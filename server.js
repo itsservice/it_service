@@ -114,13 +114,20 @@ app.post('/line/webhook', async (req, res) => {
       const timeNow = formatDateTime();
 
       const replyText =
-`👤 ชื่อผู้ใช้: ${userName}
-🆔 User ID: ${userId}
+`👤 ชื่อผู้ใช้: 
+${userName}
 
-👥 ชื่อกลุ่ม: ${groupName}
-🆔 Group ID: ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
+🆔 User ID: 
+${userId}
 
-⏰ เวลา: ${timeNow}`;
+👥 ชื่อกลุ่ม: 
+${groupName}
+
+🆔 Group ID: 
+${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
+
+⏰ เวลา: 
+${timeNow}`;
 
       console.log('\n📥 LINE MESSAGE');
       console.log(replyText);
