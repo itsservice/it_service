@@ -10,12 +10,13 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-// ================= LINE =================
+// ================= LINE HEADER =================
 const lineHeaders = {
   Authorization: `Bearer ${LINE_TOKEN}`,
   'Content-Type': 'application/json'
 };
 
+// ================= LINE API =================
 async function lineReply(replyToken, text) {
   return axios.post(
     'https://api.line.me/v2/bot/message/reply',
@@ -32,9 +33,40 @@ async function linePush(to, text) {
   );
 }
 
+// ================= LINE PROFILE =================
+async function getUserProfile(userId) {
+  const res = await axios.get(
+    `https://api.line.me/v2/bot/profile/${userId}`,
+    { headers: lineHeaders }
+  );
+  return res.data.displayName;
+}
+
+async function getGroupName(groupId) {
+  try {
+    const res = await axios.get(
+      `https://api.line.me/v2/bot/group/${groupId}/summary`,
+      { headers: lineHeaders }
+    );
+    return res.data.groupName;
+  } catch {
+    return 'ไม่ได้อยู่ในกลุ่ม';
+  }
+}
+
+function formatDateTime() {
+  return new Date().toLocaleString('th-TH', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
 // ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
-
   const key = crypto.createHash('sha256').update(encryptKey).digest();
   const iv = key.slice(0, 16);
 
@@ -46,7 +78,6 @@ function decryptLark(encryptKey, encrypt) {
     decipher.final()
   ]);
 
-  // remove padding
   const pad = decrypted[decrypted.length - 1];
   decrypted = decrypted.slice(0, decrypted.length - pad);
 
@@ -70,17 +101,35 @@ app.post('/line/webhook', async (req, res) => {
     if (event.type !== 'message') continue;
     if (event.message.type !== 'text') continue;
 
-    const userId = event.source.userId;
-    const groupId = event.source.groupId || '-';
+    try {
 
-    const replyText =
-`📨 ข้อความของคุณคือ:
-${event.message.text}
+      const userId = event.source.userId;
+      const groupId = event.source.groupId || null;
 
-👤 User ID : ${userId}
-${groupId !== '-' ? `👥 Group ID : ${groupId}` : ''}`;
+      const userName = await getUserProfile(userId);
+      const groupName = groupId
+        ? await getGroupName(groupId)
+        : 'ไม่ได้อยู่ในกลุ่ม';
 
-    await lineReply(event.replyToken, replyText);
+      const timeNow = formatDateTime();
+
+      const replyText =
+`👤 ชื่อผู้ใช้: ${userName}
+🆔 User ID: ${userId}
+
+👥 ชื่อกลุ่ม: ${groupName}
+🆔 Group ID: ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
+
+⏰ เวลา: ${timeNow}`;
+
+      console.log('\n📥 LINE MESSAGE');
+      console.log(replyText);
+
+      await lineReply(event.replyToken, replyText);
+
+    } catch (err) {
+      console.error('❌ LINE ERROR', err.response?.data || err.message);
+    }
   }
 });
 
@@ -96,8 +145,8 @@ app.post('/lark/webhook', async (req, res) => {
     console.log('\n📥 LARK RAW');
     console.log(JSON.stringify(body));
 
-    // 🔓 decrypt
-    if (body.encrypt) {
+    // 🔓 decrypt (ถ้าเปิด encrypt)
+    if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
 
       console.log('\n🔓 LARK DECRYPTED');
@@ -114,7 +163,6 @@ app.post('/lark/webhook', async (req, res) => {
       return res.json({ challenge: body.challenge });
     }
 
-    // ตอบทันที
     res.json({ ok: true });
 
     const data = body.event || body;
