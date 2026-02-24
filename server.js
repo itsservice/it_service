@@ -10,38 +10,35 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-const LINE_PUSH_URL  = 'https://api.line.me/v2/bot/message/push';
-const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
-
-// ================= LINE HELPERS =================
+// ================= LINE API =================
 const lineHeaders = {
   Authorization: `Bearer ${LINE_TOKEN}`,
   'Content-Type': 'application/json'
 };
 
 async function lineReply(replyToken, text) {
-  return axios.post(LINE_REPLY_URL, {
-    replyToken,
-    messages: [{ type: 'text', text }]
-  }, { headers: lineHeaders });
+  return axios.post(
+    'https://api.line.me/v2/bot/message/reply',
+    { replyToken, messages: [{ type: 'text', text }] },
+    { headers: lineHeaders }
+  );
 }
 
 async function linePush(to, text) {
-  return axios.post(LINE_PUSH_URL, {
-    to,
-    messages: [{ type: 'text', text }]
-  }, { headers: lineHeaders });
+  return axios.post(
+    'https://api.line.me/v2/bot/message/push',
+    { to, messages: [{ type: 'text', text }] },
+    { headers: lineHeaders }
+  );
 }
 
 // ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
-  const key = crypto.createHash('sha256').update(encryptKey).digest();
 
-  const decipher = crypto.createDecipheriv(
-    'aes-256-cbc',
-    key,
-    key.slice(0, 16)
-  );
+  const key = crypto.createHash('sha256').update(encryptKey).digest();
+  const iv = key.slice(0, 16);
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
 
   let decrypted = decipher.update(encrypt, 'base64', 'utf8');
   decrypted += decipher.final('utf8');
@@ -50,28 +47,28 @@ function decryptLark(encryptKey, encrypt) {
 }
 
 // ================= HEALTH =================
-app.get('/', (_, res) => {
-  res.status(200).send('SERVER OK');
-});
+app.get('/', (_, res) => res.send('SERVER OK'));
 
 // ======================================================
 // 1) LINE WEBHOOK
 // ======================================================
 app.post('/line/webhook', async (req, res) => {
+
   res.status(200).json({ ok: true });
 
   const events = req.body.events || [];
 
   for (const event of events) {
+
     if (event.type !== 'message') continue;
     if (event.message.type !== 'text') continue;
 
-    const userId     = event.source.userId;
-    const groupId    = event.source.groupId || '-';
-    const text       = event.message.text;
+    const userId = event.source.userId;
+    const groupId = event.source.groupId || '-';
+    const text = event.message.text;
     const replyToken = event.replyToken;
 
-    const replyText = 
+    const replyText =
 `📨 ข้อความของคุณคือ:
 ${text}
 
@@ -91,59 +88,60 @@ ${groupId !== '-' ? `👥 Group ID : ${groupId}` : ''}`;
 // ======================================================
 app.post('/lark/webhook', async (req, res) => {
 
-  let body = req.body || {};
+  try {
 
-  console.log('\n📥 LARK RAW');
-  console.log(JSON.stringify(body, null, 2));
+    let body = req.body;
 
-  // 🔓 decrypt เมื่อเปิด Encrypt Key
-  if (body.encrypt) {
-    body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
-    console.log('\n🔓 LARK DECRYPTED');
-    console.log(JSON.stringify(body, null, 2));
-  }
+    console.log('\n📥 LARK RAW');
+    console.log(JSON.stringify(body));
 
-  // 🔐 verify token
-  if (body.token !== process.env.LARK_VERIFICATION_TOKEN) {
-    console.error('❌ INVALID TOKEN');
-    return res.status(403).send('Invalid token');
-  }
+    // 🔓 decrypt
+    if (body.encrypt) {
+      body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
 
-  // ✅ URL VERIFICATION
-  if (body.type === 'url_verification') {
-    return res.json({ challenge: body.challenge });
-  }
+      console.log('\n🔓 LARK DECRYPTED');
+      console.log(JSON.stringify(body));
+    }
 
-  // ตอบทันที กัน timeout
-  res.status(200).json({ ok: true });
+    // 🔐 verify token
+    if (body.token !== process.env.LARK_VERIFICATION_TOKEN) {
+      return res.status(403).json({ msg: 'Invalid token' });
+    }
 
-  const data = body.event || body;
+    // ✅ URL VERIFICATION
+    if (body.type === 'url_verification') {
+      return res.json({ challenge: body.challenge });
+    }
 
-  // ================= DAILY REPORT =================
-  if (data.type === 'daily_report') {
+    // ตอบกลับ Lark ทันที กัน timeout
+    res.json({ ok: true });
 
-    const target = data.line_user_id || data.line_group_id;
-    if (!target) return;
+    const data = body.event || body;
 
-    const msg =
+    // ================= DAILY REPORT =================
+    if (data.type === 'daily_report') {
+
+      const target = data.line_user_id || data.line_group_id;
+      if (!target) return;
+
+      const msg =
 `📋 รายงานงานคงเหลือ
 ⏰ รอบเวลา : ${data.time}
 
 🟡 รอดำเนินการ : ${data.pending_count}
 🔵 อยู่ระหว่างดำเนินการ : ${data.inprogress_count}`;
 
-    await linePush(target, msg);
-    console.log('✅ DAILY REPORT SENT');
-    return;
-  }
+      await linePush(target, msg);
+      return;
+    }
 
-  // ================= TICKET =================
-  if (typeof data.type === 'string' && data.type.startsWith('Ticket-')) {
+    // ================= TICKET =================
+    if (typeof data.type === 'string' && data.type.startsWith('Ticket-')) {
 
-    const target = data.line_user_id || data.line_group_id;
-    if (!target) return;
+      const target = data.line_user_id || data.line_group_id;
+      if (!target) return;
 
-    const msg =
+      const msg =
 `🆔 Ticket ID : ${data.ticket_id}
 📅 วันที่ : ${data.ticketDate}
 
@@ -156,15 +154,20 @@ app.post('/lark/webhook', async (req, res) => {
 📞 Phone : ${data.phone}
 📊 Status : ${data.status}`;
 
-    await linePush(target, msg);
-    console.log('✅ TICKET SENT');
-    return;
+      await linePush(target, msg);
+      return;
+    }
+
+    console.log('⚠️ UNKNOWN LARK PAYLOAD');
+
+  } catch (err) {
+
+    console.error('❌ LARK ERROR', err.message);
+    res.status(500).json({ error: 'server error' });
+
   }
 
-  console.warn('⚠️ UNKNOWN LARK PAYLOAD TYPE');
 });
 
 // ================= START =================
-app.listen(PORT, () => {
-  console.log(`🚀 SERVER STARTED : PORT ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 SERVER STARTED : PORT ${PORT}`));
