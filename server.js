@@ -10,7 +10,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-// ================= LINE API =================
+// ================= LINE =================
 const lineHeaders = {
   Authorization: `Bearer ${LINE_TOKEN}`,
   'Content-Type': 'application/json'
@@ -39,22 +39,29 @@ function decryptLark(encryptKey, encrypt) {
   const iv = key.slice(0, 16);
 
   const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  decipher.setAutoPadding(false);
 
-  let decrypted = decipher.update(encrypt, 'base64', 'utf8');
-  decrypted += decipher.final('utf8');
+  let decrypted = Buffer.concat([
+    decipher.update(encrypt, 'base64'),
+    decipher.final()
+  ]);
 
-  return JSON.parse(decrypted);
+  // remove padding
+  const pad = decrypted[decrypted.length - 1];
+  decrypted = decrypted.slice(0, decrypted.length - pad);
+
+  return JSON.parse(decrypted.toString('utf8'));
 }
 
 // ================= HEALTH =================
 app.get('/', (_, res) => res.send('SERVER OK'));
 
 // ======================================================
-// 1) LINE WEBHOOK
+// LINE WEBHOOK
 // ======================================================
 app.post('/line/webhook', async (req, res) => {
 
-  res.status(200).json({ ok: true });
+  res.json({ ok: true });
 
   const events = req.body.events || [];
 
@@ -65,26 +72,20 @@ app.post('/line/webhook', async (req, res) => {
 
     const userId = event.source.userId;
     const groupId = event.source.groupId || '-';
-    const text = event.message.text;
-    const replyToken = event.replyToken;
 
     const replyText =
 `📨 ข้อความของคุณคือ:
-${text}
+${event.message.text}
 
 👤 User ID : ${userId}
 ${groupId !== '-' ? `👥 Group ID : ${groupId}` : ''}`;
 
-    try {
-      await lineReply(replyToken, replyText);
-    } catch (err) {
-      console.error('❌ LINE REPLY ERROR', err.response?.data || err.message);
-    }
+    await lineReply(event.replyToken, replyText);
   }
 });
 
 // ======================================================
-// 2) LARK WEBHOOK
+// LARK WEBHOOK
 // ======================================================
 app.post('/lark/webhook', async (req, res) => {
 
@@ -113,12 +114,12 @@ app.post('/lark/webhook', async (req, res) => {
       return res.json({ challenge: body.challenge });
     }
 
-    // ตอบกลับ Lark ทันที กัน timeout
+    // ตอบทันที
     res.json({ ok: true });
 
     const data = body.event || body;
 
-    // ================= DAILY REPORT =================
+    // ===== DAILY REPORT =====
     if (data.type === 'daily_report') {
 
       const target = data.line_user_id || data.line_group_id;
@@ -135,7 +136,7 @@ app.post('/lark/webhook', async (req, res) => {
       return;
     }
 
-    // ================= TICKET =================
+    // ===== TICKET =====
     if (typeof data.type === 'string' && data.type.startsWith('Ticket-')) {
 
       const target = data.line_user_id || data.line_group_id;
@@ -166,7 +167,6 @@ app.post('/lark/webhook', async (req, res) => {
     res.status(500).json({ error: 'server error' });
 
   }
-
 });
 
 // ================= START =================
