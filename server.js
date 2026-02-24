@@ -111,7 +111,7 @@ app.post('/lark/webhook', async (req, res) => {
 
   // ✅ URL VERIFICATION
   if (body.type === 'url_verification') {
-    return res.send(body.challenge);
+    return res.json({ challenge: body.challenge });
   }
 
   // ตอบทันที กัน timeout
