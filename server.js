@@ -1,100 +1,23 @@
-require('dotenv').config();
-const express = require('express');
-const axios = require('axios');
-
-const app = express();
-app.use(express.json());
-
-// ================= CONFIG =================
-const PORT = process.env.PORT || 3000;
-const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-
-const LINE_PUSH_URL  = 'https://api.line.me/v2/bot/message/push';
-const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
-
-// ================= LINE HELPERS =================
-const lineHeaders = {
-  Authorization: `Bearer ${LINE_TOKEN}`,
-  'Content-Type': 'application/json'
-};
-
-async function lineReply(replyToken, text) {
-  return axios.post(
-    LINE_REPLY_URL,
-    {
-      replyToken,
-      messages: [{ type: 'text', text }]
-    },
-    { headers: lineHeaders }
-  );
-}
-
-async function linePush(to, text) {
-  return axios.post(
-    LINE_PUSH_URL,
-    {
-      to,
-      messages: [{ type: 'text', text }]
-    },
-    { headers: lineHeaders }
-  );
-}
-
-// ================= HEALTH =================
-app.get('/', (_, res) => {
-  res.status(200).send('SERVER OK');
-});
-
-
-// ======================================================
-// 1) LINE WEBHOOK (User ส่งข้อความเข้า LINE)
-// ======================================================
-app.post('/line/webhook', async (req, res) => {
-  res.status(200).json({ ok: true });
-
-  const events = req.body.events || [];
-
-  for (const event of events) {
-    if (event.type !== 'message') continue;
-    if (event.message.type !== 'text') continue;
-
-    const userId     = event.source.userId;
-    const groupId    = event.source.groupId || '-';
-    const text       = event.message.text;
-    const replyToken = event.replyToken;
-
-    console.log('💬 LINE MESSAGE RECEIVED');
-    console.log(`👤 User ID  : ${userId}`);
-    console.log(`👥 Group ID : ${groupId}`);
-    console.log(`✉️ Message  : ${text}`);
-
-    const replyText = 
-`📨 ข้อความของคุณคือ:
-${text}
-
-👤 User ID : ${userId}
-${groupId !== '-' ? `👥 Group ID : ${groupId}` : ''}`;
-
-    try {
-      await lineReply(replyToken, replyText);
-      console.log('✅ LINE REPLY SENT');
-    } catch (err) {
-      console.error('❌ LINE REPLY ERROR', err.response?.data || err.message);
-    }
-  }
-});
-
-
 // ======================================================
 // 2) LARK WEBHOOK (Ticket + Daily Report)
 // ======================================================
 app.post('/lark/webhook', async (req, res) => {
-  res.status(200).json({ ok: true });
 
   const body = req.body || {};
 
   console.log('\n📥 LARK WEBHOOK RECEIVED');
   console.log(JSON.stringify(body, null, 2));
+
+  // ==================================================
+  // ✅ URL VERIFICATION (สำคัญมาก)
+  // ==================================================
+  if (body.type === 'url_verification') {
+    console.log('✅ LARK URL VERIFICATION');
+    return res.status(200).send(body.challenge);
+  }
+
+  // ตอบ OK ให้ event ปกติทันที (กัน timeout)
+  res.status(200).json({ ok: true });
 
   // ==================================================
   // DAILY REPORT
@@ -137,9 +60,10 @@ app.post('/lark/webhook', async (req, res) => {
   }
 
   // ==================================================
-  // TICKET (รองรับ Ticket-xxx)
+  // TICKET
   // ==================================================
   if (typeof body.type === 'string' && body.type.startsWith('Ticket-')) {
+
     const {
       ticket_id,
       ticketDate,
@@ -193,9 +117,4 @@ app.post('/lark/webhook', async (req, res) => {
   }
 
   console.warn('⚠️ UNKNOWN LARK PAYLOAD TYPE');
-});
-
-// ================= START =================
-app.listen(PORT, () => {
-  console.log(`🚀 SERVER STARTED : PORT ${PORT}`);
 });
