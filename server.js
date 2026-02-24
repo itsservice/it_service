@@ -9,27 +9,43 @@ app.post('/lark/webhook', async (req, res) => {
   console.log(JSON.stringify(body, null, 2));
 
   // ==================================================
-  // ✅ URL VERIFICATION (สำคัญมาก)
+  // ✅ URL VERIFICATION
   // ==================================================
   if (body.type === 'url_verification') {
     console.log('✅ LARK URL VERIFICATION');
-    return res.status(200).send(body.challenge);
+    return res.send(body.challenge);
   }
 
-  // ตอบ OK ให้ event ปกติทันที (กัน timeout)
+  // ==================================================
+  // 🔐 OPTIONAL: VERIFY TOKEN (เปิดใช้ตอน PROD)
+  // ==================================================
+  if (process.env.LARK_VERIFICATION_TOKEN) {
+    if (body.token !== process.env.LARK_VERIFICATION_TOKEN) {
+      console.error('❌ INVALID LARK TOKEN');
+      return res.status(403).send('Invalid token');
+    }
+  }
+
+  // ตอบกลับ Lark ทันที (กัน timeout)
   res.status(200).json({ ok: true });
+
+  // ==================================================
+  // 🔄 รองรับ payload จริงของ Lark (event.callback)
+  // ==================================================
+  const data = body.event || body;
 
   // ==================================================
   // DAILY REPORT
   // ==================================================
-  if (body.type === 'daily_report') {
+  if (data.type === 'daily_report') {
+
     const {
       time,
       pending_count,
       inprogress_count,
       line_user_id,
       line_group_id
-    } = body;
+    } = data;
 
     const target = line_user_id || line_group_id;
     if (!target) {
@@ -38,10 +54,6 @@ app.post('/lark/webhook', async (req, res) => {
     }
 
     console.log('\n📊 DAILY REPORT');
-    console.log(`⏰ Time        : ${time}`);
-    console.log(`🟡 Pending    : ${pending_count}`);
-    console.log(`🔵 InProgress : ${inprogress_count}`);
-    console.log(`🎯 Send to    : ${target}`);
 
     const msg =
 `📋 รายงานงานคงเหลือ
@@ -56,13 +68,14 @@ app.post('/lark/webhook', async (req, res) => {
     } catch (err) {
       console.error('❌ DAILY REPORT ERROR', err.response?.data || err.message);
     }
+
     return;
   }
 
   // ==================================================
   // TICKET
   // ==================================================
-  if (typeof body.type === 'string' && body.type.startsWith('Ticket-')) {
+  if (typeof data.type === 'string' && data.type.startsWith('Ticket-')) {
 
     const {
       ticket_id,
@@ -75,7 +88,7 @@ app.post('/lark/webhook', async (req, res) => {
       status,
       line_user_id,
       line_group_id
-    } = body;
+    } = data;
 
     const target = line_user_id || line_group_id;
     if (!target) {
@@ -84,15 +97,6 @@ app.post('/lark/webhook', async (req, res) => {
     }
 
     console.log('\n🎫 NEW TICKET');
-    console.log(`🆔 ${ticket_id}`);
-    console.log(`📅 ${ticketDate}`);
-    console.log(`📌 ${title}`);
-    console.log(`⚙️ ${symptom}`);
-    console.log(`🏬 ${branch}`);
-    console.log(`🏷️ ${branch_code}`);
-    console.log(`📞 ${phone}`);
-    console.log(`📊 ${status}`);
-    console.log(`🎯 Send to ${target}`);
 
     const msg =
 `🆔 Ticket ID : ${ticket_id}
@@ -113,6 +117,7 @@ app.post('/lark/webhook', async (req, res) => {
     } catch (err) {
       console.error('❌ TICKET ERROR', err.response?.data || err.message);
     }
+
     return;
   }
 
