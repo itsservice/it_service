@@ -122,7 +122,7 @@ ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
     console.log('\n📥 LINE MESSAGE');
     console.log(text);
 
-    await lineReply(event.replyToken, text);
+    //await lineReply(event.replyToken, text);
   }
 });
 
