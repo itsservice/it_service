@@ -118,13 +118,9 @@ ${groupName}
 ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
 
 ⏰ เวลา: ${formatTime()}`;
-    console.log(`\n ------------------ \n`)
-    console.log('\n📥 Start ---- LINE MESSAGE');
-    console.log(`\n ------------------ \n`)
+
+    console.log('\n📥 LINE MESSAGE');
     console.log(text);
-    console.log(`\n ------------------ \n`)
-    console.log('\n📥 End ---- LINE MESSAGE');
-    console.log(`\n ------------------ \n`)
 
     await lineReply(event.replyToken, text);
   }
@@ -139,18 +135,16 @@ app.post('/lark/webhook', async (req, res) => {
   try {
 
     let body = req.body;
-    console.log(`\n ------------------ \n`)
+
     console.log('\n📥 LARK RAW');
     console.log(JSON.stringify(body));
-    console.log(`\n ------------------ \n`)
+
     // decrypt when enable encryption
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
 
-      console.log(`\n ------------------ \n`)
       console.log('🔓 LARK DECRYPTED');
       console.log(JSON.stringify(body));
-      console.log(`\n ------------------ \n`)
     }
 
     // URL verification
@@ -168,41 +162,37 @@ app.post('/lark/webhook', async (req, res) => {
     if (data.line_user_id || data.line_group_id) {
 
       const target = data.line_user_id || data.line_group_id;
-      console.log(`\n ------------------ \n`)
+
       console.log('🎯 SEND TO:', target);
-      console.log(`\n ------------------ \n`)
-console.log(`\n ------------------ \n`)
+
       const msg =
 `Ticket ID: ${data.ticket_id || '-'}
-- วันที่: ${data.ticketDate || '-'}
+📅 วันที่: ${data.ticketDate || '-'}
 
-- ประเภท/อุปกรณ์: ${data.title || '-'}
-- รายละเอียด/อาการ: ${data.symptom || '-'}
+ประเภท/อุปกรณ์: ${data.title || '-'}
+รายละเอียด/อาการ: ${data.symptom || '-'}
 
-- สาขา: ${data.branch || '-'}
-- รหัสสาขา: ${data.branch_code || '-'}
+สาขา: ${data.branch || '-'}
+รหัสสาขา: ${data.branch_code || '-'}
 
-- เบอร์โทร: ${data.phone || '-'}
-- สถานะ: ${data.status || '-'}`;
+เบอร์โทร: ${data.phone || '-'}
+สถานะ: ${data.status || '-'}`;
 
       await linePush(target, msg);
-      console.log(`\n ------------------ \n`)
+
       console.log('✅ PUSH SUCCESS');
-      console.log(`\n ------------------ \n`)
     }
 
   } catch (err) {
-    console.log(`\n ------------------ \n`)
+
     console.error('❌ LARK ERROR', err.message);
     res.status(500).json({ error: 'server error' });
-    console.log(`\n ------------------ \n`)
+
   }
 });
 
 
 // ================= START =================
 app.listen(PORT, () =>
-  console.log(`🚀 \n ------------------ \n`)
   console.log(`🚀 SERVER STARTED : PORT ${PORT}`)
-  console.log(`🚀 \n ------------------ \n`)
 );
