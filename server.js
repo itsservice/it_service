@@ -18,13 +18,15 @@ const lineHeaders = {
 
 // ================= LINE API =================
 const lineReply = (replyToken, text) =>
-  axios.post('https://api.line.me/v2/bot/message/reply',
+  axios.post(
+    'https://api.line.me/v2/bot/message/reply',
     { replyToken, messages: [{ type: 'text', text }] },
     { headers: lineHeaders }
   );
 
 const linePush = (to, text) =>
-  axios.post('https://api.line.me/v2/bot/message/push',
+  axios.post(
+    'https://api.line.me/v2/bot/message/push',
     { to, messages: [{ type: 'text', text }] },
     { headers: lineHeaders }
   );
@@ -106,23 +108,24 @@ app.post('/line/webhook', async (req, res) => {
       : 'ไม่ได้อยู่ในกลุ่ม';
 
     const text =
-`👤 ชื่อผู้ใช้: ${userName}
+`ชื่อผู้ใช้: ${userName}
 
-🆔 User ID: 
+User ID:
 ${userId}
 
-👥 ชื่อกลุ่ม: 
+ชื่อกลุ่ม:
 ${groupName}
 
-🆔 Group ID: 
+Group ID:
 ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
 
-⏰ เวลา: ${formatTime()}`;
+เวลา: ${formatTime()}`;
 
     console.log('\n📥 LINE MESSAGE');
     console.log(text);
 
-    //await lineReply(event.replyToken, text);
+    // ถ้าต้องการ reply ให้เปิดบรรทัดล่างนี้
+    // await lineReply(event.replyToken, text);
   }
 });
 
@@ -137,26 +140,43 @@ app.post('/lark/webhook', async (req, res) => {
     let body = req.body;
 
     console.log('\n📥 LARK RAW');
-    console.log(JSON.stringify(body));
+    console.log(JSON.stringify(body, null, 2));
 
-    // decrypt when enable encryption
+    // ================= DECRYPT =================
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
 
       console.log('🔓 LARK DECRYPTED');
-      console.log(JSON.stringify(body));
+      console.log(JSON.stringify(body, null, 2));
     }
 
-    // URL verification
+    // ================= URL VERIFICATION =================
     if (body.type === 'url_verification') {
       return res.json({ challenge: body.challenge });
     }
 
+    // ตอบกลับทันที ป้องกัน timeout
     res.json({ ok: true });
 
     const data = body.event || body;
 
-    console.log('📦 LARK DATA:', data);
+    console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
+
+    // ================= RECORD ID DETECTION =================
+    const recordId =
+      data.record_id ||
+      data?.record?.record_id ||
+      data?.event?.record_id ||
+      '-';
+
+    console.log('📌 RECORD ID:', recordId);
+
+    // ================= BUILD RECORD URL =================
+    const baseUrl = 'https://gjpl1ez37fzh.jp.larksuite.com/record/';
+    const recordUrl =
+      recordId !== '-' ? `${baseUrl}${recordId}` : '-';
+
+    console.log('🔗 RECORD URL:', recordUrl);
 
     // ================= SEND TO LINE =================
     if (data.line_user_id || data.line_group_id) {
@@ -167,9 +187,9 @@ app.post('/lark/webhook', async (req, res) => {
 
       const msg =
 `${data.type || 'Report Ticket'}
- 
+
 Ticket ID: ${data.ticket_id || '-'}
-📅 วันที่: ${data.ticketDate || '-'}
+วันที่: ${data.ticketDate || '-'}
 
 ประเภท/อุปกรณ์: ${data.title || '-'}
 รายละเอียด/อาการ: ${data.symptom || '-'}
@@ -178,7 +198,10 @@ Ticket ID: ${data.ticket_id || '-'}
 รหัสสาขา: ${data.branch_code || '-'}
 
 เบอร์โทร: ${data.phone || '-'}
-สถานะ: ${data.status || '-'}`;
+สถานะ: ${data.status || '-'}
+
+เปิดรายการ:
+${recordUrl}`;
 
       await linePush(target, msg);
 
@@ -187,7 +210,7 @@ Ticket ID: ${data.ticket_id || '-'}
 
   } catch (err) {
 
-    console.error('❌ LARK ERROR', err.message);
+    console.error('❌ LARK ERROR:', err.message);
     res.status(500).json({ error: 'server error' });
 
   }
