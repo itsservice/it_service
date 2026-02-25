@@ -166,8 +166,7 @@ app.post('/lark/webhook', async (req, res) => {
       console.log('🎯 SEND TO:', target);
 
       const msg =
-`
- ${data.type || '-'}
+`${data.type || 'Report Ticket'}
  
 Ticket ID: ${data.ticket_id || '-'}
 📅 วันที่: ${data.ticketDate || '-'}
