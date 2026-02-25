@@ -17,32 +17,28 @@ const lineHeaders = {
 };
 
 // ================= LINE API =================
-async function lineReply(replyToken, text) {
-  return axios.post(
-    'https://api.line.me/v2/bot/message/reply',
+const lineReply = (replyToken, text) =>
+  axios.post('https://api.line.me/v2/bot/message/reply',
     { replyToken, messages: [{ type: 'text', text }] },
     { headers: lineHeaders }
   );
-}
 
-async function linePush(to, text) {
-  return axios.post(
-    'https://api.line.me/v2/bot/message/push',
+const linePush = (to, text) =>
+  axios.post('https://api.line.me/v2/bot/message/push',
     { to, messages: [{ type: 'text', text }] },
     { headers: lineHeaders }
   );
-}
 
 // ================= LINE PROFILE =================
-async function getUserProfile(userId) {
+const getUserProfile = async (userId) => {
   const res = await axios.get(
     `https://api.line.me/v2/bot/profile/${userId}`,
     { headers: lineHeaders }
   );
   return res.data.displayName;
-}
+};
 
-async function getGroupName(groupId) {
+const getGroupName = async (groupId) => {
   try {
     const res = await axios.get(
       `https://api.line.me/v2/bot/group/${groupId}/summary`,
@@ -52,10 +48,10 @@ async function getGroupName(groupId) {
   } catch {
     return 'ไม่ได้อยู่ในกลุ่ม';
   }
-}
+};
 
-function formatDateTime() {
-  return new Date().toLocaleString('th-TH', {
+const formatTime = () =>
+  new Date().toLocaleString('th-TH', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -63,7 +59,6 @@ function formatDateTime() {
     minute: '2-digit',
     second: '2-digit'
   });
-}
 
 // ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
@@ -87,6 +82,7 @@ function decryptLark(encryptKey, encrypt) {
 // ================= HEALTH =================
 app.get('/', (_, res) => res.send('SERVER OK'));
 
+
 // ======================================================
 // LINE WEBHOOK
 // ======================================================
@@ -101,44 +97,30 @@ app.post('/line/webhook', async (req, res) => {
     if (event.type !== 'message') continue;
     if (event.message.type !== 'text') continue;
 
-    try {
+    const userId = event.source.userId;
+    const groupId = event.source.groupId || null;
 
-      const userId = event.source.userId;
-      const groupId = event.source.groupId || null;
+    const userName = await getUserProfile(userId);
+    const groupName = groupId
+      ? await getGroupName(groupId)
+      : 'ไม่ได้อยู่ในกลุ่ม';
 
-      const userName = await getUserProfile(userId);
-      const groupName = groupId
-        ? await getGroupName(groupId)
-        : 'ไม่ได้อยู่ในกลุ่ม';
+    const text =
+`👤 ชื่อผู้ใช้: ${userName}
+🆔 User ID: ${userId}
 
-      const timeNow = formatDateTime();
+👥 ชื่อกลุ่ม: ${groupName}
+🆔 Group ID: ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
 
-      const replyText =
-`👤 ชื่อผู้ใช้: 
-${userName}
+⏰ เวลา: ${formatTime()}`;
 
-🆔 User ID: 
-${userId}
+    console.log('\n📥 LINE MESSAGE');
+    console.log(text);
 
-👥 ชื่อกลุ่ม: 
-${groupName}
-
-🆔 Group ID: 
-${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
-
-⏰ เวลา: 
-${timeNow}`;
-
-      console.log('\n📥 LINE MESSAGE');
-      console.log(replyText);
-
-      await lineReply(event.replyToken, replyText);
-
-    } catch (err) {
-      console.error('❌ LINE ERROR', err.response?.data || err.message);
-    }
+    await lineReply(event.replyToken, text);
   }
 });
+
 
 // ======================================================
 // LARK WEBHOOK
@@ -152,20 +134,15 @@ app.post('/lark/webhook', async (req, res) => {
     console.log('\n📥 LARK RAW');
     console.log(JSON.stringify(body));
 
-    // 🔓 decrypt (ถ้าเปิด encrypt)
+    // decrypt when enable encryption
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
 
-      console.log('\n🔓 LARK DECRYPTED');
+      console.log('🔓 LARK DECRYPTED');
       console.log(JSON.stringify(body));
     }
 
-    // 🔐 verify token
-    if (body.token !== process.env.LARK_VERIFICATION_TOKEN) {
-      return res.status(403).json({ msg: 'Invalid token' });
-    }
-
-    // ✅ URL VERIFICATION
+    // URL verification
     if (body.type === 'url_verification') {
       return res.json({ challenge: body.challenge });
     }
@@ -174,47 +151,32 @@ app.post('/lark/webhook', async (req, res) => {
 
     const data = body.event || body;
 
-    // ===== DAILY REPORT =====
-    if (data.type === 'daily_report') {
+    console.log('📦 LARK DATA:', data);
+
+    // ================= SEND TO LINE =================
+    if (data.line_user_id || data.line_group_id) {
 
       const target = data.line_user_id || data.line_group_id;
-      if (!target) return;
+
+      console.log('🎯 SEND TO:', target);
 
       const msg =
-`📋 รายงานงานคงเหลือ
-⏰ รอบเวลา : ${data.time}
+`🆔 Ticket ID: ${data.ticket_id || '-'}
+📅 วันที่: ${data.ticketDate || '-'}
 
-🟡 รอดำเนินการ : ${data.pending_count}
-🔵 อยู่ระหว่างดำเนินการ : ${data.inprogress_count}`;
+📌 หัวข้อ: ${data.title || '-'}
+⚙️ อาการ: ${data.symptom || '-'}
 
-      await linePush(target, msg);
-      return;
-    }
+🏬 สาขา: ${data.branch || '-'}
+🏷️ รหัสสาขา: ${data.branch_code || '-'}
 
-    // ===== TICKET =====
-    if (typeof data.type === 'string' && data.type.startsWith('Ticket-')) {
-
-      const target = data.line_user_id || data.line_group_id;
-      if (!target) return;
-
-      const msg =
-`🆔 Ticket ID : ${data.ticket_id}
-📅 วันที่ : ${data.ticketDate}
-
-📌 หัวข้อ : ${data.title}
-⚙️ อาการ : ${data.symptom}
-
-🏬 สาขา : ${data.branch}
-🏷️ รหัสสาขา : ${data.branch_code}
-
-📞 Phone : ${data.phone}
-📊 Status : ${data.status}`;
+📞 Phone: ${data.phone || '-'}
+📊 Status: ${data.status || '-'}`;
 
       await linePush(target, msg);
-      return;
-    }
 
-    console.log('⚠️ UNKNOWN LARK PAYLOAD');
+      console.log('✅ PUSH SUCCESS');
+    }
 
   } catch (err) {
 
@@ -224,5 +186,8 @@ app.post('/lark/webhook', async (req, res) => {
   }
 });
 
+
 // ================= START =================
-app.listen(PORT, () => console.log(`🚀 SERVER STARTED : PORT ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 SERVER STARTED : PORT ${PORT}`)
+);
