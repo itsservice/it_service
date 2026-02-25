@@ -107,10 +107,15 @@ app.post('/line/webhook', async (req, res) => {
 
     const text =
 `👤 ชื่อผู้ใช้: ${userName}
-🆔 User ID: ${userId}
 
-👥 ชื่อกลุ่ม: ${groupName}
-🆔 Group ID: ${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
+🆔 User ID: 
+${userId}
+
+👥 ชื่อกลุ่ม: 
+${groupName}
+
+🆔 Group ID: 
+${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
 
 ⏰ เวลา: ${formatTime()}`;
 
@@ -161,17 +166,17 @@ app.post('/lark/webhook', async (req, res) => {
       console.log('🎯 SEND TO:', target);
 
       const msg =
-`🆔 Ticket ID: ${data.ticket_id || '-'}
+`Ticket ID: ${data.ticket_id || '-'}
 📅 วันที่: ${data.ticketDate || '-'}
 
-📌 หัวข้อ: ${data.title || '-'}
-⚙️ อาการ: ${data.symptom || '-'}
+ประเภท/อุปกรณ์: ${data.title || '-'}
+รายละเอียด/อาการ: ${data.symptom || '-'}
 
-🏬 สาขา: ${data.branch || '-'}
-🏷️ รหัสสาขา: ${data.branch_code || '-'}
+สาขา: ${data.branch || '-'}
+รหัสสาขา: ${data.branch_code || '-'}
 
-📞 Phone: ${data.phone || '-'}
-📊 Status: ${data.status || '-'}`;
+เบอร์โทร: ${data.phone || '-'}
+สถานะ: ${data.status || '-'}`;
 
       await linePush(target, msg);
 
