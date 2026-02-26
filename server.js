@@ -16,51 +16,13 @@ const lineHeaders = {
   'Content-Type': 'application/json'
 };
 
-// ================= LINE API =================
-const lineReply = (replyToken, text) =>
-  axios.post(
-    'https://api.line.me/v2/bot/message/reply',
-    { replyToken, messages: [{ type: 'text', text }] },
-    { headers: lineHeaders }
-  );
-
-const linePush = (to, text) =>
+// ================= LINE PUSH FLEX =================
+const linePushFlex = (to, flexMessage) =>
   axios.post(
     'https://api.line.me/v2/bot/message/push',
-    { to, messages: [{ type: 'text', text }] },
+    { to, messages: [flexMessage] },
     { headers: lineHeaders }
   );
-
-// ================= LINE PROFILE =================
-const getUserProfile = async (userId) => {
-  const res = await axios.get(
-    `https://api.line.me/v2/bot/profile/${userId}`,
-    { headers: lineHeaders }
-  );
-  return res.data.displayName;
-};
-
-const getGroupName = async (groupId) => {
-  try {
-    const res = await axios.get(
-      `https://api.line.me/v2/bot/group/${groupId}/summary`,
-      { headers: lineHeaders }
-    );
-    return res.data.groupName;
-  } catch {
-    return 'ไม่ได้อยู่ในกลุ่ม';
-  }
-};
-
-const formatTime = () =>
-  new Date().toLocaleString('th-TH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
 
 // ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
@@ -86,51 +48,6 @@ app.get('/', (_, res) => res.send('SERVER OK'));
 
 
 // ======================================================
-// LINE WEBHOOK
-// ======================================================
-app.post('/line/webhook', async (req, res) => {
-
-  res.json({ ok: true });
-
-  const events = req.body.events || [];
-
-  for (const event of events) {
-
-    if (event.type !== 'message') continue;
-    if (event.message.type !== 'text') continue;
-
-    const userId = event.source.userId;
-    const groupId = event.source.groupId || null;
-
-    const userName = await getUserProfile(userId);
-    const groupName = groupId
-      ? await getGroupName(groupId)
-      : 'ไม่ได้อยู่ในกลุ่ม';
-
-    const text =
-`ชื่อผู้ใช้: ${userName}
-
-User ID:
-${userId}
-
-ชื่อกลุ่ม:
-${groupName}
-
-Group ID:
-${groupId || 'ไม่ได้อยู่ในกลุ่ม'}
-
-เวลา: ${formatTime()}`;
-
-    console.log('\n📥 LINE MESSAGE');
-    console.log(text);
-
-    // ถ้าต้องการ reply ให้เปิดบรรทัดล่างนี้
-    // await lineReply(event.replyToken, text);
-  }
-});
-
-
-// ======================================================
 // LARK WEBHOOK
 // ======================================================
 app.post('/lark/webhook', async (req, res) => {
@@ -145,7 +62,6 @@ app.post('/lark/webhook', async (req, res) => {
     // ================= DECRYPT =================
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
-
       console.log('🔓 LARK DECRYPTED');
       console.log(JSON.stringify(body, null, 2));
     }
@@ -155,26 +71,18 @@ app.post('/lark/webhook', async (req, res) => {
       return res.json({ challenge: body.challenge });
     }
 
-    // ตอบกลับทันที ป้องกัน timeout
     res.json({ ok: true });
 
     const data = body.event || body;
 
     console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
 
-    // ================= RECORD ID DETECTION =================
-    const recordId =
-      data.record_id ||
-      data?.record?.record_id ||
-      data?.event?.record_id ||
-      '-';
-
-    console.log('📌 RECORD ID:', recordId);
-
-    // ================= BUILD RECORD URL =================
-    const baseUrl = 'https://gjpl1ez37fzh.jp.larksuite.com/record/';
+    // ================= RECORD URL =================
     const recordUrl =
-      recordId !== '-' ? `${baseUrl}${recordId}` : '-';
+      data.recordUrl ||   // ถ้า Automation ส่งมา
+      (data.record_id
+        ? `https://gjpl1ez37fzh.jp.larksuite.com/base/RUkWwDUisiBmkrk9pzYjVok6pAe?table=tblCqCvo7GOEB1uN&recordId=${data.record_id}`
+        : '-');
 
     console.log('🔗 RECORD URL:', recordUrl);
 
@@ -183,27 +91,53 @@ app.post('/lark/webhook', async (req, res) => {
 
       const target = data.line_user_id || data.line_group_id;
 
-      console.log('🎯 SEND TO:', target);
+      const flexMessage = {
+        type: "flex",
+        altText: "มี Ticket ใหม่",
+        contents: {
+          type: "bubble",
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: [
+              {
+                type: "text",
+                text: data.ticket_id || "Report Ticket",
+                weight: "bold",
+                size: "lg"
+              },
+              {
+                type: "text",
+                text: `วันที่: ${data.ticketDate || '-'}`,
+                size: "sm"
+              },
+              {
+                type: "text",
+                text: `สถานะ: ${data.status || '-'}`,
+                size: "sm"
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "uri",
+                  label: "Link งาน",
+                  uri: recordUrl
+                }
+              }
+            ]
+          }
+        }
+      };
 
-      const msg =
-`${data.type || 'Report Ticket'}
-
-Ticket ID: ${data.ticket_id || '-'}
-วันที่: ${data.ticketDate || '-'}
-
-ประเภท/อุปกรณ์: ${data.title || '-'}
-รายละเอียด/อาการ: ${data.symptom || '-'}
-
-สาขา: ${data.branch || '-'}
-รหัสสาขา: ${data.branch_code || '-'}
-
-เบอร์โทร: ${data.phone || '-'}
-สถานะ: ${data.status || '-'}
-
-เปิดรายการ:
-${recordUrl}`;
-
-      await linePush(target, msg);
+      await linePushFlex(target, flexMessage);
 
       console.log('✅ PUSH SUCCESS');
     }
@@ -215,7 +149,6 @@ ${recordUrl}`;
 
   }
 });
-
 
 // ================= START =================
 app.listen(PORT, () =>
