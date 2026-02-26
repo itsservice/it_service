@@ -77,10 +77,11 @@ app.post('/lark/webhook', async (req, res) => {
 
     console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
 
-    // ================= ใช้ recordUrl ตรง ๆ =================
-    const recordUrl = data.recordUrl && data.recordUrl.trim() !== ''
-      ? data.recordUrl
-      : null;
+    // ================= URL =================
+    const recordUrl =
+      data.recordUrl && data.recordUrl.trim() !== ''
+        ? data.recordUrl
+        : null;
 
     console.log('🔗 RECORD URL:', recordUrl);
 
@@ -88,21 +89,6 @@ app.post('/lark/webhook', async (req, res) => {
     if (data.line_user_id || data.line_group_id) {
 
       const target = data.line_user_id || data.line_group_id;
-
-      // ถ้าไม่มี URL จะไม่ใส่ปุ่ม
-      const footerContents = [];
-
-      if (recordUrl) {
-        footerContents.push({
-          type: "button",
-          style: "primary",
-          action: {
-            type: "uri",
-            label: "Link งาน",
-            uri: recordUrl
-          }
-        });
-      }
 
       const flexMessage = {
         type: "flex",
@@ -114,30 +100,91 @@ app.post('/lark/webhook', async (req, res) => {
             layout: "vertical",
             spacing: "sm",
             contents: [
+
               {
                 type: "text",
-                text: data.ticket_id || "Report Ticket",
+                text: data.type || "Report Ticket",
                 weight: "bold",
                 size: "lg"
+              },
+
+              { type: "separator", margin: "md" },
+
+              {
+                type: "text",
+                text: `Ticket ID: ${data.ticket_id || '-'}`,
+                size: "sm",
+                wrap: true
               },
               {
                 type: "text",
                 text: `วันที่: ${data.ticketDate || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+
+              { type: "separator", margin: "md" },
+
+              {
+                type: "text",
+                text: `ประเภท/อุปกรณ์: ${data.title || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `รายละเอียด/อาการ: ${data.symptom || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+
+              { type: "separator", margin: "md" },
+
+              {
+                type: "text",
+                text: `สาขา: ${data.branch || '-'}`,
                 size: "sm"
               },
               {
                 type: "text",
-                text: `สถานะ: ${data.status || '-'}`,
+                text: `รหัสสาขา: ${data.branch_code || '-'}`,
                 size: "sm"
+              },
+
+              { type: "separator", margin: "md" },
+
+              {
+                type: "text",
+                text: `เบอร์โทร: ${data.phone || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `สถานะ: ${data.status || '-'}`,
+                size: "sm",
+                wrap: true
               }
+
             ]
           },
-          footer: {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            contents: footerContents
-          }
+          footer: recordUrl
+            ? {
+                type: "box",
+                layout: "vertical",
+                contents: [
+                  {
+                    type: "button",
+                    style: "primary",
+                    action: {
+                      type: "uri",
+                      label: "เปิดรายการ",
+                      uri: recordUrl
+                    }
+                  }
+                ]
+              }
+            : undefined
         }
       };
 
@@ -147,10 +194,8 @@ app.post('/lark/webhook', async (req, res) => {
     }
 
   } catch (err) {
-
     console.error('❌ LARK ERROR:', err.message);
     res.status(500).json({ error: 'server error' });
-
   }
 });
 
