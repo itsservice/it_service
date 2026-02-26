@@ -10,7 +10,6 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-// ================= LINE HEADER =================
 const lineHeaders = {
   Authorization: `Bearer ${LINE_TOKEN}`,
   'Content-Type': 'application/json'
@@ -71,18 +70,17 @@ app.post('/lark/webhook', async (req, res) => {
       return res.json({ challenge: body.challenge });
     }
 
+    // ตอบทันที กัน timeout
     res.json({ ok: true });
 
     const data = body.event || body;
 
     console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
 
-    // ================= RECORD URL =================
-    const recordUrl =
-      data.recordUrl ||   // ถ้า Automation ส่งมา
-      (data.record_id
-        ? `https://gjpl1ez37fzh.jp.larksuite.com/base/RUkWwDUisiBmkrk9pzYjVok6pAe?table=tblCqCvo7GOEB1uN&recordId=${data.record_id}`
-        : '-');
+    // ================= ใช้ recordUrl ตรง ๆ =================
+    const recordUrl = data.recordUrl && data.recordUrl.trim() !== ''
+      ? data.recordUrl
+      : null;
 
     console.log('🔗 RECORD URL:', recordUrl);
 
@@ -91,9 +89,24 @@ app.post('/lark/webhook', async (req, res) => {
 
       const target = data.line_user_id || data.line_group_id;
 
+      // ถ้าไม่มี URL จะไม่ใส่ปุ่ม
+      const footerContents = [];
+
+      if (recordUrl) {
+        footerContents.push({
+          type: "button",
+          style: "primary",
+          action: {
+            type: "uri",
+            label: "Link งาน",
+            uri: recordUrl
+          }
+        });
+      }
+
       const flexMessage = {
         type: "flex",
-        altText: "มี Ticket ใหม่",
+        altText: `Ticket ${data.ticket_id || ''}`,
         contents: {
           type: "bubble",
           body: {
@@ -122,17 +135,8 @@ app.post('/lark/webhook', async (req, res) => {
           footer: {
             type: "box",
             layout: "vertical",
-            contents: [
-              {
-                type: "button",
-                style: "primary",
-                action: {
-                  type: "uri",
-                  label: "Link งาน",
-                  uri: recordUrl
-                }
-              }
-            ]
+            spacing: "sm",
+            contents: footerContents
           }
         }
       };
