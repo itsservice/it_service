@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ========= BRAND ========= */
+/* ===== BRAND ===== */
 
 const brands = {
   GD:{brandName:"GD"},
@@ -45,10 +45,10 @@ margin:0;
 font-family:Arial;
 height:100vh;
 overflow:hidden;
-transition:color .5s ease;
+transition:color .4s ease;
 }
 
-/* BACKGROUND */
+/* ===== BACKGROUND ===== */
 .bg{
 position:fixed;
 inset:0;
@@ -57,7 +57,7 @@ transition:1.5s ease;
 z-index:-1;
 }
 
-/* HEADER */
+/* ===== HEADER ===== */
 .header{
 position:fixed;
 top:0;
@@ -68,10 +68,10 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 20px;
-z-index:1100;
+z-index:1200;
 }
 
-/* MENU BUTTON */
+/* ===== MENU BUTTON ===== */
 .menu-btn{
 width:45px;
 height:45px;
@@ -84,15 +84,7 @@ justify-content:center;
 cursor:pointer;
 }
 
-/* TIME + MODE */
-.time{
-font-size:14px;
-}
-.mode-label{
-font-size:12px;
-}
-
-/* SIDEBAR */
+/* ===== SIDEBAR ===== */
 .sidebar{
 position:fixed;
 left:-260px;
@@ -101,20 +93,25 @@ width:240px;
 height:100%;
 background:#111827;
 color:white;
-padding:90px 20px 20px 20px;
+padding:100px 20px 20px 20px;
 transition:.4s ease;
-z-index:1000;
+z-index:1100;
 }
 .sidebar.active{left:0}
 
 .sidebar-header{
 position:absolute;
-top:20px;
+top:25px;
 left:20px;
 right:20px;
 display:flex;
 justify-content:space-between;
 align-items:center;
+}
+
+.sidebar-header h3{
+margin:0;
+font-size:20px;
 }
 
 .brand-item{
@@ -126,16 +123,17 @@ cursor:pointer;
 }
 .brand-item.active{background:#374151}
 
+/* ===== OVERLAY ===== */
 .overlay{
 position:fixed;
 inset:0;
 background:rgba(0,0,0,.4);
 display:none;
-z-index:900;
+z-index:1000;
 }
 .overlay.active{display:block}
 
-/* MAIN */
+/* ===== MAIN ===== */
 .main{
 height:100%;
 display:flex;
@@ -143,9 +141,10 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 text-align:center;
+padding-top:70px;
 }
 
-/* BUTTONS */
+/* ===== BUTTON ===== */
 button{
 width:260px;
 padding:14px;
@@ -158,7 +157,7 @@ background:#6b7280;
 color:white;
 }
 
-/* THEME BUTTON */
+/* ===== THEME ===== */
 .theme-btn{
 width:45px;
 height:45px;
@@ -171,7 +170,6 @@ justify-content:center;
 cursor:pointer;
 }
 
-/* THEME PANEL */
 .theme-panel{
 position:absolute;
 top:70px;
@@ -182,20 +180,19 @@ border-radius:12px;
 display:none;
 flex-direction:column;
 gap:8px;
-z-index:1200;
+z-index:1300;
 }
 .theme-panel.active{display:flex}
 
-/* SLIDER */
 .slider-panel{
 position:fixed;
-bottom:-150px;
+bottom:-160px;
 left:0;
 width:100%;
 background:white;
 padding:20px;
 transition:.5s ease;
-z-index:1500;
+z-index:1400;
 text-align:center;
 }
 .slider-panel.active{bottom:0}
@@ -206,8 +203,35 @@ justify-content:space-between;
 align-items:center;
 }
 
+/* ===== TEXT CONTRAST ===== */
 .light-text{color:white}
 .dark-text{color:black}
+
+.time, .mode-label{
+text-align:right;
+}
+
+/* ===== MOBILE FIX ===== */
+@media(max-width:600px){
+
+.sidebar{
+width:100%;
+left:-100%;
+}
+
+.sidebar.active{
+left:0;
+}
+
+.sidebar{
+padding-top:120px; /* ดันคำว่า Brand ลง */
+}
+
+.sidebar-header{
+top:35px; /* ลดทับ */
+}
+
+}
 
 </style>
 </head>
@@ -219,9 +243,7 @@ align-items:center;
 <!-- HEADER -->
 <div class="header">
 
-<div style="display:flex;align-items:center;gap:10px">
 <div class="menu-btn" onclick="toggleMenu()">☰</div>
-</div>
 
 <div style="text-align:right">
 <div class="time" id="time"></div>
@@ -234,11 +256,14 @@ align-items:center;
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
+
 <div class="sidebar-header">
 <h3>Brand</h3>
 <div onclick="closeMenu()" style="cursor:pointer">✕</div>
 </div>
+
 ${menu}
+
 </div>
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
@@ -271,7 +296,7 @@ oninput="adjustBrightness(this.value)">
 
 let sliderTimeout;
 
-/* MENU */
+/* ===== MENU ===== */
 function toggleMenu(){
 sidebar.classList.toggle("active");
 overlay.classList.toggle("active");
@@ -285,7 +310,7 @@ closeMenu();
 window.location="/portal/"+b;
 }
 
-/* TIME */
+/* ===== TIME ===== */
 function updateTime(){
 const now=new Date();
 time.innerText=now.toLocaleString('th-TH');
@@ -293,15 +318,14 @@ time.innerText=now.toLocaleString('th-TH');
 setInterval(updateTime,1000);
 updateTime();
 
-/* THEME */
+/* ===== THEME ===== */
 function toggleTheme(){
 themePanel.classList.toggle("active");
 }
 
 function updateContrast(isDark){
 mainText.className=isDark?"main light-text":"main dark-text";
-themePanel.style.background=isDark?"#222":"#fff";
-themePanel.style.color=isDark?"white":"black";
+document.querySelector(".header").className=isDark?"header light-text":"header dark-text";
 }
 
 function setLight(){
