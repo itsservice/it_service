@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -47,6 +48,116 @@ app.get('/', (_, res) => res.send('SERVER OK'));
 
 
 // ======================================================
+// 🌐 WEB PORTAL PAGE
+// ======================================================
+app.get('/portal', (req, res) => {
+
+  res.send(`
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GD Service Portal</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .container {
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+      }
+      .brand {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 30px;
+      }
+      .time {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        font-size: 14px;
+        color: #555;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .primary {
+        background-color: #007bff;
+        color: white;
+      }
+      .secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      @media (max-width: 768px) {
+        body {
+          background: #ffffff;
+        }
+        .brand {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="time" id="time"></div>
+
+    <div class="container">
+      <div class="brand">GD</div>
+
+      <button class="primary" onclick="openLink('https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf')">
+        แจ้งปัญหา
+      </button>
+
+      <button class="secondary" onclick="openLink('https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc')">
+        ติดตาม Ticket
+      </button>
+    </div>
+
+    <script>
+      function openLink(url) {
+        window.location.href = url;
+      }
+
+      function updateTime() {
+        const now = new Date();
+        const options = {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        document.getElementById('time').innerText =
+          now.toLocaleString('th-TH', options);
+      }
+
+      updateTime();
+      setInterval(updateTime, 1000);
+    </script>
+
+  </body>
+  </html>
+  `);
+});
+
+
+// ======================================================
 // LARK WEBHOOK
 // ======================================================
 app.post('/lark/webhook', async (req, res) => {
@@ -58,34 +169,25 @@ app.post('/lark/webhook', async (req, res) => {
     console.log('\n📥 LARK RAW');
     console.log(JSON.stringify(body, null, 2));
 
-    // ================= DECRYPT =================
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
       console.log('🔓 LARK DECRYPTED');
       console.log(JSON.stringify(body, null, 2));
     }
 
-    // ================= URL VERIFICATION =================
     if (body.type === 'url_verification') {
       return res.json({ challenge: body.challenge });
     }
 
-    // ตอบทันที กัน timeout
     res.json({ ok: true });
 
     const data = body.event || body;
 
-    console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
-
-    // ================= URL =================
     const recordUrl =
       data.recordUrl && data.recordUrl.trim() !== ''
         ? data.recordUrl
         : null;
 
-    console.log('🔗 RECORD URL:', recordUrl);
-
-    // ================= SEND TO LINE =================
     if (data.line_user_id || data.line_group_id) {
 
       const target = data.line_user_id || data.line_group_id;
@@ -100,72 +202,8 @@ app.post('/lark/webhook', async (req, res) => {
             layout: "vertical",
             spacing: "sm",
             contents: [
-
-              {
-                type: "text",
-                text: data.type || "Report Ticket",
-                weight: "bold",
-                size: "lg"
-              },
-
-              { type: "separator", margin: "md" },
-
-              {
-                type: "text",
-                text: `Ticket ID: ${data.ticket_id || '-'}`,
-                size: "sm",
-                wrap: true
-              },
-              {
-                type: "text",
-                text: `วันที่: ${data.ticketDate || '-'}`,
-                size: "sm",
-                wrap: true
-              },
-
-              { type: "separator", margin: "md" },
-
-              {
-                type: "text",
-                text: `ประเภท/อุปกรณ์: ${data.title || '-'}`,
-                size: "sm",
-                wrap: true
-              },
-              {
-                type: "text",
-                text: `รายละเอียด/อาการ: ${data.symptom || '-'}`,
-                size: "sm",
-                wrap: true
-              },
-
-              { type: "separator", margin: "md" },
-
-              {
-                type: "text",
-                text: `สาขา: ${data.branch || '-'}`,
-                size: "sm"
-              },
-              {
-                type: "text",
-                text: `รหัสสาขา: ${data.branch_code || '-'}`,
-                size: "sm"
-              },
-
-              { type: "separator", margin: "md" },
-
-              {
-                type: "text",
-                text: `เบอร์โทร: ${data.phone || '-'}`,
-                size: "sm",
-                wrap: true
-              },
-              {
-                type: "text",
-                text: `สถานะ: ${data.status || '-'}`,
-                size: "sm",
-                wrap: true
-              }
-
+              { type: "text", text: data.ticket_id || "Report Ticket", weight: "bold", size: "lg" },
+              { type: "text", text: \`สถานะ: \${data.status || '-'}\`, size: "sm" }
             ]
           },
           footer: recordUrl
@@ -189,8 +227,6 @@ app.post('/lark/webhook', async (req, res) => {
       };
 
       await linePushFlex(target, flexMessage);
-
-      console.log('✅ PUSH SUCCESS');
     }
 
   } catch (err) {
@@ -201,5 +237,5 @@ app.post('/lark/webhook', async (req, res) => {
 
 // ================= START =================
 app.listen(PORT, () =>
-  console.log(`🚀 SERVER STARTED : PORT ${PORT}`)
+  console.log(\`🚀 SERVER STARTED : PORT \${PORT}\`)
 );
