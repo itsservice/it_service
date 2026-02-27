@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
-const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -12,17 +11,18 @@ const PORT = process.env.PORT || 3000;
 const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
 const lineHeaders = {
-  Authorization: `Bearer ${LINE_TOKEN}`,
+  Authorization: 'Bearer ' + LINE_TOKEN,
   'Content-Type': 'application/json'
 };
 
 // ================= LINE PUSH FLEX =================
-const linePushFlex = (to, flexMessage) =>
-  axios.post(
+async function linePushFlex(to, flexMessage) {
+  return axios.post(
     'https://api.line.me/v2/bot/message/push',
-    { to, messages: [flexMessage] },
+    { to: to, messages: [flexMessage] },
     { headers: lineHeaders }
   );
+}
 
 // ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
@@ -104,12 +104,8 @@ app.get('/portal', (req, res) => {
         color: white;
       }
       @media (max-width: 768px) {
-        body {
-          background: #ffffff;
-        }
-        .brand {
-          font-size: 24px;
-        }
+        body { background: #ffffff; }
+        .brand { font-size: 24px; }
       }
     </style>
   </head>
@@ -120,23 +116,21 @@ app.get('/portal', (req, res) => {
     <div class="container">
       <div class="brand">GD</div>
 
-      <button class="primary" onclick="openLink('https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf')">
+      <button class="primary"
+        onclick="window.location.href='https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf'">
         แจ้งปัญหา
       </button>
 
-      <button class="secondary" onclick="openLink('https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc')">
+      <button class="secondary"
+        onclick="window.location.href='https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc'">
         ติดตาม Ticket
       </button>
     </div>
 
     <script>
-      function openLink(url) {
-        window.location.href = url;
-      }
-
       function updateTime() {
-        const now = new Date();
-        const options = {
+        var now = new Date();
+        var options = {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
@@ -146,7 +140,6 @@ app.get('/portal', (req, res) => {
         document.getElementById('time').innerText =
           now.toLocaleString('th-TH', options);
       }
-
       updateTime();
       setInterval(updateTime, 1000);
     </script>
@@ -166,13 +159,12 @@ app.post('/lark/webhook', async (req, res) => {
 
     let body = req.body;
 
-    console.log('\n📥 LARK RAW');
+    console.log('📥 LARK RAW');
     console.log(JSON.stringify(body, null, 2));
 
     if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
       body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
       console.log('🔓 LARK DECRYPTED');
-      console.log(JSON.stringify(body, null, 2));
     }
 
     if (body.type === 'url_verification') {
@@ -192,50 +184,65 @@ app.post('/lark/webhook', async (req, res) => {
 
       const target = data.line_user_id || data.line_group_id;
 
-      const flexMessage = {
-        type: "flex",
-        altText: `Ticket ${data.ticket_id || ''}`,
-        contents: {
-          type: "bubble",
-          body: {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            contents: [
-              { type: "text", text: data.ticket_id || "Report Ticket", weight: "bold", size: "lg" },
-              { type: "text", text: \`สถานะ: \${data.status || '-'}\`, size: "sm" }
-            ]
-          },
-          footer: recordUrl
-            ? {
-                type: "box",
-                layout: "vertical",
-                contents: [
-                  {
-                    type: "button",
-                    style: "primary",
-                    action: {
-                      type: "uri",
-                      label: "เปิดรายการ",
-                      uri: recordUrl
-                    }
-                  }
-                ]
-              }
-            : undefined
+      const bubble = {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            {
+              type: "text",
+              text: data.ticket_id || "Report Ticket",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "สถานะ: " + (data.status || "-"),
+              size: "sm",
+              wrap: true
+            }
+          ]
         }
       };
 
+      // เพิ่ม footer เฉพาะกรณีมีลิงก์
+      if (recordUrl) {
+        bubble.footer = {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "เปิดรายการ",
+                uri: recordUrl
+              }
+            }
+          ]
+        };
+      }
+
+      const flexMessage = {
+        type: "flex",
+        altText: "Ticket " + (data.ticket_id || ""),
+        contents: bubble
+      };
+
       await linePushFlex(target, flexMessage);
+      console.log("✅ PUSH SUCCESS");
     }
 
   } catch (err) {
-    console.error('❌ LARK ERROR:', err.message);
+    console.error('❌ LARK ERROR:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
 
 // ================= START =================
-app.listen(PORT, () =>
-  console.log(\`🚀 SERVER STARTED : PORT \${PORT}\`)
-);
+app.listen(PORT, () => {
+  console.log("🚀 SERVER STARTED : PORT " + PORT);
+});
