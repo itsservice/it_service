@@ -56,121 +56,91 @@ app.get('/portal/:brand', (req, res) => {
 
 function renderPortal(brandKey, res) {
 
-  const brand = brands[brandKey];
-  if (!brand) return res.status(404).send("Brand not found");
+const brand = brands[brandKey];
+if (!brand) return res.status(404).send("Brand not found");
 
-  const brandMenu = Object.keys(brands).map(key => `
-    <div class="brand-item ${key === brandKey ? 'active' : ''}"
-         onclick="goBrand('${key}')">
-      ${brands[key].brandName}
-    </div>
-  `).join("");
+const brandMenu = Object.keys(brands).map(key => `
+  <div class="brand-item ${key === brandKey ? 'active' : ''}"
+       onclick="goBrand('${key}')">
+    ${brands[key].brandName}
+  </div>
+`).join("");
 
-  res.send(`
+res.send(`
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${brand.brandName} Portal</title>
+<title>${brand.brandName}</title>
 
 <style>
-* { box-sizing:border-box; }
-
-body {
+*{box-sizing:border-box;}
+body{
   margin:0;
-  font-family:Arial, sans-serif;
-  display:flex;
+  font-family:Arial;
   height:100vh;
-  background:#f3f4f6;
   overflow:hidden;
-  transition:0.3s;
+  background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
+  transition:background 1.5s ease, color 1s ease;
 }
 
-/* DARK MODE */
-.dark {
-  background:#0f172a;
-  color:white;
-}
-.dark .main { background:#111827; }
-.dark .time { color:#cbd5e1; }
-
-/* SIDEBAR */
-.sidebar {
-  width:240px;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-.sidebar h2 { margin-bottom:25px; }
-
-.brand-item {
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  text-align:center;
-  background:#1e293b;
-  border-radius:8px;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.brand-item:hover {
+/* ========= SIDEBAR ========= */
+.menu-btn{
+  position:absolute;
+  top:20px;
+  left:20px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
   background:${brand.primaryColor};
-}
-
-.brand-item.active {
-  background:${brand.primaryColor};
-}
-
-/* DIVIDER */
-.divider {
-  width:4px;
-  background:#1e293b;
-}
-
-/* MAIN */
-.main {
-  flex:1;
-  position:relative;
+  color:white;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:white;
-  transition:0.3s;
+  font-size:22px;
+  cursor:pointer;
+  overflow:hidden;
 }
 
-/* HEADER ITEMS */
-.settings {
-  position:absolute;
-  top:20px;
-  right:40px;
-  font-size:20px;
+.sidebar{
+  position:fixed;
+  left:-260px;
+  top:0;
+  width:240px;
+  height:100%;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+  transition:0.5s cubic-bezier(.68,-0.55,.27,1.55);
+  backdrop-filter:blur(10px);
+}
+
+.sidebar.active{
+  left:0;
+}
+
+.brand-item{
+  padding:12px;
+  margin:6px 0;
+  background:#1e293b;
+  border-radius:8px;
   cursor:pointer;
 }
-
-.time {
-  position:absolute;
-  top:20px;
-  right:90px;
-  font-size:14px;
-  color:#555;
+.brand-item.active{
+  background:${brand.primaryColor};
 }
 
-/* CENTER */
-.center {
+/* ========= MAIN ========= */
+.main{
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
   text-align:center;
 }
 
-.center h1 {
-  margin-bottom:30px;
-}
-
-/* BUTTONS */
-button {
+button{
   width:260px;
   padding:14px;
   margin:10px;
@@ -178,49 +148,86 @@ button {
   border-radius:10px;
   font-size:16px;
   cursor:pointer;
-  transition:0.2s;
+  position:relative;
+  overflow:hidden;
 }
 
-.primary {
+.primary{
   background:${brand.primaryColor};
   color:white;
 }
-
-.secondary {
+.secondary{
   background:#4b5563;
   color:white;
 }
 
-/* FADE */
-.fade-up {
-  opacity:0;
-  transform:translateY(30px);
-  animation:fadeUp 0.7s ease forwards;
+/* ========= RIPPLE ========= */
+button span{
+  position:absolute;
+  background:rgba(255,255,255,0.5);
+  transform:scale(0);
+  border-radius:50%;
+  animation:ripple 0.6s linear;
 }
-
-.fade-up:nth-child(1){animation-delay:0.2s;}
-.fade-up:nth-child(2){animation-delay:0.4s;}
-.fade-up:nth-child(3){animation-delay:0.6s;}
-
-@keyframes fadeUp {
-  to { opacity:1; transform:translateY(0); }
-}
-
-/* RESPONSIVE */
-@media(max-width:900px){
-  .sidebar { width:180px; }
-  button { width:200px; }
-}
-
-@media(max-width:600px){
-  body { flex-direction:column; }
-  .sidebar {
-    width:100%;
-    flex-direction:row;
-    overflow-x:auto;
+@keyframes ripple{
+  to{
+    transform:scale(4);
+    opacity:0;
   }
-  .divider { display:none; }
-  .brand-item { margin:5px; }
+}
+
+/* ========= THEME BUTTON ========= */
+.theme-btn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+
+.theme-options{
+  position:absolute;
+  top:90px;
+  right:20px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+}
+.theme-options.active{
+  display:flex;
+}
+.theme-options div{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:white;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(0,0,0,0.2);
+}
+
+/* DARK */
+.dark{
+  background:linear-gradient(135deg,#0f172a,#111827);
+  color:white;
+}
+
+/* FADE */
+.fade{
+  animation:fadeIn 0.7s ease;
+}
+@keyframes fadeIn{
+  from{opacity:0;}
+  to{opacity:1;}
 }
 
 </style>
@@ -228,62 +235,99 @@ button {
 
 <body>
 
-<div class="sidebar">
+<div class="menu-btn" onclick="toggleSidebar()">☰</div>
+
+<div class="sidebar" id="sidebar">
   <h2>Brand</h2>
   ${brandMenu}
 </div>
 
-<div class="divider"></div>
+<div class="theme-btn" onclick="toggleThemeMenu()">⚙</div>
 
-<div class="main">
+<div class="theme-options" id="themeOptions">
+  <div onclick="setLight()">🌞</div>
+  <div onclick="setDark()">🌙</div>
+  <div onclick="setAuto()">🕒</div>
+  <div onclick="setCustom()">🎛</div>
+</div>
 
-  <div class="settings" onclick="toggleDark()">⚙</div>
-  <div class="time" id="time"></div>
+<div class="main fade">
+  <h1>${brand.brandName}</h1>
 
-  <div class="center">
-    <h1 class="fade-up">${brand.brandName}</h1>
+  <button class="primary" onclick="navigate(event,'${brand.reportUrl}')">
+    แจ้งปัญหา
+  </button>
 
-    <button class="primary fade-up"
-      onclick="window.location.href='${brand.reportUrl}'">
-      แจ้งปัญหา
-    </button>
-
-    <br>
-
-    <button class="secondary fade-up"
-      onclick="window.location.href='${brand.trackUrl}'">
-      ติดตาม Ticket
-    </button>
-  </div>
-
+  <button class="secondary" onclick="navigate(event,'${brand.trackUrl}')">
+    ติดตาม Ticket
+  </button>
 </div>
 
 <script>
 
+/* ===== SIDEBAR ===== */
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("active");
+}
+
+/* ===== RIPPLE ===== */
+function navigate(e,url){
+  const btn=e.currentTarget;
+  const circle=document.createElement("span");
+  circle.style.width=circle.style.height=
+    Math.max(btn.clientWidth,btn.clientHeight)+"px";
+  circle.style.left=e.offsetX-circle.offsetX+"px";
+  circle.style.top=e.offsetY-circle.offsetY+"px";
+  btn.appendChild(circle);
+  setTimeout(()=>window.location.href=url,300);
+}
+
+/* ===== THEME MENU ===== */
+function toggleThemeMenu(){
+  document.getElementById("themeOptions").classList.toggle("active");
+}
+
+function setLight(){
+  document.body.classList.remove("dark");
+  localStorage.setItem("theme","light");
+}
+
+function setDark(){
+  document.body.classList.add("dark");
+  localStorage.setItem("theme","dark");
+}
+
+function setAuto(){
+  localStorage.setItem("theme","auto");
+  applyAutoTheme();
+}
+
+function setCustom(){
+  const val=prompt("ใส่ค่าความเข้ม 0-100");
+  document.body.style.filter="brightness("+(val/100)+")";
+}
+
+/* ===== AUTO THEME ===== */
+function applyAutoTheme(){
+  const hour=new Date().getHours();
+  if(hour>=8 && hour<18){
+    setLight();
+  }else{
+    setDark();
+  }
+}
+
+(function(){
+  const saved=localStorage.getItem("theme");
+  if(saved==="dark") setDark();
+  else if(saved==="light") setLight();
+  else applyAutoTheme();
+})();
+
+/* ===== NAV ===== */
 function goBrand(b){
-  window.location.href = "/portal/" + b;
+  window.location.href="/portal/"+b;
 }
-
-function toggleDark(){
-  document.body.classList.toggle("dark");
-}
-
-function updateTime(){
-  const now = new Date();
-  const options = {
-    day:'2-digit',
-    month:'2-digit',
-    year:'numeric',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit'
-  };
-  document.getElementById('time').innerText =
-    now.toLocaleString('th-TH', options);
-}
-
-updateTime();
-setInterval(updateTime,1000);
 
 </script>
 
