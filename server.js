@@ -1,376 +1,205 @@
 require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
+const crypto = require('crypto');
+
 const app = express();
+app.use(express.json());
+
+// ================= CONFIG =================
 const PORT = process.env.PORT || 3000;
+const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-/* ===== BRAND ===== */
-
-const brands = {
-  GD:{brandName:"GD"},
-  ABP:{brandName:"ABP"},
-  GH:{brandName:"GH"},
-  BR4:{brandName:"BR4"},
-  BR5:{brandName:"BR5"},
-  BR6:{brandName:"BR6"},
-  BR7:{brandName:"BR7"},
-  BR8:{brandName:"BR8"},
-  BR9:{brandName:"BR9"}
+const lineHeaders = {
+  Authorization: `Bearer ${LINE_TOKEN}`,
+  'Content-Type': 'application/json'
 };
 
-app.get('/',(_,res)=>res.send("SERVER OK"));
-app.get('/portal',(req,res)=>render("GD",res));
-app.get('/portal/:brand',(req,res)=>render(req.params.brand.toUpperCase(),res));
+// ================= LINE PUSH FLEX =================
+const linePushFlex = (to, flexMessage) =>
+  axios.post(
+    'https://api.line.me/v2/bot/message/push',
+    { to, messages: [flexMessage] },
+    { headers: lineHeaders }
+  );
 
-function render(key,res){
+// ================= LARK DECRYPT =================
+function decryptLark(encryptKey, encrypt) {
+  const key = crypto.createHash('sha256').update(encryptKey).digest();
+  const iv = key.slice(0, 16);
 
-if(!brands[key]) return res.send("Brand not found");
-const brand=brands[key];
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  decipher.setAutoPadding(false);
 
-const menu=Object.keys(brands).map(k=>`
-<div class="brand-item ${k===key?'active':''}" onclick="goBrand('${k}')">
-${brands[k].brandName}
-</div>`).join("");
+  let decrypted = Buffer.concat([
+    decipher.update(encrypt, 'base64'),
+    decipher.final()
+  ]);
 
-res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${brand.brandName}</title>
+  const pad = decrypted[decrypted.length - 1];
+  decrypted = decrypted.slice(0, decrypted.length - pad);
 
-<style>
-*{box-sizing:border-box}
-body{
-margin:0;
-font-family:Arial;
-height:100vh;
-overflow:hidden;
-transition:color .4s ease;
+  return JSON.parse(decrypted.toString('utf8'));
 }
 
-/* ===== BACKGROUND ===== */
-.bg{
-position:fixed;
-inset:0;
-background:linear-gradient(135deg,#ffffff,#e5e7eb);
-transition:1.5s ease;
-z-index:-1;
-}
+// ================= HEALTH =================
+app.get('/', (_, res) => res.send('SERVER OK'));
 
-/* ===== HEADER ===== */
-.header{
-position:fixed;
-top:0;
-left:0;
-right:0;
-height:70px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 20px;
-z-index:1200;
-}
 
-/* ===== MENU BUTTON ===== */
-.menu-btn{
-width:45px;
-height:45px;
-border-radius:50%;
-background:#4b5563;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-transition:.3s ease;
-}
+// ======================================================
+// LARK WEBHOOK
+// ======================================================
+app.post('/lark/webhook', async (req, res) => {
 
-/* ซ่อนตอน sidebar เปิด */
-.menu-btn.hidden{
-opacity:0;
-pointer-events:none;
-}
+  try {
 
-/* ===== SIDEBAR ===== */
-.sidebar{
-position:fixed;
-left:-260px;
-top:0;
-width:240px;
-height:100%;
-background:#111827;
-color:white;
-padding:110px 20px 20px 20px;
-transition:.4s ease;
-z-index:1100;
-}
-.sidebar.active{left:0}
+    let body = req.body;
 
-.sidebar-header{
-position:absolute;
-top:30px;
-left:20px;
-right:20px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
+    console.log('\n📥 LARK RAW');
+    console.log(JSON.stringify(body, null, 2));
 
-.brand-item{
-padding:12px;
-margin:6px 0;
-background:#1f2937;
-border-radius:8px;
-cursor:pointer;
-}
-.brand-item.active{background:#374151}
+    // ================= DECRYPT =================
+    if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
+      body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
+      console.log('🔓 LARK DECRYPTED');
+      console.log(JSON.stringify(body, null, 2));
+    }
 
-/* ===== OVERLAY ===== */
-.overlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.4);
-display:none;
-z-index:1000;
-}
-.overlay.active{display:block}
+    // ================= URL VERIFICATION =================
+    if (body.type === 'url_verification') {
+      return res.json({ challenge: body.challenge });
+    }
 
-/* ===== MAIN ===== */
-.main{
-height:100%;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-padding-top:70px;
-}
+    // ตอบทันที กัน timeout
+    res.json({ ok: true });
 
-/* ===== BUTTON ===== */
-button{
-width:260px;
-padding:14px;
-margin:10px;
-border:none;
-border-radius:10px;
-font-size:16px;
-cursor:pointer;
-background:#6b7280;
-color:white;
-}
+    const data = body.event || body;
 
-/* ===== THEME ===== */
-.theme-btn{
-width:45px;
-height:45px;
-border-radius:50%;
-background:#6b7280;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-}
+    console.log('📦 LARK DATA:', JSON.stringify(data, null, 2));
 
-.theme-panel{
-position:absolute;
-top:70px;
-right:20px;
-background:white;
-padding:10px;
-border-radius:12px;
-display:none;
-flex-direction:column;
-gap:8px;
-z-index:1300;
-}
-.theme-panel.active{display:flex}
+    // ================= URL =================
+    const recordUrl =
+      data.recordUrl && data.recordUrl.trim() !== ''
+        ? data.recordUrl
+        : null;
 
-.slider-panel{
-position:fixed;
-bottom:-160px;
-left:0;
-width:100%;
-background:white;
-padding:20px;
-transition:.5s ease;
-z-index:1400;
-text-align:center;
-}
-.slider-panel.active{bottom:0}
+    console.log('🔗 RECORD URL:', recordUrl);
 
-.slider-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
+    // ================= SEND TO LINE =================
+    if (data.line_user_id || data.line_group_id) {
 
-.light-text{color:white}
-.dark-text{color:black}
+      const target = data.line_user_id || data.line_group_id;
 
-/* ===== MOBILE ===== */
-@media(max-width:600px){
+      const flexMessage = {
+        type: "flex",
+        altText: `Ticket ${data.ticket_id || ''}`,
+        contents: {
+          type: "bubble",
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: [
 
-.sidebar{
-width:100%;
-left:-100%;
-}
+              {
+                type: "text",
+                text: data.type || "Report Ticket",
+                weight: "bold",
+                size: "lg"
+              },
 
-.sidebar.active{
-left:0;
-}
+              { type: "separator", margin: "md" },
 
-}
+              {
+                type: "text",
+                text: `Ticket ID: ${data.ticket_id || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `วันที่: ${data.ticketDate || '-'}`,
+                size: "sm",
+                wrap: true
+              },
 
-</style>
-</head>
+              { type: "separator", margin: "md" },
 
-<body>
+              {
+                type: "text",
+                text: `ประเภท/อุปกรณ์: ${data.title || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `รายละเอียด/อาการ: ${data.symptom || '-'}`,
+                size: "sm",
+                wrap: true
+              },
 
-<div class="bg" id="bg"></div>
+              { type: "separator", margin: "md" },
 
-<!-- HEADER -->
-<div class="header">
+              {
+                type: "text",
+                text: `สาขา: ${data.branch || '-'}`,
+                size: "sm"
+              },
+              {
+                type: "text",
+                text: `รหัสสาขา: ${data.branch_code || '-'}`,
+                size: "sm"
+              },
 
-<div class="menu-btn" id="menuBtn" onclick="toggleMenu()">☰</div>
+              { type: "separator", margin: "md" },
 
-<div style="text-align:right">
-<div id="time"></div>
-<div id="modeLabel"></div>
-</div>
+              {
+                type: "text",
+                text: `เบอร์โทร: ${data.phone || '-'}`,
+                size: "sm",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: `สถานะ: ${data.status || '-'}`,
+                size: "sm",
+                wrap: true
+              }
 
-<div class="theme-btn" onclick="toggleTheme()">⚙</div>
+            ]
+          },
+          footer: recordUrl
+            ? {
+                type: "box",
+                layout: "vertical",
+                contents: [
+                  {
+                    type: "button",
+                    style: "primary",
+                    action: {
+                      type: "uri",
+                      label: "เปิดรายการ",
+                      uri: recordUrl
+                    }
+                  }
+                ]
+              }
+            : undefined
+        }
+      };
 
-</div>
+      await linePushFlex(target, flexMessage);
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
+      console.log('✅ PUSH SUCCESS');
+    }
 
-<div class="sidebar-header">
-<h3>Brand</h3>
-<div onclick="closeMenu()" style="cursor:pointer">✕</div>
-</div>
+  } catch (err) {
+    console.error('❌ LARK ERROR:', err.message);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-${menu}
-
-</div>
-
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
-
-<!-- THEME -->
-<div class="theme-panel" id="themePanel">
-<div onclick="setLight()">🌞 Light</div>
-<div onclick="setDark()">🌙 Dark</div>
-<div onclick="setAuto()">🕒 Auto</div>
-<div onclick="openSlider()">🎛 Custom</div>
-</div>
-
-<div class="slider-panel" id="sliderPanel">
-<div class="slider-header">
-<div>Custom Brightness</div>
-<div onclick="closeSlider()" style="cursor:pointer">✕</div>
-</div>
-<input type="range" min="50" max="150" value="100"
-oninput="adjustBrightness(this.value)">
-</div>
-
-<!-- MAIN -->
-<div class="main" id="mainText">
-<h1>${brand.brandName}</h1>
-<button>แจ้งปัญหา</button>
-<button>ติดตาม Ticket</button>
-</div>
-
-<script>
-
-let sliderTimeout;
-
-/* ===== MENU ===== */
-function toggleMenu(){
-sidebar.classList.add("active");
-overlay.classList.add("active");
-menuBtn.classList.add("hidden");
-}
-function closeMenu(){
-sidebar.classList.remove("active");
-overlay.classList.remove("active");
-menuBtn.classList.remove("hidden");
-}
-function goBrand(b){
-closeMenu();
-window.location="/portal/"+b;
-}
-
-/* ===== TIME ===== */
-function updateTime(){
-const now=new Date();
-time.innerText=now.toLocaleString('th-TH');
-}
-setInterval(updateTime,1000);
-updateTime();
-
-/* ===== THEME ===== */
-function toggleTheme(){
-themePanel.classList.toggle("active");
-}
-
-function updateContrast(isDark){
-mainText.className=isDark?"main light-text":"main dark-text";
-header.className=isDark?"header light-text":"header dark-text";
-}
-
-function setLight(){
-closeSlider();
-bg.style.background="linear-gradient(135deg,#ffffff,#e5e7eb)";
-bg.style.filter="brightness(100%)";
-updateContrast(false);
-modeLabel.innerText="Light Mode";
-}
-
-function setDark(){
-closeSlider();
-bg.style.background="linear-gradient(135deg,#0f172a,#111827)";
-bg.style.filter="brightness(100%)";
-updateContrast(true);
-modeLabel.innerText="Dark Mode";
-}
-
-function setAuto(){
-closeSlider();
-const h=new Date().getHours();
-if(h>=8 && h<18){
-setLight();
-modeLabel.innerText="Auto Mode (Light)";
-}else{
-setDark();
-modeLabel.innerText="Auto Mode (Dark)";
-}
-}
-
-function openSlider(){
-modeLabel.innerText="Custom Mode";
-sliderPanel.classList.add("active");
-sliderTimeout=setTimeout(closeSlider,3000);
-}
-
-function adjustBrightness(val){
-clearTimeout(sliderTimeout);
-bg.style.filter="brightness("+val+"%)";
-sliderTimeout=setTimeout(closeSlider,3000);
-}
-
-function closeSlider(){
-sliderPanel.classList.remove("active");
-}
-
-/* INIT */
-setAuto();
-
-</script>
-
-</body>
-</html>
-`);
-}
-
-app.listen(PORT,()=>console.log("SERVER RUNNING"));
+// ================= START =================
+app.listen(PORT, () =>
+  console.log(`🚀 SERVER STARTED : PORT ${PORT}`)
+);
