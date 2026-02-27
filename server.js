@@ -7,7 +7,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 /* =====================================================
-   BRAND CONFIG (แก้ลิงก์ตรงนี้อย่างเดียวพอ)
+   BRAND CONFIG (แก้ลิงก์เฉพาะตรงนี้)
 ===================================================== */
 
 const brands = {
@@ -28,20 +28,35 @@ const brands = {
 };
 
 /* =====================================================
-   HEALTH
+   HEALTH CHECK
 ===================================================== */
 
-app.get('/', (_, res) => res.send("SERVER OK"));
+app.get('/', (_, res) => {
+  res.send("SERVER OK");
+});
 
 /* =====================================================
-   PORTAL
+   ROUTES (ไม่ใช้ :brand? อีกต่อไป)
 ===================================================== */
 
-app.get('/portal/:brand?', (req, res) => {
+// Default → GD
+app.get('/portal', (req, res) => {
+  renderPortal("GD", res);
+});
 
-  const brandKey = (req.params.brand || "GD").toUpperCase();
+// Specific brand
+app.get('/portal/:brand', (req, res) => {
+  const brandKey = req.params.brand.toUpperCase();
+  renderPortal(brandKey, res);
+});
+
+/* =====================================================
+   RENDER FUNCTION
+===================================================== */
+
+function renderPortal(brandKey, res) {
+
   const brand = brands[brandKey];
-
   if (!brand) return res.status(404).send("Brand not found");
 
   const brandMenu = Object.keys(brands).map(key => `
@@ -59,33 +74,27 @@ app.get('/portal/:brand?', (req, res) => {
 <title>${brand.brandName} Portal</title>
 
 <style>
-
-/* ================= RESET ================= */
-
-* { box-sizing: border-box; }
+* { box-sizing:border-box; }
 
 body {
   margin:0;
-  font-family: Arial, sans-serif;
-  background:#f3f4f6;
+  font-family:Arial, sans-serif;
   display:flex;
   height:100vh;
+  background:#f3f4f6;
   overflow:hidden;
   transition:0.3s;
 }
 
-/* ================= DARK MODE ================= */
-
+/* DARK MODE */
 .dark {
   background:#0f172a;
   color:white;
 }
-
 .dark .main { background:#111827; }
 .dark .time { color:#cbd5e1; }
 
-/* ================= SIDEBAR ================= */
-
+/* SIDEBAR */
 .sidebar {
   width:240px;
   background:#0f172a;
@@ -94,12 +103,9 @@ body {
   display:flex;
   flex-direction:column;
   align-items:center;
-  transition:0.3s;
 }
 
-.sidebar h2 {
-  margin-bottom:25px;
-}
+.sidebar h2 { margin-bottom:25px; }
 
 .brand-item {
   width:100%;
@@ -120,27 +126,24 @@ body {
   background:${brand.primaryColor};
 }
 
-/* ================= DIVIDER ================= */
-
+/* DIVIDER */
 .divider {
   width:4px;
   background:#1e293b;
 }
 
-/* ================= MAIN ================= */
-
+/* MAIN */
 .main {
   flex:1;
   position:relative;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#ffffff;
+  background:white;
   transition:0.3s;
 }
 
-/* ================= HEADER ITEMS ================= */
-
+/* HEADER ITEMS */
 .settings {
   position:absolute;
   top:20px;
@@ -157,8 +160,7 @@ body {
   color:#555;
 }
 
-/* ================= CENTER ================= */
-
+/* CENTER */
 .center {
   text-align:center;
 }
@@ -167,8 +169,7 @@ body {
   margin-bottom:30px;
 }
 
-/* ================= BUTTONS ================= */
-
+/* BUTTONS */
 button {
   width:260px;
   padding:14px;
@@ -185,17 +186,12 @@ button {
   color:white;
 }
 
-.primary:hover { opacity:0.9; }
-
 .secondary {
   background:#4b5563;
   color:white;
 }
 
-.secondary:hover { opacity:0.9; }
-
-/* ================= FADE ANIMATION ================= */
-
+/* FADE */
 .fade-up {
   opacity:0;
   transform:translateY(30px);
@@ -210,8 +206,7 @@ button {
   to { opacity:1; transform:translateY(0); }
 }
 
-/* ================= RESPONSIVE ================= */
-
+/* RESPONSIVE */
 @media(max-width:900px){
   .sidebar { width:180px; }
   button { width:200px; }
@@ -219,7 +214,11 @@ button {
 
 @media(max-width:600px){
   body { flex-direction:column; }
-  .sidebar { width:100%; flex-direction:row; overflow-x:auto; }
+  .sidebar {
+    width:100%;
+    flex-direction:row;
+    overflow-x:auto;
+  }
   .divider { display:none; }
   .brand-item { margin:5px; }
 }
@@ -229,16 +228,13 @@ button {
 
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
   <h2>Brand</h2>
   ${brandMenu}
 </div>
 
-<!-- Divider -->
 <div class="divider"></div>
 
-<!-- Main -->
 <div class="main">
 
   <div class="settings" onclick="toggleDark()">⚙</div>
@@ -294,10 +290,10 @@ setInterval(updateTime,1000);
 </body>
 </html>
 `);
-});
+}
 
 /* =====================================================
-   START SERVER
+   START
 ===================================================== */
 
 app.listen(PORT, () => {
