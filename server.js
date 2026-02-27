@@ -1,28 +1,27 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
-/* ================= BRAND CONFIG ================= */
+/* ========= BRAND ========= */
 
 const brands = {
-  GD:{brandName:"GD",reportUrl:"#",trackUrl:"#",primaryColor:"#2563eb"},
-  ABP:{brandName:"ABP",reportUrl:"#",trackUrl:"#",primaryColor:"#16a34a"},
-  GH:{brandName:"GH",reportUrl:"#",trackUrl:"#",primaryColor:"#dc2626"},
-  BR4:{brandName:"BR4",reportUrl:"#",trackUrl:"#",primaryColor:"#9333ea"},
-  BR5:{brandName:"BR5",reportUrl:"#",trackUrl:"#",primaryColor:"#ea580c"},
-  BR6:{brandName:"BR6",reportUrl:"#",trackUrl:"#",primaryColor:"#0ea5e9"},
-  BR7:{brandName:"BR7",reportUrl:"#",trackUrl:"#",primaryColor:"#14b8a6"},
-  BR8:{brandName:"BR8",reportUrl:"#",trackUrl:"#",primaryColor:"#f43f5e"},
-  BR9:{brandName:"BR9",reportUrl:"#",trackUrl:"#",primaryColor:"#6366f1"}
+  GD:{brandName:"GD",reportUrl:"#",trackUrl:"#"},
+  ABP:{brandName:"ABP",reportUrl:"#",trackUrl:"#"},
+  GH:{brandName:"GH",reportUrl:"#",trackUrl:"#"},
+  BR4:{brandName:"BR4",reportUrl:"#",trackUrl:"#"},
+  BR5:{brandName:"BR5",reportUrl:"#",trackUrl:"#"},
+  BR6:{brandName:"BR6",reportUrl:"#",trackUrl:"#"},
+  BR7:{brandName:"BR7",reportUrl:"#",trackUrl:"#"},
+  BR8:{brandName:"BR8",reportUrl:"#",trackUrl:"#"},
+  BR9:{brandName:"BR9",reportUrl:"#",trackUrl:"#"}
 };
 
 app.get('/',(_,res)=>res.send("SERVER OK"));
-app.get('/portal',(req,res)=>renderPortal("GD",res));
-app.get('/portal/:brand',(req,res)=>renderPortal(req.params.brand.toUpperCase(),res));
+app.get('/portal',(req,res)=>render("GD",res));
+app.get('/portal/:brand',(req,res)=>render(req.params.brand.toUpperCase(),res));
 
-function renderPortal(key,res){
+function render(key,res){
 
 if(!brands[key]) return res.send("Brand not found");
 const brand=brands[key];
@@ -42,97 +41,168 @@ res.send(`
 <style>
 *{box-sizing:border-box}
 body{
-margin:0;font-family:Arial;height:100vh;overflow:hidden;
-background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
-transition:background 1.5s ease;
+margin:0;
+font-family:Arial;
+height:100vh;
+overflow:hidden;
+transition:color .5s ease;
 }
 
-/* BACKGROUND LAYER */
+/* BACKGROUND */
 .bg{
 position:fixed;inset:0;
-background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
+background:linear-gradient(135deg,#ffffff,#e5e7eb);
 transition:1.5s ease;
 z-index:-1;
 }
 
+/* TEXT AUTO CONTRAST */
+.light-text{color:white}
+.dark-text{color:black}
+
+/* MENU BUTTON */
+.menu-btn{
+position:absolute;
+top:20px;
+left:20px;
+width:45px;height:45px;
+border-radius:50%;
+background:#4b5563;
+color:white;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;
+z-index:1100;
+}
+
 /* SIDEBAR */
 .sidebar{
-position:fixed;left:-260px;top:0;width:240px;height:100%;
-background:#0f172a;color:white;padding:20px;
-transition:.4s ease;z-index:1000;
+position:fixed;
+left:-260px;
+top:0;
+width:240px;
+height:100%;
+background:#111827;
+color:white;
+padding:20px;
+transition:.4s ease;
+z-index:1000;
 }
 .sidebar.active{left:0}
-.brand-item{
-padding:12px;margin:6px 0;background:#1e293b;
-border-radius:8px;cursor:pointer;
+
+.sidebar-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
-.brand-item.active{background:${brand.primaryColor}}
+
+.close-btn{
+cursor:pointer;
+font-size:18px;
+}
+
+.brand-item{
+padding:12px;
+margin:6px 0;
+background:#1f2937;
+border-radius:8px;
+cursor:pointer;
+}
+.brand-item.active{background:#374151}
 
 .overlay{
-position:fixed;inset:0;background:rgba(0,0,0,.4);
-backdrop-filter:blur(4px);display:none;z-index:900;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.4);
+display:none;
+z-index:900;
 }
 .overlay.active{display:block}
 
-.menu-btn{
-position:absolute;top:20px;left:20px;
-width:50px;height:50px;border-radius:50%;
-background:${brand.primaryColor};color:white;
-display:flex;align-items:center;justify-content:center;
-cursor:pointer;z-index:1100;
-}
-
 /* MAIN */
 .main{
-height:100%;display:flex;
-flex-direction:column;justify-content:center;
-align-items:center;text-align:center;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
 }
 
-/* BUTTONS */
+/* BUTTONS (สีเทาทั้งหมด) */
 button{
-width:260px;padding:14px;margin:10px;
-border:none;border-radius:10px;font-size:16px;
+width:260px;
+padding:14px;
+margin:10px;
+border:none;
+border-radius:10px;
+font-size:16px;
 cursor:pointer;
+background:#6b7280;
+color:white;
 }
-.primary{background:${brand.primaryColor};color:white}
-.secondary{background:#4b5563;color:white}
 
-/* THEME */
+/* THEME BUTTON */
 .theme-btn{
-position:absolute;top:20px;right:20px;
-width:50px;height:50px;border-radius:50%;
-background:white;display:flex;align-items:center;
-justify-content:center;cursor:pointer;
+position:absolute;
+top:20px;
+right:20px;
+width:45px;height:45px;
+border-radius:50%;
+background:#6b7280;
+color:white;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;
 z-index:1100;
 }
 
 .theme-panel{
-position:absolute;top:80px;right:20px;
-background:white;padding:10px;border-radius:12px;
-display:none;flex-direction:column;gap:8px;
+position:absolute;
+top:70px;
+right:20px;
+background:white;
+padding:10px;
+border-radius:12px;
+display:none;
+flex-direction:column;
+gap:8px;
 z-index:1200;
 }
 .theme-panel.active{display:flex}
-.theme-panel div{cursor:pointer;padding:6px}
+
+.theme-panel div{cursor:pointer}
+
+/* SLIDER PANEL */
+.slider-panel{
+position:fixed;
+bottom:-150px;
+left:0;
+width:100%;
+background:white;
+padding:20px;
+transition:.5s ease;
+z-index:1500;
+text-align:center;
+}
+.slider-panel.active{bottom:0}
+.slider-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
 
 .time{
-position:absolute;top:20px;right:90px;
-font-size:14px;color:#444;
+position:absolute;
+top:20px;
+right:80px;
+font-size:14px;
 }
 
 .mode-label{
-position:absolute;top:60px;right:90px;
-font-size:12px;color:#666;
+position:absolute;
+top:50px;
+right:80px;
+font-size:12px;
 }
-
-/* SLIDER */
-.slider-panel{
-position:fixed;bottom:-120px;left:0;width:100%;
-background:white;padding:20px;text-align:center;
-transition:.4s ease;z-index:1500;
-}
-.slider-panel.active{bottom:0}
 
 </style>
 </head>
@@ -141,15 +211,20 @@ transition:.4s ease;z-index:1500;
 
 <div class="bg" id="bg"></div>
 
-<div class="menu-btn" onclick="openMenu()">☰</div>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+
 <div class="sidebar" id="sidebar">
+<div class="sidebar-header">
 <h3>Brand</h3>
-${menu}
-<button onclick="closeMenu()">❌ ปิด</button>
+<div class="close-btn" onclick="closeMenu()">✕</div>
 </div>
+${menu}
+</div>
+
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
 <div class="theme-btn" onclick="toggleTheme()">⚙</div>
+
 <div class="theme-panel" id="themePanel">
 <div onclick="setLight()">🌞 Light</div>
 <div onclick="setDark()">🌙 Dark</div>
@@ -158,6 +233,10 @@ ${menu}
 </div>
 
 <div class="slider-panel" id="sliderPanel">
+<div class="slider-header">
+<div>Custom Brightness</div>
+<div onclick="closeSlider()" style="cursor:pointer">✕</div>
+</div>
 <input type="range" min="50" max="150" value="100"
 oninput="adjustBrightness(this.value)">
 </div>
@@ -165,23 +244,25 @@ oninput="adjustBrightness(this.value)">
 <div class="time" id="time"></div>
 <div class="mode-label" id="modeLabel"></div>
 
-<div class="main">
+<div class="main" id="mainText">
 <h1>${brand.brandName}</h1>
-<button class="primary">แจ้งปัญหา</button>
-<button class="secondary">ติดตาม Ticket</button>
+<button>แจ้งปัญหา</button>
+<button>ติดตาม Ticket</button>
 </div>
 
 <script>
 
-function openMenu(){
-sidebar.classList.add("active");
-overlay.classList.add("active");
+let sliderTimeout;
+
+/* ===== MENU ===== */
+function toggleMenu(){
+sidebar.classList.toggle("active");
+overlay.classList.toggle("active");
 }
 function closeMenu(){
 sidebar.classList.remove("active");
 overlay.classList.remove("active");
 }
-
 function goBrand(b){
 closeMenu();
 window.location="/portal/"+b;
@@ -200,24 +281,28 @@ function toggleTheme(){
 themePanel.classList.toggle("active");
 }
 
+function updateContrast(isDark){
+mainText.className = isDark ? "main light-text" : "main dark-text";
+themePanel.style.background = isDark ? "#222" : "#fff";
+themePanel.style.color = isDark ? "white" : "black";
+}
+
 function setLight(){
-bg.style.background="linear-gradient(135deg,#f3f4f6,#e5e7eb)";
+closeSlider();
+bg.style.background="linear-gradient(135deg,#ffffff,#e5e7eb)";
+updateContrast(false);
 modeLabel.innerText="Light Mode";
-localStorage.setItem("theme","light");
 }
 
 function setDark(){
+closeSlider();
 bg.style.background="linear-gradient(135deg,#0f172a,#111827)";
+updateContrast(true);
 modeLabel.innerText="Dark Mode";
-localStorage.setItem("theme","dark");
 }
 
 function setAuto(){
-localStorage.setItem("theme","auto");
-applyAuto();
-}
-
-function applyAuto(){
+closeSlider();
 const h=new Date().getHours();
 if(h>=8 && h<18){
 setLight();
@@ -229,22 +314,28 @@ modeLabel.innerText="Auto Mode (Dark)";
 }
 
 function openSlider(){
-sliderPanel.classList.add("active");
 modeLabel.innerText="Custom Mode";
-localStorage.setItem("theme","custom");
+sliderPanel.classList.add("active");
+
+sliderTimeout=setTimeout(()=>{
+closeSlider();
+},3000);
 }
 
 function adjustBrightness(val){
+clearTimeout(sliderTimeout);
 bg.style.filter="brightness("+val+"%)";
+sliderTimeout=setTimeout(()=>{
+closeSlider();
+},3000);
 }
 
-(function init(){
-const saved=localStorage.getItem("theme");
-if(saved==="dark") setDark();
-else if(saved==="light") setLight();
-else if(saved==="custom") openSlider();
-else applyAuto();
-})();
+function closeSlider(){
+sliderPanel.classList.remove("active");
+}
+
+/* INIT */
+setAuto();
 
 </script>
 
@@ -253,4 +344,4 @@ else applyAuto();
 `);
 }
 
-app.listen(PORT,()=>console.log("SERVER STARTED"));
+app.listen(PORT,()=>console.log("SERVER RUNNING"));
