@@ -82,6 +82,13 @@ display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
+transition:.3s ease;
+}
+
+/* ซ่อนตอน sidebar เปิด */
+.menu-btn.hidden{
+opacity:0;
+pointer-events:none;
 }
 
 /* ===== SIDEBAR ===== */
@@ -93,7 +100,7 @@ width:240px;
 height:100%;
 background:#111827;
 color:white;
-padding:100px 20px 20px 20px;
+padding:110px 20px 20px 20px;
 transition:.4s ease;
 z-index:1100;
 }
@@ -101,17 +108,12 @@ z-index:1100;
 
 .sidebar-header{
 position:absolute;
-top:25px;
+top:30px;
 left:20px;
 right:20px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-}
-
-.sidebar-header h3{
-margin:0;
-font-size:20px;
 }
 
 .brand-item{
@@ -203,15 +205,10 @@ justify-content:space-between;
 align-items:center;
 }
 
-/* ===== TEXT CONTRAST ===== */
 .light-text{color:white}
 .dark-text{color:black}
 
-.time, .mode-label{
-text-align:right;
-}
-
-/* ===== MOBILE FIX ===== */
+/* ===== MOBILE ===== */
 @media(max-width:600px){
 
 .sidebar{
@@ -221,14 +218,6 @@ left:-100%;
 
 .sidebar.active{
 left:0;
-}
-
-.sidebar{
-padding-top:120px; /* ดันคำว่า Brand ลง */
-}
-
-.sidebar-header{
-top:35px; /* ลดทับ */
 }
 
 }
@@ -243,11 +232,11 @@ top:35px; /* ลดทับ */
 <!-- HEADER -->
 <div class="header">
 
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<div class="menu-btn" id="menuBtn" onclick="toggleMenu()">☰</div>
 
 <div style="text-align:right">
-<div class="time" id="time"></div>
-<div class="mode-label" id="modeLabel"></div>
+<div id="time"></div>
+<div id="modeLabel"></div>
 </div>
 
 <div class="theme-btn" onclick="toggleTheme()">⚙</div>
@@ -298,12 +287,14 @@ let sliderTimeout;
 
 /* ===== MENU ===== */
 function toggleMenu(){
-sidebar.classList.toggle("active");
-overlay.classList.toggle("active");
+sidebar.classList.add("active");
+overlay.classList.add("active");
+menuBtn.classList.add("hidden");
 }
 function closeMenu(){
 sidebar.classList.remove("active");
 overlay.classList.remove("active");
+menuBtn.classList.remove("hidden");
 }
 function goBrand(b){
 closeMenu();
@@ -325,7 +316,7 @@ themePanel.classList.toggle("active");
 
 function updateContrast(isDark){
 mainText.className=isDark?"main light-text":"main dark-text";
-document.querySelector(".header").className=isDark?"header light-text":"header dark-text";
+header.className=isDark?"header light-text":"header dark-text";
 }
 
 function setLight(){
