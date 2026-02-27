@@ -1,23 +1,14 @@
 require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
-const crypto = require('crypto');
 
 const app = express();
 app.use(express.json());
 
-// ================= CONFIG =================
 const PORT = process.env.PORT || 3000;
-const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-const lineHeaders = {
-  Authorization: `Bearer ${LINE_TOKEN}`,
-  'Content-Type': 'application/json'
-};
-
-// =======================================================
-// ================= BRAND CONFIG ========================
-// =======================================================
+/* =====================================================
+   BRAND CONFIG (แก้ลิงก์ตรงนี้อย่างเดียวพอ)
+===================================================== */
 
 const brands = {
   GD: {
@@ -36,74 +27,29 @@ const brands = {
   BR9: { brandName: "BR9", reportUrl: "#", trackUrl: "#", primaryColor: "#6366f1" }
 };
 
-// =======================================================
-// ================= HEALTH ==============================
-// =======================================================
+/* =====================================================
+   HEALTH
+===================================================== */
 
-app.get('/', (_, res) => res.send('SERVER OK'));
+app.get('/', (_, res) => res.send("SERVER OK"));
 
-// =======================================================
-// ================= MAIN BRAND SELECT PAGE ==============
-// =======================================================
+/* =====================================================
+   PORTAL
+===================================================== */
 
-app.get('/portal', (req, res) => {
+app.get('/portal/:brand?', (req, res) => {
 
-  const brandButtons = Object.keys(brands).map(key => `
-    <button onclick="goBrand('${key}')">${brands[key].brandName}</button>
-  `).join("");
-
-  res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Service Portal</title>
-<style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#f3f4f6;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  flex-direction:column;
-}
-h1 { margin-bottom:30px; }
-button {
-  padding:12px 20px;
-  margin:6px;
-  border:none;
-  border-radius:8px;
-  background:#111827;
-  color:white;
-  cursor:pointer;
-}
-</style>
-</head>
-<body>
-<h1>Select Brand</h1>
-${brandButtons}
-<script>
-function goBrand(brand){
-  window.location.href = "/portal/" + brand;
-}
-</script>
-</body>
-</html>
-`);
-});
-
-// =======================================================
-// ================= BRAND PAGE ==========================
-// =======================================================
-
-app.get('/portal/:brand', (req, res) => {
-
-  const brandKey = req.params.brand.toUpperCase();
+  const brandKey = (req.params.brand || "GD").toUpperCase();
   const brand = brands[brandKey];
 
   if (!brand) return res.status(404).send("Brand not found");
+
+  const brandMenu = Object.keys(brands).map(key => `
+    <div class="brand-item ${key === brandKey ? 'active' : ''}"
+         onclick="goBrand('${key}')">
+      ${brands[key].brandName}
+    </div>
+  `).join("");
 
   res.send(`
 <!DOCTYPE html>
@@ -114,56 +60,146 @@ app.get('/portal/:brand', (req, res) => {
 
 <style>
 
+/* ================= RESET ================= */
+
+* { box-sizing: border-box; }
+
 body {
   margin:0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background:#f3f4f6;
+  display:flex;
+  height:100vh;
+  overflow:hidden;
   transition:0.3s;
 }
+
+/* ================= DARK MODE ================= */
 
 .dark {
-  background:#111827;
+  background:#0f172a;
   color:white;
 }
 
+.dark .main { background:#111827; }
+.dark .time { color:#cbd5e1; }
+
+/* ================= SIDEBAR ================= */
+
 .sidebar {
-  position:fixed;
-  left:-220px;
-  top:0;
-  width:220px;
-  height:100%;
-  background:#1f2937;
+  width:240px;
+  background:#0f172a;
   color:white;
   padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   transition:0.3s;
 }
 
-.sidebar.active { left:0; }
+.sidebar h2 {
+  margin-bottom:25px;
+}
 
-.menu-btn {
+.brand-item {
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  text-align:center;
+  background:#1e293b;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.brand-item:hover {
+  background:${brand.primaryColor};
+}
+
+.brand-item.active {
+  background:${brand.primaryColor};
+}
+
+/* ================= DIVIDER ================= */
+
+.divider {
+  width:4px;
+  background:#1e293b;
+}
+
+/* ================= MAIN ================= */
+
+.main {
+  flex:1;
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#ffffff;
+  transition:0.3s;
+}
+
+/* ================= HEADER ITEMS ================= */
+
+.settings {
   position:absolute;
   top:20px;
-  left:20px;
+  right:40px;
+  font-size:20px;
   cursor:pointer;
-  font-size:24px;
 }
 
 .time {
   position:absolute;
   top:20px;
-  right:40px;
+  right:90px;
   font-size:14px;
+  color:#555;
 }
 
-.container {
+/* ================= CENTER ================= */
+
+.center {
   text-align:center;
-  margin-top:150px;
 }
+
+.center h1 {
+  margin-bottom:30px;
+}
+
+/* ================= BUTTONS ================= */
+
+button {
+  width:260px;
+  padding:14px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.primary {
+  background:${brand.primaryColor};
+  color:white;
+}
+
+.primary:hover { opacity:0.9; }
+
+.secondary {
+  background:#4b5563;
+  color:white;
+}
+
+.secondary:hover { opacity:0.9; }
+
+/* ================= FADE ANIMATION ================= */
 
 .fade-up {
   opacity:0;
-  transform:translateY(40px);
-  animation:fadeUp 0.8s ease forwards;
+  transform:translateY(30px);
+  animation:fadeUp 0.7s ease forwards;
 }
 
 .fade-up:nth-child(1){animation-delay:0.2s;}
@@ -174,82 +210,66 @@ body {
   to { opacity:1; transform:translateY(0); }
 }
 
-button {
-  width:260px;
-  padding:14px;
-  margin:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:16px;
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:900px){
+  .sidebar { width:180px; }
+  button { width:200px; }
 }
 
-.primary {
-  background:${brand.primaryColor};
-  color:white;
+@media(max-width:600px){
+  body { flex-direction:column; }
+  .sidebar { width:100%; flex-direction:row; overflow-x:auto; }
+  .divider { display:none; }
+  .brand-item { margin:5px; }
 }
-
-.secondary {
-  background:#4b5563;
-  color:white;
-}
-
-.small button { width:200px; padding:10px; font-size:14px; }
-.medium button { width:260px; padding:14px; font-size:16px; }
-.large button { width:320px; padding:18px; font-size:18px; }
 
 </style>
 </head>
 
-<body class="medium">
+<body>
 
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
-<div class="time" id="time"></div>
-
-<div class="sidebar" id="sidebar">
-  <h3>Settings</h3>
-  <p onclick="setSize('small')" style="cursor:pointer;">Small</p>
-  <p onclick="setSize('medium')" style="cursor:pointer;">Medium</p>
-  <p onclick="setSize('large')" style="cursor:pointer;">Large</p>
-  <hr>
-  <p onclick="toggleDark()" style="cursor:pointer;">Dark Mode</p>
-  <hr>
-  <p onclick="goHome()" style="cursor:pointer;">Back</p>
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Brand</h2>
+  ${brandMenu}
 </div>
 
-<div class="container">
-  <h1 class="fade-up">${brand.brandName}</h1>
+<!-- Divider -->
+<div class="divider"></div>
 
-  <button class="primary fade-up"
-    onclick="window.location.href='${brand.reportUrl}'">
-    แจ้งปัญหา
-  </button>
+<!-- Main -->
+<div class="main">
 
-  <br>
+  <div class="settings" onclick="toggleDark()">⚙</div>
+  <div class="time" id="time"></div>
 
-  <button class="secondary fade-up"
-    onclick="window.location.href='${brand.trackUrl}'">
-    ติดตาม Ticket
-  </button>
+  <div class="center">
+    <h1 class="fade-up">${brand.brandName}</h1>
+
+    <button class="primary fade-up"
+      onclick="window.location.href='${brand.reportUrl}'">
+      แจ้งปัญหา
+    </button>
+
+    <br>
+
+    <button class="secondary fade-up"
+      onclick="window.location.href='${brand.trackUrl}'">
+      ติดตาม Ticket
+    </button>
+  </div>
+
 </div>
 
 <script>
 
-function toggleMenu(){
-  document.getElementById('sidebar').classList.toggle('active');
-}
-
-function setSize(size){
-  document.body.className = size;
-  toggleMenu();
+function goBrand(b){
+  window.location.href = "/portal/" + b;
 }
 
 function toggleDark(){
-  document.body.classList.toggle('dark');
-}
-
-function goHome(){
-  window.location.href = "/portal";
+  document.body.classList.toggle("dark");
 }
 
 function updateTime(){
@@ -276,10 +296,10 @@ setInterval(updateTime,1000);
 `);
 });
 
-// =======================================================
-// ================= START ===============================
-// =======================================================
+/* =====================================================
+   START SERVER
+===================================================== */
 
-app.listen(PORT, () =>
-  console.log("🚀 SERVER STARTED : PORT " + PORT)
-);
+app.listen(PORT, () => {
+  console.log("🚀 SERVER STARTED ON PORT " + PORT);
+});
