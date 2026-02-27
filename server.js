@@ -1,19 +1,60 @@
-app.get('/portal', (req, res) => {
+const brands = require('./brands.json');
 
-res.send(`
+app.get('/portal/:brand', (req, res) => {
+
+  const brandKey = req.params.brand.toUpperCase();
+  const brand = brands[brandKey];
+
+  if (!brand) {
+    return res.status(404).send("Brand not found");
+  }
+
+  res.send(`
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GD Portal</title>
+<title>${brand.brandName} Service Portal</title>
 
 <style>
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f4f6f9;
+  background: #f3f4f6;
   overflow-x: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  left: -220px;
+  top: 0;
+  width: 220px;
+  height: 100%;
+  background: #111827;
+  color: white;
+  padding: 20px;
+  transition: 0.3s;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+.menu-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+/* Container */
+.container {
+  text-align: center;
+  margin-top: 150px;
 }
 
 /* Fade Animation */
@@ -23,165 +64,111 @@ body {
   animation: fadeUp 0.8s ease forwards;
 }
 
+.fade-up:nth-child(1) { animation-delay: 0.2s; }
+.fade-up:nth-child(2) { animation-delay: 0.4s; }
+.fade-up:nth-child(3) { animation-delay: 0.6s; }
+
 @keyframes fadeUp {
-  to { opacity:1; transform:translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Layout */
-.container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Menu Button */
-.menu-btn {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  width: 45px;
-  height: 45px;
-  background: #222;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 1001;
-  font-size: 20px;
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  left: -260px;
-  top: 0;
-  width: 260px;
-  height: 100%;
-  background: #222;
-  color: white;
-  padding: 20px;
-  transition: 0.3s;
-  z-index: 1002;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-/* Overlay */
-.overlay {
-  position: fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background: rgba(0,0,0,0.4);
-  display:none;
-  z-index:1000;
-}
-
-.overlay.show {
-  display:block;
-}
-
-/* Buttons */
 button {
   width: 260px;
-  padding: 15px;
+  padding: 14px;
   margin: 10px;
-  border-radius: 10px;
   border: none;
-  font-size: 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
+  font-size: 16px;
+  transition: 0.2s;
 }
 
-button:hover { transform: scale(1.05); }
+.primary {
+  background: ${brand.primaryColor};
+  color: white;
+}
 
-.brand { font-size:32px; margin-bottom:30px; }
+.secondary {
+  background: #4b5563;
+  color: white;
+}
+
+/* Size Presets */
+.small button { width: 200px; padding: 10px; font-size: 14px; }
+.medium button { width: 260px; padding: 14px; font-size: 16px; }
+.large button { width: 320px; padding: 18px; font-size: 18px; }
 
 .time {
-  position: fixed;
-  top: 15px;
-  right: 30px;
+  position: absolute;
+  top: 20px;
+  right: 40px;
   font-size: 14px;
+  color: #555;
 }
+
 </style>
 </head>
 
-<body>
+<body class="medium">
 
-<div class="menu-btn" onclick="openMenu()">≡</div>
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
 
 <div class="sidebar" id="sidebar">
-  <h3>ตั้งค่า</h3>
-  <button onclick="setSize('small')">Small</button>
-  <button onclick="setSize('medium')">Medium</button>
-  <button onclick="setSize('large')">Large</button>
-  <hr>
-  <button onclick="setColor('#007bff')">Blue</button>
-  <button onclick="setColor('#28a745')">Green</button>
-  <button onclick="setColor('#dc3545')">Red</button>
+  <h3>Preset</h3>
+  <p onclick="setSize('small')" style="cursor:pointer;">ขนาดเล็ก</p>
+  <p onclick="setSize('medium')" style="cursor:pointer;">ขนาดกลาง</p>
+  <p onclick="setSize('large')" style="cursor:pointer;">ขนาดใหญ่</p>
 </div>
 
 <div class="time" id="time"></div>
 
-<div class="container fade-up">
-  <div class="brand fade-up" style="animation-delay:0.2s">GD</div>
+<div class="container">
+  <h1 class="fade-up">${brand.brandName}</h1>
 
-  <button id="btn1" class="fade-up"
-    style="animation-delay:0.4s;background:#007bff;color:white"
-    onclick="window.location.href='https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf'">
+  <button class="primary fade-up"
+    onclick="window.location.href='${brand.reportUrl}'">
     แจ้งปัญหา
   </button>
 
-  <button id="btn2" class="fade-up"
-    style="animation-delay:0.6s;background:#6c757d;color:white"
-    onclick="window.location.href='https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc'">
+  <br>
+
+  <button class="secondary fade-up"
+    onclick="window.location.href='${brand.trackUrl}'">
     ติดตาม Ticket
   </button>
 </div>
 
 <script>
-function openMenu() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
-}
 
-function closeMenu() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('active');
 }
 
 function setSize(size) {
-  var fontSize = "16px";
-  var padding = "15px";
-
-  if (size === 'small') { fontSize="14px"; padding="10px"; }
-  if (size === 'large') { fontSize="20px"; padding="20px"; }
-
-  document.querySelectorAll("button").forEach(function(btn){
-    btn.style.fontSize = fontSize;
-    btn.style.padding = padding;
-  });
+  document.body.className = size;
+  toggleMenu();
 }
 
-function setColor(color) {
-  document.getElementById('btn1').style.background = color;
-  document.getElementById('btn2').style.background = color;
-}
-
+/* Time */
 function updateTime() {
+  var now = new Date();
+  var options = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
   document.getElementById('time').innerText =
-    new Date().toLocaleString('th-TH');
+    now.toLocaleString('th-TH', options);
 }
+
 updateTime();
 setInterval(updateTime, 1000);
+
 </script>
 
 </body>
