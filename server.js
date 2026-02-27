@@ -1,70 +1,36 @@
 require('dotenv').config();
 const express = require('express');
-
 const app = express();
 app.use(express.json());
-
 const PORT = process.env.PORT || 3000;
 
-/* =====================================================
-   BRAND CONFIG (แก้ลิงก์เฉพาะตรงนี้)
-===================================================== */
+/* ================= BRAND CONFIG ================= */
 
 const brands = {
-  GD: {
-    brandName: "GD",
-    reportUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf",
-    trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc",
-    primaryColor: "#2563eb"
-  },
-  ABP: { brandName: "ABP", reportUrl: "#", trackUrl: "#", primaryColor: "#16a34a" },
-  GH: { brandName: "GH", reportUrl: "#", trackUrl: "#", primaryColor: "#dc2626" },
-  BR4: { brandName: "BR4", reportUrl: "#", trackUrl: "#", primaryColor: "#9333ea" },
-  BR5: { brandName: "BR5", reportUrl: "#", trackUrl: "#", primaryColor: "#ea580c" },
-  BR6: { brandName: "BR6", reportUrl: "#", trackUrl: "#", primaryColor: "#0ea5e9" },
-  BR7: { brandName: "BR7", reportUrl: "#", trackUrl: "#", primaryColor: "#14b8a6" },
-  BR8: { brandName: "BR8", reportUrl: "#", trackUrl: "#", primaryColor: "#f43f5e" },
-  BR9: { brandName: "BR9", reportUrl: "#", trackUrl: "#", primaryColor: "#6366f1" }
+  GD:{brandName:"GD",reportUrl:"#",trackUrl:"#",primaryColor:"#2563eb"},
+  ABP:{brandName:"ABP",reportUrl:"#",trackUrl:"#",primaryColor:"#16a34a"},
+  GH:{brandName:"GH",reportUrl:"#",trackUrl:"#",primaryColor:"#dc2626"},
+  BR4:{brandName:"BR4",reportUrl:"#",trackUrl:"#",primaryColor:"#9333ea"},
+  BR5:{brandName:"BR5",reportUrl:"#",trackUrl:"#",primaryColor:"#ea580c"},
+  BR6:{brandName:"BR6",reportUrl:"#",trackUrl:"#",primaryColor:"#0ea5e9"},
+  BR7:{brandName:"BR7",reportUrl:"#",trackUrl:"#",primaryColor:"#14b8a6"},
+  BR8:{brandName:"BR8",reportUrl:"#",trackUrl:"#",primaryColor:"#f43f5e"},
+  BR9:{brandName:"BR9",reportUrl:"#",trackUrl:"#",primaryColor:"#6366f1"}
 };
 
-/* =====================================================
-   HEALTH CHECK
-===================================================== */
+app.get('/',(_,res)=>res.send("SERVER OK"));
+app.get('/portal',(req,res)=>renderPortal("GD",res));
+app.get('/portal/:brand',(req,res)=>renderPortal(req.params.brand.toUpperCase(),res));
 
-app.get('/', (_, res) => {
-  res.send("SERVER OK");
-});
+function renderPortal(key,res){
 
-/* =====================================================
-   ROUTES (ไม่ใช้ :brand? อีกต่อไป)
-===================================================== */
+if(!brands[key]) return res.send("Brand not found");
+const brand=brands[key];
 
-// Default → GD
-app.get('/portal', (req, res) => {
-  renderPortal("GD", res);
-});
-
-// Specific brand
-app.get('/portal/:brand', (req, res) => {
-  const brandKey = req.params.brand.toUpperCase();
-  renderPortal(brandKey, res);
-});
-
-/* =====================================================
-   RENDER FUNCTION
-===================================================== */
-
-function renderPortal(brandKey, res) {
-
-const brand = brands[brandKey];
-if (!brand) return res.status(404).send("Brand not found");
-
-const brandMenu = Object.keys(brands).map(key => `
-  <div class="brand-item ${key === brandKey ? 'active' : ''}"
-       onclick="goBrand('${key}')">
-    ${brands[key].brandName}
-  </div>
-`).join("");
+const menu=Object.keys(brands).map(k=>`
+<div class="brand-item ${k===key?'active':''}" onclick="goBrand('${k}')">
+${brands[k].brandName}
+</div>`).join("");
 
 res.send(`
 <!DOCTYPE html>
@@ -74,260 +40,211 @@ res.send(`
 <title>${brand.brandName}</title>
 
 <style>
-*{box-sizing:border-box;}
+*{box-sizing:border-box}
 body{
-  margin:0;
-  font-family:Arial;
-  height:100vh;
-  overflow:hidden;
-  background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
-  transition:background 1.5s ease, color 1s ease;
+margin:0;font-family:Arial;height:100vh;overflow:hidden;
+background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
+transition:background 1.5s ease;
 }
 
-/* ========= SIDEBAR ========= */
-.menu-btn{
-  position:absolute;
-  top:20px;
-  left:20px;
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:${brand.primaryColor};
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:22px;
-  cursor:pointer;
-  overflow:hidden;
+/* BACKGROUND LAYER */
+.bg{
+position:fixed;inset:0;
+background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
+transition:1.5s ease;
+z-index:-1;
 }
 
+/* SIDEBAR */
 .sidebar{
-  position:fixed;
-  left:-260px;
-  top:0;
-  width:240px;
-  height:100%;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-  transition:0.5s cubic-bezier(.68,-0.55,.27,1.55);
-  backdrop-filter:blur(10px);
+position:fixed;left:-260px;top:0;width:240px;height:100%;
+background:#0f172a;color:white;padding:20px;
+transition:.4s ease;z-index:1000;
 }
-
-.sidebar.active{
-  left:0;
-}
-
+.sidebar.active{left:0}
 .brand-item{
-  padding:12px;
-  margin:6px 0;
-  background:#1e293b;
-  border-radius:8px;
-  cursor:pointer;
+padding:12px;margin:6px 0;background:#1e293b;
+border-radius:8px;cursor:pointer;
 }
-.brand-item.active{
-  background:${brand.primaryColor};
+.brand-item.active{background:${brand.primaryColor}}
+
+.overlay{
+position:fixed;inset:0;background:rgba(0,0,0,.4);
+backdrop-filter:blur(4px);display:none;z-index:900;
+}
+.overlay.active{display:block}
+
+.menu-btn{
+position:absolute;top:20px;left:20px;
+width:50px;height:50px;border-radius:50%;
+background:${brand.primaryColor};color:white;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;z-index:1100;
 }
 
-/* ========= MAIN ========= */
+/* MAIN */
 .main{
-  height:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  text-align:center;
+height:100%;display:flex;
+flex-direction:column;justify-content:center;
+align-items:center;text-align:center;
 }
 
+/* BUTTONS */
 button{
-  width:260px;
-  padding:14px;
-  margin:10px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  cursor:pointer;
-  position:relative;
-  overflow:hidden;
+width:260px;padding:14px;margin:10px;
+border:none;border-radius:10px;font-size:16px;
+cursor:pointer;
 }
+.primary{background:${brand.primaryColor};color:white}
+.secondary{background:#4b5563;color:white}
 
-.primary{
-  background:${brand.primaryColor};
-  color:white;
-}
-.secondary{
-  background:#4b5563;
-  color:white;
-}
-
-/* ========= RIPPLE ========= */
-button span{
-  position:absolute;
-  background:rgba(255,255,255,0.5);
-  transform:scale(0);
-  border-radius:50%;
-  animation:ripple 0.6s linear;
-}
-@keyframes ripple{
-  to{
-    transform:scale(4);
-    opacity:0;
-  }
-}
-
-/* ========= THEME BUTTON ========= */
+/* THEME */
 .theme-btn{
-  position:absolute;
-  top:20px;
-  right:20px;
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-  box-shadow:0 4px 15px rgba(0,0,0,0.2);
+position:absolute;top:20px;right:20px;
+width:50px;height:50px;border-radius:50%;
+background:white;display:flex;align-items:center;
+justify-content:center;cursor:pointer;
+z-index:1100;
 }
 
-.theme-options{
-  position:absolute;
-  top:90px;
-  right:20px;
-  display:none;
-  flex-direction:column;
-  gap:10px;
+.theme-panel{
+position:absolute;top:80px;right:20px;
+background:white;padding:10px;border-radius:12px;
+display:none;flex-direction:column;gap:8px;
+z-index:1200;
 }
-.theme-options.active{
-  display:flex;
-}
-.theme-options div{
-  width:45px;
-  height:45px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:white;
-  cursor:pointer;
-  box-shadow:0 3px 10px rgba(0,0,0,0.2);
+.theme-panel.active{display:flex}
+.theme-panel div{cursor:pointer;padding:6px}
+
+.time{
+position:absolute;top:20px;right:90px;
+font-size:14px;color:#444;
 }
 
-/* DARK */
-.dark{
-  background:linear-gradient(135deg,#0f172a,#111827);
-  color:white;
+.mode-label{
+position:absolute;top:60px;right:90px;
+font-size:12px;color:#666;
 }
 
-/* FADE */
-.fade{
-  animation:fadeIn 0.7s ease;
+/* SLIDER */
+.slider-panel{
+position:fixed;bottom:-120px;left:0;width:100%;
+background:white;padding:20px;text-align:center;
+transition:.4s ease;z-index:1500;
 }
-@keyframes fadeIn{
-  from{opacity:0;}
-  to{opacity:1;}
-}
+.slider-panel.active{bottom:0}
 
 </style>
 </head>
 
 <body>
 
-<div class="menu-btn" onclick="toggleSidebar()">☰</div>
+<div class="bg" id="bg"></div>
 
+<div class="menu-btn" onclick="openMenu()">☰</div>
 <div class="sidebar" id="sidebar">
-  <h2>Brand</h2>
-  ${brandMenu}
+<h3>Brand</h3>
+${menu}
+<button onclick="closeMenu()">❌ ปิด</button>
+</div>
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<div class="theme-btn" onclick="toggleTheme()">⚙</div>
+<div class="theme-panel" id="themePanel">
+<div onclick="setLight()">🌞 Light</div>
+<div onclick="setDark()">🌙 Dark</div>
+<div onclick="setAuto()">🕒 Auto</div>
+<div onclick="openSlider()">🎛 Custom</div>
 </div>
 
-<div class="theme-btn" onclick="toggleThemeMenu()">⚙</div>
-
-<div class="theme-options" id="themeOptions">
-  <div onclick="setLight()">🌞</div>
-  <div onclick="setDark()">🌙</div>
-  <div onclick="setAuto()">🕒</div>
-  <div onclick="setCustom()">🎛</div>
+<div class="slider-panel" id="sliderPanel">
+<input type="range" min="50" max="150" value="100"
+oninput="adjustBrightness(this.value)">
 </div>
 
-<div class="main fade">
-  <h1>${brand.brandName}</h1>
+<div class="time" id="time"></div>
+<div class="mode-label" id="modeLabel"></div>
 
-  <button class="primary" onclick="navigate(event,'${brand.reportUrl}')">
-    แจ้งปัญหา
-  </button>
-
-  <button class="secondary" onclick="navigate(event,'${brand.trackUrl}')">
-    ติดตาม Ticket
-  </button>
+<div class="main">
+<h1>${brand.brandName}</h1>
+<button class="primary">แจ้งปัญหา</button>
+<button class="secondary">ติดตาม Ticket</button>
 </div>
 
 <script>
 
-/* ===== SIDEBAR ===== */
-function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("active");
+function openMenu(){
+sidebar.classList.add("active");
+overlay.classList.add("active");
+}
+function closeMenu(){
+sidebar.classList.remove("active");
+overlay.classList.remove("active");
 }
 
-/* ===== RIPPLE ===== */
-function navigate(e,url){
-  const btn=e.currentTarget;
-  const circle=document.createElement("span");
-  circle.style.width=circle.style.height=
-    Math.max(btn.clientWidth,btn.clientHeight)+"px";
-  circle.style.left=e.offsetX-circle.offsetX+"px";
-  circle.style.top=e.offsetY-circle.offsetY+"px";
-  btn.appendChild(circle);
-  setTimeout(()=>window.location.href=url,300);
+function goBrand(b){
+closeMenu();
+window.location="/portal/"+b;
 }
 
-/* ===== THEME MENU ===== */
-function toggleThemeMenu(){
-  document.getElementById("themeOptions").classList.toggle("active");
+/* ===== TIME ===== */
+function updateTime(){
+const now=new Date();
+time.innerText=now.toLocaleString('th-TH');
+}
+setInterval(updateTime,1000);
+updateTime();
+
+/* ===== THEME ===== */
+function toggleTheme(){
+themePanel.classList.toggle("active");
 }
 
 function setLight(){
-  document.body.classList.remove("dark");
-  localStorage.setItem("theme","light");
+bg.style.background="linear-gradient(135deg,#f3f4f6,#e5e7eb)";
+modeLabel.innerText="Light Mode";
+localStorage.setItem("theme","light");
 }
 
 function setDark(){
-  document.body.classList.add("dark");
-  localStorage.setItem("theme","dark");
+bg.style.background="linear-gradient(135deg,#0f172a,#111827)";
+modeLabel.innerText="Dark Mode";
+localStorage.setItem("theme","dark");
 }
 
 function setAuto(){
-  localStorage.setItem("theme","auto");
-  applyAutoTheme();
+localStorage.setItem("theme","auto");
+applyAuto();
 }
 
-function setCustom(){
-  const val=prompt("ใส่ค่าความเข้ม 0-100");
-  document.body.style.filter="brightness("+(val/100)+")";
+function applyAuto(){
+const h=new Date().getHours();
+if(h>=8 && h<18){
+setLight();
+modeLabel.innerText="Auto Mode (Light)";
+}else{
+setDark();
+modeLabel.innerText="Auto Mode (Dark)";
+}
 }
 
-/* ===== AUTO THEME ===== */
-function applyAutoTheme(){
-  const hour=new Date().getHours();
-  if(hour>=8 && hour<18){
-    setLight();
-  }else{
-    setDark();
-  }
+function openSlider(){
+sliderPanel.classList.add("active");
+modeLabel.innerText="Custom Mode";
+localStorage.setItem("theme","custom");
 }
 
-(function(){
-  const saved=localStorage.getItem("theme");
-  if(saved==="dark") setDark();
-  else if(saved==="light") setLight();
-  else applyAutoTheme();
+function adjustBrightness(val){
+bg.style.filter="brightness("+val+"%)";
+}
+
+(function init(){
+const saved=localStorage.getItem("theme");
+if(saved==="dark") setDark();
+else if(saved==="light") setLight();
+else if(saved==="custom") openSlider();
+else applyAuto();
 })();
-
-/* ===== NAV ===== */
-function goBrand(b){
-  window.location.href="/portal/"+b;
-}
 
 </script>
 
@@ -336,10 +253,4 @@ function goBrand(b){
 `);
 }
 
-/* =====================================================
-   START
-===================================================== */
-
-app.listen(PORT, () => {
-  console.log("🚀 SERVER STARTED ON PORT " + PORT);
-});
+app.listen(PORT,()=>console.log("SERVER STARTED"));
