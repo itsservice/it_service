@@ -1,3 +1,57 @@
+require('dotenv').config();
+const express = require('express');
+const axios = require('axios');
+const crypto = require('crypto');
+
+const app = express();
+app.use(express.json());
+
+// ================= CONFIG =================
+const PORT = process.env.PORT || 3000;
+const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+
+const lineHeaders = {
+  Authorization: 'Bearer ' + LINE_TOKEN,
+  'Content-Type': 'application/json'
+};
+
+// ================= LINE PUSH FLEX =================
+async function linePushFlex(to, flexMessage) {
+  return axios.post(
+    'https://api.line.me/v2/bot/message/push',
+    { to: to, messages: [flexMessage] },
+    { headers: lineHeaders }
+  );
+}
+
+// ================= LARK DECRYPT =================
+function decryptLark(encryptKey, encrypt) {
+  const key = crypto.createHash('sha256').update(encryptKey).digest();
+  const iv = key.slice(0, 16);
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  decipher.setAutoPadding(false);
+
+  let decrypted = Buffer.concat([
+    decipher.update(encrypt, 'base64'),
+    decipher.final()
+  ]);
+
+  const pad = decrypted[decrypted.length - 1];
+  decrypted = decrypted.slice(0, decrypted.length - pad);
+
+  return JSON.parse(decrypted.toString('utf8'));
+}
+
+// ================= HEALTH =================
+app.get('/', (req, res) => {
+  res.send('SERVER OK');
+});
+
+
+// ======================================================
+// 🌐 PORTAL PAGE (Animation + Sidebar)
+// ======================================================
 app.get('/portal', (req, res) => {
 
   res.send(`
@@ -6,7 +60,7 @@ app.get('/portal', (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GD Service Portal</title>
+<title>GD Portal</title>
 
 <style>
 body {
@@ -16,7 +70,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Fade Up Animation */
 .fade-up {
   opacity: 0;
   transform: translateY(40px);
@@ -30,7 +83,6 @@ body {
   }
 }
 
-/* Layout */
 .container {
   height: 100vh;
   display: flex;
@@ -59,7 +111,6 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* Sidebar */
 .menu-btn {
   position: fixed;
   top: 20px;
@@ -70,7 +121,7 @@ button:hover {
 
 .sidebar {
   position: fixed;
-  left: -300px;
+  left: -260px;
   top: 0;
   width: 260px;
   height: 100%;
@@ -84,16 +135,11 @@ button:hover {
   left: 0;
 }
 
-.sidebar h3 {
-  margin-top: 0;
-}
-
 .sidebar button {
   width: 100%;
   margin: 5px 0;
 }
 
-/* Time */
 .time {
   position: fixed;
   top: 20px;
@@ -109,16 +155,16 @@ button:hover {
 <div class="time" id="time"></div>
 
 <div class="sidebar" id="sidebar">
-  <h3>ตั้งค่า Preset</h3>
+  <h3>Preset</h3>
 
-  <strong>ขนาด</strong>
-  <button onclick="setSize('small')">เล็ก</button>
-  <button onclick="setSize('medium')">กลาง</button>
-  <button onclick="setSize('large')">ใหญ่</button>
+  <strong>Size</strong>
+  <button onclick="setSize('small')">Small</button>
+  <button onclick="setSize('medium')">Medium</button>
+  <button onclick="setSize('large')">Large</button>
 
   <hr>
 
-  <strong>สี</strong>
+  <strong>Color</strong>
   <button onclick="setColor('#007bff')">Blue</button>
   <button onclick="setColor('#28a745')">Green</button>
   <button onclick="setColor('#dc3545')">Red</button>
@@ -146,8 +192,7 @@ function toggleMenu() {
 }
 
 function setSize(size) {
-  let fontSize;
-  let padding;
+  var fontSize, padding;
 
   if (size === 'small') {
     fontSize = "14px";
@@ -162,7 +207,7 @@ function setSize(size) {
     padding = "20px";
   }
 
-  document.querySelectorAll("button").forEach(btn => {
+  document.querySelectorAll("button").forEach(function(btn){
     btn.style.fontSize = fontSize;
     btn.style.padding = padding;
   });
@@ -174,7 +219,7 @@ function setColor(color) {
 }
 
 function updateTime() {
-  const now = new Date();
+  var now = new Date();
   document.getElementById('time').innerText =
     now.toLocaleString('th-TH');
 }
@@ -185,5 +230,102 @@ setInterval(updateTime, 1000);
 
 </body>
 </html>
-`);
+  `);
+});
+
+
+// ======================================================
+// LARK WEBHOOK
+// ======================================================
+app.post('/lark/webhook', async (req, res) => {
+
+  try {
+
+    let body = req.body;
+
+    console.log('📥 LARK RAW');
+    console.log(JSON.stringify(body, null, 2));
+
+    if (body.encrypt && process.env.LARK_ENCRYPT_KEY) {
+      body = decryptLark(process.env.LARK_ENCRYPT_KEY, body.encrypt);
+      console.log('🔓 LARK DECRYPTED');
+    }
+
+    if (body.type === 'url_verification') {
+      return res.json({ challenge: body.challenge });
+    }
+
+    res.json({ ok: true });
+
+    const data = body.event || body;
+
+    const recordUrl =
+      data.recordUrl && data.recordUrl.trim() !== ''
+        ? data.recordUrl
+        : null;
+
+    if (data.line_user_id || data.line_group_id) {
+
+      const target = data.line_user_id || data.line_group_id;
+
+      const bubble = {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            {
+              type: "text",
+              text: data.ticket_id || "Report Ticket",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "สถานะ: " + (data.status || "-"),
+              size: "sm",
+              wrap: true
+            }
+          ]
+        }
+      };
+
+      if (recordUrl) {
+        bubble.footer = {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "เปิดรายการ",
+                uri: recordUrl
+              }
+            }
+          ]
+        };
+      }
+
+      const flexMessage = {
+        type: "flex",
+        altText: "Ticket " + (data.ticket_id || ""),
+        contents: bubble
+      };
+
+      await linePushFlex(target, flexMessage);
+      console.log("✅ PUSH SUCCESS");
+    }
+
+  } catch (err) {
+    console.error('❌ LARK ERROR:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ================= START =================
+app.listen(PORT, () => {
+  console.log("🚀 SERVER STARTED : PORT " + PORT);
 });
