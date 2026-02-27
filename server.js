@@ -6,15 +6,15 @@ const PORT = process.env.PORT || 3000;
 /* ========= BRAND ========= */
 
 const brands = {
-  GD:{brandName:"GD",reportUrl:"#",trackUrl:"#"},
-  ABP:{brandName:"ABP",reportUrl:"#",trackUrl:"#"},
-  GH:{brandName:"GH",reportUrl:"#",trackUrl:"#"},
-  BR4:{brandName:"BR4",reportUrl:"#",trackUrl:"#"},
-  BR5:{brandName:"BR5",reportUrl:"#",trackUrl:"#"},
-  BR6:{brandName:"BR6",reportUrl:"#",trackUrl:"#"},
-  BR7:{brandName:"BR7",reportUrl:"#",trackUrl:"#"},
-  BR8:{brandName:"BR8",reportUrl:"#",trackUrl:"#"},
-  BR9:{brandName:"BR9",reportUrl:"#",trackUrl:"#"}
+  GD:{brandName:"GD"},
+  ABP:{brandName:"ABP"},
+  GH:{brandName:"GH"},
+  BR4:{brandName:"BR4"},
+  BR5:{brandName:"BR5"},
+  BR6:{brandName:"BR6"},
+  BR7:{brandName:"BR7"},
+  BR8:{brandName:"BR8"},
+  BR9:{brandName:"BR9"}
 };
 
 app.get('/',(_,res)=>res.send("SERVER OK"));
@@ -50,28 +50,46 @@ transition:color .5s ease;
 
 /* BACKGROUND */
 .bg{
-position:fixed;inset:0;
+position:fixed;
+inset:0;
 background:linear-gradient(135deg,#ffffff,#e5e7eb);
 transition:1.5s ease;
 z-index:-1;
 }
 
-/* TEXT AUTO CONTRAST */
-.light-text{color:white}
-.dark-text{color:black}
+/* HEADER */
+.header{
+position:fixed;
+top:0;
+left:0;
+right:0;
+height:70px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+z-index:1100;
+}
 
 /* MENU BUTTON */
 .menu-btn{
-position:absolute;
-top:20px;
-left:20px;
-width:45px;height:45px;
+width:45px;
+height:45px;
 border-radius:50%;
 background:#4b5563;
 color:white;
-display:flex;align-items:center;justify-content:center;
+display:flex;
+align-items:center;
+justify-content:center;
 cursor:pointer;
-z-index:1100;
+}
+
+/* TIME + MODE */
+.time{
+font-size:14px;
+}
+.mode-label{
+font-size:12px;
 }
 
 /* SIDEBAR */
@@ -83,21 +101,20 @@ width:240px;
 height:100%;
 background:#111827;
 color:white;
-padding:20px;
+padding:90px 20px 20px 20px;
 transition:.4s ease;
 z-index:1000;
 }
 .sidebar.active{left:0}
 
 .sidebar-header{
+position:absolute;
+top:20px;
+left:20px;
+right:20px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-}
-
-.close-btn{
-cursor:pointer;
-font-size:18px;
 }
 
 .brand-item{
@@ -128,7 +145,7 @@ align-items:center;
 text-align:center;
 }
 
-/* BUTTONS (สีเทาทั้งหมด) */
+/* BUTTONS */
 button{
 width:260px;
 padding:14px;
@@ -143,18 +160,18 @@ color:white;
 
 /* THEME BUTTON */
 .theme-btn{
-position:absolute;
-top:20px;
-right:20px;
-width:45px;height:45px;
+width:45px;
+height:45px;
 border-radius:50%;
 background:#6b7280;
 color:white;
-display:flex;align-items:center;justify-content:center;
+display:flex;
+align-items:center;
+justify-content:center;
 cursor:pointer;
-z-index:1100;
 }
 
+/* THEME PANEL */
 .theme-panel{
 position:absolute;
 top:70px;
@@ -169,9 +186,7 @@ z-index:1200;
 }
 .theme-panel.active{display:flex}
 
-.theme-panel div{cursor:pointer}
-
-/* SLIDER PANEL */
+/* SLIDER */
 .slider-panel{
 position:fixed;
 bottom:-150px;
@@ -184,25 +199,15 @@ z-index:1500;
 text-align:center;
 }
 .slider-panel.active{bottom:0}
+
 .slider-header{
 display:flex;
 justify-content:space-between;
 align-items:center;
 }
 
-.time{
-position:absolute;
-top:20px;
-right:80px;
-font-size:14px;
-}
-
-.mode-label{
-position:absolute;
-top:50px;
-right:80px;
-font-size:12px;
-}
+.light-text{color:white}
+.dark-text{color:black}
 
 </style>
 </head>
@@ -211,20 +216,34 @@ font-size:12px;
 
 <div class="bg" id="bg"></div>
 
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<!-- HEADER -->
+<div class="header">
 
+<div style="display:flex;align-items:center;gap:10px">
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+</div>
+
+<div style="text-align:right">
+<div class="time" id="time"></div>
+<div class="mode-label" id="modeLabel"></div>
+</div>
+
+<div class="theme-btn" onclick="toggleTheme()">⚙</div>
+
+</div>
+
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 <div class="sidebar-header">
 <h3>Brand</h3>
-<div class="close-btn" onclick="closeMenu()">✕</div>
+<div onclick="closeMenu()" style="cursor:pointer">✕</div>
 </div>
 ${menu}
 </div>
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<div class="theme-btn" onclick="toggleTheme()">⚙</div>
-
+<!-- THEME -->
 <div class="theme-panel" id="themePanel">
 <div onclick="setLight()">🌞 Light</div>
 <div onclick="setDark()">🌙 Dark</div>
@@ -241,9 +260,7 @@ ${menu}
 oninput="adjustBrightness(this.value)">
 </div>
 
-<div class="time" id="time"></div>
-<div class="mode-label" id="modeLabel"></div>
-
+<!-- MAIN -->
 <div class="main" id="mainText">
 <h1>${brand.brandName}</h1>
 <button>แจ้งปัญหา</button>
@@ -254,7 +271,7 @@ oninput="adjustBrightness(this.value)">
 
 let sliderTimeout;
 
-/* ===== MENU ===== */
+/* MENU */
 function toggleMenu(){
 sidebar.classList.toggle("active");
 overlay.classList.toggle("active");
@@ -268,7 +285,7 @@ closeMenu();
 window.location="/portal/"+b;
 }
 
-/* ===== TIME ===== */
+/* TIME */
 function updateTime(){
 const now=new Date();
 time.innerText=now.toLocaleString('th-TH');
@@ -276,20 +293,21 @@ time.innerText=now.toLocaleString('th-TH');
 setInterval(updateTime,1000);
 updateTime();
 
-/* ===== THEME ===== */
+/* THEME */
 function toggleTheme(){
 themePanel.classList.toggle("active");
 }
 
 function updateContrast(isDark){
-mainText.className = isDark ? "main light-text" : "main dark-text";
-themePanel.style.background = isDark ? "#222" : "#fff";
-themePanel.style.color = isDark ? "white" : "black";
+mainText.className=isDark?"main light-text":"main dark-text";
+themePanel.style.background=isDark?"#222":"#fff";
+themePanel.style.color=isDark?"white":"black";
 }
 
 function setLight(){
 closeSlider();
 bg.style.background="linear-gradient(135deg,#ffffff,#e5e7eb)";
+bg.style.filter="brightness(100%)";
 updateContrast(false);
 modeLabel.innerText="Light Mode";
 }
@@ -297,6 +315,7 @@ modeLabel.innerText="Light Mode";
 function setDark(){
 closeSlider();
 bg.style.background="linear-gradient(135deg,#0f172a,#111827)";
+bg.style.filter="brightness(100%)";
 updateContrast(true);
 modeLabel.innerText="Dark Mode";
 }
@@ -316,18 +335,13 @@ modeLabel.innerText="Auto Mode (Dark)";
 function openSlider(){
 modeLabel.innerText="Custom Mode";
 sliderPanel.classList.add("active");
-
-sliderTimeout=setTimeout(()=>{
-closeSlider();
-},3000);
+sliderTimeout=setTimeout(closeSlider,3000);
 }
 
 function adjustBrightness(val){
 clearTimeout(sliderTimeout);
 bg.style.filter="brightness("+val+"%)";
-sliderTimeout=setTimeout(()=>{
-closeSlider();
-},3000);
+sliderTimeout=setTimeout(closeSlider,3000);
 }
 
 function closeSlider(){
