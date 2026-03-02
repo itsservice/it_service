@@ -1,84 +1,66 @@
 const express = require('express');
+const crypto = require('crypto');
+
+const { LINE_CHANNEL_SECRET } = require('./env');
+const { logLineMessage } = require('./lineLogger');
+const { getUserProfileInGroup, getGroupSummary } = require('./lineLookup');
+
 const router = express.Router();
 
-const { LARK_ENCRYPT_KEY } = require('./env');
-const { decryptLark } = require('./larkCrypto');
-const { linePushFlex } = require('./lineService');
+function verifyLineSignature(req) {
+  if (!LINE_CHANNEL_SECRET) return false;
+
+  const signature = req.get('x-line-signature');
+  if (!signature) return false;
+
+  const hash = crypto
+    .createHmac('sha256', LINE_CHANNEL_SECRET)
+    .update(req.rawBody)
+    .digest('base64');
+
+  return hash === signature;
+}
 
 router.post('/webhook', async (req, res) => {
   try {
-    let body = req.body;
-
-    console.log('\n📥 LARK RAW');
-    console.log(JSON.stringify(body, null, 2));
-
-    if (body.encrypt && LARK_ENCRYPT_KEY) {
-      body = decryptLark(LARK_ENCRYPT_KEY, body.encrypt);
-      console.log('🔓 LARK DECRYPTED');
-      console.log(JSON.stringify(body, null, 2));
+    const ok = verifyLineSignature(req);
+    if (!ok) {
+      console.error('\n===== LINE Message =====');
+      console.error('Invalid signature (x-line-signature)');
+      console.error('===== End Function ======\n');
+      return res.status(401).send('invalid signature');
     }
 
-    if (body.type === 'url_verification') {
-      return res.json({ challenge: body.challenge });
-    }
+    res.status(200).json({ ok: true });
 
-    // ตอบทันที กัน timeout
-    res.json({ ok: true });
+    const events = Array.isArray(req.body?.events) ? req.body.events : [];
+    for (const ev of events) {
+      if (ev.type !== 'message') continue;
 
-    const data = body.event || body;
+      const source = ev.source || {};
+      const userId = source.userId || '';
+      const groupId = source.groupId || '';
 
-    const recordUrl =
-      data.recordUrl && data.recordUrl.trim() !== '' ? data.recordUrl : null;
+      let userName = '';
+      let groupName = '';
 
-    if (data.line_user_id || data.line_group_id) {
-      const target = data.line_user_id || data.line_group_id;
+      if (groupId && userId) {
+        try {
+          const [profile, summary] = await Promise.all([
+            getUserProfileInGroup(groupId, userId),
+            getGroupSummary(groupId)
+          ]);
+          userName = profile?.displayName || '';
+          groupName = summary?.groupName || '';
+        } catch {}
+      }
 
-      const flexMessage = {
-        type: "flex",
-        altText: `Ticket ${data.ticket_id || ''}`,
-        contents: {
-          type: "bubble",
-          body: {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            contents: [
-              { type: "text", text: data.type || "Report Ticket", weight: "bold", size: "lg" },
-              { type: "separator", margin: "md" },
-              { type: "text", text: `Ticket ID: ${data.ticket_id || '-'}`, size: "sm", wrap: true },
-              { type: "text", text: `วันที่: ${data.ticketDate || '-'}`, size: "sm", wrap: true },
-              { type: "separator", margin: "md" },
-              { type: "text", text: `ประเภท/อุปกรณ์: ${data.title || '-'}`, size: "sm", wrap: true },
-              { type: "text", text: `รายละเอียด/อาการ: ${data.symptom || '-'}`, size: "sm", wrap: true },
-              { type: "separator", margin: "md" },
-              { type: "text", text: `สาขา: ${data.branch || '-'}`, size: "sm" },
-              { type: "text", text: `รหัสสาขา: ${data.branch_code || '-'}`, size: "sm" },
-              { type: "separator", margin: "md" },
-              { type: "text", text: `เบอร์โทร: ${data.phone || '-'}`, size: "sm", wrap: true },
-              { type: "text", text: `สถานะ: ${data.status || '-'}`, size: "sm", wrap: true }
-            ]
-          },
-          footer: recordUrl
-            ? {
-                type: "box",
-                layout: "vertical",
-                contents: [
-                  {
-                    type: "button",
-                    style: "primary",
-                    action: { type: "uri", label: "เปิดรายการ", uri: recordUrl }
-                  }
-                ]
-              }
-            : undefined
-        }
-      };
-
-      await linePushFlex(target, flexMessage);
-      console.log('✅ PUSH SUCCESS');
+      logLineMessage({ userName, userId, groupName, groupId });
     }
   } catch (err) {
-    console.error('❌ LARK ERROR:', err.message);
+    console.error('\n===== LINE Message =====');
+    console.error(`Error: ${err?.message || err}`);
+    console.error('===== End Function ======\n');
     if (!res.headersSent) res.status(500).json({ error: 'server error' });
   }
 });
