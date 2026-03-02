@@ -17,6 +17,15 @@ app.use(
 // HEALTH
 app.get('/', (_, res) => res.send('SERVER OK'));
 
+// DEBUG ENV (ชั่วคราว)
+app.get('/debug/env', (_req, res) => {
+  res.json({
+    hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
+    lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
+    hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
+  });
+});
+
 // LARK
 app.use('/lark', larkWebhookRouter);
 
