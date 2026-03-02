@@ -1,5 +1,5 @@
 const express = require('express');
-const larkWebhookRouter = require('./routes/larkWebhook');
+const larkWebhook = require('./larkWebhook');
 
 const app = express();
 app.use(express.json());
@@ -8,6 +8,6 @@ app.use(express.json());
 app.get('/', (_, res) => res.send('SERVER OK'));
 
 // Lark routes
-app.use('/lark', larkWebhookRouter);
+app.use('/lark', larkWebhook);
 
 module.exports = app;
