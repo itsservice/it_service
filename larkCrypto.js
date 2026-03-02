@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 
-// ================= LARK DECRYPT =================
 function decryptLark(encryptKey, encrypt) {
   const key = crypto.createHash('sha256').update(encryptKey).digest();
   const iv = key.slice(0, 16);
