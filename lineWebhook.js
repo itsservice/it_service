@@ -7,33 +7,64 @@ const { getUserProfileInGroup, getGroupSummary } = require('./lineLookup');
 
 const router = express.Router();
 
+/**
+ * Verify LINE signature (Production)
+ * - ใช้ raw body ที่ได้รับจริง (bytes) + HMAC-SHA256(channel secret)
+ * - ถ้า parse/format ก่อน verify จะ fail ได้ (LINE เตือนชัด) 
+ */
 function verifyLineSignature(req) {
-  if (!LINE_CHANNEL_SECRET) return false;
-
   const signature = req.get('x-line-signature');
-  if (!signature) return false;
+
+  if (!LINE_CHANNEL_SECRET) {
+    return { ok: false, reason: 'MISSING_ENV_LINE_CHANNEL_SECRET' };
+  }
+  if (!signature) {
+    return { ok: false, reason: 'MISSING_HEADER_X_LINE_SIGNATURE' };
+  }
+  if (!req.rawBody) {
+    return { ok: false, reason: 'MISSING_RAW_BODY' };
+  }
 
   const hash = crypto
     .createHmac('sha256', LINE_CHANNEL_SECRET)
     .update(req.rawBody)
     .digest('base64');
 
-  return hash === signature;
+  return { ok: hash === signature, reason: hash === signature ? 'OK' : 'SIGNATURE_MISMATCH' };
 }
 
 router.post('/webhook', async (req, res) => {
+  // ✅ ตอบไวกัน timeout (แต่ “คง verify ก่อนประมวลผล” ตามแนวทาง LINE)
+  const v = verifyLineSignature(req);
+
+  if (!v.ok) {
+    console.error('\n============');
+    console.error('Error (lineWebhook.js)');
+    console.error('============');
+    console.error(
+      [
+        `reason: ${v.reason}`,
+        `hasSecret: ${!!LINE_CHANNEL_SECRET}`,
+        `secretLen: ${(LINE_CHANNEL_SECRET || '').length}`,
+        `hasSignatureHeader: ${!!req.get('x-line-signature')}`,
+        `contentType: ${req.get('content-type') || '-'}`,
+        `rawBodyLen: ${req.rawBody ? req.rawBody.length : 0}`
+      ].join('\n')
+    );
+    console.error('============');
+    console.error('(จบขั้นตอน Error)');
+    console.error('❌❌❌❌❌\n');
+
+    // ตามเอกสาร LINE: ถ้า signature ไม่ match ไม่ควร process และควรจบด้วย error  [oai_citation:1‡LINE Developers](https://developers.line.biz/en/docs/messaging-api/verify-webhook-signature/?utm_source=chatgpt.com)
+    return res.status(401).send('invalid signature');
+  }
+
+  // signature ผ่านแล้ว ค่อยตอบ 200
+  res.status(200).json({ ok: true });
+
   try {
-    const ok = verifyLineSignature(req);
-    if (!ok) {
-      console.error('\n===== LINE Message =====');
-      console.error('Invalid signature (x-line-signature) หรือยังไม่ได้ตั้ง LINE_CHANNEL_SECRET');
-      console.error('===== End Function ======\n');
-      return res.status(401).send('invalid signature');
-    }
-
-    res.status(200).json({ ok: true });
-
     const events = Array.isArray(req.body?.events) ? req.body.events : [];
+
     for (const ev of events) {
       if (ev.type !== 'message') continue;
 
@@ -44,6 +75,7 @@ router.post('/webhook', async (req, res) => {
       let userName = '';
       let groupName = '';
 
+      // ดึงชื่อ (ถ้าเป็น group)
       if (groupId && userId) {
         try {
           const [profile, summary] = await Promise.all([
@@ -57,14 +89,17 @@ router.post('/webhook', async (req, res) => {
         }
       }
 
+      // ✅ log ตาม format ที่เต้ต้องการ
       logLineMessage({ userName, userId, groupName, groupId });
     }
   } catch (err) {
-    console.error('\n===== LINE Message =====');
-    console.error(`Error: ${err?.message || err}`);
-    console.error('===== End Function ======\n');
-
-    if (!res.headersSent) res.status(500).json({ error: 'server error' });
+    console.error('\n============');
+    console.error('Error (lineWebhook.js)');
+    console.error('============');
+    console.error(err?.message || err);
+    console.error('============');
+    console.error('(จบขั้นตอน Error)');
+    console.error('❌❌❌❌❌\n');
   }
 });
 
