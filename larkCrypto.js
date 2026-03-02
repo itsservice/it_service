@@ -13,9 +13,15 @@ function decryptLark(encryptKey, encrypt) {
   ]);
 
   const pad = decrypted[decrypted.length - 1];
+  if (pad < 1 || pad > 16) throw new Error(`Invalid padding length: ${pad}`);
   decrypted = decrypted.slice(0, decrypted.length - pad);
 
-  return JSON.parse(decrypted.toString('utf8'));
+  const text = decrypted.toString('utf8');
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Decrypted payload is not valid JSON');
+  }
 }
 
 module.exports = { decryptLark };
