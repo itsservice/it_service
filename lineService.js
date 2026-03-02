@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { lineHeaders } = require('../config/line');
+const { lineHeaders } = require('./line');
 
 // ================= LINE PUSH FLEX =================
 const linePushFlex = (to, flexMessage) =>
