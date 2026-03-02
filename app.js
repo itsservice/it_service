@@ -1,13 +1,26 @@
 const express = require('express');
-const larkWebhook = require('./larkWebhook');
+
+const larkWebhookRouter = require('./routes/larkWebhook');
+const lineWebhookRouter = require('./routes/lineWebhook');
 
 const app = express();
-app.use(express.json());
 
-// ================= HEALTH =================
+// เก็บ rawBody สำหรับตรวจ LINE signature
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf; // Buffer
+    }
+  })
+);
+
+// HEALTH
 app.get('/', (_, res) => res.send('SERVER OK'));
 
-// Lark routes
-app.use('/lark', larkWebhook);
+// LARK
+app.use('/lark', larkWebhookRouter);
+
+// LINE (ใหม่)
+app.use('/line', lineWebhookRouter);
 
 module.exports = app;
