@@ -1,52 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GD Portal</title>
-  <link rel="stylesheet" href="/portal.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brand Portal</title>
+  <link rel="stylesheet" href="/assets/portal.css" />
 </head>
 
-<body>
-  <div class="menu-btn" id="menuBtn" aria-label="menu">☰</div>
-  <div class="time" id="time"></div>
+<body class="theme-dark">
+  <!-- TOP LEFT: menu button (pos 1) -->
+  <button id="menuBtn" class="icon-btn menu-btn" aria-label="Menu">
+    <span class="hamburger" aria-hidden="true"></span>
+  </button>
 
-  <aside class="sidebar" id="sidebar">
-    <h3>Preset</h3>
-
-    <div class="section">
-      <strong>Size</strong>
-      <button class="btn preset" data-size="small">Small</button>
-      <button class="btn preset" data-size="medium">Medium</button>
-      <button class="btn preset" data-size="large">Large</button>
+  <!-- TOP RIGHT: info + theme control (pos 3) -->
+  <div class="top-right">
+    <div class="info">
+      <div id="timeText" class="time"></div>
+      <div id="tempText" class="temp">--°C</div>
     </div>
 
-    <hr/>
+    <button id="themeBtn" class="icon-btn theme-btn" aria-label="Theme">
+      <span class="gear" aria-hidden="true">⚙️</span>
+    </button>
 
-    <div class="section">
-      <strong>Color</strong>
-      <button class="btn preset" data-color="#007bff">Blue</button>
-      <button class="btn preset" data-color="#28a745">Green</button>
-      <button class="btn preset" data-color="#dc3545">Red</button>
+    <div id="themePop" class="theme-pop" role="menu" aria-hidden="true">
+      <button class="theme-item" data-theme="light">🌤️ Light</button>
+      <button class="theme-item" data-theme="dark">🌙 Dark</button>
+      <button class="theme-item" data-theme="custom">🎚️ Auto</button>
+
+      <div id="sliderWrap" class="slider-wrap" hidden>
+        <div class="slider-label">
+          <span>🌤️</span><span>พลบค่ำ</span><span>🌙</span>
+        </div>
+        <input id="themeSlider" type="range" min="0" max="100" value="100" />
+      </div>
     </div>
+  </div>
+
+  <!-- overlay for closing sidebar by clicking empty area -->
+  <div id="overlay" class="overlay" hidden></div>
+
+  <!-- SIDEBAR (covers ~20% width, pos 1/4/7) -->
+  <aside id="sidebar" class="sidebar" aria-hidden="true">
+    <div class="sidebar-head">
+      <div>
+        <div class="sidebar-title">Brand</div>
+        <div class="sidebar-sub">Select brand</div>
+      </div>
+
+      <button id="closeBtn" class="close-btn" aria-label="Close">✕</button>
+    </div>
+
+    <nav id="brandList" class="brand-list"></nav>
   </aside>
 
-  <main class="container">
-    <div class="brand fade-up" style="animation-delay:0.2s">GD</div>
+  <!-- MAIN (center pos 5; fade-up from pos 8) -->
+  <main class="main">
+    <div id="brandTitle" class="brand-title fade-up">—</div>
 
-    <button id="btn1" class="btn action fade-up primary"
-      style="animation-delay:0.4s"
-      data-href="https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf">
-      แจ้งปัญหา
-    </button>
-
-    <button id="btn2" class="btn action fade-up secondary"
-      style="animation-delay:0.6s"
-      data-href="https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc">
-      ติดตาม Ticket
-    </button>
+    <div class="actions fade-up" style="animation-delay:.08s">
+      <button id="btnReport" class="action-btn">แจ้งปัญหา</button>
+      <button id="btnTrack" class="action-btn secondary">ติดตาม Ticket</button>
+    </div>
   </main>
 
-  <script src="/portal.js"></script>
+  <script src="/assets/portal.js"></script>
 </body>
 </html>
