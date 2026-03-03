@@ -1,30 +1,36 @@
 :root{
+  /* Button colors (แก้ที่นี่ที่เดียว) */
   --btn-idle: #6b7280;     /* grey */
   --btn-action: #60a5fa;   /* light blue */
-  --bg: #0b1220;
-  --bg2: #0f1a33;
-  --card: rgba(255,255,255,0.06);
-  --text: rgba(255,255,255,0.92);
+
+  /* Dynamic text color (JS จะ set ให้ตรงข้ามพื้นหลัง) */
+  --fg: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.65);
 
-  /* custom theme mix 0=day -> 100=night */
-  --mix: 50;
+  /* Background base (JS จะ set) */
+  --bg1: #0b1220;
+  --bg2: #0a1630;
+
+  --panel: rgba(255,255,255,0.08);
+  --panel2: rgba(10,14,26,0.92);
 }
 
 *{ box-sizing: border-box; }
+
 body{
   margin:0;
   font-family: Arial, sans-serif;
-  color: var(--text);
+  color: var(--fg);
   min-height: 100vh;
   overflow-x: hidden;
 
-  /* background will be controlled by theme class */
-  background: radial-gradient(1200px 600px at 30% 30%, rgba(255,255,255,0.08), transparent 60%),
-              linear-gradient(135deg, var(--bg), var(--bg2));
+  /* JS จะ override ให้ตาม theme */
+  background:
+    radial-gradient(900px 650px at 25% 20%, rgba(255,255,255,0.10), transparent 60%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
 }
 
-/* ===== top UI ===== */
+/* ---------------- Top UI (pos 1,3) ---------------- */
 .fab{
   width:56px;
   height:56px;
@@ -36,26 +42,49 @@ body{
   justify-content:center;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   transition: transform .18s ease, filter .18s ease;
+  background: rgba(255,255,255,0.12);
+  color: var(--fg);
+  backdrop-filter: blur(10px);
 }
 .fab:active{ transform: scale(0.96); }
 
-.fab-left{
+.fab.left{
   position: fixed;
   top: 18px;
   left: 18px;
-  background: rgba(255,255,255,0.12);
-  color: var(--text);
-  z-index: 50;
-}
-.fab-right{
-  background: rgba(255,255,255,0.12);
-  color: var(--text);
+  z-index: 60;
 }
 
+.topRight{
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display:flex;
+  align-items:flex-start;
+  gap: 12px;
+  z-index: 70;
+}
+
+.clockCard{
+  text-align:right;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.20);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--fg);
+  min-width: 160px;
+}
+#clockText{ font-size: 13px; color: var(--muted); }
+.tempRow{ margin-top: 2px; font-size: 14px; color: var(--fg); }
+
+.themeWrap{ position: relative; }
+
+/* hamburger */
 .hamburger{
   width: 20px;
   height: 2px;
-  background: var(--text);
+  background: var(--fg);
   position: relative;
   display:block;
 }
@@ -66,35 +95,13 @@ body{
   left:0;
   width: 20px;
   height: 2px;
-  background: var(--text);
+  background: var(--fg);
 }
 .hamburger::before{ top: -6px; }
 .hamburger::after{ top: 6px; }
 
-.topRight{
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  display:flex;
-  align-items:flex-start;
-  gap: 12px;
-  z-index: 60;
-}
-
-.infoBox{
-  text-align:right;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.20);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.08);
-}
-.dt{ font-size: 13px; color: var(--muted); }
-.temp{ margin-top: 2px; font-size: 14px; }
-
-.themeWrap{ position: relative; }
-
-.panel{
+/* theme popup */
+.popup{
   position:absolute;
   top: 64px;
   right: 0;
@@ -102,142 +109,148 @@ body{
   padding: 10px;
   border-radius: 14px;
   background: rgba(20,25,40,0.92);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 18px 40px rgba(0,0,0,0.45);
   backdrop-filter: blur(12px);
+
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition: .18s ease;
   transform-origin: top right;
-  animation: pop .18s ease;
 }
-@keyframes pop{
-  from { transform: translateY(-8px) scale(0.98); opacity: 0; }
-  to   { transform: translateY(0) scale(1); opacity: 1; }
+.popup.open{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
-.panelTitle{
-  font-weight: 700;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.panelItem{
+.popItem{
   width:100%;
   border:none;
   border-radius: 12px;
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
+  background: rgba(255,255,255,0.07);
+  color: var(--fg);
   padding: 10px 10px;
   cursor:pointer;
   text-align:left;
   margin-bottom: 8px;
   transition: filter .18s ease, transform .18s ease;
 }
-.panelItem:hover{ filter: brightness(1.15); }
-.panelItem:active{ transform: scale(0.98); }
+.popItem:hover{ filter: brightness(1.15); }
+.popItem:active{ transform: scale(0.98); }
 
-.customRow{
+.sliderWrap{
   margin-top: 6px;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.07);
 }
-.customLabel{
-  display:flex;
-  align-items:center;
-  gap:8px;
+.sliderLabel{
   font-size: 12px;
   color: var(--muted);
   margin-bottom: 8px;
 }
-.spacer{ flex:1; }
-.muted{ color: var(--muted); }
 #mixSlider{ width: 100%; }
 
-/* ===== sidebar (left 20%) ===== */
+/* scrim */
+.scrim{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 55;
+}
+
+/* ---------------- Sidebar (pos 1,4,7) ----------------
+   ต้องบังพื้นที่เมนู ~20% ของหน้าจอ (desktop)
+*/
 .sidebar{
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: min(320px, 20vw);
-  min-width: 260px;
+  width: clamp(240px, 20vw, 320px);
   background: rgba(10,14,26,0.92);
-  border-right: 1px solid rgba(255,255,255,0.08);
+  border-right: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(14px);
-  z-index: 55;
+  z-index: 56;
 
   transform: translateX(-110%);
   opacity: 0;
   transition: transform .28s ease, opacity .28s ease;
+  will-change: transform, opacity;
 }
 .sidebar.open{
   transform: translateX(0);
   opacity: 1;
 }
 
-.sideHeader{
+/* top inside sidebar */
+.sideTop{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
   padding: 16px 16px 8px 16px;
 }
-.sideTitle{
+
+.sideH1{
   font-size: 22px;
   font-weight: 800;
+  color: var(--fg);
 }
-.closeX{
+.sideH2{
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.closeBtn{
   border:none;
   width:42px;
   height:42px;
   border-radius:999px;
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
+  background: rgba(255,255,255,0.10);
+  color: var(--fg);
   cursor:pointer;
 }
-.sideSubTitle{
-  padding: 0 16px 12px 16px;
-  color: var(--muted);
-}
 
+/* brand list: scroll รองรับเพิ่มในอนาคต */
 .brandList{
   padding: 0 12px 18px 12px;
   display:flex;
   flex-direction: column;
   gap: 10px;
+
+  overflow-y: auto;
+  height: calc(100vh - 86px);
+  -webkit-overflow-scrolling: touch;
 }
 
-.brandBtn{
+.brandItem{
   width: 100%;
   padding: 16px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.07);
-  color: var(--text);
+  color: var(--fg);
   cursor:pointer;
   text-align:left;
   font-size: 18px;
   transition: filter .18s ease, transform .18s ease;
 }
-.brandBtn:hover{ filter: brightness(1.15); transform: translateY(-1px); }
-.brandBtn.active{
+.brandItem:hover{ filter: brightness(1.15); transform: translateY(-1px); }
+.brandItem:active{ transform: scale(0.99); }
+
+.brandItem.active{
   background: linear-gradient(90deg, rgba(96,165,250,0.45), rgba(96,165,250,0.12));
   border-color: rgba(96,165,250,0.35);
 }
 
-/* overlay: click outside to close */
-.overlay{
-  position: fixed;
-  inset: 0;
-  z-index: 54;
-  background: rgba(0,0,0,0.35);
-}
-.hidden{ display:none !important; }
-
-/* ===== main center ===== */
+/* ---------------- Main center (pos 5) ---------------- */
 .main{
   min-height: 100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding: 80px 16px 40px;
+  padding: 90px 16px 50px;
 }
 
 .center{
@@ -250,17 +263,10 @@ body{
   font-weight: 800;
   letter-spacing: 0.5px;
   margin-bottom: 18px;
+  color: var(--fg);
 }
 
-.btnStack{
-  display:flex;
-  flex-direction:column;
-  gap: 14px;
-  align-items:center;
-}
-
-/* idle/action use same base but color differs */
-.idleBtn,
+/* Buttons: ใช้ตัวแปรสีเดียวกันเพื่อแก้ง่าย */
 .actionBtn{
   width: 280px;
   max-width: 90vw;
@@ -268,19 +274,28 @@ body{
   border-radius: 14px;
   border: none;
   cursor:pointer;
-  color: white;
   font-size: 16px;
   transition: transform .18s ease, filter .18s ease, background .18s ease;
+  color: var(--fg);
 }
+.actionBtn.primary{ background: var(--btn-idle); }
+.actionBtn.secondary{ background: var(--btn-idle); }
 
-.idleBtn{ background: var(--btn-idle); }
-.actionBtn{ background: var(--btn-action); }
-
-.idleBtn:hover,
-.actionBtn:hover{ filter: brightness(1.08); transform: translateY(-1px); }
-
-.idleBtn:active,
+.actionBtn:hover{
+  background: var(--btn-action);
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
 .actionBtn:active{ transform: scale(0.98); }
+
+.notReady{
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: var(--fg);
+  border: 1px solid rgba(255,255,255,0.10);
+}
 
 /* entrance animation from bottom (pos 8 -> 5 느낌) */
 .fadeUp{
@@ -292,11 +307,14 @@ body{
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== responsive (mobile = sidebar becomes full width but still "left zone") ===== */
+/* ---------------- Mobile only adjustments ----------------
+   ตามที่เต้บอก: แถบเมนู "ไม่ใหญ่เกิน" และพอดีกับมือถือ
+*/
 @media (max-width: 640px){
   .sidebar{
-    width: 86vw; /* phone: still left side panel but bigger */
-    min-width: unset;
+    width: 74vw;          /* ลดจาก 86vw -> ใกล้ภาพตัวอย่าง */
+    max-width: 320px;
   }
   .brandTitle{ font-size: 34px; }
+  .clockCard{ min-width: 150px; }
 }
