@@ -27,14 +27,29 @@ app.get('/portal', (_req, res) => {
   res.sendFile(path.join(__dirname, 'portal.html'));
 });
 
+// ======= PORTAL WEB (serve html/css/js as separate files) =======
+const path = require('path');
+
+app.get('/portal/:brand?', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'portal.html'));
+});
+
+app.get('/assets/portal.css', (_req, res) => {
+  res.type('text/css').sendFile(path.join(__dirname, 'portal.css'));
+});
+
+app.get('/assets/portal.js', (_req, res) => {
+  res.type('application/javascript').sendFile(path.join(__dirname, 'portal.js'));
+});
+
 // 🔐 แนะนำ: ลบหรือคอมเมนต์ทิ้งหลังตรวจแล้ว
-// app.get('/debug/env', (_req, res) => {
-//   res.json({
-//     hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
-//     lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
-//     hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
-//   });
-// });
+app.get('/debug/env', (_req, res) => {
+  res.json({
+    hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
+    lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
+    hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
+  });
+});
 
 // LARK
 app.use('/lark', larkWebhookRouter);
