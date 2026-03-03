@@ -1,67 +1,75 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Brand Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IT Service Portal</title>
   <link rel="stylesheet" href="/assets/portal.css" />
 </head>
-
-<body class="theme-dark">
-  <!-- TOP LEFT: menu button (pos 1) -->
-  <button id="menuBtn" class="icon-btn menu-btn" aria-label="Menu">
-    <span class="hamburger" aria-hidden="true"></span>
+<body>
+  <!-- TOP LEFT : menu circle -->
+  <button id="menuBtn" class="fab fab-left" aria-label="menu">
+    <span class="hamburger"></span>
   </button>
 
-  <!-- TOP RIGHT: info + theme control (pos 3) -->
-  <div class="top-right">
-    <div class="info">
-      <div id="timeText" class="time"></div>
-      <div id="tempText" class="temp">--°C</div>
+  <!-- TOP RIGHT : info + theme -->
+  <div class="topRight">
+    <div class="infoBox">
+      <div id="dateTime" class="dt">--</div>
+      <div class="temp"><span id="tempC">--</span>°C</div>
     </div>
 
-    <button id="themeBtn" class="icon-btn theme-btn" aria-label="Theme">
-      <span class="gear" aria-hidden="true">⚙️</span>
-    </button>
+    <div class="themeWrap">
+      <button id="themeBtn" class="fab fab-right" aria-label="theme">
+        ⚙️
+      </button>
 
-    <div id="themePop" class="theme-pop" role="menu" aria-hidden="true">
-      <button class="theme-item" data-theme="light">🌤️ Light</button>
-      <button class="theme-item" data-theme="dark">🌙 Dark</button>
-      <button class="theme-item" data-theme="custom">🎚️ Auto</button>
+      <div id="themePanel" class="panel hidden" role="menu">
+        <div class="panelTitle">Theme</div>
 
-      <div id="sliderWrap" class="slider-wrap" hidden>
-        <div class="slider-label">
-          <span>🌤️</span><span>พลบค่ำ</span><span>🌙</span>
+        <button class="panelItem" data-theme="light">🌤️ Light</button>
+        <button class="panelItem" data-theme="dark">🌙 Dark</button>
+        <button class="panelItem" data-theme="custom">🎚️ Custom</button>
+
+        <div id="customRow" class="customRow hidden">
+          <div class="customLabel">
+            🌤️ <span class="muted">Day</span>
+            <span class="spacer"></span>
+            <span class="muted">Night</span> 🌙
+          </div>
+          <input id="mixSlider" type="range" min="0" max="100" value="50" />
         </div>
-        <input id="themeSlider" type="range" min="0" max="100" value="100" />
       </div>
     </div>
   </div>
 
-  <!-- overlay for closing sidebar by clicking empty area -->
-  <div id="overlay" class="overlay" hidden></div>
+  <!-- MENU OVERLAY (cover only left 20% on desktop) -->
+  <div id="overlay" class="overlay hidden"></div>
 
-  <!-- SIDEBAR (covers ~20% width, pos 1/4/7) -->
-  <aside id="sidebar" class="sidebar" aria-hidden="true">
-    <div class="sidebar-head">
-      <div>
-        <div class="sidebar-title">Brand</div>
-        <div class="sidebar-sub">Select brand</div>
-      </div>
-
-      <button id="closeBtn" class="close-btn" aria-label="Close">✕</button>
+  <aside id="sidebar" class="sidebar" aria-label="brand menu">
+    <div class="sideHeader">
+      <div class="sideTitle">Brand</div>
+      <button id="closeSidebarBtn" class="closeX" aria-label="close">✕</button>
     </div>
 
-    <nav id="brandList" class="brand-list"></nav>
+    <div class="sideSubTitle">Select brand</div>
+
+    <div id="brandList" class="brandList"></div>
   </aside>
 
-  <!-- MAIN (center pos 5; fade-up from pos 8) -->
+  <!-- MAIN CENTER -->
   <main class="main">
-    <div id="brandTitle" class="brand-title fade-up">—</div>
+    <div class="center fadeUp">
+      <div id="brandTitle" class="brandTitle">GD</div>
 
-    <div class="actions fade-up" style="animation-delay:.08s">
-      <button id="btnReport" class="action-btn">แจ้งปัญหา</button>
-      <button id="btnTrack" class="action-btn secondary">ติดตาม Ticket</button>
+      <div class="btnStack">
+        <button id="btnIssue" class="actionBtn">
+          แจ้งปัญหา
+        </button>
+        <button id="btnTrack" class="idleBtn">
+          ติดตาม Ticket
+        </button>
+      </div>
     </div>
   </main>
 
