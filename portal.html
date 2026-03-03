@@ -1,78 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IT Service Portal</title>
-  <link rel="stylesheet" href="/assets/portal.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>IT Portal</title>
+  <link rel="stylesheet" href="/portal.css" />
 </head>
 <body>
-  <!-- TOP LEFT : menu circle -->
-  <button id="menuBtn" class="fab fab-left" aria-label="menu">
+  <!-- Top overlay controls (ตำแหน่ง 1 และ 3) -->
+  <button id="menuBtn" class="fab left" aria-label="Menu">
     <span class="hamburger"></span>
   </button>
 
-  <!-- TOP RIGHT : info + theme -->
   <div class="topRight">
-    <div class="infoBox">
-      <div id="dateTime" class="dt">--</div>
-      <div class="temp"><span id="tempC">--</span>°C</div>
+    <div class="clockCard" id="clockCard">
+      <div id="clockText">--/--/---- --:--:--</div>
+      <div class="tempRow"><span id="tempText">--°C</span></div>
     </div>
 
-    <div class="themeWrap">
-      <button id="themeBtn" class="fab fab-right" aria-label="theme">
-        ⚙️
-      </button>
+    <button id="themeBtn" class="fab right" aria-label="Theme">⚙️</button>
 
-      <div id="themePanel" class="panel hidden" role="menu">
-        <div class="panelTitle">Theme</div>
+    <div id="themePopup" class="popup" role="menu" aria-hidden="true">
+      <button class="popItem" data-theme="light">🌤️ Light</button>
+      <button class="popItem" data-theme="dark">🌙 Dark</button>
+      <button class="popItem" data-theme="auto">🎚️ Auto</button>
 
-        <button class="panelItem" data-theme="light">🌤️ Light</button>
-        <button class="panelItem" data-theme="dark">🌙 Dark</button>
-        <button class="panelItem" data-theme="custom">🎚️ Custom</button>
-
-        <div id="customRow" class="customRow hidden">
-          <div class="customLabel">
-            🌤️ <span class="muted">Day</span>
-            <span class="spacer"></span>
-            <span class="muted">Night</span> 🌙
-          </div>
-          <input id="mixSlider" type="range" min="0" max="100" value="50" />
-        </div>
+      <div class="sliderWrap" id="sliderWrap" hidden>
+        <div class="sliderLabel">🌤️ → 🌆 → 🌙</div>
+        <input id="mixSlider" type="range" min="0" max="100" value="0" />
       </div>
     </div>
   </div>
 
-  <!-- MENU OVERLAY (cover only left 20% on desktop) -->
-  <div id="overlay" class="overlay hidden"></div>
+  <!-- Dim overlay (กดพื้นที่ว่างเพื่อปิด) -->
+  <div id="scrim" class="scrim" hidden></div>
 
-  <aside id="sidebar" class="sidebar" aria-label="brand menu">
-    <div class="sideHeader">
-      <div class="sideTitle">Brand</div>
-      <button id="closeSidebarBtn" class="closeX" aria-label="close">✕</button>
+  <!-- Sidebar (ตำแหน่ง 1,4,7) -->
+  <aside id="sidebar" class="sidebar" aria-hidden="true">
+    <div class="sideTop">
+      <div class="sideTitle">
+        <div class="sideH1">Brand</div>
+        <div class="sideH2">Select brand</div>
+      </div>
+      <button id="closeBtn" class="closeBtn" aria-label="Close">✕</button>
     </div>
 
-    <div class="sideSubTitle">Select brand</div>
-
-    <div id="brandList" class="brandList"></div>
+    <div id="brandList" class="brandList" role="list"></div>
   </aside>
 
-  <!-- MAIN CENTER -->
+  <!-- Main content (ตำแหน่ง 5 + fade-up จาก 8 ไป 5) -->
   <main class="main">
-    <div class="center fadeUp">
-      <div id="brandTitle" class="brandTitle">GD</div>
+    <div class="center fadeUp" id="centerBox">
+      <div id="brandTitle" class="brandTitle">-</div>
 
-      <div class="btnStack">
-        <button id="btnIssue" class="actionBtn">
-          แจ้งปัญหา
-        </button>
-        <button id="btnTrack" class="idleBtn">
-          ติดตาม Ticket
-        </button>
+      <button id="btnReport" class="actionBtn primary">แจ้งปัญหา</button>
+      <button id="btnTrack" class="actionBtn secondary">ติดตาม Ticket</button>
+
+      <div id="notReady" class="notReady" hidden>
+        ขณะนี้หน้าเว็บยังไม่พร้อมใช้งาน
       </div>
     </div>
   </main>
 
-  <script src="/assets/portal.js"></script>
+  <script src="/portal.js"></script>
 </body>
 </html>
