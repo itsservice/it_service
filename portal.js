@@ -2,17 +2,17 @@
 // CONFIG (แก้ที่นี่ที่เดียว)
 // ======================
 const BRAND_CONFIG = {
-  "Animal House"      : { report: 'https://example.com', track: 'https://example.com' },
-  "Another Hound Café": { report: 'https://example.com', track: 'https://example.com' },
-  "Au Bon Pain"       : { report: 'https://example.com', track: 'https://example.com' },
-  "Dunkin'"           : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Café"    : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Coffee"  : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Original": { report: 'https://example.com', track: 'https://example.com' },
-  "Kin+Hey (กินเฮ)"   : { report: 'https://example.com', track: 'https://example.com' },
-  "Le Grand Véfour"   : { report: 'https://example.com', track: 'https://example.com' },
+  "Animal House"        : { report: 'https://example.com', track: 'https://example.com' },
+  "Another Hound Café"  : { report: 'https://example.com', track: 'https://example.com' },
+  "Au Bon Pain"         : { report: 'https://example.com', track: 'https://example.com' },
+  "Dunkin'"             : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Café"      : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Coffee"    : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Original"  : { report: 'https://example.com', track: 'https://example.com' },
+  "Kin+Hey (กินเฮ)"     : { report: 'https://example.com', track: 'https://example.com' },
+  "Le Grand Véfour"     : { report: 'https://example.com', track: 'https://example.com' },
   "M-Kitchen (ครัวเอ็ม)": { report: 'https://example.com', track: 'https://example.com' },
-  "Smileyhound"       : { report: 'https://example.com', track: 'https://example.com' },
+  "Smileyhound"         : { report: 'https://example.com', track: 'https://example.com' },
 };
 
 // ======================
@@ -24,6 +24,7 @@ const scrim      = document.getElementById('scrim');
 const closeBtn   = document.getElementById('closeBtn');
 const brandList  = document.getElementById('brandList');
 const brandTitle = document.getElementById('brandTitle');
+const brandSub   = document.getElementById('brandSub');
 const btnReport  = document.getElementById('btnReport');
 const btnTrack   = document.getElementById('btnTrack');
 const notReady   = document.getElementById('notReady');
@@ -39,8 +40,9 @@ const tempText   = document.getElementById('tempText');
 // ======================
 function addRipple(el, e) {
   const rect = el.getBoundingClientRect();
-  const x = e ? e.clientX - rect.left : rect.width / 2;
-  const y = e ? e.clientY - rect.top  : rect.height / 2;
+  const src = e?.touches?.[0] || e;
+  const x = src ? src.clientX - rect.left : rect.width / 2;
+  const y = src ? src.clientY - rect.top  : rect.height / 2;
   const size = Math.max(rect.width, rect.height);
   const r = document.createElement('span');
   r.className = 'btn-ripple';
@@ -50,19 +52,21 @@ function addRipple(el, e) {
 }
 
 // ======================
-// Brand routing  ← FIX: decodeURIComponent ป้องกัน %20
+// Brand routing — FIX %20
 // ======================
 function getBrandFromPath() {
   const parts = location.pathname.split('/').filter(Boolean);
   if (parts[0] !== 'portal') return Object.keys(BRAND_CONFIG)[0];
-  const slug = decodeURIComponent(parts[1] || '');
-  // หา key ที่ตรงตัว หรือ case-insensitive
-  const exact = BRAND_CONFIG[slug];
-  if (exact) return slug;
-  const found = Object.keys(BRAND_CONFIG).find(
-    k => k.toLowerCase() === slug.toLowerCase()
-  );
-  return found || Object.keys(BRAND_CONFIG)[0];
+  try {
+    const slug = decodeURIComponent(parts[1] || '');
+    if (BRAND_CONFIG[slug]) return slug;
+    const ci = Object.keys(BRAND_CONFIG).find(
+      k => k.toLowerCase() === slug.toLowerCase()
+    );
+    return ci || Object.keys(BRAND_CONFIG)[0];
+  } catch {
+    return Object.keys(BRAND_CONFIG)[0];
+  }
 }
 
 let currentBrand = null;
@@ -78,6 +82,7 @@ function setActiveBrandUI(brand, animate = false) {
     brandTitle.textContent = brand;
   }
   currentBrand = brand;
+  brandSub.textContent = '';
 
   [...brandList.querySelectorAll('.brandItem')].forEach(btn => {
     btn.classList.toggle('active', btn.dataset.brand === brand);
@@ -85,16 +90,14 @@ function setActiveBrandUI(brand, animate = false) {
 
   const cfg = BRAND_CONFIG[brand];
   const invalid = !cfg || !cfg.report || !cfg.track || cfg.report === cfg.track;
-
   if (invalid) {
     notReady.hidden = false;
-    btnReport.onclick = null;
-    btnTrack.onclick  = null;
+    btnReport.onclick = btnTrack.onclick = null;
     return;
   }
   notReady.hidden = true;
-  btnReport.onclick = (e) => { addRipple(btnReport, e); setTimeout(() => window.location.href = cfg.report, 220); };
-  btnTrack.onclick  = (e) => { addRipple(btnTrack, e);  setTimeout(() => window.location.href = cfg.track,  220); };
+  btnReport.onclick = (e) => { addRipple(btnReport, e); setTimeout(() => location.href = cfg.report, 220); };
+  btnTrack.onclick  = (e) => { addRipple(btnTrack, e);  setTimeout(() => location.href = cfg.track,  220); };
 }
 
 // ======================
@@ -110,7 +113,7 @@ function openMenu() {
   document.body.classList.add('menuOpen');
   sidebar.querySelectorAll('.brandItem').forEach((el, i) => {
     el.classList.remove('visible');
-    el.style.animationDelay = `${i * 35 + 60}ms`;
+    el.style.animationDelay = `${i * 32 + 55}ms`;
     void el.offsetWidth;
     el.classList.add('visible');
   });
@@ -128,23 +131,26 @@ menuBtn.addEventListener('click', (e) => { addRipple(menuBtn, e); toggleMenu(); 
 closeBtn.addEventListener('click', (e) => { addRipple(closeBtn, e); closeMenu(); });
 scrim.addEventListener('click', closeMenu);
 
+// Swipe left
 let tx0 = null, ty0 = null;
-sidebar.addEventListener('touchstart', e => { const t = e.touches?.[0]; if(t){tx0=t.clientX;ty0=t.clientY;} }, {passive:true});
-sidebar.addEventListener('touchmove',  e => {
-  if(!isOpen||tx0==null) return;
-  const t=e.touches?.[0]; if(!t) return;
-  const dx=t.clientX-tx0, dy=t.clientY-ty0;
-  if(Math.abs(dy)>Math.abs(dx)) return;
-  if(dx<-55){closeMenu();tx0=ty0=null;}
-}, {passive:true});
-sidebar.addEventListener('touchend', ()=>{tx0=ty0=null;}, {passive:true});
+sidebar.addEventListener('touchstart', e => {
+  const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY;
+}, { passive: true });
+sidebar.addEventListener('touchmove', e => {
+  if (!isOpen || tx0 == null) return;
+  const t = e.touches[0];
+  const dx = t.clientX - tx0, dy = t.clientY - ty0;
+  if (Math.abs(dy) > Math.abs(dx)) return;
+  if (dx < -55) { closeMenu(); tx0 = ty0 = null; }
+}, { passive: true });
+sidebar.addEventListener('touchend', () => { tx0 = ty0 = null; }, { passive: true });
 
 // ======================
-// Brand list — A-Z
+// Brand list — sorted A-Z
 // ======================
 function renderBrandList() {
   const brands = Object.keys(BRAND_CONFIG).sort((a, b) =>
-    a.localeCompare(b, ['en','th'], { sensitivity: 'base', numeric: true })
+    a.localeCompare(b, ['en', 'th'], { sensitivity: 'base', numeric: true })
   );
   brandList.innerHTML = '';
   brands.forEach(b => {
@@ -152,6 +158,7 @@ function renderBrandList() {
     btn.className = 'brandItem';
     btn.textContent = b;
     btn.dataset.brand = b;
+    btn.title = b; // tooltip ชื่อเต็มกรณีถูกตัด
     btn.addEventListener('click', (e) => {
       addRipple(btn, e);
       setTimeout(() => {
@@ -167,15 +174,14 @@ function renderBrandList() {
 // ======================
 // Theme
 // ======================
-function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
 function applyTheme(mode) {
   localStorage.setItem('themeMode', mode);
   sliderWrap.hidden = mode !== 'auto';
-  if (mode === 'auto') { applyMix(parseInt(localStorage.getItem('mix')||'100',10)); return; }
+  if (mode === 'auto') { applyMix(parseInt(localStorage.getItem('mix') || '100', 10)); return; }
   document.body.classList.toggle('theme-light', mode === 'light');
 }
-
 function applyMix(v) {
   v = clamp(v, 0, 100);
   localStorage.setItem('mix', String(v));
@@ -191,84 +197,79 @@ themeBtn.addEventListener('click', (e) => {
 themePopup.querySelectorAll('.popItem').forEach(btn => {
   btn.addEventListener('click', (e) => { addRipple(btn, e); applyTheme(btn.dataset.theme); });
 });
-mixSlider.addEventListener('input', e => applyMix(parseInt(e.target.value,10)));
+mixSlider.addEventListener('input', e => applyMix(parseInt(e.target.value, 10)));
 document.addEventListener('click', e => {
   if (!themePopup.contains(e.target) && !themeBtn.contains(e.target))
     themePopup.classList.remove('open');
 });
 
 // ======================
-// Particle / Canvas background
+// Particle canvas
 // ======================
-(function initCanvas() {
+(function () {
   const canvas = document.getElementById('bgCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
+  let W, H, pts = [];
+  const isMobile = () => window.innerWidth < 600;
 
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
   }
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', resize, { passive: true });
   resize();
 
-  const COUNT = 55;
+  // ลดจำนวน particle บนมือถือ
+  const COUNT = isMobile() ? 30 : 55;
   for (let i = 0; i < COUNT; i++) {
-    particles.push({
-      x: Math.random() * 1000,
-      y: Math.random() * 800,
-      r: Math.random() * 1.4 + 0.3,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.18,
-      o: Math.random() * 0.5 + 0.15,
+    pts.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.3 + 0.3,
+      vx: (Math.random() - 0.5) * 0.16,
+      vy: (Math.random() - 0.5) * 0.16,
+      o: Math.random() * 0.45 + 0.12,
     });
   }
 
-  let mouse = { x: -999, y: -999 };
-  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  let mx = -999, my = -999;
+  window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+
+  // ไม่ใช้ mouse effect บนมือถือ (performance)
+  const CONNECT_DIST = isMobile() ? 80 : 110;
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    const isLight = document.body.classList.contains('theme-light');
-    const dotColor = isLight ? '30,50,120' : '150,190,255';
+    const light = document.body.classList.contains('theme-light');
+    const col = light ? '30,50,120' : '150,190,255';
 
-    particles.forEach(p => {
-      // subtle mouse repel
-      const dx = p.x - mouse.x, dy = p.y - mouse.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 120) {
-        p.vx += dx / dist * 0.04;
-        p.vy += dy / dist * 0.04;
+    pts.forEach(p => {
+      if (!isMobile()) {
+        const dx = p.x - mx, dy = p.y - my;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 120) { p.vx += dx/d*0.035; p.vy += dy/d*0.035; }
+        const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+        if (spd > 0.55) { p.vx *= 0.55/spd; p.vy *= 0.55/spd; }
       }
-      // speed limit
-      const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-      if (spd > 0.6) { p.vx *= 0.6/spd; p.vy *= 0.6/spd; }
-
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0) p.x = W;
-      if (p.x > W) p.x = 0;
-      if (p.y < 0) p.y = H;
-      if (p.y > H) p.y = 0;
-
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${dotColor},${p.o})`;
+      ctx.fillStyle = `rgba(${col},${p.o})`;
       ctx.fill();
     });
 
-    // connect nearby dots
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i+1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i+1; j < pts.length; j++) {
+        const dx = pts[i].x-pts[j].x, dy = pts[i].y-pts[j].y;
         const d = Math.sqrt(dx*dx + dy*dy);
-        if (d < 110) {
+        if (d < CONNECT_DIST) {
           ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(${dotColor},${0.12*(1 - d/110)})`;
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = `rgba(${col},${0.10*(1-d/CONNECT_DIST)})`;
           ctx.lineWidth = 0.6;
           ctx.stroke();
         }
@@ -284,10 +285,11 @@ document.addEventListener('click', e => {
 // ======================
 function updateClock() {
   const now = new Date();
-  clockText.textContent = now.toLocaleString('th-TH', {
-    day:'2-digit', month:'2-digit', year:'numeric',
-    hour:'2-digit', minute:'2-digit', second:'2-digit'
-  });
+  // มือถือ: แสดงแค่เวลา  /  desktop: แสดง date+เวลา
+  const mobile = window.innerWidth < 480;
+  clockText.textContent = mobile
+    ? now.toLocaleTimeString('th-TH')
+    : now.toLocaleString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
 setInterval(updateClock, 1000);
 updateClock();
@@ -298,7 +300,7 @@ async function loadTemp() {
     const j = await r.json();
     const t = Math.round(j?.current?.temperature_2m);
     if (Number.isFinite(t)) tempText.textContent = t + '°C';
-  } catch(_) {}
+  } catch (_) {}
 }
 loadTemp();
 
