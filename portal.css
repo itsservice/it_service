@@ -9,28 +9,27 @@
   --fg:     rgba(255,255,255,0.90);
   --fg2:    rgba(255,255,255,0.45);
   --accent: #60a5fa;
-  --glow:   rgba(96,165,250,0.20);
+  --glow:   rgba(96,165,250,0.22);
   --r:      14px;
   --ease:   cubic-bezier(0.22,0.61,0.36,1);
   --spring: cubic-bezier(0.34,1.56,0.64,1);
-  /* safe area สำหรับ notch / Dynamic Island */
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
   --safe-right:  env(safe-area-inset-right, 0px);
 }
 body.theme-light {
-  --bg:    #eef2fc;
-  --bg2:   #e2e9f8;
-  --s1:    rgba(0,0,0,0.04);
-  --s2:    rgba(0,0,0,0.07);
-  --s3:    rgba(0,0,0,0.11);
-  --b1:    rgba(0,0,0,0.07);
-  --b2:    rgba(0,0,0,0.13);
-  --fg:    rgba(8,15,35,0.92);
-  --fg2:   rgba(8,15,35,0.45);
+  --bg:     #eef2fc;
+  --bg2:    #e2e9f8;
+  --s1:     rgba(0,0,0,0.04);
+  --s2:     rgba(0,0,0,0.07);
+  --s3:     rgba(0,0,0,0.11);
+  --b1:     rgba(0,0,0,0.07);
+  --b2:     rgba(0,0,0,0.13);
+  --fg:     rgba(8,15,35,0.92);
+  --fg2:    rgba(8,15,35,0.45);
   --accent: #2563eb;
-  --glow:  rgba(37,99,235,0.18);
+  --glow:   rgba(37,99,235,0.18);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,37 +41,27 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   transition: background 0.5s, color 0.4s;
-  /* รองรับ safe area ทั้งหน้า */
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
 }
 
-/* Canvas */
-#bgCanvas {
-  position: fixed; inset: 0;
-  z-index: 0; pointer-events: none;
-}
+#bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-/* ── Menu FAB ────────────────────────── */
+/* ── Menu FAB ─────────────────────────── */
 .menu-fab {
   position: fixed;
   top: calc(20px + var(--safe-top));
   left: calc(18px + var(--safe-left));
   z-index: 90;
   width: 44px; height: 44px;
-  min-width: 44px; /* touch target iOS */
   border-radius: 12px;
-  background: var(--s3);
-  border: 1px solid var(--b2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--s3); border: 1px solid var(--b2);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   cursor: pointer;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 5px;
   transition: opacity 0.25s, transform 0.2s var(--spring);
   overflow: hidden;
-  /* ทำให้ fixed ทำงานถูกต้องบน iOS Safari */
-  -webkit-transform: translateZ(0);
 }
 .menu-fab:hover { transform: scale(1.07); }
 .menu-fab:active { transform: scale(0.93); }
@@ -87,7 +76,6 @@ body.menuOpen .menu-fab { opacity: 0; pointer-events: none; }
   right: calc(16px + var(--safe-right));
   z-index: 80;
   display: flex; align-items: center; gap: 9px;
-  -webkit-transform: translateZ(0);
 }
 body.menuOpen .topright { pointer-events: none; }
 
@@ -95,23 +83,19 @@ body.menuOpen .topright { pointer-events: none; }
   display: flex; align-items: center; gap: 6px;
   padding: 7px 11px;
   border-radius: 10px;
-  background: var(--s1);
-  border: 1px solid var(--b1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--s1); border: 1px solid var(--b1);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   font-family: 'DM Mono', monospace;
   font-size: 11px; font-weight: 300;
   color: var(--fg2); letter-spacing: 0.03em;
   white-space: nowrap;
-  /* ซ่อน date บนมือถือ เหลือแค่เวลา+อุณหภูมิ */
-  max-width: calc(100vw - 110px);
-  overflow: hidden;
+  max-width: calc(100vw - 110px); overflow: hidden;
 }
 .clock-icon { opacity: 0.5; display: flex; align-items: center; flex-shrink: 0; }
 .pill-sep { width: 1px; height: 9px; background: var(--b2); flex-shrink: 0; }
 
 .icon-btn {
-  width: 44px; height: 44px; min-width: 44px;
+  width: 44px; height: 44px;
   border-radius: 12px;
   background: var(--s3); border: 1px solid var(--b2);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -128,7 +112,7 @@ body.menuOpen .topright { pointer-events: none; }
 .theme-popup {
   position: absolute;
   top: calc(100% + 9px); right: 0;
-  width: 168px; padding: 6px;
+  width: 210px; padding: 8px;
   border-radius: var(--r);
   background: var(--bg2); border: 1px solid var(--b2);
   box-shadow: 0 24px 52px rgba(0,0,0,0.55);
@@ -139,35 +123,43 @@ body.menuOpen .topright { pointer-events: none; }
   z-index: 110;
 }
 .theme-popup.open {
-  clip-path: circle(230% at calc(100% - 22px) -8px);
+  clip-path: circle(250% at calc(100% - 22px) -8px);
   pointer-events: auto;
 }
 .popItem {
-  width: 100%; display: flex; align-items: center; gap: 9px;
-  padding: 11px 12px; /* touch target */
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; min-height: 44px;
   border-radius: 9px; border: none;
   background: transparent; color: var(--fg2);
   font-family: 'Outfit', sans-serif; font-size: 13px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   overflow: hidden; position: relative;
-  min-height: 44px; /* iOS touch */
 }
 .popItem:hover { background: var(--s2); color: var(--fg); }
-.pop-ico { font-size: 14px; flex-shrink: 0; }
+.pop-ico { font-size: 15px; flex-shrink: 0; width: 22px; text-align: center; }
+
+/* slider พอดีกับ popup ไม่หลุด */
 .sliderWrap { padding: 2px 4px 6px; }
 .slider-row {
-  display: flex; align-items: center; gap: 7px;
-  padding: 8px 10px; border-radius: 9px; background: var(--s1); font-size: 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 11px; border-radius: 9px;
+  background: var(--s1); font-size: 14px;
+  overflow: hidden;
 }
+.slider-row span { flex-shrink: 0; line-height: 1; }
 #mixSlider {
-  flex: 1; -webkit-appearance: none; appearance: none;
+  flex: 1; min-width: 0;
+  -webkit-appearance: none; appearance: none;
   height: 3px; border-radius: 2px; background: var(--b2); outline: none;
 }
 #mixSlider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 16px; height: 16px;
-  border-radius: 50%; background: var(--accent); cursor: pointer;
+  -webkit-appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  transition: transform 0.15s;
 }
+#mixSlider::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
 /* ── Scrim ───────────────────────────── */
 .scrim {
@@ -182,7 +174,6 @@ body.menuOpen .topright { pointer-events: none; }
 /* ── Sidebar ─────────────────────────── */
 .sidebar {
   position: fixed; top: 0; left: 0; height: 100%;
-  /* มือถือ: 85vw, desktop: 22vw max 340px */
   width: clamp(260px, 85vw, 340px);
   background: var(--bg2); border-right: 1px solid var(--b1);
   backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
@@ -191,7 +182,6 @@ body.menuOpen .topright { pointer-events: none; }
   clip-path: circle(0% at 42px 42px);
   transition: clip-path 0.48s var(--ease);
   will-change: clip-path;
-  /* safe area padding ด้านบน */
   padding-top: var(--safe-top);
 }
 .sidebar.open { clip-path: circle(200% at 42px 42px); }
@@ -205,7 +195,7 @@ body.menuOpen .topright { pointer-events: none; }
 .side-h2 { margin-top: 2px; font-size: 12px; color: var(--fg2); }
 
 .close-btn {
-  width: 36px; height: 36px; min-width: 36px;
+  width: 36px; height: 36px;
   border-radius: 8px; border: 1px solid var(--b1);
   background: var(--s1); color: var(--fg2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -217,9 +207,7 @@ body.menuOpen .topright { pointer-events: none; }
 
 .brand-list {
   flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 10px 10px 20px;
-  /* safe area ด้านล่าง */
-  padding-bottom: calc(20px + var(--safe-bottom));
+  padding: 10px 10px calc(20px + var(--safe-bottom));
   display: flex; flex-direction: column; gap: 2px;
   scrollbar-width: thin; scrollbar-color: var(--b2) transparent;
   -webkit-overflow-scrolling: touch;
@@ -228,9 +216,7 @@ body.menuOpen .topright { pointer-events: none; }
 .brand-list::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
 
 .brandItem {
-  width: 100%;
-  padding: 12px 13px; /* touch target ~44px */
-  min-height: 44px;
+  width: 100%; padding: 12px 13px; min-height: 44px;
   border-radius: 9px; border: 1px solid transparent;
   background: transparent; color: var(--fg2);
   font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 400;
@@ -238,7 +224,6 @@ body.menuOpen .topright { pointer-events: none; }
   transition: background 0.15s, color 0.15s, transform 0.18s var(--ease);
   overflow: hidden; position: relative;
   opacity: 0; transform: translateX(-12px);
-  /* ตัดชื่อยาวบนมือถือ */
   white-space: nowrap; text-overflow: ellipsis;
 }
 .brandItem.visible { animation: slideIn 0.32s var(--ease) forwards; }
@@ -249,42 +234,38 @@ body.menuOpen .topright { pointer-events: none; }
 }
 .brandItem.active {
   background: rgba(96,165,250,0.10);
-  border-color: rgba(96,165,250,0.25);
-  color: var(--accent);
+  border-color: rgba(96,165,250,0.25); color: var(--accent);
 }
 body.theme-light .brandItem.active {
   background: rgba(37,99,235,0.09);
-  border-color: rgba(37,99,235,0.22);
-  color: var(--accent);
+  border-color: rgba(37,99,235,0.22); color: var(--accent);
 }
 
 /* ── Main ────────────────────────────── */
 .main {
   position: relative; z-index: 1;
-  min-height: 100vh;
-  min-height: 100dvh; /* dynamic viewport บน iOS */
+  min-height: 100vh; min-height: 100dvh;
   display: flex; align-items: center; justify-content: center;
-  padding: 80px 20px;
-  padding-bottom: calc(40px + var(--safe-bottom));
+  padding: 80px 24px calc(40px + var(--safe-bottom));
 }
 
 .hero {
   display: flex; flex-direction: column; align-items: center;
-  gap: 28px; width: 100%;
-  max-width: 360px;
+  gap: 24px; width: 100%;
   opacity: 0; transform: translateY(28px);
   animation: heroIn 0.7s 0.08s var(--ease) forwards;
 }
 @keyframes heroIn { to { opacity:1; transform:translateY(0); } }
 
+/* Brand name — single line desktop, wrap mobile */
 .brand-wrap { text-align: center; width: 100%; }
 .brand-name {
-  font-size: clamp(36px, 8vw, 78px);
+  /* clamp: เล็กสุด 28px, fluid 5vw, ใหญ่สุด 68px */
+  font-size: clamp(28px, 5vw, 68px);
   font-weight: 200; letter-spacing: -0.03em;
-  color: var(--fg); line-height: 1;
+  color: var(--fg); line-height: 1.1;
   transition: opacity 0.18s, transform 0.28s var(--spring);
-  /* ชื่อยาว wrap ได้บนมือถือ */
-  word-break: break-word; hyphens: auto;
+  white-space: nowrap; /* desktop: บรรทัดเดียว */
 }
 .brand-name.switching { opacity: 0; transform: translateY(-10px) scale(0.97); }
 .brand-sub {
@@ -292,17 +273,15 @@ body.theme-light .brandItem.active {
   letter-spacing: 0.06em; text-transform: uppercase; font-weight: 300;
 }
 
-/* Cards — full width บนมือถือ */
+/* Cards — ความกว้างพอดีบน desktop */
 .cards {
   display: flex; flex-direction: column; gap: 10px;
-  width: 100%;
+  width: 320px;
 }
-
 .card {
   width: 100%;
   display: flex; align-items: center; gap: 15px;
-  padding: 17px 18px;
-  min-height: 72px; /* touch target */
+  padding: 16px 18px; min-height: 68px;
   border-radius: var(--r); border: 1px solid var(--b1);
   background: var(--s1); color: var(--fg); cursor: pointer;
   text-align: left;
@@ -310,7 +289,6 @@ body.theme-light .brandItem.active {
               transform 0.22s var(--spring), box-shadow 0.22s;
   position: relative; overflow: hidden;
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  /* ป้องกัน tap highlight บน iOS */
   -webkit-tap-highlight-color: transparent;
 }
 .card:active { transform: scale(0.97); background: var(--s2); }
@@ -320,6 +298,9 @@ body.theme-light .brandItem.active {
     transform: translateX(5px);
     box-shadow: 0 8px 28px rgba(0,0,0,0.22);
   }
+  .card:hover .card-glow  { opacity: 1; left: -10px; }
+  .card:hover .card-icon  { background: var(--glow); }
+  .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
 }
 .card-glow {
   position: absolute; left: -40px; top: 50%; transform: translateY(-50%);
@@ -328,44 +309,30 @@ body.theme-light .brandItem.active {
   opacity: 0; transition: opacity 0.3s, left 0.3s var(--ease);
   pointer-events: none;
 }
-@media (hover: hover) {
-  .card:hover .card-glow { opacity: 1; left: -10px; }
-}
-
 .card-icon {
-  width: 44px; height: 44px; flex-shrink: 0;
+  width: 42px; height: 42px; flex-shrink: 0;
   border-radius: 11px; background: var(--s2); border: 1px solid var(--b1);
   display: flex; align-items: center; justify-content: center;
   color: var(--accent); transition: background 0.2s;
 }
 .card:active .card-icon { background: var(--glow); }
-@media (hover: hover) {
-  .card:hover .card-icon { background: var(--glow); }
-}
-
 .card-body { flex: 1; min-width: 0; }
-.card-th { font-size: 15px; font-weight: 500; color: var(--fg); line-height: 1.2; }
+.card-th { font-size: 14.5px; font-weight: 500; color: var(--fg); line-height: 1.2; }
 .card-en { font-size: 11px; color: var(--fg2); margin-top: 3px; letter-spacing: 0.03em; font-weight: 300; }
-
 .card-arrow {
   color: var(--fg2); flex-shrink: 0;
   opacity: 0; transform: translateX(-6px);
   transition: opacity 0.2s, transform 0.2s var(--ease);
 }
-@media (hover: hover) {
-  .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
-}
-/* มือถือ: แสดง arrow ตลอด */
-@media (hover: none) {
-  .card-arrow { opacity: 0.4; transform: translateX(0); }
-}
+@media (hover: none) { .card-arrow { opacity: 0.35; transform: translateX(0); } }
 
 /* Not ready */
 .not-ready {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 14px; border-radius: 10px;
   background: var(--s1); border: 1px solid var(--b1);
-  font-size: 12.5px; color: var(--fg2); width: 100%;
+  font-size: 12.5px; color: var(--fg2);
+  width: 320px;
 }
 
 /* Ripple */
@@ -377,37 +344,35 @@ body.theme-light .brandItem.active {
 }
 @keyframes ripple { to { transform: scale(5); opacity: 0; } }
 
-/* ── Responsive breakpoints ──────────── */
-
-/* Tablet (601–1024) */
-@media (min-width: 601px) and (max-width: 1024px) {
-  .hero { max-width: 420px; }
-  .sidebar { width: clamp(260px, 40vw, 340px); }
-  .brand-name { font-size: clamp(42px, 6vw, 68px); }
-}
-
-/* Desktop (1025+) */
-@media (min-width: 1025px) {
-  .hero { max-width: 340px; }
-  .sidebar { width: clamp(260px, 22vw, 340px); }
-  @media (hover: hover) {
-    .card:hover { transform: translateX(5px); }
+/* ── Responsive ──────────────────────── */
+/* Mobile ≤ 600px */
+@media (max-width: 600px) {
+  .brand-name {
+    white-space: normal;
+    font-size: clamp(30px, 10vw, 46px);
+    word-break: break-word;
   }
+  .cards    { width: 92vw; }
+  .not-ready{ width: 92vw; }
 }
-
-/* Mobile small (≤ 390px เช่น iPhone SE) */
+/* Mobile ≤ 390px */
 @media (max-width: 390px) {
   .clock-pill { font-size: 10px; padding: 6px 9px; gap: 5px; }
-  .clock-icon { display: none; } /* ซ่อน icon นาฬิกาตอนจอเล็กมาก */
-  .brand-name { font-size: 32px; }
-  .card { padding: 14px 15px; }
+  .clock-icon { display: none; }
+  .brand-name { font-size: clamp(26px, 9vw, 38px); }
 }
-
-/* Landscape มือถือ */
+/* Tablet 601–1024px */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .sidebar   { width: clamp(260px, 40vw, 340px); }
+  .brand-name{ font-size: clamp(36px, 5.5vw, 60px); }
+  .cards     { width: 340px; }
+  .not-ready { width: 340px; }
+}
+/* Landscape mobile */
 @media (max-height: 500px) and (orientation: landscape) {
-  .main { padding-top: 60px; align-items: flex-start; padding-top: calc(70px + var(--safe-top)); }
-  .hero { gap: 16px; }
-  .brand-name { font-size: 28px; }
-  .cards { flex-direction: row; }
-  .card { flex: 1; flex-direction: column; align-items: flex-start; min-height: 80px; }
+  .main       { align-items: flex-start; padding-top: calc(65px + var(--safe-top)); }
+  .hero       { gap: 14px; }
+  .brand-name { font-size: 26px; white-space: nowrap; }
+  .cards      { flex-direction: row; width: auto; }
+  .card       { width: 200px; flex-direction: column; align-items: flex-start; min-height: 80px; }
 }
