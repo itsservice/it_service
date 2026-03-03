@@ -1,26 +1,24 @@
-/* ============================================
-   DESIGN: "Deep Space Minimal"
-   Font: Outfit (ดู premium กว่า DM Sans)
-   Motion: particle field + card hover glow
-   ============================================ */
-
 :root {
-  --bg:       #070b12;
-  --bg2:      #0c1220;
-  --s1:       rgba(255,255,255,0.05);
-  --s2:       rgba(255,255,255,0.09);
-  --s3:       rgba(255,255,255,0.14);
-  --b1:       rgba(255,255,255,0.07);
-  --b2:       rgba(255,255,255,0.14);
-  --fg:       rgba(255,255,255,0.90);
-  --fg2:      rgba(255,255,255,0.45);
-  --accent:   #60a5fa;
-  --glow:     rgba(96,165,250,0.20);
-  --r:        14px;
-  --ease:     cubic-bezier(0.22,0.61,0.36,1);
-  --spring:   cubic-bezier(0.34,1.56,0.64,1);
+  --bg:     #070b12;
+  --bg2:    #0c1220;
+  --s1:     rgba(255,255,255,0.05);
+  --s2:     rgba(255,255,255,0.09);
+  --s3:     rgba(255,255,255,0.14);
+  --b1:     rgba(255,255,255,0.07);
+  --b2:     rgba(255,255,255,0.14);
+  --fg:     rgba(255,255,255,0.90);
+  --fg2:    rgba(255,255,255,0.45);
+  --accent: #60a5fa;
+  --glow:   rgba(96,165,250,0.20);
+  --r:      14px;
+  --ease:   cubic-bezier(0.22,0.61,0.36,1);
+  --spring: cubic-bezier(0.34,1.56,0.64,1);
+  /* safe area สำหรับ notch / Dynamic Island */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
 }
-
 body.theme-light {
   --bg:    #eef2fc;
   --bg2:   #e2e9f8;
@@ -37,168 +35,145 @@ body.theme-light {
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
-
 body {
   font-family: 'Outfit', sans-serif;
   background: var(--bg);
   color: var(--fg);
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background 0.5s ease, color 0.4s ease;
+  transition: background 0.5s, color 0.4s;
+  /* รองรับ safe area ทั้งหน้า */
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 
-/* Canvas particle field */
+/* Canvas */
 #bgCanvas {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
 }
 
-/* ── Menu FAB ─────────────────────────── */
+/* ── Menu FAB ────────────────────────── */
 .menu-fab {
   position: fixed;
-  top: 20px; left: 20px;
+  top: calc(20px + var(--safe-top));
+  left: calc(18px + var(--safe-left));
   z-index: 90;
-  width: 42px; height: 42px;
-  border-radius: 11px;
+  width: 44px; height: 44px;
+  min-width: 44px; /* touch target iOS */
+  border-radius: 12px;
   background: var(--s3);
   border: 1px solid var(--b2);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 5px;
   transition: opacity 0.25s, transform 0.2s var(--spring);
   overflow: hidden;
-  position: fixed;
+  /* ทำให้ fixed ทำงานถูกต้องบน iOS Safari */
+  -webkit-transform: translateZ(0);
 }
 .menu-fab:hover { transform: scale(1.07); }
-.menu-fab:active { transform: scale(0.94); }
-.bar {
-  display: block;
-  width: 17px; height: 1.5px;
-  background: var(--fg);
-  border-radius: 2px;
-  transition: 0.28s var(--ease);
-}
+.menu-fab:active { transform: scale(0.93); }
+.bar { display: block; width: 17px; height: 1.5px; background: var(--fg); border-radius: 2px; transition: 0.28s var(--ease); }
 .bar-2 { width: 11px; margin-left: -6px; }
 body.menuOpen .menu-fab { opacity: 0; pointer-events: none; }
 
 /* ── Top Right ───────────────────────── */
 .topright {
   position: fixed;
-  top: 18px; right: 18px;
+  top: calc(16px + var(--safe-top));
+  right: calc(16px + var(--safe-right));
   z-index: 80;
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  display: flex; align-items: center; gap: 9px;
+  -webkit-transform: translateZ(0);
 }
 body.menuOpen .topright { pointer-events: none; }
 
 .clock-pill {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 13px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 11px;
   border-radius: 10px;
   background: var(--s1);
   border: 1px solid var(--b1);
   backdrop-filter: blur(20px);
-  font-family: 'DM Mono', 'Courier New', monospace;
-  font-size: 11px;
-  font-weight: 300;
-  color: var(--fg2);
-  letter-spacing: 0.03em;
+  -webkit-backdrop-filter: blur(20px);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 300;
+  color: var(--fg2); letter-spacing: 0.03em;
   white-space: nowrap;
+  /* ซ่อน date บนมือถือ เหลือแค่เวลา+อุณหภูมิ */
+  max-width: calc(100vw - 110px);
+  overflow: hidden;
 }
-.clock-icon { opacity: 0.55; display: flex; align-items: center; }
-.sep {
-  width: 1px; height: 10px;
-  background: var(--b2);
-  display: block;
-}
+.clock-icon { opacity: 0.5; display: flex; align-items: center; flex-shrink: 0; }
+.pill-sep { width: 1px; height: 9px; background: var(--b2); flex-shrink: 0; }
 
 .icon-btn {
-  width: 42px; height: 42px;
-  border-radius: 11px;
-  background: var(--s3);
-  border: 1px solid var(--b2);
-  backdrop-filter: blur(20px);
-  color: var(--fg2);
-  cursor: pointer;
+  width: 44px; height: 44px; min-width: 44px;
+  border-radius: 12px;
+  background: var(--s3); border: 1px solid var(--b2);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  color: var(--fg2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.2s, transform 0.2s var(--spring);
   overflow: hidden; position: relative;
 }
 .icon-btn:hover { color: var(--fg); transform: scale(1.07); }
-.icon-btn:active { transform: scale(0.94); }
+.icon-btn:active { transform: scale(0.93); }
 .theme-wrap { position: relative; }
 
 /* ── Theme popup ─────────────────────── */
 .theme-popup {
   position: absolute;
   top: calc(100% + 9px); right: 0;
-  width: 168px;
-  padding: 6px;
+  width: 168px; padding: 6px;
   border-radius: var(--r);
-  background: var(--bg2);
-  border: 1px solid var(--b2);
+  background: var(--bg2); border: 1px solid var(--b2);
   box-shadow: 0 24px 52px rgba(0,0,0,0.55);
-  backdrop-filter: blur(24px);
-  clip-path: circle(0% at calc(100% - 21px) -8px);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  clip-path: circle(0% at calc(100% - 22px) -8px);
   pointer-events: none;
   transition: clip-path 0.38s var(--ease);
   z-index: 110;
 }
 .theme-popup.open {
-  clip-path: circle(230% at calc(100% - 21px) -8px);
+  clip-path: circle(230% at calc(100% - 22px) -8px);
   pointer-events: auto;
 }
 .popItem {
-  width: 100%;
-  display: flex; align-items: center; gap: 9px;
-  padding: 9px 11px;
-  border-radius: 9px;
-  border: none;
-  background: transparent;
-  color: var(--fg2);
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px; font-weight: 400;
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 11px 12px; /* touch target */
+  border-radius: 9px; border: none;
+  background: transparent; color: var(--fg2);
+  font-family: 'Outfit', sans-serif; font-size: 13px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   overflow: hidden; position: relative;
+  min-height: 44px; /* iOS touch */
 }
 .popItem:hover { background: var(--s2); color: var(--fg); }
-
+.pop-ico { font-size: 14px; flex-shrink: 0; }
 .sliderWrap { padding: 2px 4px 6px; }
 .slider-row {
   display: flex; align-items: center; gap: 7px;
-  padding: 8px 10px;
-  border-radius: 9px;
-  background: var(--s1);
-  font-size: 12px;
+  padding: 8px 10px; border-radius: 9px; background: var(--s1); font-size: 12px;
 }
 #mixSlider {
-  flex: 1; -webkit-appearance: none;
-  height: 2px; border-radius: 2px;
-  background: var(--b2); outline: none;
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 3px; border-radius: 2px; background: var(--b2); outline: none;
 }
 #mixSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px; border-radius: 50%;
-  background: var(--accent); cursor: pointer;
-  transition: transform 0.15s;
+  -webkit-appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
 }
-#mixSlider::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
 /* ── Scrim ───────────────────────────── */
 .scrim {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   z-index: 75;
   animation: scrimIn 0.22s ease;
 }
@@ -206,69 +181,72 @@ body.menuOpen .topright { pointer-events: none; }
 
 /* ── Sidebar ─────────────────────────── */
 .sidebar {
-  position: fixed; top:0; left:0;
-  height: 100%;
-  width: clamp(260px, 24vw, 340px);
-  background: var(--bg2);
-  border-right: 1px solid var(--b1);
-  backdrop-filter: blur(28px);
+  position: fixed; top: 0; left: 0; height: 100%;
+  /* มือถือ: 85vw, desktop: 22vw max 340px */
+  width: clamp(260px, 85vw, 340px);
+  background: var(--bg2); border-right: 1px solid var(--b1);
+  backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
   z-index: 76;
   display: flex; flex-direction: column;
-  clip-path: circle(0% at 41px 41px);
+  clip-path: circle(0% at 42px 42px);
   transition: clip-path 0.48s var(--ease);
   will-change: clip-path;
+  /* safe area padding ด้านบน */
+  padding-top: var(--safe-top);
 }
-.sidebar.open { clip-path: circle(180% at 41px 41px); }
+.sidebar.open { clip-path: circle(200% at 42px 42px); }
 
 .side-head {
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 22px 17px 13px;
-  border-bottom: 1px solid var(--b1);
-  flex-shrink: 0;
+  padding: 20px 16px 13px;
+  border-bottom: 1px solid var(--b1); flex-shrink: 0;
 }
-.side-h1 { font-size: 17px; font-weight: 500; color: var(--fg); letter-spacing: -0.01em; }
-.side-h2 { margin-top: 3px; font-size: 11.5px; color: var(--fg2); }
+.side-h1 { font-size: 17px; font-weight: 500; color: var(--fg); }
+.side-h2 { margin-top: 2px; font-size: 12px; color: var(--fg2); }
 
 .close-btn {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--b1);
-  background: var(--s1);
-  color: var(--fg2); cursor: pointer;
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 8px; border: 1px solid var(--b1);
+  background: var(--s1); color: var(--fg2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, color 0.15s, transform 0.2s var(--spring);
   overflow: hidden; position: relative; flex-shrink: 0;
 }
 .close-btn:hover { background: var(--s2); color: var(--fg); transform: scale(1.1); }
-.close-btn:active { transform: scale(0.93); }
+.close-btn:active { transform: scale(0.92); }
 
 .brand-list {
-  flex: 1; overflow-y: auto;
+  flex: 1; overflow-y: auto; overflow-x: hidden;
   padding: 10px 10px 20px;
+  /* safe area ด้านล่าง */
+  padding-bottom: calc(20px + var(--safe-bottom));
   display: flex; flex-direction: column; gap: 2px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--b2) transparent;
+  scrollbar-width: thin; scrollbar-color: var(--b2) transparent;
+  -webkit-overflow-scrolling: touch;
 }
 .brand-list::-webkit-scrollbar { width: 3px; }
 .brand-list::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
 
 .brandItem {
   width: 100%;
-  padding: 10px 13px;
-  border-radius: 9px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--fg2);
-  font-family: 'Outfit', sans-serif;
-  font-size: 13.5px; font-weight: 400;
+  padding: 12px 13px; /* touch target ~44px */
+  min-height: 44px;
+  border-radius: 9px; border: 1px solid transparent;
+  background: transparent; color: var(--fg2);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 400;
   cursor: pointer; text-align: left;
   transition: background 0.15s, color 0.15s, transform 0.18s var(--ease);
   overflow: hidden; position: relative;
   opacity: 0; transform: translateX(-12px);
+  /* ตัดชื่อยาวบนมือถือ */
+  white-space: nowrap; text-overflow: ellipsis;
 }
 .brandItem.visible { animation: slideIn 0.32s var(--ease) forwards; }
 @keyframes slideIn { to { opacity:1; transform:translateX(0); } }
-.brandItem:hover { background: var(--s2); color: var(--fg); transform: translateX(4px); }
+.brandItem:active { background: var(--s2); color: var(--fg); }
+@media (hover: hover) {
+  .brandItem:hover { background: var(--s2); color: var(--fg); transform: translateX(4px); }
+}
 .brandItem.active {
   background: rgba(96,165,250,0.10);
   border-color: rgba(96,165,250,0.25);
@@ -284,112 +262,110 @@ body.theme-light .brandItem.active {
 .main {
   position: relative; z-index: 1;
   min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport บน iOS */
   display: flex; align-items: center; justify-content: center;
-  padding: 80px 24px;
+  padding: 80px 20px;
+  padding-bottom: calc(40px + var(--safe-bottom));
 }
 
 .hero {
   display: flex; flex-direction: column; align-items: center;
-  gap: 32px;
+  gap: 28px; width: 100%;
+  max-width: 360px;
   opacity: 0; transform: translateY(28px);
-  animation: heroIn 0.75s 0.08s var(--ease) forwards;
+  animation: heroIn 0.7s 0.08s var(--ease) forwards;
 }
 @keyframes heroIn { to { opacity:1; transform:translateY(0); } }
 
-/* Brand name */
-.brand-wrap { text-align: center; }
+.brand-wrap { text-align: center; width: 100%; }
 .brand-name {
-  font-size: clamp(44px, 7.5vw, 82px);
-  font-weight: 200;
-  letter-spacing: -0.035em;
-  color: var(--fg);
-  line-height: 1;
-  transition: opacity 0.18s ease, transform 0.28s var(--spring);
-  white-space: nowrap;
+  font-size: clamp(36px, 8vw, 78px);
+  font-weight: 200; letter-spacing: -0.03em;
+  color: var(--fg); line-height: 1;
+  transition: opacity 0.18s, transform 0.28s var(--spring);
+  /* ชื่อยาว wrap ได้บนมือถือ */
+  word-break: break-word; hyphens: auto;
 }
-.brand-name.switching {
-  opacity: 0;
-  transform: translateY(-10px) scale(0.97);
+.brand-name.switching { opacity: 0; transform: translateY(-10px) scale(0.97); }
+.brand-sub {
+  margin-top: 8px; font-size: 11px; color: var(--fg2);
+  letter-spacing: 0.06em; text-transform: uppercase; font-weight: 300;
 }
 
-/* Action cards */
+/* Cards — full width บนมือถือ */
 .cards {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  width: 320px;
-  max-width: 90vw;
+  display: flex; flex-direction: column; gap: 10px;
+  width: 100%;
 }
 
 .card {
   width: 100%;
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 20px;
-  border-radius: var(--r);
-  border: 1px solid var(--b1);
-  background: var(--s1);
-  color: var(--fg);
-  cursor: pointer;
+  display: flex; align-items: center; gap: 15px;
+  padding: 17px 18px;
+  min-height: 72px; /* touch target */
+  border-radius: var(--r); border: 1px solid var(--b1);
+  background: var(--s1); color: var(--fg); cursor: pointer;
   text-align: left;
-  transition: border-color 0.2s, background 0.2s, transform 0.22s var(--spring), box-shadow 0.22s;
+  transition: border-color 0.2s, background 0.2s,
+              transform 0.22s var(--spring), box-shadow 0.22s;
   position: relative; overflow: hidden;
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  /* ป้องกัน tap highlight บน iOS */
+  -webkit-tap-highlight-color: transparent;
 }
-.card:hover {
-  background: var(--s2);
-  border-color: var(--b2);
-  transform: translateX(5px);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+.card:active { transform: scale(0.97); background: var(--s2); }
+@media (hover: hover) {
+  .card:hover {
+    background: var(--s2); border-color: var(--b2);
+    transform: translateX(5px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+  }
 }
-.card:active { transform: scale(0.98); }
-
-/* glow on hover */
 .card-glow {
-  position: absolute;
-  left: -40px; top: 50%; transform: translateY(-50%);
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: var(--glow);
-  filter: blur(24px);
-  opacity: 0;
-  transition: opacity 0.3s, left 0.3s var(--ease);
+  position: absolute; left: -40px; top: 50%; transform: translateY(-50%);
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--glow); filter: blur(24px);
+  opacity: 0; transition: opacity 0.3s, left 0.3s var(--ease);
   pointer-events: none;
 }
-.card:hover .card-glow { opacity: 1; left: -10px; }
+@media (hover: hover) {
+  .card:hover .card-glow { opacity: 1; left: -10px; }
+}
 
 .card-icon {
   width: 44px; height: 44px; flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--s2);
-  border: 1px solid var(--b1);
+  border-radius: 11px; background: var(--s2); border: 1px solid var(--b1);
   display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-  transition: background 0.2s;
+  color: var(--accent); transition: background 0.2s;
 }
-.card:hover .card-icon { background: var(--glow); }
+.card:active .card-icon { background: var(--glow); }
+@media (hover: hover) {
+  .card:hover .card-icon { background: var(--glow); }
+}
 
-.card-body { flex: 1; }
+.card-body { flex: 1; min-width: 0; }
 .card-th { font-size: 15px; font-weight: 500; color: var(--fg); line-height: 1.2; }
-.card-en { font-size: 11px; color: var(--fg2); margin-top: 3px; letter-spacing: 0.04em; font-weight: 300; }
+.card-en { font-size: 11px; color: var(--fg2); margin-top: 3px; letter-spacing: 0.03em; font-weight: 300; }
 
 .card-arrow {
-  color: var(--fg2);
-  opacity: 0;
-  transform: translateX(-6px);
+  color: var(--fg2); flex-shrink: 0;
+  opacity: 0; transform: translateX(-6px);
   transition: opacity 0.2s, transform 0.2s var(--ease);
-  flex-shrink: 0;
 }
-.card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+@media (hover: hover) {
+  .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+}
+/* มือถือ: แสดง arrow ตลอด */
+@media (hover: none) {
+  .card-arrow { opacity: 0.4; transform: translateX(0); }
+}
 
 /* Not ready */
 .not-ready {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: var(--s1);
-  border: 1px solid var(--b1);
-  font-size: 12.5px; color: var(--fg2);
-  width: 320px; max-width: 90vw;
+  padding: 10px 14px; border-radius: 10px;
+  background: var(--s1); border: 1px solid var(--b1);
+  font-size: 12.5px; color: var(--fg2); width: 100%;
 }
 
 /* Ripple */
@@ -401,10 +377,37 @@ body.theme-light .brandItem.active {
 }
 @keyframes ripple { to { transform: scale(5); opacity: 0; } }
 
-/* Mobile */
-@media (max-width: 560px) {
-  .sidebar { width: 83vw; max-width: 320px; }
-  .brand-name { font-size: 38px; white-space: normal; text-align: center; }
-  .clock-pill { font-size: 10px; padding: 6px 9px; }
-  .cards { width: 280px; }
+/* ── Responsive breakpoints ──────────── */
+
+/* Tablet (601–1024) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .hero { max-width: 420px; }
+  .sidebar { width: clamp(260px, 40vw, 340px); }
+  .brand-name { font-size: clamp(42px, 6vw, 68px); }
+}
+
+/* Desktop (1025+) */
+@media (min-width: 1025px) {
+  .hero { max-width: 340px; }
+  .sidebar { width: clamp(260px, 22vw, 340px); }
+  @media (hover: hover) {
+    .card:hover { transform: translateX(5px); }
+  }
+}
+
+/* Mobile small (≤ 390px เช่น iPhone SE) */
+@media (max-width: 390px) {
+  .clock-pill { font-size: 10px; padding: 6px 9px; gap: 5px; }
+  .clock-icon { display: none; } /* ซ่อน icon นาฬิกาตอนจอเล็กมาก */
+  .brand-name { font-size: 32px; }
+  .card { padding: 14px 15px; }
+}
+
+/* Landscape มือถือ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main { padding-top: 60px; align-items: flex-start; padding-top: calc(70px + var(--safe-top)); }
+  .hero { gap: 16px; }
+  .brand-name { font-size: 28px; }
+  .cards { flex-direction: row; }
+  .card { flex: 1; flex-direction: column; align-items: flex-start; min-height: 80px; }
 }
