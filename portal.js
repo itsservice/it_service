@@ -2,27 +2,27 @@
 // CONFIG (แก้ที่นี่ที่เดียว)
 // ======================
 const BRAND_CONFIG = {
-  "Animal House"     : { report: 'https://example.com', track: 'https://example.com' },
-  "Another Hound Café"          : { report: 'https://example.com', track: 'https://example.com' },
-  "Au Bon Pain"      : { report: 'https://example.com', track: 'https://example.com' },
-  "Dunkin'"   : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Café": { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Coffee": { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Original"      : { report: 'https://example.com', track: 'https://example.com' },
-  "Kin+Hey (กินเฮ)"  : { report: 'https://example.com', track: 'https://example.com' },
-  "Le Grand Véfour": { report: 'https://example.com', track: 'https://example.com' },
-  "M-Kitchen (ครัวเอ็ม)"  : { report: 'https://example.com', track: 'https://example.com' },
-  "Smileyhound" : { report: 'https://example.com', track: 'https://example.com' },
-  
+  "Animal House"      : { report: 'https://example.com', track: 'https://example.com' },
+  "Another Hound Café": { report: 'https://example.com', track: 'https://example.com' },
+  "Au Bon Pain"       : { report: 'https://example.com', track: 'https://example.com' },
+  "Dunkin'"           : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Café"    : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Coffee"  : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Original": { report: 'https://example.com', track: 'https://example.com' },
+  "Kin+Hey (กินเฮ)"   : { report: 'https://example.com', track: 'https://example.com' },
+  "Le Grand Véfour"   : { report: 'https://example.com', track: 'https://example.com' },
+  "M-Kitchen (ครัวเอ็ม)": { report: 'https://example.com', track: 'https://example.com' },
+  "Smileyhound"       : { report: 'https://example.com', track: 'https://example.com' },
 };
+
 // ======================
 // DOM
 // ======================
-const menuBtn   = document.getElementById('menuBtn');
-const sidebar   = document.getElementById('sidebar');
-const scrim     = document.getElementById('scrim');
-const closeBtn  = document.getElementById('closeBtn');
-const brandList = document.getElementById('brandList');
+const menuBtn    = document.getElementById('menuBtn');
+const sidebar    = document.getElementById('sidebar');
+const scrim      = document.getElementById('scrim');
+const closeBtn   = document.getElementById('closeBtn');
+const brandList  = document.getElementById('brandList');
 const brandTitle = document.getElementById('brandTitle');
 const btnReport  = document.getElementById('btnReport');
 const btnTrack   = document.getElementById('btnTrack');
@@ -31,130 +31,123 @@ const themeBtn   = document.getElementById('themeBtn');
 const themePopup = document.getElementById('themePopup');
 const sliderWrap = document.getElementById('sliderWrap');
 const mixSlider  = document.getElementById('mixSlider');
-const clockText = document.getElementById('clockText');
-const tempText  = document.getElementById('tempText');
+const clockText  = document.getElementById('clockText');
+const tempText   = document.getElementById('tempText');
 
 // ======================
-// RIPPLE HELPER
-// สร้างวงหยดน้ำบนปุ่มที่มี overflow:hidden + position:relative
+// RIPPLE
 // ======================
 function addRipple(el, e) {
   const rect = el.getBoundingClientRect();
-  // ใช้ตำแหน่งที่คลิก หรือกลางปุ่มถ้าไม่มี event
   const x = e ? e.clientX - rect.left : rect.width / 2;
   const y = e ? e.clientY - rect.top  : rect.height / 2;
   const size = Math.max(rect.width, rect.height);
-
-  const ripple = document.createElement('span');
-  ripple.className = 'btn-ripple';
-  ripple.style.cssText = `
-    width: ${size}px;
-    height: ${size}px;
-    left: ${x - size / 2}px;
-    top: ${y - size / 2}px;
-  `;
-  el.appendChild(ripple);
-  ripple.addEventListener('animationend', () => ripple.remove());
+  const r = document.createElement('span');
+  r.className = 'btn-ripple';
+  r.style.cssText = `width:${size}px;height:${size}px;left:${x-size/2}px;top:${y-size/2}px;`;
+  el.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
 }
 
 // ======================
-// Helpers
+// Brand routing  ← FIX: decodeURIComponent ป้องกัน %20
 // ======================
 function getBrandFromPath() {
   const parts = location.pathname.split('/').filter(Boolean);
-  if (parts[0] !== 'portal') return 'GD';
-  return (parts[1] || 'GD').toUpperCase();
+  if (parts[0] !== 'portal') return Object.keys(BRAND_CONFIG)[0];
+  const slug = decodeURIComponent(parts[1] || '');
+  // หา key ที่ตรงตัว หรือ case-insensitive
+  const exact = BRAND_CONFIG[slug];
+  if (exact) return slug;
+  const found = Object.keys(BRAND_CONFIG).find(
+    k => k.toLowerCase() === slug.toLowerCase()
+  );
+  return found || Object.keys(BRAND_CONFIG)[0];
 }
-function setActiveBrandUI(brand) {
-  brandTitle.textContent = brand;
+
+let currentBrand = null;
+
+function setActiveBrandUI(brand, animate = false) {
+  if (animate && currentBrand !== brand) {
+    brandTitle.classList.add('switching');
+    setTimeout(() => {
+      brandTitle.textContent = brand;
+      brandTitle.classList.remove('switching');
+    }, 180);
+  } else {
+    brandTitle.textContent = brand;
+  }
+  currentBrand = brand;
+
   [...brandList.querySelectorAll('.brandItem')].forEach(btn => {
     btn.classList.toggle('active', btn.dataset.brand === brand);
   });
+
   const cfg = BRAND_CONFIG[brand];
-  const invalid =
-    !cfg || !cfg.report || !cfg.track || (cfg.report === cfg.track);
+  const invalid = !cfg || !cfg.report || !cfg.track || cfg.report === cfg.track;
+
   if (invalid) {
     notReady.hidden = false;
-    btnReport.onclick = () => {};
-    btnTrack.onclick  = () => {};
+    btnReport.onclick = null;
+    btnTrack.onclick  = null;
     return;
   }
   notReady.hidden = true;
-  btnReport.onclick = (e) => { addRipple(btnReport, e); setTimeout(() => window.location.href = cfg.report, 200); };
-  btnTrack.onclick  = (e) => { addRipple(btnTrack, e);  setTimeout(() => window.location.href = cfg.track,  200); };
+  btnReport.onclick = (e) => { addRipple(btnReport, e); setTimeout(() => window.location.href = cfg.report, 220); };
+  btnTrack.onclick  = (e) => { addRipple(btnTrack, e);  setTimeout(() => window.location.href = cfg.track,  220); };
 }
 
 // ======================
-// Menu open/close
+// Sidebar
 // ======================
 let isOpen = false;
-function openMenu(){
+
+function openMenu() {
   isOpen = true;
   sidebar.classList.add('open');
-  sidebar.setAttribute('aria-hidden','false');
+  sidebar.setAttribute('aria-hidden', 'false');
   scrim.hidden = false;
-  menuBtn.classList.add('open');
-  menuBtn.setAttribute('aria-expanded', 'true');
   document.body.classList.add('menuOpen');
+  sidebar.querySelectorAll('.brandItem').forEach((el, i) => {
+    el.classList.remove('visible');
+    el.style.animationDelay = `${i * 35 + 60}ms`;
+    void el.offsetWidth;
+    el.classList.add('visible');
+  });
 }
-function closeMenu(){
+function closeMenu() {
   isOpen = false;
   sidebar.classList.remove('open');
-  sidebar.setAttribute('aria-hidden','true');
+  sidebar.setAttribute('aria-hidden', 'true');
   scrim.hidden = true;
-  menuBtn.classList.remove('open');
-  menuBtn.setAttribute('aria-expanded', 'false');
   document.body.classList.remove('menuOpen');
 }
-function toggleMenu(){
-  isOpen ? closeMenu() : openMenu();
-}
+function toggleMenu() { isOpen ? closeMenu() : openMenu(); }
 
-// ปุ่มเมนู: ripple แล้วเปิด
-menuBtn.addEventListener('click', (e) => {
-  addRipple(menuBtn, e);
-  toggleMenu();
-});
-closeBtn.addEventListener('click', (e) => {
-  addRipple(closeBtn, e);
-  closeMenu();
-});
+menuBtn.addEventListener('click', (e) => { addRipple(menuBtn, e); toggleMenu(); });
+closeBtn.addEventListener('click', (e) => { addRipple(closeBtn, e); closeMenu(); });
 scrim.addEventListener('click', closeMenu);
 
-// swipe close (left)
-let touchX0 = null;
-let touchY0 = null;
-sidebar.addEventListener('touchstart', (e) => {
-  const t = e.touches?.[0];
-  if (!t) return;
-  touchX0 = t.clientX;
-  touchY0 = t.clientY;
-}, { passive: true });
-sidebar.addEventListener('touchmove', (e) => {
-  if (!isOpen || touchX0 == null) return;
-  const t = e.touches?.[0];
-  if (!t) return;
-  const dx = t.clientX - touchX0;
-  const dy = t.clientY - touchY0;
-  if (Math.abs(dy) > Math.abs(dx)) return;
-  if (dx < -55) {
-    closeMenu();
-    touchX0 = null;
-    touchY0 = null;
-  }
-}, { passive: true });
-sidebar.addEventListener('touchend', () => {
-  touchX0 = null;
-  touchY0 = null;
-}, { passive: true });
+let tx0 = null, ty0 = null;
+sidebar.addEventListener('touchstart', e => { const t = e.touches?.[0]; if(t){tx0=t.clientX;ty0=t.clientY;} }, {passive:true});
+sidebar.addEventListener('touchmove',  e => {
+  if(!isOpen||tx0==null) return;
+  const t=e.touches?.[0]; if(!t) return;
+  const dx=t.clientX-tx0, dy=t.clientY-ty0;
+  if(Math.abs(dy)>Math.abs(dx)) return;
+  if(dx<-55){closeMenu();tx0=ty0=null;}
+}, {passive:true});
+sidebar.addEventListener('touchend', ()=>{tx0=ty0=null;}, {passive:true});
 
 // ======================
-// Brand list render
+// Brand list — A-Z
 // ======================
 function renderBrandList() {
-  const brands = Object.keys(BRAND_CONFIG);
+  const brands = Object.keys(BRAND_CONFIG).sort((a, b) =>
+    a.localeCompare(b, ['en','th'], { sensitivity: 'base', numeric: true })
+  );
   brandList.innerHTML = '';
-  brands.forEach((b) => {
+  brands.forEach(b => {
     const btn = document.createElement('button');
     btn.className = 'brandItem';
     btn.textContent = b;
@@ -162,8 +155,8 @@ function renderBrandList() {
     btn.addEventListener('click', (e) => {
       addRipple(btn, e);
       setTimeout(() => {
-        history.replaceState({}, '', `/portal/${b}`);
-        setActiveBrandUI(b);
+        history.replaceState({}, '', `/portal/${encodeURIComponent(b)}`);
+        setActiveBrandUI(b, true);
         closeMenu();
       }, 180);
     });
@@ -174,121 +167,138 @@ function renderBrandList() {
 // ======================
 // Theme
 // ======================
-function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-function setTextForBg(rgb){
-  const [r,g,b] = rgb.map(v => v/255);
-  const lum = 0.2126*r + 0.7152*g + 0.0722*b;
-  const fg = lum > 0.55 ? '#0b1220' : '#f1f5ff';
-  const muted = lum > 0.55 ? 'rgba(11,18,32,.70)' : 'rgba(241,245,255,.70)';
-  document.documentElement.style.setProperty('--fg', fg);
-  document.documentElement.style.setProperty('--muted', muted);
-  if (lum > 0.55) {
-    document.documentElement.style.setProperty('--panel', 'rgba(0,0,0,0.06)');
-    document.documentElement.style.setProperty('--panel2', 'rgba(255,255,255,0.78)');
-  } else {
-    document.documentElement.style.setProperty('--panel', 'rgba(255,255,255,0.08)');
-    document.documentElement.style.setProperty('--panel2', 'rgba(10,14,26,0.92)');
-  }
-}
-function applyTheme(mode){
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+
+function applyTheme(mode) {
   localStorage.setItem('themeMode', mode);
-  if (mode === 'auto') {
-    sliderWrap.hidden = false;
-    applyMix(parseInt(localStorage.getItem('mix') || '0', 10));
-    return;
-  }
-  sliderWrap.hidden = true;
-  if (mode === 'light') {
-    document.documentElement.style.setProperty('--bg1', '#eaf2ff');
-    document.documentElement.style.setProperty('--bg2', '#ffffff');
-    document.body.style.background =
-      'radial-gradient(800px 500px at 20% 20%, rgba(255,255,255,.9), transparent 60%),' +
-      'radial-gradient(900px 500px at 70% 30%, rgba(255,255,255,.7), transparent 65%),' +
-      'linear-gradient(135deg, var(--bg1), var(--bg2))';
-    setTextForBg([245, 248, 255]);
-  }
-  if (mode === 'dark') {
-    document.documentElement.style.setProperty('--bg1', '#0b1220');
-    document.documentElement.style.setProperty('--bg2', '#0a1630');
-    document.body.style.background =
-      'radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.35), transparent 60%),' +
-      'radial-gradient(2px 2px at 70% 40%, rgba(255,255,255,.25), transparent 60%),' +
-      'radial-gradient(2px 2px at 50% 20%, rgba(255,255,255,.20), transparent 60%),' +
-      'linear-gradient(135deg, var(--bg1), var(--bg2))';
-    setTextForBg([11, 18, 32]);
-  }
-}
-function mixColor(a,b,t){
-  return [
-    Math.round(a[0] + (b[0]-a[0])*t),
-    Math.round(a[1] + (b[1]-a[1])*t),
-    Math.round(a[2] + (b[2]-a[2])*t),
-  ];
-}
-function applyMix(value){
-  const v = clamp(value,0,100);
-  localStorage.setItem('mix', String(v));
-  const t = v/100;
-  const day1 = [234, 242, 255];
-  const day2 = [255, 255, 255];
-  const night1 = [11, 18, 32];
-  const night2 = [10, 22, 48];
-  const bg1 = mixColor(day1, night1, t);
-  const bg2 = mixColor(day2, night2, t);
-  document.documentElement.style.setProperty('--bg1', `rgb(${bg1.join(',')})`);
-  document.documentElement.style.setProperty('--bg2', `rgb(${bg2.join(',')})`);
-  document.body.style.background =
-    'radial-gradient(900px 650px at 25% 20%, rgba(255,255,255,' + (0.22*(1-t)).toFixed(3) + '), transparent 60%),' +
-    'radial-gradient(2px 2px at 70% 40%, rgba(255,255,255,' + (0.25*t).toFixed(3) + '), transparent 60%),' +
-    'linear-gradient(135deg, var(--bg1), var(--bg2))';
-  const mid = mixColor(bg1, bg2, .5);
-  setTextForBg(mid);
+  sliderWrap.hidden = mode !== 'auto';
+  if (mode === 'auto') { applyMix(parseInt(localStorage.getItem('mix')||'100',10)); return; }
+  document.body.classList.toggle('theme-light', mode === 'light');
 }
 
-// theme popup toggle — ripple บนปุ่ม gear
+function applyMix(v) {
+  v = clamp(v, 0, 100);
+  localStorage.setItem('mix', String(v));
+  mixSlider.value = String(v);
+  document.body.classList.toggle('theme-light', v < 50);
+}
+
 themeBtn.addEventListener('click', (e) => {
   addRipple(themeBtn, e);
-  themePopup.classList.toggle('open');
-  const opened = themePopup.classList.contains('open');
-  themePopup.setAttribute('aria-hidden', String(!opened));
+  const open = themePopup.classList.toggle('open');
+  themePopup.setAttribute('aria-hidden', String(!open));
 });
-
-// choose theme — ripple บน popItem
 themePopup.querySelectorAll('.popItem').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    addRipple(btn, e);
-    const mode = btn.dataset.theme;
-    applyTheme(mode);
-  });
+  btn.addEventListener('click', (e) => { addRipple(btn, e); applyTheme(btn.dataset.theme); });
 });
-
-mixSlider.addEventListener('input', (e) => {
-  applyMix(parseInt(e.target.value, 10));
-});
-
-document.addEventListener('click', (e) => {
-  const within = themePopup.contains(e.target) || themeBtn.contains(e.target);
-  if (!within) themePopup.classList.remove('open');
+mixSlider.addEventListener('input', e => applyMix(parseInt(e.target.value,10)));
+document.addEventListener('click', e => {
+  if (!themePopup.contains(e.target) && !themeBtn.contains(e.target))
+    themePopup.classList.remove('open');
 });
 
 // ======================
-// Clock + Temperature
+// Particle / Canvas background
 // ======================
-function updateClock(){
+(function initCanvas() {
+  const canvas = document.getElementById('bgCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const COUNT = 55;
+  for (let i = 0; i < COUNT; i++) {
+    particles.push({
+      x: Math.random() * 1000,
+      y: Math.random() * 800,
+      r: Math.random() * 1.4 + 0.3,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: (Math.random() - 0.5) * 0.18,
+      o: Math.random() * 0.5 + 0.15,
+    });
+  }
+
+  let mouse = { x: -999, y: -999 };
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const isLight = document.body.classList.contains('theme-light');
+    const dotColor = isLight ? '30,50,120' : '150,190,255';
+
+    particles.forEach(p => {
+      // subtle mouse repel
+      const dx = p.x - mouse.x, dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        p.vx += dx / dist * 0.04;
+        p.vy += dy / dist * 0.04;
+      }
+      // speed limit
+      const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+      if (spd > 0.6) { p.vx *= 0.6/spd; p.vy *= 0.6/spd; }
+
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${dotColor},${p.o})`;
+      ctx.fill();
+    });
+
+    // connect nearby dots
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i+1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 110) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(${dotColor},${0.12*(1 - d/110)})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ======================
+// Clock + Temp
+// ======================
+function updateClock() {
   const now = new Date();
-  clockText.textContent = now.toLocaleString('th-TH');
+  clockText.textContent = now.toLocaleString('th-TH', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-async function loadTemp(){
-  try{
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m';
-    const r = await fetch(url, { cache: 'no-store' });
+async function loadTemp() {
+  try {
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m', { cache: 'no-store' });
     const j = await r.json();
     const t = Math.round(j?.current?.temperature_2m);
-    if (Number.isFinite(t)) tempText.textContent = `${t}°C`;
-  }catch(_e){}
+    if (Number.isFinite(t)) tempText.textContent = t + '°C';
+  } catch(_) {}
 }
 loadTemp();
 
@@ -296,10 +306,11 @@ loadTemp();
 // Init
 // ======================
 renderBrandList();
-const brand = getBrandFromPath();
-setActiveBrandUI(brand);
+const initBrand = getBrandFromPath();
+setActiveBrandUI(initBrand);
+
 const savedMode = localStorage.getItem('themeMode') || 'dark';
-const savedMix  = parseInt(localStorage.getItem('mix') || '0', 10);
+const savedMix  = parseInt(localStorage.getItem('mix') || '100', 10);
 mixSlider.value = String(savedMix);
 applyTheme(savedMode);
 if (savedMode === 'auto') applyMix(savedMix);
