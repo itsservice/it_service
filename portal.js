@@ -2,15 +2,17 @@
 // CONFIG (แก้ที่นี่ที่เดียว)
 // ======================
 const BRAND_CONFIG = {
-  GD:  { report: 'https://example.com', track: 'https://example.com' },
-  ABP: { report: 'https://example.com', track: 'https://example.com' },
-  GH:  { report: 'https://example.com', track: 'https://example.com' },
-  BR4: { report: 'https://example.com', track: 'https://example.com' },
-  BR5: { report: 'https://example.com', track: 'https://example.com' },
-  BR6: { report: 'https://example.com', track: 'https://example.com' },
-  BR7: { report: 'https://example.com', track: 'https://example.com' },
-  BR8: { report: 'https://example.com', track: 'https://example.com' },
-  BR9: { report: 'https://example.com', track: 'https://example.com' },
+  "Dunkin'"          : { report: 'https://example.com', track: 'https://example.com' },
+  "Au Bon Pain"      : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Café"   : { report: 'https://example.com', track: 'https://example.com' },
+  "Another Hound Café": { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Original": { report: 'https://example.com', track: 'https://example.com' },
+  "Smileyhound"      : { report: 'https://example.com', track: 'https://example.com' },
+  "Le Grand Véfour"  : { report: 'https://example.com', track: 'https://example.com' },
+  "M-Kitchen (ครัวเอ็ม)": { report: 'https://example.com', track: 'https://example.com' },
+  "Kin+Hey (กินเฮ)"  : { report: 'https://example.com', track: 'https://example.com' },
+  "Greyhound Coffee" : { report: 'https://example.com', track: 'https://example.com' },
+  "Animal House"     : { report: 'https://example.com', track: 'https://example.com' },
 };
 // ======================
 // DOM
