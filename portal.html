@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GD Portal</title>
+  <link rel="stylesheet" href="/portal.css" />
+</head>
+
+<body>
+  <div class="menu-btn" id="menuBtn" aria-label="menu">☰</div>
+  <div class="time" id="time"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <h3>Preset</h3>
+
+    <div class="section">
+      <strong>Size</strong>
+      <button class="btn preset" data-size="small">Small</button>
+      <button class="btn preset" data-size="medium">Medium</button>
+      <button class="btn preset" data-size="large">Large</button>
+    </div>
+
+    <hr/>
+
+    <div class="section">
+      <strong>Color</strong>
+      <button class="btn preset" data-color="#007bff">Blue</button>
+      <button class="btn preset" data-color="#28a745">Green</button>
+      <button class="btn preset" data-color="#dc3545">Red</button>
+    </div>
+  </aside>
+
+  <main class="container">
+    <div class="brand fade-up" style="animation-delay:0.2s">GD</div>
+
+    <button id="btn1" class="btn action fade-up primary"
+      style="animation-delay:0.4s"
+      data-href="https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf">
+      แจ้งปัญหา
+    </button>
+
+    <button id="btn2" class="btn action fade-up secondary"
+      style="animation-delay:0.6s"
+      data-href="https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc">
+      ติดตาม Ticket
+    </button>
+  </main>
+
+  <script src="/portal.js"></script>
+</body>
+</html>
