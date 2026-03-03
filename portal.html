@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/assets/portal.css"/>
 </head>
 <body>
+
   <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
   <button id="menuBtn" class="menu-fab" aria-label="Menu" aria-expanded="false">
@@ -22,13 +23,15 @@
   </button>
 
   <div class="topright">
-    <div class="clock-pill" id="clockCard">
+    <div class="clock-pill">
       <span class="clock-icon">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
       </span>
-      <span id="clockText" class="clock-text">--:--:--</span>
+      <span id="clockText">--:--:--</span>
       <span class="pill-sep"></span>
-      <span id="tempText">--°C</span>
+      <span id="tempText">--&deg;C</span>
     </div>
     <div class="theme-wrap">
       <button id="themeBtn" class="icon-btn" aria-label="Theme">
@@ -38,14 +41,14 @@
         </svg>
       </button>
       <div id="themePopup" class="theme-popup" role="menu" aria-hidden="true">
-        <button class="popItem" data-theme="dark"><span class="pop-ico">🌙</span>Dark</button>
-        <button class="popItem" data-theme="light"><span class="pop-ico">☀️</span>Light</button>
-        <button class="popItem" data-theme="auto"><span class="pop-ico">🎚</span>Auto</button>
+        <button class="popItem" data-theme="dark"><span class="pop-ico">&#127769;</span>Dark</button>
+        <button class="popItem" data-theme="light"><span class="pop-ico">&#9728;&#65039;</span>Light</button>
+        <button class="popItem" data-theme="auto"><span class="pop-ico">&#127450;</span>Auto</button>
         <div class="sliderWrap" id="sliderWrap" hidden>
           <div class="slider-row">
-            <span>☀</span>
+            <span>&#9728;</span>
             <input id="mixSlider" type="range" min="0" max="100" value="100"/>
-            <span>🌙</span>
+            <span>&#127769;</span>
           </div>
         </div>
       </div>
@@ -72,7 +75,7 @@
   <main class="main">
     <div class="hero" id="centerBox">
       <div class="brand-wrap">
-        <div id="brandTitle" class="brand-name">—</div>
+        <div id="brandTitle" class="brand-name">&#8212;</div>
         <div class="brand-sub" id="brandSub">เลือกแบรนด์จากเมนู</div>
       </div>
       <div class="cards">
@@ -88,7 +91,9 @@
             <div class="card-en">Report Issue</div>
           </div>
           <div class="card-arrow">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
           </div>
         </button>
         <button id="btnTrack" class="card">
@@ -103,9 +108,19 @@
             <div class="card-en">Track Status</div>
           </div>
           <div class="card-arrow">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
           </div>
         </button>
+      </div>
+      <div id="notReady" class="not-ready" hidden>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        ขณะนี้หน้าเว็บยังไม่พร้อมใช้งาน
       </div>
     </div>
   </main>
