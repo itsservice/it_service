@@ -28,13 +28,13 @@ app.get('/portal', (_req, res) => {
 });
 
 // 🔐 แนะนำ: ลบหรือคอมเมนต์ทิ้งหลังตรวจแล้ว
- app.get('/debug/env', (_req, res) => {
-res.json({
-     hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
-     lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
-     hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
-   });
-});
+// app.get('/debug/env', (_req, res) => {
+//   res.json({
+//     hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
+//     lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
+//     hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
+//   });
+// });
 
 // LARK
 app.use('/lark', larkWebhookRouter);
