@@ -1,0 +1,123 @@
+:root{
+  --bg:#f4f6f9;
+  --text:#111;
+  --sidebar:#222;
+  --white:#fff;
+
+  --btn-font:16px;
+  --btn-pad:15px;
+
+  --primary:#007bff;
+  --secondary:#6c757d;
+}
+
+* { box-sizing: border-box; }
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+/* Animation */
+.fade-up{
+  opacity:0;
+  transform: translateY(40px);
+  animation: fadeUp 0.8s ease forwards;
+}
+@keyframes fadeUp{
+  to{ opacity:1; transform: translateY(0); }
+}
+
+.container{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.brand{
+  font-size:32px;
+  margin-bottom:30px;
+}
+
+/* Buttons */
+.btn{
+  width:260px;
+  padding: var(--btn-pad);
+  margin:10px;
+  border-radius:10px;
+  border:none;
+  font-size: var(--btn-font);
+  cursor:pointer;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+  user-select:none;
+}
+
+.btn:hover{
+  transform: scale(1.04);
+  filter: brightness(1.02);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.btn:active{
+  transform: scale(0.98);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+}
+
+/* Action buttons */
+.btn.action.primary{ background: var(--primary); color: var(--white); }
+.btn.action.secondary{ background: var(--secondary); color: var(--white); }
+
+/* Menu + Sidebar */
+.menu-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  font-size:24px;
+  cursor:pointer;
+  width:auto;
+  padding:6px 10px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(6px);
+}
+
+.time{
+  position:fixed;
+  top:20px;
+  right:40px;
+  font-size:14px;
+  background: rgba(255,255,255,0.75);
+  padding:6px 10px;
+  border-radius:10px;
+}
+
+.sidebar{
+  position:fixed;
+  left:-260px;
+  top:0;
+  width:260px;
+  height:100%;
+  background: var(--sidebar);
+  color: var(--white);
+  padding:20px;
+  transition: left 0.22s ease;
+}
+
+.sidebar.open{ left:0; }
+
+.sidebar .section{
+  margin: 12px 0 18px;
+}
+
+.sidebar .btn{
+  width:100%;
+  margin:5px 0;
+}
+hr{
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
