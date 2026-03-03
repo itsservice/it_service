@@ -1,9 +1,14 @@
 const express = require('express');
+const path = require('path'); // ✅ เพิ่ม
 
 const larkWebhookRouter = require('./larkWebhook');
 const lineWebhookRouter = require('./lineWebhook');
 
 const app = express();
+
+// ✅ เพิ่ม: เสิร์ฟไฟล์ static จากโฟลเดอร์เดียวกัน
+// เพื่อให้ /portal.css และ /portal.js โหลดได้
+app.use(express.static(__dirname));
 
 // เก็บ rawBody สำหรับตรวจ LINE signature
 app.use(
@@ -17,13 +22,18 @@ app.use(
 // HEALTH
 app.get('/', (_, res) => res.send('SERVER OK'));
 
-// DEBUG ENV (ชั่วคราว)
-app.get('/debug/env', (_req, res) => {
-  res.json({
-    hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
-    lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
-    hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
-  });
+// ✅ เพิ่ม: หน้าเว็บ portal (HTML แยกไฟล์)
+app.get('/portal', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'portal.html'));
+});
+
+// 🔐 แนะนำ: ลบหรือคอมเมนต์ทิ้งหลังตรวจแล้ว
+ app.get('/debug/env', (_req, res) => {
+res.json({
+     hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
+     lineSecretLen: (process.env.LINE_CHANNEL_SECRET || '').length,
+     hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
+   });
 });
 
 // LARK
