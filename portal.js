@@ -1,225 +1,219 @@
-// ================== CONFIG (แก้ลิงก์แบรนด์ที่นี่ที่เดียว) ==================
-const BRAND_CONFIG = {
-  GD: {
-    report: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf",
-    track:  "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc",
-  },
-  ABP: { report: "#", track: "#" },
-  GH:  { report: "#", track: "#" },
-  BR4: { report: "#", track: "#" },
-  BR5: { report: "#", track: "#" },
-  BR6: { report: "#", track: "#" },
-  BR7: { report: "#", track: "#" },
-  BR8: { report: "#", track: "#" },
-  BR9: { report: "#", track: "#" },
-};
+// ===== CONFIG =====
+const BRANDS = [
+  { code: "GD",  issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "ABP", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "GH",  issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR4", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR5", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR6", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR7", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR8", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+  { code: "BR9", issueUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/form/shrjp3lEZoGxc1dyZtcXdPBehJf", trackUrl: "https://gjpl1ez37fzh.jp.larksuite.com/share/base/query/shrjpnvMShBpzPtQrNeNP8Tzygc" },
+];
 
-const BRAND_ORDER = ["GD","ABP","GH","BR4","BR5","BR6","BR7","BR8","BR9"];
-
-// ================== Helpers ==================
-function getBrandFromPath() {
-  // /portal/ABP  -> "ABP"
-  const parts = window.location.pathname.split("/").filter(Boolean);
-  const idx = parts.indexOf("portal");
-  const b = (idx >= 0 && parts[idx + 1]) ? parts[idx + 1].toUpperCase() : "GD";
-  return BRAND_CONFIG[b] ? b : "GD";
-}
-
-function setActiveBrand(brand) {
-  const title = document.getElementById("brandTitle");
-  title.textContent = brand;
-
-  document.querySelectorAll(".brand-item").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.brand === brand);
-  });
-
-  const cfg = BRAND_CONFIG[brand];
-  document.getElementById("btnReport").onclick = () => window.location.href = cfg.report;
-  document.getElementById("btnTrack").onclick  = () => window.location.href = cfg.track;
-}
-
-function buildBrandMenu(activeBrand) {
-  const list = document.getElementById("brandList");
-  list.innerHTML = "";
-
-  BRAND_ORDER.forEach(b => {
-    const btn = document.createElement("button");
-    btn.className = "brand-item";
-    btn.textContent = b;
-    btn.dataset.brand = b;
-    btn.onclick = () => {
-      // ไปหน้า brand นั้นๆ
-      window.location.href = `/portal/${b}`;
-    };
-    if (b === activeBrand) btn.classList.add("active");
-    list.appendChild(btn);
-  });
-}
-
-// ================== Sidebar open/close (minimal slide/fade) ==================
+// ===== DOM =====
+const menuBtn = document.getElementById("menuBtn");
 const sidebar = document.getElementById("sidebar");
 const overlay = document.getElementById("overlay");
-const menuBtn = document.getElementById("menuBtn");
-const closeBtn = document.getElementById("closeBtn");
+const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+const brandList = document.getElementById("brandList");
+
+const brandTitle = document.getElementById("brandTitle");
+const btnIssue = document.getElementById("btnIssue");
+const btnTrack = document.getElementById("btnTrack");
+
+const dateTimeEl = document.getElementById("dateTime");
+const tempEl = document.getElementById("tempC");
+
+const themeBtn = document.getElementById("themeBtn");
+const themePanel = document.getElementById("themePanel");
+const customRow = document.getElementById("customRow");
+const mixSlider = document.getElementById("mixSlider");
+
+// ===== HELPERS =====
+function getBrandFromPath() {
+  // /portal/BR5
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const idx = parts.indexOf("portal");
+  if (idx >= 0 && parts[idx + 1]) return parts[idx + 1].toUpperCase();
+  return "GD";
+}
+
+function setBrand(code) {
+  const b = BRANDS.find(x => x.code === code) || BRANDS[0];
+  brandTitle.textContent = b.code;
+
+  btnIssue.onclick = () => window.location.href = b.issueUrl;
+  btnTrack.onclick = () => window.location.href = b.trackUrl;
+
+  // active highlight
+  document.querySelectorAll(".brandBtn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.code === b.code);
+  });
+}
 
 function openSidebar() {
-  overlay.hidden = false;
-  sidebar.classList.remove("closing");
   sidebar.classList.add("open");
-  sidebar.setAttribute("aria-hidden", "false");
+  overlay.classList.remove("hidden");
 }
-
 function closeSidebar() {
   sidebar.classList.remove("open");
-  sidebar.classList.add("closing");
-  sidebar.setAttribute("aria-hidden", "true");
-
-  // wait animation then hide overlay
-  setTimeout(() => {
-    overlay.hidden = true;
-    sidebar.classList.remove("closing");
-  }, 280);
+  overlay.classList.add("hidden");
 }
-
 function toggleSidebar() {
-  const isOpen = sidebar.classList.contains("open");
-  if (isOpen) closeSidebar();
+  if (sidebar.classList.contains("open")) closeSidebar();
   else openSidebar();
 }
 
-menuBtn.addEventListener("click", toggleSidebar);
-closeBtn.addEventListener("click", closeSidebar);
-overlay.addEventListener("click", closeSidebar);
+// ===== SIDEBAR BUILD =====
+function buildBrandButtons() {
+  brandList.innerHTML = "";
+  BRANDS.forEach(b => {
+    const btn = document.createElement("button");
+    btn.className = "brandBtn";
+    btn.textContent = b.code;
+    btn.dataset.code = b.code;
+    btn.onclick = () => {
+      // go to brand page
+      window.location.href = `/portal/${b.code}`;
+    };
+    brandList.appendChild(btn);
+  });
+}
 
-// ================== Time (Thai locale) ==================
+// ===== TIME =====
 function updateTime() {
   const now = new Date();
-  // แสดง วัน/เดือน/ปี เวลา:นาที:วินาที
-  document.getElementById("timeText").textContent = now.toLocaleString("th-TH");
+  // th-TH: dd/mm/yyyy HH:MM:SS
+  dateTimeEl.textContent = now.toLocaleString("th-TH");
 }
-updateTime();
 setInterval(updateTime, 1000);
+updateTime();
 
-// ================== Temperature (Bangkok) via Open-Meteo ==================
-// Client-side fetch (no server key). Update every 10 minutes.
-async function updateTemp() {
-  try {
-    // Bangkok approx lat/lon
-    const lat = 13.7563;
-    const lon = 100.5018;
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("temp fetch failed");
-
-    const data = await res.json();
-    const t = data?.current?.temperature_2m;
-
-    if (typeof t === "number") {
-      document.getElementById("tempText").textContent = `${Math.round(t)}°C`;
-    } else {
-      document.getElementById("tempText").textContent = `--°C`;
-    }
-  } catch (_e) {
-    document.getElementById("tempText").textContent = `--°C`;
-  }
-}
-updateTemp();
-setInterval(updateTemp, 10 * 60 * 1000);
-
-// ================== Theme system ==================
-const themeBtn = document.getElementById("themeBtn");
-const themePop = document.getElementById("themePop");
-const sliderWrap = document.getElementById("sliderWrap");
-const themeSlider = document.getElementById("themeSlider");
-
-function applyThemeMix(pctDark) {
-  // pctDark: 0..100
-  // เราจะค่อยๆเปลี่ยน sky/star opacity เพื่อให้เหมือน transition
-  const d = pctDark / 100;
-
-  // Dark => stars more, clouds less
-  const star = 0.08 + (0.35 * d);
-  const sky  = 0.42 - (0.28 * d);
-
-  document.documentElement.style.setProperty("--starOpacity", String(star));
-  document.documentElement.style.setProperty("--skyOpacity", String(sky));
-
-  // background base colors shift (light -> dark)
-  // ใช้ mix แบบง่ายด้วย HSL-ish approximation
-  // light: #e9effa like, dark: #071223
-  const bg1 = mixColor([233,239,250],[7,18,35], d);
-  const bg2 = mixColor([214,228,248],[10,27,51], d);
-
-  document.documentElement.style.setProperty("--bg1", rgbToHex(bg1));
-  document.documentElement.style.setProperty("--bg2", rgbToHex(bg2));
+// ===== TEMP (best-effort) =====
+async function tryLoadTemp(lat, lon) {
+  // Best-effort: open API may fail depending on network policy. If fail -> keep "--"
+  // Using open endpoint style (no key) - if blocked, it will just stay as "--"
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`;
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) return;
+  const j = await r.json();
+  const t = j?.current?.temperature_2m;
+  if (typeof t === "number") tempEl.textContent = String(Math.round(t));
 }
 
-function mixColor(a, b, t) {
-  return [
-    Math.round(a[0] + (b[0]-a[0])*t),
-    Math.round(a[1] + (b[1]-a[1])*t),
-    Math.round(a[2] + (b[2]-a[2])*t),
-  ];
-}
-function rgbToHex([r,g,b]) {
-  return "#" + [r,g,b].map(x => x.toString(16).padStart(2,"0")).join("");
-}
+function loadTemp() {
+  // fallback: Bangkok
+  const fallback = () => tryLoadTemp(13.7563, 100.5018).catch(() => {});
 
+  if (!navigator.geolocation) return fallback();
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      tryLoadTemp(latitude, longitude).catch(() => fallback());
+    },
+    () => fallback(),
+    { enableHighAccuracy: false, timeout: 2500 }
+  );
+}
+loadTemp();
+
+// ===== THEME =====
 function setTheme(mode) {
+  document.body.classList.remove("theme-light", "theme-dark");
+  customRow.classList.add("hidden");
+
   if (mode === "light") {
-    sliderWrap.hidden = true;
-    applyThemeMix(0);
-    localStorage.setItem("themeMode", "light");
+    document.body.classList.add("theme-light");
   } else if (mode === "dark") {
-    sliderWrap.hidden = true;
-    applyThemeMix(100);
-    localStorage.setItem("themeMode", "dark");
-  } else {
-    // custom/auto via slider
-    sliderWrap.hidden = false;
-    localStorage.setItem("themeMode", "custom");
-    const v = Number(themeSlider.value || 100);
-    applyThemeMix(v);
+    document.body.classList.add("theme-dark");
+  } else if (mode === "custom") {
+    customRow.classList.remove("hidden");
+    // custom uses CSS var --mix from slider
   }
+  localStorage.setItem("themeMode", mode);
 }
 
-function toggleThemePop() {
-  const open = themePop.classList.toggle("open");
-  themePop.setAttribute("aria-hidden", open ? "false" : "true");
+function applyCustomMix(v) {
+  document.documentElement.style.setProperty("--mix", String(v));
+  localStorage.setItem("themeMix", String(v));
 }
+
+// Theme panel toggle
 themeBtn.addEventListener("click", (e) => {
   e.stopPropagation();
-  toggleThemePop();
-});
-document.addEventListener("click", (e) => {
-  // close pop when clicking outside
-  if (!themePop.contains(e.target) && e.target !== themeBtn) {
-    themePop.classList.remove("open");
-    themePop.setAttribute("aria-hidden", "true");
-  }
+  themePanel.classList.toggle("hidden");
 });
 
-document.querySelectorAll(".theme-item").forEach(btn => {
-  btn.addEventListener("click", () => setTheme(btn.dataset.theme));
+// click outside closes panel
+document.addEventListener("click", () => {
+  if (!themePanel.classList.contains("hidden")) themePanel.classList.add("hidden");
 });
 
-themeSlider.addEventListener("input", () => {
-  localStorage.setItem("themeSlider", String(themeSlider.value));
-  applyThemeMix(Number(themeSlider.value));
+// theme option
+document.querySelectorAll(".panelItem").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    const mode = e.currentTarget.dataset.theme;
+    setTheme(mode);
+  });
 });
 
-// Load saved theme
-(function initTheme() {
+mixSlider.addEventListener("input", (e) => {
+  applyCustomMix(e.target.value);
+});
+
+// restore
+(function restoreTheme(){
   const mode = localStorage.getItem("themeMode") || "dark";
-  const slider = localStorage.getItem("themeSlider");
-  if (slider != null) themeSlider.value = slider;
+  const mix = Number(localStorage.getItem("themeMix") || "50");
+  mixSlider.value = String(mix);
+  applyCustomMix(mix);
   setTheme(mode);
 })();
 
-// ================== init brand page ==================
-(function init() {
-  const brand = getBrandFromPath();
-  buildBrandMenu(brand);
-  setActiveBrand(brand);
-})();
+// ===== SIDEBAR EVENTS =====
+menuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleSidebar();
+});
+
+closeSidebarBtn.addEventListener("click", closeSidebar);
+overlay.addEventListener("click", closeSidebar);
+
+// ESC close
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeSidebar();
+    themePanel.classList.add("hidden");
+  }
+});
+
+// ===== INIT =====
+buildBrandButtons();
+setBrand(getBrandFromPath());
+
+// ===== Theme background variants =====
+// (CSS classes)
+const style = document.createElement("style");
+style.textContent = `
+  body.theme-light{
+    color: rgba(10,12,18,0.92);
+    background:
+      radial-gradient(900px 500px at 30% 30%, rgba(0,0,0,0.06), transparent 60%),
+      linear-gradient(135deg, #eef2ff, #dbeafe);
+  }
+  body.theme-dark{
+    color: rgba(255,255,255,0.92);
+  }
+  /* custom mix: 0 day -> 100 night */
+  body:not(.theme-light):not(.theme-dark){
+    background:
+      radial-gradient(1200px 600px at 30% 30%, rgba(255,255,255,0.08), transparent 60%),
+      linear-gradient(135deg,
+        color-mix(in srgb, #eef2ff calc((100 - var(--mix))*1%), #0b1220 calc(var(--mix)*1%)),
+        color-mix(in srgb, #dbeafe calc((100 - var(--mix))*1%), #0f1a33 calc(var(--mix)*1%))
+      );
+  }
+`;
+document.head.appendChild(style);
