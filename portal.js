@@ -1,6 +1,7 @@
 // ======================
 // CONFIG (แก้ที่นี่ที่เดียว)
 // ======================
+// NOTE: ตอนนี้ยังไม่ใส่ครบ -> ใช้ลิงก์เดียวหรือ placeholder ได้
 const BRAND_CONFIG = {
   GD:  { report: 'https://example.com', track: 'https://example.com' },
   ABP: { report: 'https://example.com', track: 'https://example.com' },
@@ -40,7 +41,7 @@ const tempText  = document.getElementById('tempText');
 // ======================
 function getBrandFromPath() {
   const parts = location.pathname.split('/').filter(Boolean); // ["portal","ABP"]
-  if (parts[0] !== 'portal') return null;
+  if (parts[0] !== 'portal') return 'GD';
   return (parts[1] || 'GD').toUpperCase();
 }
 
@@ -52,10 +53,13 @@ function setActiveBrandUI(brand) {
     btn.classList.toggle('active', btn.dataset.brand === brand);
   });
 
-  // URLs
   const cfg = BRAND_CONFIG[brand];
-  if (!cfg || !cfg.report || !cfg.track || cfg.report === cfg.track) {
-    // ตามที่ขอ: ยังไม่ต้องใส่ครบ ให้แสดง not ready (หรือถ้าอยากให้เข้า 1 link ก็ปรับตรงนี้)
+
+  // ตามที่ขอ: ยังไม่ต้องใส่ครบ ให้แสดง not ready เมื่อ report/track เป็นลิงก์เดียวกันหรือไม่มี
+  const invalid =
+    !cfg || !cfg.report || !cfg.track || (cfg.report === cfg.track);
+
+  if (invalid) {
     notReady.hidden = false;
     btnReport.onclick = () => {};
     btnTrack.onclick  = () => {};
@@ -68,7 +72,8 @@ function setActiveBrandUI(brand) {
 }
 
 // ======================
-// Menu open/close
+// Menu open/close (fade+slide)
+// ปิดได้ 4 วิธี: เมนูซ้ำ / X / กดพื้นที่ว่าง / swipe (เลื่อนดันให้เก็บ)
 // ======================
 let isOpen = false;
 
@@ -92,33 +97,45 @@ function toggleMenu(){
 
 menuBtn.addEventListener('click', toggleMenu);
 closeBtn.addEventListener('click', closeMenu);
-scrim.addEventListener('click', closeMenu); // ปิดด้วยการกดพื้นที่ว่าง
+scrim.addEventListener('click', closeMenu);
 
-// ปิดแบบ “เลื่อน/ดันให้มันเก็บ” (swipe left)
+// swipe close (left)
 let touchX0 = null;
+let touchY0 = null;
+
 sidebar.addEventListener('touchstart', (e) => {
-  touchX0 = e.touches?.[0]?.clientX ?? null;
+  const t = e.touches?.[0];
+  if (!t) return;
+  touchX0 = t.clientX;
+  touchY0 = t.clientY;
 }, { passive: true });
 
 sidebar.addEventListener('touchmove', (e) => {
   if (!isOpen || touchX0 == null) return;
-  const x = e.touches?.[0]?.clientX;
-  if (typeof x !== 'number') return;
+  const t = e.touches?.[0];
+  if (!t) return;
 
-  const dx = x - touchX0;
-  // ถ้าปัดไปทางซ้ายเกิน threshold -> ปิด
-  if (dx < -50) {
+  const dx = t.clientX - touchX0;
+  const dy = t.clientY - touchY0;
+
+  // ถ้ากำลัง scroll แนวตั้ง ให้ไม่ไปปิดมั่ว
+  if (Math.abs(dy) > Math.abs(dx)) return;
+
+  // ปัดซ้ายเกิน threshold -> ปิด
+  if (dx < -55) {
     closeMenu();
     touchX0 = null;
+    touchY0 = null;
   }
 }, { passive: true });
 
 sidebar.addEventListener('touchend', () => {
   touchX0 = null;
+  touchY0 = null;
 }, { passive: true });
 
 // ======================
-// Brand list render (รองรับเพิ่มแบรนด์/scroll)
+// Brand list render (รองรับเพิ่ม/scroll)
 // ======================
 function renderBrandList() {
   const brands = Object.keys(BRAND_CONFIG);
@@ -139,29 +156,26 @@ function renderBrandList() {
 
 // ======================
 // Theme (Light/Dark/Auto + Slider)
+// + สีตัวหนังสือ "ตรงข้ามพื้นหลัง" เสมอ
 // ======================
 function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
 
-// คำนวณ luminance คร่าว ๆ เพื่อสลับสีตัวอักษรให้ “ตรงข้ามพื้นหลัง”
 function setTextForBg(rgb){
   const [r,g,b] = rgb.map(v => v/255);
   const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+
   const fg = lum > 0.55 ? '#0b1220' : '#f1f5ff';
   const muted = lum > 0.55 ? 'rgba(11,18,32,.70)' : 'rgba(241,245,255,.70)';
+
   document.documentElement.style.setProperty('--fg', fg);
   document.documentElement.style.setProperty('--muted', muted);
-
-  // ปรับสีตัวหนังสือบนปุ่มให้ชัด
-  btnReport.style.color = fg;
-  btnTrack.style.color  = fg;
 }
 
 function applyTheme(mode){
-  // mode: light | dark | auto
   localStorage.setItem('themeMode', mode);
 
   if (mode === 'auto') {
-    sliderWrap.hidden = false; // ตามที่ขอ: Auto มี slider
+    sliderWrap.hidden = false;
     applyMix(parseInt(localStorage.getItem('mix') || '0', 10));
     return;
   }
@@ -171,23 +185,27 @@ function applyTheme(mode){
   if (mode === 'light') {
     document.documentElement.style.setProperty('--bg1', '#eaf2ff');
     document.documentElement.style.setProperty('--bg2', '#ffffff');
+
     // เมฆจาง ๆ
     document.body.style.background =
       'radial-gradient(800px 500px at 20% 20%, rgba(255,255,255,.9), transparent 60%),' +
       'radial-gradient(900px 500px at 70% 30%, rgba(255,255,255,.7), transparent 65%),' +
       'linear-gradient(135deg, var(--bg1), var(--bg2))';
+
     setTextForBg([245, 248, 255]);
   }
 
   if (mode === 'dark') {
     document.documentElement.style.setProperty('--bg1', '#0b1220');
     document.documentElement.style.setProperty('--bg2', '#0a1630');
+
     // ดาวจาง ๆ
     document.body.style.background =
       'radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.35), transparent 60%),' +
       'radial-gradient(2px 2px at 70% 40%, rgba(255,255,255,.25), transparent 60%),' +
       'radial-gradient(2px 2px at 50% 20%, rgba(255,255,255,.20), transparent 60%),' +
       'linear-gradient(135deg, var(--bg1), var(--bg2))';
+
     setTextForBg([11, 18, 32]);
   }
 }
@@ -201,7 +219,6 @@ function mixColor(a,b,t){
 }
 
 function applyMix(value){
-  // 0..100 : sun -> night
   const v = clamp(value,0,100);
   localStorage.setItem('mix', String(v));
   const t = v/100;
@@ -222,19 +239,19 @@ function applyMix(value){
     'radial-gradient(2px 2px at 70% 40%, rgba(255,255,255,' + (0.25*t).toFixed(3) + '), transparent 60%),' +
     'linear-gradient(135deg, var(--bg1), var(--bg2))';
 
-  // ตั้งสีตัวอักษรให้ตรงข้าม “ตามพื้นหลังที่ผสม”
+  // set opposite text
   const mid = mixColor(bg1, bg2, .5);
   setTextForBg(mid);
 }
 
-// เปิด popup
+// theme popup toggle
 themeBtn.addEventListener('click', () => {
   themePopup.classList.toggle('open');
-  const isOpen = themePopup.classList.contains('open');
-  themePopup.setAttribute('aria-hidden', String(!isOpen));
+  const opened = themePopup.classList.contains('open');
+  themePopup.setAttribute('aria-hidden', String(!opened));
 });
 
-// คลิกเลือก theme
+// choose theme
 themePopup.querySelectorAll('.popItem').forEach(btn => {
   btn.addEventListener('click', () => {
     const mode = btn.dataset.theme;
@@ -242,12 +259,12 @@ themePopup.querySelectorAll('.popItem').forEach(btn => {
   });
 });
 
-// slider สำหรับ auto
+// slider auto
 mixSlider.addEventListener('input', (e) => {
   applyMix(parseInt(e.target.value, 10));
 });
 
-// คลิกที่อื่นปิด popup
+// click outside close popup
 document.addEventListener('click', (e) => {
   const within = themePopup.contains(e.target) || themeBtn.contains(e.target);
   if (!within) themePopup.classList.remove('open');
@@ -263,18 +280,16 @@ function updateClock(){
 setInterval(updateClock, 1000);
 updateClock();
 
-// อุณหภูมิ: ถ้าไม่อยากเรียก API ก็ปล่อย “--°C” ได้
-// (ตอนนี้คงใช้ค่าเดิมของเต้แล้วก็โอเค)
+// Temperature: open-meteo (Bangkok)
 async function loadTemp(){
   try{
-    // Bangkok (คร่าว ๆ) - ถ้าจะเปลี่ยนใช้ geolocation ได้
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m';
     const r = await fetch(url, { cache: 'no-store' });
     const j = await r.json();
     const t = Math.round(j?.current?.temperature_2m);
     if (Number.isFinite(t)) tempText.textContent = `${t}°C`;
   }catch(_e){
-    // เงียบไว้
+    // keep --°C
   }
 }
 loadTemp();
@@ -291,5 +306,6 @@ setActiveBrandUI(brand);
 const savedMode = localStorage.getItem('themeMode') || 'dark';
 const savedMix  = parseInt(localStorage.getItem('mix') || '0', 10);
 mixSlider.value = String(savedMix);
+
 applyTheme(savedMode);
 if (savedMode === 'auto') applyMix(savedMix);
