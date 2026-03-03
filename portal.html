@@ -4,38 +4,42 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>IT Portal</title>
-  <link rel="stylesheet" href="/portal.css" />
+  <link rel="stylesheet" href="/assets/portal.css" />
 </head>
 <body>
-  <!-- Top overlay controls (ตำแหน่ง 1 และ 3) -->
+
+  <!-- Position 1: Menu button -->
   <button id="menuBtn" class="fab left" aria-label="Menu">
     <span class="hamburger"></span>
   </button>
 
-  <div class="topRight">
+  <!-- Position 3: Info + Theme -->
+  <div class="topRight" aria-label="TopRight">
     <div class="clockCard" id="clockCard">
       <div id="clockText">--/--/---- --:--:--</div>
       <div class="tempRow"><span id="tempText">--°C</span></div>
     </div>
 
-    <button id="themeBtn" class="fab right" aria-label="Theme">⚙️</button>
+    <div class="themeWrap">
+      <button id="themeBtn" class="fab right" aria-label="Theme">⚙️</button>
 
-    <div id="themePopup" class="popup" role="menu" aria-hidden="true">
-      <button class="popItem" data-theme="light">🌤️ Light</button>
-      <button class="popItem" data-theme="dark">🌙 Dark</button>
-      <button class="popItem" data-theme="auto">🎚️ Auto</button>
+      <div id="themePopup" class="popup" role="menu" aria-hidden="true">
+        <button class="popItem" data-theme="light">🌤️ Light</button>
+        <button class="popItem" data-theme="dark">🌙 Dark</button>
+        <button class="popItem" data-theme="auto">🎚️ Auto</button>
 
-      <div class="sliderWrap" id="sliderWrap" hidden>
-        <div class="sliderLabel">🌤️ → 🌆 → 🌙</div>
-        <input id="mixSlider" type="range" min="0" max="100" value="0" />
+        <div class="sliderWrap" id="sliderWrap" hidden>
+          <div class="sliderLabel">🌤️ → 🌆 → 🌙</div>
+          <input id="mixSlider" type="range" min="0" max="100" value="0" />
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Dim overlay (กดพื้นที่ว่างเพื่อปิด) -->
+  <!-- scrim: click outside to close -->
   <div id="scrim" class="scrim" hidden></div>
 
-  <!-- Sidebar (ตำแหน่ง 1,4,7) -->
+  <!-- Sidebar -->
   <aside id="sidebar" class="sidebar" aria-hidden="true">
     <div class="sideTop">
       <div class="sideTitle">
@@ -48,7 +52,7 @@
     <div id="brandList" class="brandList" role="list"></div>
   </aside>
 
-  <!-- Main content (ตำแหน่ง 5 + fade-up จาก 8 ไป 5) -->
+  <!-- Main content -->
   <main class="main">
     <div class="center fadeUp" id="centerBox">
       <div id="brandTitle" class="brandTitle">-</div>
@@ -62,6 +66,6 @@
     </div>
   </main>
 
-  <script src="/portal.js"></script>
+  <script src="/assets/portal.js"></script>
 </body>
 </html>
