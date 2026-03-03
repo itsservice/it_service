@@ -11,6 +11,7 @@
   --bg1: #0b1220;
   --bg2: #0a1630;
 
+  /* Glass panels (JS จะปรับตามความสว่างพื้นหลัง) */
   --panel: rgba(255,255,255,0.08);
   --panel2: rgba(10,14,26,0.92);
 }
@@ -52,7 +53,12 @@ body{
   position: fixed;
   top: 18px;
   left: 18px;
-  z-index: 60;
+  z-index: 80; /* ให้อยู่เหนือ scrim เสมอ */
+}
+
+/* ตอนเมนูเปิด: บล็อกคลิก topRight ทั้งหมด (ตาม requirement: เมนูบังทุกอย่างในรัศมี) */
+body.menuOpen .topRight{
+  pointer-events: none;
 }
 
 .topRight{
@@ -85,7 +91,7 @@ body{
   width: 20px;
   height: 2px;
   background: var(--fg);
-  position: relative;
+  position: absolute;
   display:block;
 }
 .hamburger::before,
@@ -100,7 +106,27 @@ body{
 .hamburger::before{ top: -6px; }
 .hamburger::after{ top: 6px; }
 
-/* theme popup */
+/* X icon in menu button */
+.menuX{
+  position: absolute;
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity .18s ease, transform .18s ease;
+  color: var(--fg);
+}
+
+/* เมื่อเมนูเปิด: ซ่อนสามขีด เหลือกากบาท */
+#menuBtn.open .hamburger{
+  opacity: 0;
+}
+#menuBtn.open .menuX{
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* theme popup (พื้นหลังตามพื้นหลังหลักด้วยตัวแปร --panel2) */
 .popup{
   position:absolute;
   top: 64px;
@@ -108,7 +134,7 @@ body{
   width: 190px;
   padding: 10px;
   border-radius: 14px;
-  background: rgba(20,25,40,0.92);
+  background: var(--panel2);
   border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 18px 40px rgba(0,0,0,0.45);
   backdrop-filter: blur(12px);
@@ -128,7 +154,7 @@ body{
   width:100%;
   border:none;
   border-radius: 12px;
-  background: rgba(255,255,255,0.07);
+  background: var(--panel);
   color: var(--fg);
   padding: 10px 10px;
   cursor:pointer;
@@ -143,7 +169,7 @@ body{
   margin-top: 6px;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.07);
+  background: var(--panel);
 }
 .sliderLabel{
   font-size: 12px;
@@ -157,12 +183,10 @@ body{
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.35);
-  z-index: 55;
+  z-index: 75; /* สูงกว่า topRight เพื่อให้ “บังทุกอย่าง” ตอนเมนูเปิด */
 }
 
-/* ---------------- Sidebar (pos 1,4,7) ----------------
-   ต้องบังพื้นที่เมนู ~20% ของหน้าจอ (desktop)
-*/
+/* ---------------- Sidebar (pos 1,4,7) ---------------- */
 .sidebar{
   position: fixed;
   top: 0;
@@ -172,7 +196,7 @@ body{
   background: rgba(10,14,26,0.92);
   border-right: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(14px);
-  z-index: 56;
+  z-index: 76; /* เหนือ scrim */
 
   transform: translateX(-110%);
   opacity: 0;
@@ -266,7 +290,7 @@ body{
   color: var(--fg);
 }
 
-/* Buttons: ใช้ตัวแปรสีเดียวกันเพื่อแก้ง่าย */
+/* Buttons */
 .actionBtn{
   width: 280px;
   max-width: 90vw;
@@ -297,7 +321,7 @@ body{
   border: 1px solid rgba(255,255,255,0.10);
 }
 
-/* entrance animation from bottom (pos 8 -> 5 느낌) */
+/* entrance animation */
 .fadeUp{
   opacity: 0;
   transform: translateY(34px);
@@ -307,12 +331,10 @@ body{
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------------- Mobile only adjustments ----------------
-   ตามที่เต้บอก: แถบเมนู "ไม่ใหญ่เกิน" และพอดีกับมือถือ
-*/
+/* ---------------- Mobile only adjustments ---------------- */
 @media (max-width: 640px){
   .sidebar{
-    width: 74vw;          /* ลดจาก 86vw -> ใกล้ภาพตัวอย่าง */
+    width: 74vw;
     max-width: 320px;
   }
   .brandTitle{ font-size: 34px; }
