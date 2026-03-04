@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="th">
 <head>
 <meta charset="UTF-8"/>
@@ -28,38 +29,38 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:3px}
 
 /* Login */
 .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1623 0%,#1e2d4a 100%)}
 .login-card{background:#fff;border-radius:20px;padding:44px 40px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.login-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
-.login-logo-text{font-size:20px;font-weight:700;color:var(--text)}
-.login-subtitle{font-size:13px;color:var(--text2);margin-top:2px}
+.login-logo-icon{width:40px;height:40px;background:var(–accent);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
+.login-logo-text{font-size:20px;font-weight:700;color:var(–text)}
+.login-subtitle{font-size:13px;color:var(–text2);margin-top:2px}
 .login-field{margin-bottom:18px}
-.login-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-.login-input{width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .15s}
-.login-input:focus{border-color:var(--accent)}
-.login-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.login-label{display:block;font-size:12px;font-weight:500;color:var(–text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.login-input{width:100%;padding:10px 14px;border:1.5px solid var(–border2);border-radius:var(–r);font-family:‘Outfit’,sans-serif;font-size:14px;color:var(–text);outline:none;transition:border-color .15s}
+.login-input:focus{border-color:var(–accent)}
+.login-btn{width:100%;padding:11px;background:var(–accent);color:#fff;border:none;border-radius:var(–r);font-family:‘Outfit’,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
 .login-btn:hover{opacity:.88}
-.login-error{color:var(--red);font-size:13px;margin-top:10px;text-align:center}
+.login-error{color:var(–red);font-size:13px;margin-top:10px;text-align:center}
 
 /* Layout */
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:220px;flex-shrink:0;background:#111827;display:flex;flex-direction:column;overflow-y:auto}
 .sidebar-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,.07)}
-.sidebar-logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.sidebar-logo-icon{width:32px;height:32px;background:var(–accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
 .sidebar-logo-text{font-size:15px;font-weight:700;color:#fff}
 .sidebar-section{padding:10px 10px 4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase}
-.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 6px;border-radius:var(--r);cursor:pointer;color:rgba(255,255,255,.65);font-size:13.5px;font-weight:400;transition:background .12s,color .12s;user-select:none}
+.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 6px;border-radius:var(–r);cursor:pointer;color:rgba(255,255,255,.65);font-size:13.5px;font-weight:400;transition:background .12s,color .12s;user-select:none}
 .sidebar-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
-.sidebar-item.active{background:var(--accent);color:#fff;font-weight:500}
+.sidebar-item.active{background:var(–accent);color:#fff;font-weight:500}
 .sidebar-item-icon{font-size:15px;flex-shrink:0;width:18px;text-align:center}
-.sidebar-badge{margin-left:auto;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);font-size:10px;padding:1px 6px;border-radius:99px;font-family:'DM Mono',monospace}
+.sidebar-badge{margin-left:auto;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);font-size:10px;padding:1px 6px;border-radius:99px;font-family:‘DM Mono’,monospace}
 .sidebar-item.active .sidebar-badge{background:rgba(255,255,255,.25)}
 .sidebar-bottom{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding:12px 10px}
-.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background .12s}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(–r);cursor:pointer;transition:background .12s}
 .sidebar-user:hover{background:rgba(255,255,255,.07)}
 .sidebar-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .sidebar-user-info{flex:1;min-width:0}
@@ -68,149 +69,150 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font
 
 /* Main content */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{height:52px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px}
-.topbar-title{font-size:16px;font-weight:600;color:var(--text);flex:1}
-.topbar-breadcrumb{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.topbar{height:52px;flex-shrink:0;background:var(–surface);border-bottom:1px solid var(–border);display:flex;align-items:center;padding:0 20px;gap:12px}
+.topbar-title{font-size:16px;font-weight:600;color:var(–text);flex:1}
+.topbar-breadcrumb{font-size:13px;color:var(–text2);display:flex;align-items:center;gap:6px}
 .topbar-breadcrumb span{cursor:pointer}
-.topbar-breadcrumb span:hover{color:var(--accent)}
-.topbar-sep{color:var(--text3)}
+.topbar-breadcrumb span:hover{color:var(–accent)}
+.topbar-sep{color:var(–text3)}
 .topbar-actions{display:flex;align-items:center;gap:8px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1.5px solid transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(–r);border:1.5px solid transparent;font-family:‘Outfit’,sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
+.btn-primary{background:var(–accent);color:#fff;border-color:var(–accent)}
 .btn-primary:hover{background:#1d4ed8}
-.btn-outline{background:#fff;color:var(--text);border-color:var(--border2)}
-.btn-outline:hover{background:var(--surface2);border-color:var(--text3)}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-outline{background:#fff;color:var(–text);border-color:var(–border2)}
+.btn-outline:hover{background:var(–surface2);border-color:var(–text3)}
+.btn-danger{background:var(–red);color:#fff;border-color:var(–red)}
 .btn-danger:hover{background:#b91c1c}
-.btn-ghost{background:transparent;color:var(--text2);border-color:transparent;padding:6px 10px}
-.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-ghost{background:transparent;color:var(–text2);border-color:transparent;padding:6px 10px}
+.btn-ghost:hover{background:var(–surface2);color:var(–text)}
 .btn-sm{padding:5px 10px;font-size:12px}
-.btn-icon{padding:6px;border-radius:var(--r)}
+.btn-icon{padding:6px;border-radius:var(–r)}
 
 /* Content area */
 .content{flex:1;overflow-y:auto;padding:20px}
 
 /* Cards */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px}
-.stat-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1}
-.stat-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.stat-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r2);padding:18px 20px}
+.stat-label{font-size:12px;color:var(–text2);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-size:28px;font-weight:700;color:var(–text);line-height:1}
+.stat-sub{font-size:12px;color:var(–text3);margin-top:4px}
 .stat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 
 /* Table container */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
-.table-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.search-input{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1.5px solid var(--border2);border-radius:var(--r);background:#fff;flex:1;max-width:280px}
-.search-input input{border:none;outline:none;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);width:100%;background:transparent}
-.search-input input::placeholder{color:var(--text3)}
+.table-wrap{background:var(–surface);border:1px solid var(–border);border-radius:var(–r2);overflow:hidden}
+.table-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(–border);flex-wrap:wrap}
+.search-input{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1.5px solid var(–border2);border-radius:var(–r);background:#fff;flex:1;max-width:280px}
+.search-input input{border:none;outline:none;font-family:‘Outfit’,sans-serif;font-size:13px;color:var(–text);width:100%;background:transparent}
+.search-input input::placeholder{color:var(–text3)}
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border2);color:var(--text2);background:#fff;transition:all .12s}
-.chip:hover{border-color:var(--accent);color:var(--accent)}
-.chip.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.chip{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(–border2);color:var(–text2);background:#fff;transition:all .12s}
+.chip:hover{border-color:var(–accent);color:var(–accent)}
+.chip.active{background:var(–accent-bg);border-color:var(–accent);color:var(–accent)}
 
 /* Table */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{text-align:left;padding:10px 14px;font-size:12px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;user-select:none}
+.tbl th{text-align:left;padding:10px 14px;font-size:12px;font-weight:600;color:var(–text2);border-bottom:1px solid var(–border);background:var(–surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;user-select:none}
 .tbl th:first-child{padding-left:14px}
-.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text);vertical-align:middle}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(–border);font-size:13.5px;color:var(–text);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:#f9fafb}
-.tbl .mono{font-family:'DM Mono',monospace;font-size:12.5px}
-.tbl-cb{display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3)}
+.tbl .mono{font-family:‘DM Mono’,monospace;font-size:12.5px}
+.tbl-cb{display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–text3)}
 .tbl-scroll{overflow-x:auto}
 
 /* Status badges */
 .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:500;white-space:nowrap}
 .badge-blue{background:rgba(37,99,235,.10);color:#2563eb}
-.badge-green{background:var(--green-bg);color:var(--green)}
-.badge-orange{background:var(--orange-bg);color:var(--orange)}
-.badge-red{background:rgba(220,38,38,.10);color:var(--red)}
-.badge-yellow{background:var(--yellow-bg);color:var(--yellow)}
-.badge-pink{background:var(--pink-bg);color:var(--pink)}
-.badge-teal{background:var(--teal-bg);color:var(--teal)}
-.badge-gray{background:var(--surface2);color:var(--text2)}
+.badge-green{background:var(–green-bg);color:var(–green)}
+.badge-orange{background:var(–orange-bg);color:var(–orange)}
+.badge-red{background:rgba(220,38,38,.10);color:var(–red)}
+.badge-yellow{background:var(–yellow-bg);color:var(–yellow)}
+.badge-pink{background:var(–pink-bg);color:var(–pink)}
+.badge-teal{background:var(–teal-bg);color:var(–teal)}
+.badge-gray{background:var(–surface2);color:var(–text2)}
 .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
 /* SLA badge */
-.sla-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11.5px;font-weight:600}
+.sla-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-family:‘DM Mono’,monospace;font-size:11.5px;font-weight:600}
 
 /* Row group */
-.row-group td{background:var(--surface2);font-size:12px;font-weight:600;color:var(--text2);padding:7px 14px;border-bottom:1px solid var(--border)}
+.row-group td{background:var(–surface2);font-size:12px;font-weight:600;color:var(–text2);padding:7px 14px;border-bottom:1px solid var(–border)}
 .row-group-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
 
 /* Pagination */
-.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)}
-.page-info{font-size:12.5px;color:var(--text2)}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(–border)}
+.page-info{font-size:12.5px;color:var(–text2)}
 .page-btns{display:flex;gap:4px}
-.page-btn{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border2);background:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .12s}
-.page-btn:hover{border-color:var(--accent);color:var(--accent)}
-.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-btn{width:28px;height:28px;border-radius:6px;border:1.5px solid var(–border2);background:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(–text2);transition:all .12s}
+.page-btn:hover{border-color:var(–accent);color:var(–accent)}
+.page-btn.active{background:var(–accent);color:#fff;border-color:var(–accent)}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(2px)}
-.modal{background:#fff;border-radius:var(--r2);padding:28px;width:480px;max-width:95vw;box-shadow:var(--shadow2);max-height:90vh;overflow-y:auto}
+.modal{background:#fff;border-radius:var(–r2);padding:28px;width:480px;max-width:95vw;box-shadow:var(–shadow2);max-height:90vh;overflow-y:auto}
 .modal-sm{width:380px}
 .modal-lg{width:640px}
-.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.modal-title{font-size:17px;font-weight:700;color:var(–text);margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .modal-field{margin-bottom:16px}
-.modal-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-.modal-input{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:13.5px;color:var(--text);outline:none;transition:border-color .15s}
-.modal-input:focus{border-color:var(--accent)}
-.modal-select{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:13.5px;color:var(--text);outline:none;background:#fff;cursor:pointer}
-.modal-select:focus{border-color:var(--accent)}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:24px;border-top:1px solid var(--border);padding-top:16px}
+.modal-label{display:block;font-size:12px;font-weight:600;color:var(–text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.modal-input{width:100%;padding:9px 12px;border:1.5px solid var(–border2);border-radius:var(–r);font-family:‘Outfit’,sans-serif;font-size:13.5px;color:var(–text);outline:none;transition:border-color .15s}
+.modal-input:focus{border-color:var(–accent)}
+.modal-select{width:100%;padding:9px 12px;border:1.5px solid var(–border2);border-radius:var(–r);font-family:‘Outfit’,sans-serif;font-size:13.5px;color:var(–text);outline:none;background:#fff;cursor:pointer}
+.modal-select:focus{border-color:var(–accent)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:24px;border-top:1px solid var(–border);padding-top:16px}
 .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
 /* User mgmt */
 .user-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.user-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;position:relative}
+.user-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r2);padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;position:relative}
 .user-card-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff}
-.user-card-name{font-size:15px;font-weight:600;color:var(--text)}
-.user-card-username{font-size:12px;color:var(--text2);font-family:'DM Mono',monospace}
+.user-card-name{font-size:15px;font-weight:600;color:var(–text)}
+.user-card-username{font-size:12px;color:var(–text2);font-family:‘DM Mono’,monospace}
 .user-card-role{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600}
 .user-card-actions{display:flex;gap:6px;margin-top:4px}
-.user-card-dots{position:absolute;top:12px;right:12px;cursor:pointer;color:var(--text3);padding:4px 6px;border-radius:6px;transition:background .12s}
-.user-card-dots:hover{background:var(--surface2);color:var(--text)}
+.user-card-dots{position:absolute;top:12px;right:12px;cursor:pointer;color:var(–text3);padding:4px 6px;border-radius:6px;transition:background .12s}
+.user-card-dots:hover{background:var(–surface2);color:var(–text)}
 
 /* Ticket detail drawer */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;backdrop-filter:blur(1px)}
 .drawer{position:fixed;right:0;top:0;bottom:0;width:520px;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:901;overflow-y:auto;display:flex;flex-direction:column}
-.drawer-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;position:sticky;top:0;z-index:1}
+.drawer-header{padding:20px 24px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;position:sticky;top:0;z-index:1}
 .drawer-body{padding:24px;flex:1}
 .drawer-section{margin-bottom:24px}
-.drawer-section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
-.drawer-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.drawer-section-title{font-size:11px;font-weight:700;color:var(–text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.drawer-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(–border)}
 .drawer-field:last-child{border-bottom:none}
-.drawer-field-label{font-size:12.5px;color:var(--text2);min-width:120px}
-.drawer-field-value{font-size:13px;color:var(--text);text-align:right;flex:1}
+.drawer-field-label{font-size:12.5px;color:var(–text2);min-width:120px}
+.drawer-field-value{font-size:13px;color:var(–text);text-align:right;flex:1}
 
 /* Empty state */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text2)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(–text2)}
 .empty-state-icon{font-size:40px;margin-bottom:14px;opacity:.4}
 .empty-state-text{font-size:15px;font-weight:500;margin-bottom:6px}
-.empty-state-sub{font-size:13px;color:var(--text3)}
+.empty-state-sub{font-size:13px;color:var(–text3)}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--r);background:#111827;color:#fff;font-size:13.5px;font-weight:500;box-shadow:var(--shadow2);z-index:2000;animation:toastIn .22s ease}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(–r);background:#111827;color:#fff;font-size:13.5px;font-weight:500;box-shadow:var(–shadow2);z-index:2000;animation:toastIn .22s ease}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* Tabs */
-.tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto}
-.tab{padding:10px 16px;font-size:13.5px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;user-select:none}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.tab-count{background:var(--surface2);color:var(--text2);font-size:11px;padding:1px 6px;border-radius:99px;font-family:'DM Mono',monospace}
-.tab.active .tab-count{background:var(--accent-bg);color:var(--accent)}
+.tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(–border);background:var(–surface);overflow-x:auto}
+.tab{padding:10px 16px;font-size:13.5px;font-weight:500;color:var(–text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;user-select:none}
+.tab:hover{color:var(–text)}
+.tab.active{color:var(–accent);border-bottom-color:var(–accent);font-weight:600}
+.tab-count{background:var(–surface2);color:var(–text2);font-size:11px;padding:1px 6px;border-radius:99px;font-family:‘DM Mono’,monospace}
+.tab.active .tab-count{background:var(–accent-bg);color:var(–accent)}
 
 /* Responsive */
 @media(max-width:768px){
-  .stat-grid{grid-template-columns:1fr 1fr}
-  .user-grid{grid-template-columns:1fr 1fr}
-  .sidebar{display:none}
-  .drawer{width:100%}
+.stat-grid{grid-template-columns:1fr 1fr}
+.user-grid{grid-template-columns:1fr 1fr}
+.sidebar{display:none}
+.drawer{width:100%}
 }
 </style>
+
 </head>
 <body>
 <div id="root"></div>
@@ -218,871 +220,881 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 // ─── Helpers ───
-const AVATAR_COLORS = ['#2563eb','#7c3aed','#db2777','#0d9488','#ea580c','#16a34a','#ca8a04'];
-const avatarColor = (s) => AVATAR_COLORS[(s||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % AVATAR_COLORS.length];
-const initials = (name) => (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const AVATAR_COLORS = [’#2563eb’,’#7c3aed’,’#db2777’,’#0d9488’,’#ea580c’,’#16a34a’,’#ca8a04’];
+const avatarColor = (s) => AVATAR_COLORS[(s||’’).split(’’).reduce((a,c)=>a+c.charCodeAt(0),0) % AVATAR_COLORS.length];
+const initials = (name) => (name||’?’).split(’ ‘).map(w=>w[0]).join(’’).toUpperCase().slice(0,2);
 const uid = () => Math.random().toString(36).slice(2,8).toUpperCase();
 
 // ─── Initial Data ───
 const INIT_USERS = [
-  { id:'u1', name:'Admin System', username:'admin', password:'admin1234', role:'admin', brand:'ALL', active:true },
-  { id:'u2', name:'Greyhound IT', username:'gd_it', password:'gd1234', role:'manager', brand:'Greyhound Cafe', active:true },
-  { id:'u3', name:'Au Bon Pain IT', username:'abp_it', password:'abp1234', role:'staff', brand:'Au Bon Pain', active:true },
-  { id:'u4', name:'Smileyhound IT', username:'smile_it', password:'smile1234', role:'staff', brand:'Smileyhound', active:true },
+{ id:‘u1’, name:‘Admin System’, username:‘admin’, password:‘admin1234’, role:‘admin’, brand:‘ALL’, active:true },
+{ id:‘u2’, name:‘Greyhound IT’, username:‘gd_it’, password:‘gd1234’, role:‘manager’, brand:‘Greyhound Cafe’, active:true },
+{ id:‘u3’, name:‘Au Bon Pain IT’, username:‘abp_it’, password:‘abp1234’, role:‘staff’, brand:‘Au Bon Pain’, active:true },
+{ id:‘u4’, name:‘Smileyhound IT’, username:‘smile_it’, password:‘smile1234’, role:‘staff’, brand:‘Smileyhound’, active:true },
 ];
 
-const BRANDS = ['ALL','Animal House','Another Hound Cafe','Au Bon Pain',"Dunkin'","Greyhound Cafe",'Greyhound Coffee','Greyhound Original','Kin+Hey','Le Grand Vefour','M-Kitchen','Smileyhound'];
+const BRANDS = [‘ALL’,‘Animal House’,‘Another Hound Cafe’,‘Au Bon Pain’,“Dunkin’”,“Greyhound Cafe”,‘Greyhound Coffee’,‘Greyhound Original’,‘Kin+Hey’,‘Le Grand Vefour’,‘M-Kitchen’,‘Smileyhound’];
 
-const STATUSES = ['ตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น','ยกเลิก'];
-const TYPES = ['งานระบบไฟฟ้า','งานระบบปรับ...','เครื่องทำน้ำร้อน','เครื่องทำกา...','งานซ่อมแซม','งานติดตั้ง','อุปกรณ์เครือข่าย'];
+const STATUSES = [‘ตรวจงาน’,‘อยู่ระหว่างดำเนินการ’,‘รอชิ้นส่วน’,‘เสร็จสิ้น’,‘ยกเลิก’];
+const TYPES = [‘งานระบบไฟฟ้า’,‘งานระบบปรับ…’,‘เครื่องทำน้ำร้อน’,‘เครื่องทำกา…’,‘งานซ่อมแซม’,‘งานติดตั้ง’,‘อุปกรณ์เครือข่าย’];
 
 const statusColor = (s) => {
-  if(s==='ตรวจงาน') return 'badge-yellow';
-  if(s==='อยู่ระหว่างดำเนินการ') return 'badge-blue';
-  if(s==='รอชิ้นส่วน') return 'badge-orange';
-  if(s==='เสร็จสิ้น') return 'badge-green';
-  if(s==='ยกเลิก') return 'badge-red';
-  return 'badge-gray';
+if(s===‘ตรวจงาน’) return ‘badge-yellow’;
+if(s===‘อยู่ระหว่างดำเนินการ’) return ‘badge-blue’;
+if(s===‘รอชิ้นส่วน’) return ‘badge-orange’;
+if(s===‘เสร็จสิ้น’) return ‘badge-green’;
+if(s===‘ยกเลิก’) return ‘badge-red’;
+return ‘badge-gray’;
 };
-const slaColor = (s) => s==='K.0001'?'#f97316':s==='K.0002'?'#3b82f6':s==='K.0003'?'#a855f7':'#6b7280';
-const roleBadge = (r) => r==='admin'?'badge-red':r==='manager'?'badge-blue':'badge-teal';
-const roleLabel = (r) => r==='admin'?'Admin':r==='manager'?'Manager':'Staff';
+const slaColor = (s) => s===‘K.0001’?’#f97316’:s===‘K.0002’?’#3b82f6’:s===‘K.0003’?’#a855f7’:’#6b7280’;
+const roleBadge = (r) => r===‘admin’?‘badge-red’:r===‘manager’?‘badge-blue’:‘badge-teal’;
+const roleLabel = (r) => r===‘admin’?‘Admin’:r===‘manager’?‘Manager’:‘Staff’;
 
 const genTickets = () => {
-  const tickets = [];
-  const brandSamples = ['Greyhound Cafe','Au Bon Pain',"Dunkin'",'Smileyhound','M-Kitchen'];
-  const reporters = ['test','tae','Ztatst','Testt','จาหระหย'];
-  const slas = ['K.0001','K.0002','K.0003','K.0006'];
-  for(let i=43; i>=1; i--){
-    const brand = brandSamples[i % brandSamples.length];
-    const st = i===35?'ตรวจงาน': i<=5?'เสร็จสิ้น' : 'อยู่ระหว่างดำเนินการ';
-    tickets.push({
-      id: `GD-${String(i).padStart(5,'0')}`,
-      status: st,
-      branchCode: slas[i%4].replace('K.','K.0').slice(0,6),
-      sla: slas[i%4],
-      sentDate: `2026/0... ${String(6+i%16).padStart(2,'0')}:${String(i%60).padStart(2,'0')}`,
-      slaDate: '2026/03/09',
-      reporter: reporters[i%reporters.length],
-      phone: String(Math.floor(10000000 + Math.random()*90000000)),
-      type: TYPES[i%TYPES.length],
-      detail: `รายละเอียดงาน #GD-${String(i).padStart(5,'0')} — ${TYPES[i%TYPES.length]}`,
-      location: ['ชั้น 1','ชั้น 2','ครัว','หน้าร้าน'][i%4],
-      brand: brand,
-      createdAt: new Date(Date.now() - i*3600000).toISOString(),
-    });
-  }
-  return tickets;
+const tickets = [];
+const brandSamples = [‘Greyhound Cafe’,‘Au Bon Pain’,“Dunkin’”,‘Smileyhound’,‘M-Kitchen’];
+const reporters = [‘test’,‘tae’,‘Ztatst’,‘Testt’,‘จาหระหย’];
+const slas = [‘K.0001’,‘K.0002’,‘K.0003’,‘K.0006’];
+for(let i=43; i>=1; i–){
+const brand = brandSamples[i % brandSamples.length];
+const st = i===35?‘ตรวจงาน’: i<=5?‘เสร็จสิ้น’ : ‘อยู่ระหว่างดำเนินการ’;
+tickets.push({
+id: `GD-${String(i).padStart(5,'0')}`,
+status: st,
+branchCode: slas[i%4].replace(‘K.’,‘K.0’).slice(0,6),
+sla: slas[i%4],
+sentDate: `2026/0... ${String(6+i%16).padStart(2,'0')}:${String(i%60).padStart(2,'0')}`,
+slaDate: ‘2026/03/09’,
+reporter: reporters[i%reporters.length],
+phone: String(Math.floor(10000000 + Math.random()*90000000)),
+type: TYPES[i%TYPES.length],
+detail: `รายละเอียดงาน #GD-${String(i).padStart(5,'0')} — ${TYPES[i%TYPES.length]}`,
+location: [‘ชั้น 1’,‘ชั้น 2’,‘ครัว’,‘หน้าร้าน’][i%4],
+brand: brand,
+createdAt: new Date(Date.now() - i*3600000).toISOString(),
+});
+}
+return tickets;
 };
 
 // ─── Toast ───
 function Toast({ msg, onDone }) {
-  useEffect(() => { const t = setTimeout(onDone, 2400); return () => clearTimeout(t); }, []);
-  return <div className="toast">{msg}</div>;
+useEffect(() => { const t = setTimeout(onDone, 2400); return () => clearTimeout(t); }, []);
+return <div className="toast">{msg}</div>;
 }
 
 // ─── Login ───
 function LoginPage({ users, onLogin }) {
-  const [u, setU] = useState('');
-  const [p, setP] = useState('');
-  const [err, setErr] = useState('');
-  const submit = () => {
-    const found = users.find(x => x.username===u.trim() && x.password===p && x.active);
-    if(found) onLogin(found);
-    else setErr('Username หรือ Password ไม่ถูกต้อง');
-  };
-  return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-logo">
-          <div className="login-logo-icon">🎫</div>
-          <div>
-            <div className="login-logo-text">IT Ticket System</div>
-            <div className="login-subtitle">ระบบจัดการ Ticket ภายใน</div>
-          </div>
-        </div>
-        <div className="login-field">
-          <label className="login-label">Username</label>
-          <input className="login-input" value={u} onChange={e=>{setU(e.target.value);setErr('')}}
-            onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="กรอก Username" autoFocus/>
-        </div>
-        <div className="login-field">
-          <label className="login-label">Password</label>
-          <input className="login-input" type="password" value={p} onChange={e=>{setP(e.target.value);setErr('')}}
-            onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="กรอก Password"/>
-        </div>
-        <button className="login-btn" onClick={submit}>เข้าสู่ระบบ</button>
-        {err && <div className="login-error">⚠️ {err}</div>}
-        <div style={{marginTop:20,padding:'12px 14px',background:'#f8fafc',borderRadius:8,fontSize:12,color:'#6b7280'}}>
-          <div style={{fontWeight:600,marginBottom:6,color:'#374151'}}>Demo Accounts</div>
-          {[['admin','admin1234','Admin'],['gd_it','gd1234','Manager'],['smile_it','smile1234','Staff']].map(([u,p,r])=>(
-            <div key={u} style={{display:'flex',gap:8,marginBottom:3}}>
-              <span style={{fontFamily:'monospace',color:'#2563eb',minWidth:80}}>{u}</span>
-              <span style={{fontFamily:'monospace',color:'#6b7280',minWidth:80}}>{p}</span>
-              <span style={{color:'#9ca3af'}}>{r}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+const [u, setU] = useState(’’);
+const [p, setP] = useState(’’);
+const [err, setErr] = useState(’’);
+const submit = () => {
+const found = users.find(x => x.username===u.trim() && x.password===p && x.active);
+if(found) onLogin(found);
+else setErr(‘Username หรือ Password ไม่ถูกต้อง’);
+};
+return (
+<div className="login-page">
+<div className="login-card">
+<div className="login-logo">
+<div className="login-logo-icon">🎫</div>
+<div>
+<div className="login-logo-text">IT Ticket System</div>
+<div className="login-subtitle">ระบบจัดการ Ticket ภายใน</div>
+</div>
+</div>
+<div className="login-field">
+<label className="login-label">Username</label>
+<input className=“login-input” value={u} onChange={e=>{setU(e.target.value);setErr(’’)}}
+onKeyDown={e=>e.key===‘Enter’&&submit()} placeholder=“กรอก Username” autoFocus/>
+</div>
+<div className="login-field">
+<label className="login-label">Password</label>
+<input className=“login-input” type=“password” value={p} onChange={e=>{setP(e.target.value);setErr(’’)}}
+onKeyDown={e=>e.key===‘Enter’&&submit()} placeholder=“กรอก Password”/>
+</div>
+<button className="login-btn" onClick={submit}>เข้าสู่ระบบ</button>
+{err && <div className="login-error">⚠️ {err}</div>}
+<div style={{marginTop:20,padding:‘12px 14px’,background:’#f8fafc’,borderRadius:8,fontSize:12,color:’#6b7280’}}>
+<div style={{fontWeight:600,marginBottom:6,color:’#374151’}}>Demo Accounts</div>
+{[[‘admin’,‘admin1234’,‘Admin’],[‘gd_it’,‘gd1234’,‘Manager’],[‘smile_it’,‘smile1234’,‘Staff’]].map(([u,p,r])=>(
+<div key={u} style={{display:‘flex’,gap:8,marginBottom:3}}>
+<span style={{fontFamily:‘monospace’,color:’#2563eb’,minWidth:80}}>{u}</span>
+<span style={{fontFamily:‘monospace’,color:’#6b7280’,minWidth:80}}>{p}</span>
+<span style={{color:’#9ca3af’}}>{r}</span>
+</div>
+))}
+</div>
+</div>
+</div>
+);
 }
 
 // ─── Ticket Detail Drawer ───
 function TicketDrawer({ ticket, onClose, onStatusChange }) {
-  const [st, setSt] = useState(ticket.status);
-  return (
-    <>
-      <div className="drawer-overlay" onClick={onClose}/>
-      <div className="drawer">
-        <div className="drawer-header">
-          <div>
-            <div style={{fontFamily:'monospace',fontSize:13,color:'var(--text2)',marginBottom:2}}>{ticket.id}</div>
-            <div style={{fontSize:17,fontWeight:700}}>{ticket.type}</div>
-          </div>
-          <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
-        </div>
-        <div className="drawer-body">
-          <div className="drawer-section">
-            <div className="drawer-section-title">สถานะ</div>
-            <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-              {STATUSES.map(s=>(
-                <button key={s} onClick={()=>{setSt(s);onStatusChange(ticket.id,s)}}
-                  className={`badge ${statusColor(s)}`}
-                  style={{cursor:'pointer',border:'1.5px solid',borderColor:st===s?'currentColor':'transparent',transform:st===s?'scale(1.05)':'scale(1)',transition:'all .15s'}}>
-                  <span className="badge-dot"/>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="drawer-section">
-            <div className="drawer-section-title">ข้อมูล Ticket</div>
-            {[
-              ['หมายเลข Ticket', ticket.id],
-              ['สาขา/รหัสสาขา', ticket.branchCode],
-              ['SLA', <span className="sla-chip" style={{background:`${slaColor(ticket.sla)}20`,color:slaColor(ticket.sla)}}>{ticket.sla}</span>],
-              ['แบรนด์', ticket.brand],
-              ['วันที่ส่ง', ticket.sentDate],
-              ['วันที่ SLA', ticket.slaDate],
-            ].map(([l,v])=>(
-              <div className="drawer-field" key={l}>
-                <div className="drawer-field-label">{l}</div>
-                <div className="drawer-field-value">{v}</div>
-              </div>
-            ))}
-          </div>
-          <div className="drawer-section">
-            <div className="drawer-section-title">ผู้แจ้ง</div>
-            {[
-              ['ชื่อผู้แจ้ง', ticket.reporter],
-              ['เบอร์ติดต่อ', ticket.phone],
-              ['สถานที่', ticket.location],
-            ].map(([l,v])=>(
-              <div className="drawer-field" key={l}>
-                <div className="drawer-field-label">{l}</div>
-                <div className="drawer-field-value">{v}</div>
-              </div>
-            ))}
-          </div>
-          <div className="drawer-section">
-            <div className="drawer-section-title">รายละเอียด</div>
-            <div style={{padding:'12px 14px',background:'var(--surface2)',borderRadius:8,fontSize:13.5,lineHeight:1.7,color:'var(--text)'}}>
-              {ticket.detail}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+const [st, setSt] = useState(ticket.status);
+return (
+<>
+<div className="drawer-overlay" onClick={onClose}/>
+<div className="drawer">
+<div className="drawer-header">
+<div>
+<div style={{fontFamily:‘monospace’,fontSize:13,color:‘var(–text2)’,marginBottom:2}}>{ticket.id}</div>
+<div style={{fontSize:17,fontWeight:700}}>{ticket.type}</div>
+</div>
+<button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+</div>
+<div className="drawer-body">
+<div className="drawer-section">
+<div className="drawer-section-title">สถานะ</div>
+<div style={{display:‘flex’,alignItems:‘center’,gap:10,flexWrap:‘wrap’}}>
+{STATUSES.map(s=>(
+<button key={s} onClick={()=>{setSt(s);onStatusChange(ticket.id,s)}}
+className={`badge ${statusColor(s)}`}
+style={{cursor:‘pointer’,border:‘1.5px solid’,borderColor:st===s?‘currentColor’:‘transparent’,transform:st===s?‘scale(1.05)’:‘scale(1)’,transition:‘all .15s’}}>
+<span className="badge-dot"/>
+{s}
+</button>
+))}
+</div>
+</div>
+<div className="drawer-section">
+<div className="drawer-section-title">ข้อมูล Ticket</div>
+{[
+[‘หมายเลข Ticket’, ticket.id],
+[‘สาขา/รหัสสาขา’, ticket.branchCode],
+[‘SLA’, <span className=“sla-chip” style={{background:`${slaColor(ticket.sla)}20`,color:slaColor(ticket.sla)}}>{ticket.sla}</span>],
+[‘แบรนด์’, ticket.brand],
+[‘วันที่ส่ง’, ticket.sentDate],
+[‘วันที่ SLA’, ticket.slaDate],
+].map(([l,v])=>(
+<div className="drawer-field" key={l}>
+<div className="drawer-field-label">{l}</div>
+<div className="drawer-field-value">{v}</div>
+</div>
+))}
+</div>
+<div className="drawer-section">
+<div className="drawer-section-title">ผู้แจ้ง</div>
+{[
+[‘ชื่อผู้แจ้ง’, ticket.reporter],
+[‘เบอร์ติดต่อ’, ticket.phone],
+[‘สถานที่’, ticket.location],
+].map(([l,v])=>(
+<div className="drawer-field" key={l}>
+<div className="drawer-field-label">{l}</div>
+<div className="drawer-field-value">{v}</div>
+</div>
+))}
+</div>
+<div className="drawer-section">
+<div className="drawer-section-title">รายละเอียด</div>
+<div style={{padding:‘12px 14px’,background:‘var(–surface2)’,borderRadius:8,fontSize:13.5,lineHeight:1.7,color:‘var(–text)’}}>
+{ticket.detail}
+</div>
+</div>
+</div>
+</div>
+</>
+);
 }
 
 // ─── Add/Edit Ticket Modal ───
 function TicketModal({ ticket, onClose, onSave }) {
-  const [form, setForm] = useState(ticket || {
-    status:'อยู่ระหว่างดำเนินการ', sla:'K.0001', brand: BRANDS[1],
-    reporter:'', phone:'', branchCode:'', type:TYPES[0], detail:'', location:'',
-    sentDate: new Date().toLocaleDateString('th-TH'), slaDate:'2026/03/09',
-  });
-  const f = (k,v) => setForm(p=>({...p,[k]:v}));
-  const save = () => {
-    if(!form.reporter||!form.phone){alert('กรุณากรอกข้อมูลให้ครบ');return;}
-    onSave({ ...form, id: form.id||(('GD-'+uid())), createdAt: form.createdAt||new Date().toISOString() });
-    onClose();
-  };
-  return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal modal-lg">
-        <div className="modal-title">
-          <span>{ticket?'📝':'➕'}</span>
-          {ticket ? `แก้ไข ${ticket.id}` : 'เพิ่ม Ticket ใหม่'}
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">แบรนด์</label>
-            <select className="modal-select" value={form.brand} onChange={e=>f('brand',e.target.value)}>
-              {BRANDS.slice(1).map(b=><option key={b}>{b}</option>)}
-            </select>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">สถานะ</label>
-            <select className="modal-select" value={form.status} onChange={e=>f('status',e.target.value)}>
-              {STATUSES.map(s=><option key={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">ชื่อผู้แจ้ง</label>
-            <input className="modal-input" value={form.reporter} onChange={e=>f('reporter',e.target.value)} placeholder="ชื่อ-นามสกุล"/>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">เบอร์ติดต่อ</label>
-            <input className="modal-input" value={form.phone} onChange={e=>f('phone',e.target.value)} placeholder="0XX-XXX-XXXX"/>
-          </div>
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">รหัสสาขา</label>
-            <input className="modal-input" value={form.branchCode} onChange={e=>f('branchCode',e.target.value)} placeholder="K.XXXX"/>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">SLA</label>
-            <select className="modal-select" value={form.sla} onChange={e=>f('sla',e.target.value)}>
-              {['K.0001','K.0002','K.0003','K.0006'].map(s=><option key={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">ประเภท/อุปกรณ์</label>
-            <select className="modal-select" value={form.type} onChange={e=>f('type',e.target.value)}>
-              {TYPES.map(t=><option key={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">สถานที่</label>
-            <input className="modal-input" value={form.location} onChange={e=>f('location',e.target.value)} placeholder="ชั้น/โซน"/>
-          </div>
-        </div>
-        <div className="modal-field">
-          <label className="modal-label">รายละเอียด</label>
-          <textarea className="modal-input" rows={3} value={form.detail} onChange={e=>f('detail',e.target.value)} placeholder="อธิบายปัญหาหรืองานที่ต้องการ..." style={{resize:'vertical'}}/>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>ยกเลิก</button>
-          <button className="btn btn-primary" onClick={save}>{ticket?'บันทึก':'เพิ่ม Ticket'}</button>
-        </div>
-      </div>
-    </div>
-  );
+const [form, setForm] = useState(ticket || {
+status:‘อยู่ระหว่างดำเนินการ’, sla:‘K.0001’, brand: BRANDS[1],
+reporter:’’, phone:’’, branchCode:’’, type:TYPES[0], detail:’’, location:’’,
+sentDate: new Date().toLocaleDateString(‘th-TH’), slaDate:‘2026/03/09’,
+});
+const f = (k,v) => setForm(p=>({…p,[k]:v}));
+const save = () => {
+if(!form.reporter||!form.phone){alert(‘กรุณากรอกข้อมูลให้ครบ’);return;}
+onSave({ …form, id: form.id||((‘GD-’+uid())), createdAt: form.createdAt||new Date().toISOString() });
+onClose();
+};
+return (
+<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="modal modal-lg">
+<div className="modal-title">
+<span>{ticket?‘📝’:‘➕’}</span>
+{ticket ? `แก้ไข ${ticket.id}` : ‘เพิ่ม Ticket ใหม่’}
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">แบรนด์</label>
+<select className=“modal-select” value={form.brand} onChange={e=>f(‘brand’,e.target.value)}>
+{BRANDS.slice(1).map(b=><option key={b}>{b}</option>)}
+</select>
+</div>
+<div className="modal-field">
+<label className="modal-label">สถานะ</label>
+<select className=“modal-select” value={form.status} onChange={e=>f(‘status’,e.target.value)}>
+{STATUSES.map(s=><option key={s}>{s}</option>)}
+</select>
+</div>
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">ชื่อผู้แจ้ง</label>
+<input className=“modal-input” value={form.reporter} onChange={e=>f(‘reporter’,e.target.value)} placeholder=“ชื่อ-นามสกุล”/>
+</div>
+<div className="modal-field">
+<label className="modal-label">เบอร์ติดต่อ</label>
+<input className=“modal-input” value={form.phone} onChange={e=>f(‘phone’,e.target.value)} placeholder=“0XX-XXX-XXXX”/>
+</div>
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">รหัสสาขา</label>
+<input className=“modal-input” value={form.branchCode} onChange={e=>f(‘branchCode’,e.target.value)} placeholder=“K.XXXX”/>
+</div>
+<div className="modal-field">
+<label className="modal-label">SLA</label>
+<select className=“modal-select” value={form.sla} onChange={e=>f(‘sla’,e.target.value)}>
+{[‘K.0001’,‘K.0002’,‘K.0003’,‘K.0006’].map(s=><option key={s}>{s}</option>)}
+</select>
+</div>
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">ประเภท/อุปกรณ์</label>
+<select className=“modal-select” value={form.type} onChange={e=>f(‘type’,e.target.value)}>
+{TYPES.map(t=><option key={t}>{t}</option>)}
+</select>
+</div>
+<div className="modal-field">
+<label className="modal-label">สถานที่</label>
+<input className=“modal-input” value={form.location} onChange={e=>f(‘location’,e.target.value)} placeholder=“ชั้น/โซน”/>
+</div>
+</div>
+<div className="modal-field">
+<label className="modal-label">รายละเอียด</label>
+<textarea className=“modal-input” rows={3} value={form.detail} onChange={e=>f(‘detail’,e.target.value)} placeholder=“อธิบายปัญหาหรืองานที่ต้องการ…” style={{resize:‘vertical’}}/>
+</div>
+<div className="modal-footer">
+<button className="btn btn-outline" onClick={onClose}>ยกเลิก</button>
+<button className="btn btn-primary" onClick={save}>{ticket?‘บันทึก’:‘เพิ่ม Ticket’}</button>
+</div>
+</div>
+</div>
+);
 }
 
 // ─── User Modal ───
 function UserModal({ user, onClose, onSave }) {
-  const [form, setForm] = useState(user || { name:'', username:'', password:'', role:'staff', brand:BRANDS[1], active:true });
-  const f = (k,v) => setForm(p=>({...p,[k]:v}));
-  const save = () => {
-    if(!form.name||!form.username||!form.password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
-    onSave({ ...form, id: form.id||('u'+uid()) });
-    onClose();
-  };
-  return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal">
-        <div className="modal-title">
-          <span style={{width:32,height:32,background:avatarColor(form.name),borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:13,fontWeight:700}}>
-            {initials(form.name)||'?'}
-          </span>
-          {user ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้ใหม่'}
-        </div>
-        <div className="modal-field">
-          <label className="modal-label">ชื่อ-นามสกุล</label>
-          <input className="modal-input" value={form.name} onChange={e=>f('name',e.target.value)} placeholder="ชื่อเต็ม" autoFocus/>
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">Username</label>
-            <input className="modal-input" value={form.username} onChange={e=>f('username',e.target.value)} placeholder="ตั้ง username"/>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">Password</label>
-            <input className="modal-input" type="text" value={form.password} onChange={e=>f('password',e.target.value)} placeholder="ตั้ง password"/>
-          </div>
-        </div>
-        <div className="modal-row">
-          <div className="modal-field">
-            <label className="modal-label">Role</label>
-            <select className="modal-select" value={form.role} onChange={e=>f('role',e.target.value)}>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="staff">Staff</option>
-            </select>
-          </div>
-          <div className="modal-field">
-            <label className="modal-label">แบรนด์</label>
-            <select className="modal-select" value={form.brand} onChange={e=>f('brand',e.target.value)}>
-              {BRANDS.map(b=><option key={b}>{b}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="modal-field">
-          <label className="modal-label" style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
-            <input type="checkbox" checked={form.active} onChange={e=>f('active',e.target.checked)}/>
-            <span>เปิดใช้งาน Account</span>
-          </label>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>ยกเลิก</button>
-          <button className="btn btn-primary" onClick={save}>{user?'บันทึก':'เพิ่มผู้ใช้'}</button>
-        </div>
-      </div>
-    </div>
-  );
+const [form, setForm] = useState(user || { name:’’, username:’’, password:’’, role:‘staff’, brand:BRANDS[1], active:true });
+const f = (k,v) => setForm(p=>({…p,[k]:v}));
+const save = () => {
+if(!form.name||!form.username||!form.password){alert(‘กรุณากรอกข้อมูลให้ครบ’);return;}
+onSave({ …form, id: form.id||(‘u’+uid()) });
+onClose();
+};
+return (
+<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="modal">
+<div className="modal-title">
+<span style={{width:32,height:32,background:avatarColor(form.name),borderRadius:‘50%’,display:‘flex’,alignItems:‘center’,justifyContent:‘center’,color:’#fff’,fontSize:13,fontWeight:700}}>
+{initials(form.name)||’?’}
+</span>
+{user ? ‘แก้ไขผู้ใช้’ : ‘เพิ่มผู้ใช้ใหม่’}
+</div>
+<div className="modal-field">
+<label className="modal-label">ชื่อ-นามสกุล</label>
+<input className=“modal-input” value={form.name} onChange={e=>f(‘name’,e.target.value)} placeholder=“ชื่อเต็ม” autoFocus/>
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">Username</label>
+<input className=“modal-input” value={form.username} onChange={e=>f(‘username’,e.target.value)} placeholder=“ตั้ง username”/>
+</div>
+<div className="modal-field">
+<label className="modal-label">Password</label>
+<input className=“modal-input” type=“text” value={form.password} onChange={e=>f(‘password’,e.target.value)} placeholder=“ตั้ง password”/>
+</div>
+</div>
+<div className="modal-row">
+<div className="modal-field">
+<label className="modal-label">Role</label>
+<select className=“modal-select” value={form.role} onChange={e=>f(‘role’,e.target.value)}>
+<option value="admin">Admin</option>
+<option value="manager">Manager</option>
+<option value="staff">Staff</option>
+</select>
+</div>
+<div className="modal-field">
+<label className="modal-label">แบรนด์</label>
+<select className=“modal-select” value={form.brand} onChange={e=>f(‘brand’,e.target.value)}>
+{BRANDS.map(b=><option key={b}>{b}</option>)}
+</select>
+</div>
+</div>
+<div className="modal-field">
+<label className=“modal-label” style={{display:‘flex’,alignItems:‘center’,gap:8,cursor:‘pointer’}}>
+<input type=“checkbox” checked={form.active} onChange={e=>f(‘active’,e.target.checked)}/>
+<span>เปิดใช้งาน Account</span>
+</label>
+</div>
+<div className="modal-footer">
+<button className="btn btn-outline" onClick={onClose}>ยกเลิก</button>
+<button className="btn btn-primary" onClick={save}>{user?‘บันทึก’:‘เพิ่มผู้ใช้’}</button>
+</div>
+</div>
+</div>
+);
 }
 
 // ─── Tickets Page ───
 function TicketsPage({ tickets, setTickets, currentUser, showToast }) {
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  const [filterBrand, setFilterBrand] = useState(currentUser.brand==='ALL'?'ALL':currentUser.brand);
-  const [selected, setSelected] = useState(new Set());
-  const [drawerTicket, setDrawerTicket] = useState(null);
-  const [editTicket, setEditTicket] = useState(null);
-  const [showAdd, setShowAdd] = useState(false);
-  const [page, setPage] = useState(1);
-  const PER = 15;
+const [search, setSearch] = useState(’’);
+const [filterStatus, setFilterStatus] = useState(‘ALL’);
+const [filterBrand, setFilterBrand] = useState(currentUser.brand===‘ALL’?‘ALL’:currentUser.brand);
+const [selected, setSelected] = useState(new Set());
+const [drawerTicket, setDrawerTicket] = useState(null);
+const [editTicket, setEditTicket] = useState(null);
+const [showAdd, setShowAdd] = useState(false);
+const [page, setPage] = useState(1);
+const PER = 15;
 
-  const filteredBrands = currentUser.brand==='ALL' ? BRANDS : ['ALL', currentUser.brand];
+const filteredBrands = currentUser.brand===‘ALL’ ? BRANDS : [‘ALL’, currentUser.brand];
 
-  const filtered = useMemo(()=>{
-    return tickets.filter(t=>{
-      if(currentUser.brand!=='ALL' && t.brand!==currentUser.brand) return false;
-      if(filterBrand!=='ALL' && t.brand!==filterBrand) return false;
-      if(filterStatus!=='ALL' && t.status!==filterStatus) return false;
-      if(search && !(`${t.id} ${t.reporter} ${t.type} ${t.detail} ${t.branchCode}`).toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  },[tickets,filterBrand,filterStatus,search,currentUser]);
+const filtered = useMemo(()=>{
+return tickets.filter(t=>{
+if(currentUser.brand!==‘ALL’ && t.brand!==currentUser.brand) return false;
+if(filterBrand!==‘ALL’ && t.brand!==filterBrand) return false;
+if(filterStatus!==‘ALL’ && t.status!==filterStatus) return false;
+if(search && !(`${t.id} ${t.reporter} ${t.type} ${t.detail} ${t.branchCode}`).toLowerCase().includes(search.toLowerCase())) return false;
+return true;
+});
+},[tickets,filterBrand,filterStatus,search,currentUser]);
 
-  const paged = filtered.slice((page-1)*PER, page*PER);
-  const totalPages = Math.ceil(filtered.length/PER);
+const paged = filtered.slice((page-1)*PER, page*PER);
+const totalPages = Math.ceil(filtered.length/PER);
 
-  const statusCounts = useMemo(()=>{
-    const c = {};
-    filtered.forEach(t=>{ c[t.status]=(c[t.status]||0)+1; });
-    return c;
-  },[filtered]);
+const statusCounts = useMemo(()=>{
+const c = {};
+filtered.forEach(t=>{ c[t.status]=(c[t.status]||0)+1; });
+return c;
+},[filtered]);
 
-  const handleStatusChange = (id, newStatus) => {
-    setTickets(prev=>prev.map(t=>t.id===id?{...t,status:newStatus}:t));
-    showToast(`อัพเดตสถานะ → ${newStatus}`);
-  };
+const handleStatusChange = (id, newStatus) => {
+setTickets(prev=>prev.map(t=>t.id===id?{…t,status:newStatus}:t));
+showToast(`อัพเดตสถานะ → ${newStatus}`);
+};
 
-  const handleSave = (ticket) => {
-    if(tickets.find(t=>t.id===ticket.id)){
-      setTickets(prev=>prev.map(t=>t.id===ticket.id?ticket:t));
-      showToast('บันทึกการแก้ไขแล้ว');
-    } else {
-      setTickets(prev=>[ticket,...prev]);
-      showToast('เพิ่ม Ticket แล้ว');
-    }
-  };
+const handleSave = (ticket) => {
+if(tickets.find(t=>t.id===ticket.id)){
+setTickets(prev=>prev.map(t=>t.id===ticket.id?ticket:t));
+showToast(‘บันทึกการแก้ไขแล้ว’);
+} else {
+setTickets(prev=>[ticket,…prev]);
+showToast(‘เพิ่ม Ticket แล้ว’);
+}
+};
 
-  const handleDelete = (id) => {
-    if(!confirm(`ลบ ${id} ?`)) return;
-    setTickets(prev=>prev.filter(t=>t.id!==id));
-    showToast('ลบ Ticket แล้ว');
-  };
+const handleDelete = (id) => {
+if(!confirm(`ลบ ${id} ?`)) return;
+setTickets(prev=>prev.filter(t=>t.id!==id));
+showToast(‘ลบ Ticket แล้ว’);
+};
 
-  // group by status for display
-  const grouped = useMemo(()=>{
-    const g = {};
-    paged.forEach(t=>{ if(!g[t.status]) g[t.status]=[]; g[t.status].push(t); });
-    return g;
-  },[paged]);
+// group by status for display
+const grouped = useMemo(()=>{
+const g = {};
+paged.forEach(t=>{ if(!g[t.status]) g[t.status]=[]; g[t.status].push(t); });
+return g;
+},[paged]);
 
-  const selectAll = (e) => {
-    if(e.target.checked) setSelected(new Set(paged.map(t=>t.id)));
-    else setSelected(new Set());
-  };
+const selectAll = (e) => {
+if(e.target.checked) setSelected(new Set(paged.map(t=>t.id)));
+else setSelected(new Set());
+};
 
-  return (
-    <div className="content">
-      {/* Stats */}
-      <div className="stat-grid">
-        {[
-          {label:'Ticket ทั้งหมด', value:filtered.length, sub:'รายการ', color:'#2563eb'},
-          {label:'อยู่ระหว่างดำเนินการ', value:statusCounts['อยู่ระหว่างดำเนินการ']||0, sub:'กำลังดำเนินการ', color:'#3b82f6'},
-          {label:'รอตรวจงาน', value:statusCounts['ตรวจงาน']||0, sub:'รอดำเนินการ', color:'#ca8a04'},
-          {label:'เสร็จสิ้น', value:statusCounts['เสร็จสิ้น']||0, sub:'ปิด Ticket แล้ว', color:'#16a34a'},
-        ].map(s=>(
-          <div className="stat-card" key={s.label}>
-            <div className="stat-label"><span className="stat-dot" style={{background:s.color}}/>{s.label}</div>
-            <div className="stat-value" style={{color:s.color}}>{s.value}</div>
-            <div className="stat-sub">{s.sub}</div>
-          </div>
+return (
+<div className="content">
+{/* Stats */}
+<div className="stat-grid">
+{[
+{label:‘Ticket ทั้งหมด’, value:filtered.length, sub:‘รายการ’, color:’#2563eb’},
+{label:‘อยู่ระหว่างดำเนินการ’, value:statusCounts[‘อยู่ระหว่างดำเนินการ’]||0, sub:‘กำลังดำเนินการ’, color:’#3b82f6’},
+{label:‘รอตรวจงาน’, value:statusCounts[‘ตรวจงาน’]||0, sub:‘รอดำเนินการ’, color:’#ca8a04’},
+{label:‘เสร็จสิ้น’, value:statusCounts[‘เสร็จสิ้น’]||0, sub:‘ปิด Ticket แล้ว’, color:’#16a34a’},
+].map(s=>(
+<div className="stat-card" key={s.label}>
+<div className="stat-label"><span className="stat-dot" style={{background:s.color}}/>{s.label}</div>
+<div className="stat-value" style={{color:s.color}}>{s.value}</div>
+<div className="stat-sub">{s.sub}</div>
+</div>
+))}
+</div>
+
+```
+  {/* Table */}
+  <div className="table-wrap">
+    <div className="table-toolbar">
+      <div className="search-input">
+        <span style={{color:'var(--text3)'}}>🔍</span>
+        <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="ค้นหา Ticket..."/>
+        {search && <span style={{cursor:'pointer',color:'var(--text3)',fontSize:12}} onClick={()=>setSearch('')}>✕</span>}
+      </div>
+      <div className="filter-chips">
+        {['ALL',...STATUSES].map(s=>(
+          <button key={s} className={`chip ${filterStatus===s?'active':''}`} onClick={()=>{setFilterStatus(s);setPage(1)}}>
+            {s==='ALL'?'ทั้งหมด':s}
+            {s!=='ALL' && <span style={{marginLeft:4,fontSize:11,opacity:.7}}>{statusCounts[s]||0}</span>}
+          </button>
         ))}
       </div>
-
-      {/* Table */}
-      <div className="table-wrap">
-        <div className="table-toolbar">
-          <div className="search-input">
-            <span style={{color:'var(--text3)'}}>🔍</span>
-            <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="ค้นหา Ticket..."/>
-            {search && <span style={{cursor:'pointer',color:'var(--text3)',fontSize:12}} onClick={()=>setSearch('')}>✕</span>}
-          </div>
-          <div className="filter-chips">
-            {['ALL',...STATUSES].map(s=>(
-              <button key={s} className={`chip ${filterStatus===s?'active':''}`} onClick={()=>{setFilterStatus(s);setPage(1)}}>
-                {s==='ALL'?'ทั้งหมด':s}
-                {s!=='ALL' && <span style={{marginLeft:4,fontSize:11,opacity:.7}}>{statusCounts[s]||0}</span>}
-              </button>
-            ))}
-          </div>
-          <div style={{marginLeft:'auto',display:'flex',gap:8}}>
-            {currentUser.brand==='ALL' && (
-              <select className="modal-select" style={{width:'auto',fontSize:12.5,padding:'6px 10px'}}
-                value={filterBrand} onChange={e=>{setFilterBrand(e.target.value);setPage(1)}}>
-                {filteredBrands.map(b=><option key={b}>{b==='ALL'?'ทุกแบรนด์':b}</option>)}
-              </select>
-            )}
-            {selected.size>0 && (
-              <button className="btn btn-danger btn-sm" onClick={()=>{
-                if(!confirm(`ลบ ${selected.size} รายการ?`)) return;
-                setTickets(p=>p.filter(t=>!selected.has(t.id)));
-                setSelected(new Set());
-                showToast(`ลบ ${selected.size} รายการแล้ว`);
-              }}>🗑 ลบ ({selected.size})</button>
-            )}
-            <button className="btn btn-primary btn-sm" onClick={()=>setShowAdd(true)}>➕ เพิ่ม Ticket</button>
-          </div>
-        </div>
-
-        <div className="tbl-scroll">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th style={{width:36}}><input type="checkbox" onChange={selectAll} checked={selected.size===paged.length&&paged.length>0}/></th>
-                <th>Number Ticket</th>
-                <th>สถานะ</th>
-                <th>รหัสสาขา</th>
-                <th>SLA</th>
-                <th>วันที่ส่ง</th>
-                <th>SLA Date</th>
-                <th>ผู้แจ้งซ่อม</th>
-                <th>เบอร์ติดต่อ</th>
-                <th>ประเภท/อุปกรณ์</th>
-                <th>รายละเอียด</th>
-                <th style={{width:80}}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(grouped).map(([status, rows]) => (
-                <React.Fragment key={status}>
-                  <tr className="row-group">
-                    <td colSpan={12}>
-                      <span className={`row-group-dot badge ${statusColor(status)}`} style={{width:8,height:8,display:'inline-block',borderRadius:'50%',marginRight:7,background:'currentColor'}}/>
-                      <span className={`badge ${statusColor(status)}`} style={{fontSize:11,padding:'1px 7px'}}>{status}</span>
-                      <span style={{marginLeft:8,color:'var(--text3)'}}>{rows.length} รายการ</span>
-                    </td>
-                  </tr>
-                  {rows.map(t=>(
-                    <tr key={t.id}>
-                      <td><input type="checkbox" checked={selected.has(t.id)} onChange={e=>{
-                        const ns=new Set(selected);
-                        e.target.checked?ns.add(t.id):ns.delete(t.id);
-                        setSelected(ns);
-                      }}/></td>
-                      <td><span className="mono" style={{color:'var(--accent)',fontWeight:600,cursor:'pointer'}} onClick={()=>setDrawerTicket(t)}>{t.id}</span></td>
-                      <td>
-                        <span className={`badge ${statusColor(t.status)}`} style={{cursor:'pointer'}} onClick={()=>setDrawerTicket(t)}>
-                          <span className="badge-dot"/>
-                          {t.status==='อยู่ระหว่างดำเนินการ'?<>อยู่ระหว่าง <span style={{fontSize:11,opacity:.7}}>⚙️</span></>:t.status}
-                        </span>
-                      </td>
-                      <td><span className="sla-chip" style={{background:`${slaColor(t.sla)}18`,color:slaColor(t.sla)}}>{t.branchCode||t.sla}</span></td>
-                      <td><span className="sla-chip" style={{background:`${slaColor(t.sla)}18`,color:slaColor(t.sla)}}>{t.sla}</span></td>
-                      <td className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.sentDate}</td>
-                      <td className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.slaDate}</td>
-                      <td style={{fontWeight:500}}>{t.reporter}</td>
-                      <td className="mono" style={{fontSize:12}}>{t.phone}</td>
-                      <td>
-                        <span style={{maxWidth:130,display:'inline-block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12.5,color:'var(--text2)',background:'var(--surface2)',padding:'2px 8px',borderRadius:5}}>
-                          {t.type}
-                        </span>
-                      </td>
-                      <td style={{maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12.5,color:'var(--text2)'}}>{t.detail}</td>
-                      <td>
-                        <div style={{display:'flex',gap:4}}>
-                          <button className="btn btn-ghost btn-icon btn-sm" title="ดูรายละเอียด" onClick={()=>setDrawerTicket(t)}>👁</button>
-                          <button className="btn btn-ghost btn-icon btn-sm" title="แก้ไข" onClick={()=>setEditTicket(t)}>✏️</button>
-                          <button className="btn btn-ghost btn-icon btn-sm" title="ลบ" onClick={()=>handleDelete(t.id)}>🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-              {paged.length===0 && (
-                <tr><td colSpan={12}>
-                  <div className="empty-state">
-                    <div className="empty-state-icon">🔍</div>
-                    <div className="empty-state-text">ไม่พบ Ticket</div>
-                    <div className="empty-state-sub">ลองเปลี่ยน filter หรือ keyword</div>
-                  </div>
-                </td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="pagination">
-          <div className="page-info">แสดง {(page-1)*PER+1}–{Math.min(page*PER,filtered.length)} จาก {filtered.length} รายการ</div>
-          <div className="page-btns">
-            <button className="page-btn" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹</button>
-            {Array.from({length:totalPages},(_,i)=>i+1).filter(p=>p===1||p===totalPages||Math.abs(p-page)<=1).map((p,i,arr)=>(
-              <React.Fragment key={p}>
-                {i>0&&arr[i-1]!==p-1&&<span style={{padding:'0 4px',color:'var(--text3)'}}>…</span>}
-                <button className={`page-btn ${page===p?'active':''}`} onClick={()=>setPage(p)}>{p}</button>
-              </React.Fragment>
-            ))}
-            <button className="page-btn" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages||totalPages===0}>›</button>
-          </div>
-        </div>
+      <div style={{marginLeft:'auto',display:'flex',gap:8}}>
+        {currentUser.brand==='ALL' && (
+          <select className="modal-select" style={{width:'auto',fontSize:12.5,padding:'6px 10px'}}
+            value={filterBrand} onChange={e=>{setFilterBrand(e.target.value);setPage(1)}}>
+            {filteredBrands.map(b=><option key={b}>{b==='ALL'?'ทุกแบรนด์':b}</option>)}
+          </select>
+        )}
+        {selected.size>0 && (
+          <button className="btn btn-danger btn-sm" onClick={()=>{
+            if(!confirm(`ลบ ${selected.size} รายการ?`)) return;
+            setTickets(p=>p.filter(t=>!selected.has(t.id)));
+            setSelected(new Set());
+            showToast(`ลบ ${selected.size} รายการแล้ว`);
+          }}>🗑 ลบ ({selected.size})</button>
+        )}
+        <button className="btn btn-primary btn-sm" onClick={()=>setShowAdd(true)}>➕ เพิ่ม Ticket</button>
       </div>
-
-      {drawerTicket && <TicketDrawer ticket={tickets.find(t=>t.id===drawerTicket.id)||drawerTicket} onClose={()=>setDrawerTicket(null)} onStatusChange={handleStatusChange}/>}
-      {editTicket && <TicketModal ticket={editTicket} onClose={()=>setEditTicket(null)} onSave={handleSave}/>}
-      {showAdd && <TicketModal onClose={()=>setShowAdd(false)} onSave={handleSave}/>}
     </div>
-  );
+
+    <div className="tbl-scroll">
+      <table className="tbl">
+        <thead>
+          <tr>
+            <th style={{width:36}}><input type="checkbox" onChange={selectAll} checked={selected.size===paged.length&&paged.length>0}/></th>
+            <th>Number Ticket</th>
+            <th>สถานะ</th>
+            <th>รหัสสาขา</th>
+            <th>SLA</th>
+            <th>วันที่ส่ง</th>
+            <th>SLA Date</th>
+            <th>ผู้แจ้งซ่อม</th>
+            <th>เบอร์ติดต่อ</th>
+            <th>ประเภท/อุปกรณ์</th>
+            <th>รายละเอียด</th>
+            <th style={{width:80}}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(grouped).map(([status, rows]) => (
+            <React.Fragment key={status}>
+              <tr className="row-group">
+                <td colSpan={12}>
+                  <span className={`row-group-dot badge ${statusColor(status)}`} style={{width:8,height:8,display:'inline-block',borderRadius:'50%',marginRight:7,background:'currentColor'}}/>
+                  <span className={`badge ${statusColor(status)}`} style={{fontSize:11,padding:'1px 7px'}}>{status}</span>
+                  <span style={{marginLeft:8,color:'var(--text3)'}}>{rows.length} รายการ</span>
+                </td>
+              </tr>
+              {rows.map(t=>(
+                <tr key={t.id}>
+                  <td><input type="checkbox" checked={selected.has(t.id)} onChange={e=>{
+                    const ns=new Set(selected);
+                    e.target.checked?ns.add(t.id):ns.delete(t.id);
+                    setSelected(ns);
+                  }}/></td>
+                  <td><span className="mono" style={{color:'var(--accent)',fontWeight:600,cursor:'pointer'}} onClick={()=>setDrawerTicket(t)}>{t.id}</span></td>
+                  <td>
+                    <span className={`badge ${statusColor(t.status)}`} style={{cursor:'pointer'}} onClick={()=>setDrawerTicket(t)}>
+                      <span className="badge-dot"/>
+                      {t.status==='อยู่ระหว่างดำเนินการ'?<>อยู่ระหว่าง <span style={{fontSize:11,opacity:.7}}>⚙️</span></>:t.status}
+                    </span>
+                  </td>
+                  <td><span className="sla-chip" style={{background:`${slaColor(t.sla)}18`,color:slaColor(t.sla)}}>{t.branchCode||t.sla}</span></td>
+                  <td><span className="sla-chip" style={{background:`${slaColor(t.sla)}18`,color:slaColor(t.sla)}}>{t.sla}</span></td>
+                  <td className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.sentDate}</td>
+                  <td className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.slaDate}</td>
+                  <td style={{fontWeight:500}}>{t.reporter}</td>
+                  <td className="mono" style={{fontSize:12}}>{t.phone}</td>
+                  <td>
+                    <span style={{maxWidth:130,display:'inline-block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12.5,color:'var(--text2)',background:'var(--surface2)',padding:'2px 8px',borderRadius:5}}>
+                      {t.type}
+                    </span>
+                  </td>
+                  <td style={{maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12.5,color:'var(--text2)'}}>{t.detail}</td>
+                  <td>
+                    <div style={{display:'flex',gap:4}}>
+                      <button className="btn btn-ghost btn-icon btn-sm" title="ดูรายละเอียด" onClick={()=>setDrawerTicket(t)}>👁</button>
+                      <button className="btn btn-ghost btn-icon btn-sm" title="แก้ไข" onClick={()=>setEditTicket(t)}>✏️</button>
+                      <button className="btn btn-ghost btn-icon btn-sm" title="ลบ" onClick={()=>handleDelete(t.id)}>🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </React.Fragment>
+          ))}
+          {paged.length===0 && (
+            <tr><td colSpan={12}>
+              <div className="empty-state">
+                <div className="empty-state-icon">🔍</div>
+                <div className="empty-state-text">ไม่พบ Ticket</div>
+                <div className="empty-state-sub">ลองเปลี่ยน filter หรือ keyword</div>
+              </div>
+            </td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    <div className="pagination">
+      <div className="page-info">แสดง {(page-1)*PER+1}–{Math.min(page*PER,filtered.length)} จาก {filtered.length} รายการ</div>
+      <div className="page-btns">
+        <button className="page-btn" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹</button>
+        {Array.from({length:totalPages},(_,i)=>i+1).filter(p=>p===1||p===totalPages||Math.abs(p-page)<=1).map((p,i,arr)=>(
+          <React.Fragment key={p}>
+            {i>0&&arr[i-1]!==p-1&&<span style={{padding:'0 4px',color:'var(--text3)'}}>…</span>}
+            <button className={`page-btn ${page===p?'active':''}`} onClick={()=>setPage(p)}>{p}</button>
+          </React.Fragment>
+        ))}
+        <button className="page-btn" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages||totalPages===0}>›</button>
+      </div>
+    </div>
+  </div>
+
+  {drawerTicket && <TicketDrawer ticket={tickets.find(t=>t.id===drawerTicket.id)||drawerTicket} onClose={()=>setDrawerTicket(null)} onStatusChange={handleStatusChange}/>}
+  {editTicket && <TicketModal ticket={editTicket} onClose={()=>setEditTicket(null)} onSave={handleSave}/>}
+  {showAdd && <TicketModal onClose={()=>setShowAdd(false)} onSave={handleSave}/>}
+</div>
+```
+
+);
 }
 
 // ─── User Management Page ───
 function UsersPage({ users, setUsers, currentUser, showToast }) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [editUser, setEditUser] = useState(null);
-  const [search, setSearch] = useState('');
-  const [view, setView] = useState('grid');
+const [showAdd, setShowAdd] = useState(false);
+const [editUser, setEditUser] = useState(null);
+const [search, setSearch] = useState(’’);
+const [view, setView] = useState(‘grid’);
 
-  const filtered = users.filter(u=>
-    `${u.name} ${u.username} ${u.brand} ${u.role}`.toLowerCase().includes(search.toLowerCase())
-  );
+const filtered = users.filter(u=>
+`${u.name} ${u.username} ${u.brand} ${u.role}`.toLowerCase().includes(search.toLowerCase())
+);
 
-  const handleSave = (user) => {
-    if(users.find(u=>u.id===user.id)){
-      setUsers(p=>p.map(u=>u.id===user.id?user:u));
-      showToast('บันทึกข้อมูลผู้ใช้แล้ว');
-    } else {
-      // check duplicate username
-      if(users.find(u=>u.username===user.username)){alert('Username นี้ถูกใช้แล้ว');return;}
-      setUsers(p=>[...p,user]);
-      showToast('เพิ่มผู้ใช้แล้ว');
-    }
-  };
-  const toggleActive = (id) => {
-    const u = users.find(x=>x.id===id);
-    if(u?.id===currentUser.id){showToast('⚠️ ไม่สามารถปิดตัวเองได้');return;}
-    setUsers(p=>p.map(u=>u.id===id?{...u,active:!u.active}:u));
-    showToast(u?.active?'ปิดใช้งาน Account แล้ว':'เปิดใช้งาน Account แล้ว');
-  };
-  const deleteUser = (id) => {
-    if(users.find(u=>u.id===id)?.id===currentUser.id){showToast('⚠️ ไม่สามารถลบตัวเองได้');return;}
-    if(!confirm('ยืนยันการลบผู้ใช้?')) return;
-    setUsers(p=>p.filter(u=>u.id!==id));
-    showToast('ลบผู้ใช้แล้ว');
-  };
-  const resetPwd = (id) => {
-    const pw = prompt('ตั้ง Password ใหม่:');
-    if(!pw) return;
-    setUsers(p=>p.map(u=>u.id===id?{...u,password:pw}:u));
-    showToast('เปลี่ยน Password แล้ว');
-  };
+const handleSave = (user) => {
+if(users.find(u=>u.id===user.id)){
+setUsers(p=>p.map(u=>u.id===user.id?user:u));
+showToast(‘บันทึกข้อมูลผู้ใช้แล้ว’);
+} else {
+// check duplicate username
+if(users.find(u=>u.username===user.username)){alert(‘Username นี้ถูกใช้แล้ว’);return;}
+setUsers(p=>[…p,user]);
+showToast(‘เพิ่มผู้ใช้แล้ว’);
+}
+};
+const toggleActive = (id) => {
+const u = users.find(x=>x.id===id);
+if(u?.id===currentUser.id){showToast(‘⚠️ ไม่สามารถปิดตัวเองได้’);return;}
+setUsers(p=>p.map(u=>u.id===id?{…u,active:!u.active}:u));
+showToast(u?.active?‘ปิดใช้งาน Account แล้ว’:‘เปิดใช้งาน Account แล้ว’);
+};
+const deleteUser = (id) => {
+if(users.find(u=>u.id===id)?.id===currentUser.id){showToast(‘⚠️ ไม่สามารถลบตัวเองได้’);return;}
+if(!confirm(‘ยืนยันการลบผู้ใช้?’)) return;
+setUsers(p=>p.filter(u=>u.id!==id));
+showToast(‘ลบผู้ใช้แล้ว’);
+};
+const resetPwd = (id) => {
+const pw = prompt(‘ตั้ง Password ใหม่:’);
+if(!pw) return;
+setUsers(p=>p.map(u=>u.id===id?{…u,password:pw}:u));
+showToast(‘เปลี่ยน Password แล้ว’);
+};
 
-  if(currentUser.role!=='admin') return (
-    <div className="content"><div className="empty-state"><div className="empty-state-icon">🔒</div><div className="empty-state-text">ไม่มีสิทธิ์เข้าถึง</div><div className="empty-state-sub">หน้านี้สำหรับ Admin เท่านั้น</div></div></div>
-  );
+if(currentUser.role!==‘admin’) return (
+<div className="content"><div className="empty-state"><div className="empty-state-icon">🔒</div><div className="empty-state-text">ไม่มีสิทธิ์เข้าถึง</div><div className="empty-state-sub">หน้านี้สำหรับ Admin เท่านั้น</div></div></div>
+);
 
-  return (
-    <div className="content">
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-        <div>
-          <h2 style={{fontSize:20,fontWeight:700}}>จัดการผู้ใช้งาน</h2>
-          <p style={{fontSize:13,color:'var(--text2)',marginTop:3}}>เพิ่ม ลบ แก้ไข และจัดการสิทธิ์ผู้ใช้งาน</p>
-        </div>
-        <button className="btn btn-primary" onClick={()=>setShowAdd(true)}>➕ เพิ่มผู้ใช้</button>
-      </div>
+return (
+<div className="content">
+<div style={{display:‘flex’,alignItems:‘center’,justifyContent:‘space-between’,marginBottom:20}}>
+<div>
+<h2 style={{fontSize:20,fontWeight:700}}>จัดการผู้ใช้งาน</h2>
+<p style={{fontSize:13,color:‘var(–text2)’,marginTop:3}}>เพิ่ม ลบ แก้ไข และจัดการสิทธิ์ผู้ใช้งาน</p>
+</div>
+<button className=“btn btn-primary” onClick={()=>setShowAdd(true)}>➕ เพิ่มผู้ใช้</button>
+</div>
 
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-        <div className="search-input" style={{maxWidth:300}}>
-          <span style={{color:'var(--text3)'}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาผู้ใช้..."/>
-        </div>
-        <div style={{marginLeft:'auto',display:'flex',gap:4}}>
-          {['grid','table'].map(v=>(
-            <button key={v} className={`btn btn-sm ${view===v?'btn-primary':'btn-outline'}`} onClick={()=>setView(v)}>
-              {v==='grid'?'⊞ การ์ด':'≡ ตาราง'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {view==='grid' ? (
-        <div className="user-grid">
-          {filtered.map(u=>(
-            <div className="user-card" key={u.id} style={{opacity:u.active?1:.6}}>
-              <div className="user-card-dots" title="ตัวเลือก" onClick={()=>setEditUser(u)}>⋯</div>
-              <div className="user-card-avatar" style={{background:avatarColor(u.name)}}>{initials(u.name)}</div>
-              <div>
-                <div className="user-card-name">{u.name}</div>
-                <div className="user-card-username">@{u.username}</div>
-              </div>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center'}}>
-                <span className={`badge ${roleBadge(u.role)}`}>{roleLabel(u.role)}</span>
-                <span className="badge badge-gray">{u.brand==='ALL'?'ทุกแบรนด์':u.brand}</span>
-              </div>
-              <div style={{display:'flex',gap:6}}>
-                <button className="btn btn-outline btn-sm" onClick={()=>setEditUser(u)}>✏️ แก้ไข</button>
-                <button className="btn btn-outline btn-sm" onClick={()=>toggleActive(u.id)}>{u.active?'🔒 ปิด':'🔓 เปิด'}</button>
-                {u.id!==currentUser.id && <button className="btn btn-danger btn-sm" onClick={()=>deleteUser(u.id)}>🗑</button>}
-              </div>
-              {!u.active && <div style={{position:'absolute',top:8,left:8,background:'#dc2626',color:'#fff',fontSize:10,padding:'2px 7px',borderRadius:99,fontWeight:700}}>ปิดใช้งาน</div>}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="table-wrap">
-          <div className="tbl-scroll">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>ชื่อ-นามสกุล</th>
-                  <th>Username</th>
-                  <th>Password</th>
-                  <th>Role</th>
-                  <th>แบรนด์</th>
-                  <th>สถานะ</th>
-                  <th style={{width:160}}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(u=>(
-                  <tr key={u.id} style={{opacity:u.active?1:.55}}>
-                    <td>
-                      <div style={{display:'flex',alignItems:'center',gap:9}}>
-                        <div style={{width:30,height:30,borderRadius:'50%',background:avatarColor(u.name),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:700,flexShrink:0}}>{initials(u.name)}</div>
-                        <div>
-                          <div style={{fontWeight:500}}>{u.name}</div>
-                          {u.id===currentUser.id && <div style={{fontSize:11,color:'var(--accent)'}}>◀ คุณ</div>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="mono">@{u.username}</td>
-                    <td><span className="mono" style={{background:'var(--surface2)',padding:'2px 8px',borderRadius:5,fontSize:12}}>{u.password}</span></td>
-                    <td><span className={`badge ${roleBadge(u.role)}`}>{roleLabel(u.role)}</span></td>
-                    <td style={{fontSize:12.5,color:'var(--text2)'}}>{u.brand==='ALL'?'ทุกแบรนด์':u.brand}</td>
-                    <td>
-                      <span className={`badge ${u.active?'badge-green':'badge-red'}`}>
-                        <span className="badge-dot"/>{u.active?'ใช้งาน':'ปิดใช้งาน'}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{display:'flex',gap:4}}>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setEditUser(u)} title="แก้ไข">✏️</button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>resetPwd(u.id)} title="เปลี่ยน Password">🔑</button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>toggleActive(u.id)} title={u.active?'ปิดใช้งาน':'เปิดใช้งาน'}>{u.active?'🔒':'🔓'}</button>
-                        {u.id!==currentUser.id && <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>deleteUser(u.id)} title="ลบ">🗑</button>}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {showAdd && <UserModal onClose={()=>setShowAdd(false)} onSave={handleSave}/>}
-      {editUser && <UserModal user={editUser} onClose={()=>setEditUser(null)} onSave={handleSave}/>}
+```
+  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+    <div className="search-input" style={{maxWidth:300}}>
+      <span style={{color:'var(--text3)'}}>🔍</span>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาผู้ใช้..."/>
     </div>
-  );
+    <div style={{marginLeft:'auto',display:'flex',gap:4}}>
+      {['grid','table'].map(v=>(
+        <button key={v} className={`btn btn-sm ${view===v?'btn-primary':'btn-outline'}`} onClick={()=>setView(v)}>
+          {v==='grid'?'⊞ การ์ด':'≡ ตาราง'}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {view==='grid' ? (
+    <div className="user-grid">
+      {filtered.map(u=>(
+        <div className="user-card" key={u.id} style={{opacity:u.active?1:.6}}>
+          <div className="user-card-dots" title="ตัวเลือก" onClick={()=>setEditUser(u)}>⋯</div>
+          <div className="user-card-avatar" style={{background:avatarColor(u.name)}}>{initials(u.name)}</div>
+          <div>
+            <div className="user-card-name">{u.name}</div>
+            <div className="user-card-username">@{u.username}</div>
+          </div>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center'}}>
+            <span className={`badge ${roleBadge(u.role)}`}>{roleLabel(u.role)}</span>
+            <span className="badge badge-gray">{u.brand==='ALL'?'ทุกแบรนด์':u.brand}</span>
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            <button className="btn btn-outline btn-sm" onClick={()=>setEditUser(u)}>✏️ แก้ไข</button>
+            <button className="btn btn-outline btn-sm" onClick={()=>toggleActive(u.id)}>{u.active?'🔒 ปิด':'🔓 เปิด'}</button>
+            {u.id!==currentUser.id && <button className="btn btn-danger btn-sm" onClick={()=>deleteUser(u.id)}>🗑</button>}
+          </div>
+          {!u.active && <div style={{position:'absolute',top:8,left:8,background:'#dc2626',color:'#fff',fontSize:10,padding:'2px 7px',borderRadius:99,fontWeight:700}}>ปิดใช้งาน</div>}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="table-wrap">
+      <div className="tbl-scroll">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>ชื่อ-นามสกุล</th>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Role</th>
+              <th>แบรนด์</th>
+              <th>สถานะ</th>
+              <th style={{width:160}}>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(u=>(
+              <tr key={u.id} style={{opacity:u.active?1:.55}}>
+                <td>
+                  <div style={{display:'flex',alignItems:'center',gap:9}}>
+                    <div style={{width:30,height:30,borderRadius:'50%',background:avatarColor(u.name),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:700,flexShrink:0}}>{initials(u.name)}</div>
+                    <div>
+                      <div style={{fontWeight:500}}>{u.name}</div>
+                      {u.id===currentUser.id && <div style={{fontSize:11,color:'var(--accent)'}}>◀ คุณ</div>}
+                    </div>
+                  </div>
+                </td>
+                <td className="mono">@{u.username}</td>
+                <td><span className="mono" style={{background:'var(--surface2)',padding:'2px 8px',borderRadius:5,fontSize:12}}>{u.password}</span></td>
+                <td><span className={`badge ${roleBadge(u.role)}`}>{roleLabel(u.role)}</span></td>
+                <td style={{fontSize:12.5,color:'var(--text2)'}}>{u.brand==='ALL'?'ทุกแบรนด์':u.brand}</td>
+                <td>
+                  <span className={`badge ${u.active?'badge-green':'badge-red'}`}>
+                    <span className="badge-dot"/>{u.active?'ใช้งาน':'ปิดใช้งาน'}
+                  </span>
+                </td>
+                <td>
+                  <div style={{display:'flex',gap:4}}>
+                    <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setEditUser(u)} title="แก้ไข">✏️</button>
+                    <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>resetPwd(u.id)} title="เปลี่ยน Password">🔑</button>
+                    <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>toggleActive(u.id)} title={u.active?'ปิดใช้งาน':'เปิดใช้งาน'}>{u.active?'🔒':'🔓'}</button>
+                    {u.id!==currentUser.id && <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>deleteUser(u.id)} title="ลบ">🗑</button>}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+  {showAdd && <UserModal onClose={()=>setShowAdd(false)} onSave={handleSave}/>}
+  {editUser && <UserModal user={editUser} onClose={()=>setEditUser(null)} onSave={handleSave}/>}
+</div>
+```
+
+);
 }
 
 // ─── Dashboard ───
 function DashboardPage({ tickets, users, currentUser }) {
-  const myTickets = currentUser.brand==='ALL' ? tickets : tickets.filter(t=>t.brand===currentUser.brand);
-  const counts = {};
-  myTickets.forEach(t=>{ counts[t.status]=(counts[t.status]||0)+1; });
-  const brandCounts = {};
-  myTickets.forEach(t=>{ brandCounts[t.brand]=(brandCounts[t.brand]||0)+1; });
-  const recent = [...myTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
+const myTickets = currentUser.brand===‘ALL’ ? tickets : tickets.filter(t=>t.brand===currentUser.brand);
+const counts = {};
+myTickets.forEach(t=>{ counts[t.status]=(counts[t.status]||0)+1; });
+const brandCounts = {};
+myTickets.forEach(t=>{ brandCounts[t.brand]=(brandCounts[t.brand]||0)+1; });
+const recent = […myTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
 
-  return (
-    <div className="content">
-      <div style={{marginBottom:20}}>
-        <h2 style={{fontSize:20,fontWeight:700}}>สวัสดี, {currentUser.name} 👋</h2>
-        <p style={{fontSize:13,color:'var(--text2)',marginTop:3}}>{new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
-      </div>
-      <div className="stat-grid" style={{marginBottom:20}}>
-        {[
-          {label:'Ticket ทั้งหมด',value:myTickets.length,color:'#2563eb',icon:'🎫'},
-          {label:'กำลังดำเนินการ',value:counts['อยู่ระหว่างดำเนินการ']||0,color:'#3b82f6',icon:'⚙️'},
-          {label:'รอตรวจงาน',value:counts['ตรวจงาน']||0,color:'#ca8a04',icon:'🔍'},
-          {label:'เสร็จสิ้น',value:counts['เสร็จสิ้น']||0,color:'#16a34a',icon:'✅'},
-        ].map(s=>(
-          <div className="stat-card" key={s.label}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-              <div className="stat-label"><span className="stat-dot" style={{background:s.color}}/>{s.label}</div>
-              <span style={{fontSize:20}}>{s.icon}</span>
-            </div>
-            <div className="stat-value" style={{color:s.color,marginTop:8}}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-        <div className="table-wrap">
-          <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',fontWeight:600,fontSize:14}}>🎫 Ticket ล่าสุด</div>
-          <table className="tbl">
-            <thead><tr><th>ID</th><th>สถานะ</th><th>ผู้แจ้ง</th><th>ประเภท</th></tr></thead>
-            <tbody>
-              {recent.map(t=>(
-                <tr key={t.id}>
-                  <td className="mono" style={{color:'var(--accent)',fontSize:12,fontWeight:600}}>{t.id}</td>
-                  <td><span className={`badge ${statusColor(t.status)}`} style={{fontSize:11}}><span className="badge-dot"/>{t.status.slice(0,8)}</span></td>
-                  <td style={{fontSize:12.5}}>{t.reporter}</td>
-                  <td style={{fontSize:11.5,color:'var(--text2)',maxWidth:100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.type}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="table-wrap">
-          <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',fontWeight:600,fontSize:14}}>📊 Ticket แยกตามแบรนด์</div>
-          <div style={{padding:'10px 14px'}}>
-            {Object.entries(brandCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([brand,count])=>(
-              <div key={brand} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
-                <div style={{flex:1,fontSize:13,fontWeight:500,color:'var(--text)',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{brand}</div>
-                <div style={{flex:2,background:'var(--surface2)',borderRadius:99,height:8,overflow:'hidden'}}>
-                  <div style={{height:'100%',background:'var(--accent)',borderRadius:99,width:`${(count/myTickets.length*100).toFixed(0)}%`,transition:'width .5s'}}/>
-                </div>
-                <div style={{fontSize:13,fontWeight:600,color:'var(--accent)',minWidth:28,textAlign:'right'}}>{count}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+return (
+<div className="content">
+<div style={{marginBottom:20}}>
+<h2 style={{fontSize:20,fontWeight:700}}>สวัสดี, {currentUser.name} 👋</h2>
+<p style={{fontSize:13,color:‘var(–text2)’,marginTop:3}}>{new Date().toLocaleDateString(‘th-TH’,{weekday:‘long’,year:‘numeric’,month:‘long’,day:‘numeric’})}</p>
+</div>
+<div className="stat-grid" style={{marginBottom:20}}>
+{[
+{label:‘Ticket ทั้งหมด’,value:myTickets.length,color:’#2563eb’,icon:‘🎫’},
+{label:‘กำลังดำเนินการ’,value:counts[‘อยู่ระหว่างดำเนินการ’]||0,color:’#3b82f6’,icon:‘⚙️’},
+{label:‘รอตรวจงาน’,value:counts[‘ตรวจงาน’]||0,color:’#ca8a04’,icon:‘🔍’},
+{label:‘เสร็จสิ้น’,value:counts[‘เสร็จสิ้น’]||0,color:’#16a34a’,icon:‘✅’},
+].map(s=>(
+<div className="stat-card" key={s.label}>
+<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘flex-start’}}>
+<div className="stat-label"><span className="stat-dot" style={{background:s.color}}/>{s.label}</div>
+<span style={{fontSize:20}}>{s.icon}</span>
+</div>
+<div className="stat-value" style={{color:s.color,marginTop:8}}>{s.value}</div>
+</div>
+))}
+</div>
+<div style={{display:‘grid’,gridTemplateColumns:‘1fr 1fr’,gap:16}}>
+<div className="table-wrap">
+<div style={{padding:‘14px 16px’,borderBottom:‘1px solid var(–border)’,fontWeight:600,fontSize:14}}>🎫 Ticket ล่าสุด</div>
+<table className="tbl">
+<thead><tr><th>ID</th><th>สถานะ</th><th>ผู้แจ้ง</th><th>ประเภท</th></tr></thead>
+<tbody>
+{recent.map(t=>(
+<tr key={t.id}>
+<td className=“mono” style={{color:‘var(–accent)’,fontSize:12,fontWeight:600}}>{t.id}</td>
+<td><span className={`badge ${statusColor(t.status)}`} style={{fontSize:11}}><span className="badge-dot"/>{t.status.slice(0,8)}</span></td>
+<td style={{fontSize:12.5}}>{t.reporter}</td>
+<td style={{fontSize:11.5,color:‘var(–text2)’,maxWidth:100,overflow:‘hidden’,textOverflow:‘ellipsis’,whiteSpace:‘nowrap’}}>{t.type}</td>
+</tr>
+))}
+</tbody>
+</table>
+</div>
+<div className="table-wrap">
+<div style={{padding:‘14px 16px’,borderBottom:‘1px solid var(–border)’,fontWeight:600,fontSize:14}}>📊 Ticket แยกตามแบรนด์</div>
+<div style={{padding:‘10px 14px’}}>
+{Object.entries(brandCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([brand,count])=>(
+<div key={brand} style={{display:‘flex’,alignItems:‘center’,gap:10,marginBottom:10}}>
+<div style={{flex:1,fontSize:13,fontWeight:500,color:‘var(–text)’,minWidth:0,overflow:‘hidden’,textOverflow:‘ellipsis’,whiteSpace:‘nowrap’}}>{brand}</div>
+<div style={{flex:2,background:‘var(–surface2)’,borderRadius:99,height:8,overflow:‘hidden’}}>
+<div style={{height:‘100%’,background:‘var(–accent)’,borderRadius:99,width:`${(count/myTickets.length*100).toFixed(0)}%`,transition:‘width .5s’}}/>
+</div>
+<div style={{fontSize:13,fontWeight:600,color:‘var(–accent)’,minWidth:28,textAlign:‘right’}}>{count}</div>
+</div>
+))}
+</div>
+</div>
+</div>
+</div>
+);
 }
 
 // ─── Main App ───
 function App() {
-  const [users, setUsers] = useState(() => {
-    try { const s = localStorage.getItem('ts_users'); return s ? JSON.parse(s) : INIT_USERS; } catch { return INIT_USERS; }
-  });
-  const [tickets, setTickets] = useState(() => {
-    try { const s = localStorage.getItem('ts_tickets'); return s ? JSON.parse(s) : genTickets(); } catch { return genTickets(); }
-  });
-  const [currentUser, setCurrentUser] = useState(null);
-  const [page, setPage] = useState('dashboard');
-  const [toast, setToast] = useState(null);
+const [users, setUsers] = useState(() => {
+try { const s = localStorage.getItem(‘ts_users’); return s ? JSON.parse(s) : INIT_USERS; } catch { return INIT_USERS; }
+});
+const [tickets, setTickets] = useState(() => {
+try { const s = localStorage.getItem(‘ts_tickets’); return s ? JSON.parse(s) : genTickets(); } catch { return genTickets(); }
+});
+const [currentUser, setCurrentUser] = useState(null);
+const [page, setPage] = useState(‘dashboard’);
+const [toast, setToast] = useState(null);
 
-  useEffect(() => { try { localStorage.setItem('ts_users', JSON.stringify(users)); } catch {} }, [users]);
-  useEffect(() => { try { localStorage.setItem('ts_tickets', JSON.stringify(tickets)); } catch {} }, [tickets]);
+useEffect(() => { try { localStorage.setItem(‘ts_users’, JSON.stringify(users)); } catch {} }, [users]);
+useEffect(() => { try { localStorage.setItem(‘ts_tickets’, JSON.stringify(tickets)); } catch {} }, [tickets]);
 
-  const showToast = (msg) => { setToast(msg); };
+const showToast = (msg) => { setToast(msg); };
 
-  if(!currentUser) return <LoginPage users={users} onLogin={u=>{setCurrentUser(u);setPage('dashboard');}}/>;
+if(!currentUser) return <LoginPage users={users} onLogin={u=>{setCurrentUser(u);setPage(‘dashboard’);}}/>;
 
-  const myTickets = currentUser.brand==='ALL' ? tickets : tickets.filter(t=>t.brand===currentUser.brand);
-  const pendingCount = myTickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ').length;
+const myTickets = currentUser.brand===‘ALL’ ? tickets : tickets.filter(t=>t.brand===currentUser.brand);
+const pendingCount = myTickets.filter(t=>t.status===‘อยู่ระหว่างดำเนินการ’).length;
 
-  const NAV = [
-    { id:'dashboard', label:'Dashboard', icon:'📊' },
-    { id:'tickets', label:'All Ticket', icon:'🎫', badge: myTickets.length },
-    { id:'inprogress', label:'กำลังดำเนินการ', icon:'⚙️', badge: pendingCount },
-    ...(currentUser.role==='admin' ? [{ id:'users', label:'จัดการผู้ใช้', icon:'👥', badge: users.length }] : []),
-  ];
+const NAV = [
+{ id:‘dashboard’, label:‘Dashboard’, icon:‘📊’ },
+{ id:‘tickets’, label:‘All Ticket’, icon:‘🎫’, badge: myTickets.length },
+{ id:‘inprogress’, label:‘กำลังดำเนินการ’, icon:‘⚙️’, badge: pendingCount },
+…(currentUser.role===‘admin’ ? [{ id:‘users’, label:‘จัดการผู้ใช้’, icon:‘👥’, badge: users.length }] : []),
+];
 
-  const ticketsForPage = (p) => {
-    if(p==='inprogress') return tickets.filter(t=> t.status==='อยู่ระหว่างดำเนินการ' && (currentUser.brand==='ALL'||t.brand===currentUser.brand));
-    return tickets;
-  };
+const ticketsForPage = (p) => {
+if(p===‘inprogress’) return tickets.filter(t=> t.status===‘อยู่ระหว่างดำเนินการ’ && (currentUser.brand===‘ALL’||t.brand===currentUser.brand));
+return tickets;
+};
 
-  return (
-    <div className="app">
-      {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">🎫</div>
-          <div className="sidebar-logo-text">IT Ticket</div>
-        </div>
-        <div style={{padding:'10px 0',flex:1}}>
-          <div className="sidebar-section">เมนูหลัก</div>
-          {NAV.map(n=>(
-            <div key={n.id} className={`sidebar-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
-              <span className="sidebar-item-icon">{n.icon}</span>
-              <span>{n.label}</span>
-              {n.badge!==undefined && <span className="sidebar-badge">{n.badge}</span>}
-            </div>
-          ))}
-          <div className="sidebar-section" style={{marginTop:10}}>แบรนด์</div>
-          {(currentUser.brand==='ALL'?BRANDS.slice(1):BRANDS.filter(b=>b===currentUser.brand)).map(b=>(
-            <div key={b} className="sidebar-item" style={{fontSize:12.5}} onClick={()=>{setPage('tickets');}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:avatarColor(b),flexShrink:0}}/>
-              {b}
-              <span className="sidebar-badge" style={{fontSize:10}}>{tickets.filter(t=>t.brand===b).length}</span>
-            </div>
-          ))}
-        </div>
-        <div className="sidebar-bottom">
-          <div className="sidebar-user" onClick={()=>{if(currentUser.role==='admin')setPage('users');}}>
-            <div className="sidebar-avatar" style={{background:avatarColor(currentUser.name)}}>{initials(currentUser.name)}</div>
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">{currentUser.name}</div>
-              <div className="sidebar-user-role">{roleLabel(currentUser.role)} · {currentUser.brand==='ALL'?'ทุกแบรนด์':currentUser.brand}</div>
-            </div>
-          </div>
-          <div className="sidebar-item" onClick={()=>{setCurrentUser(null);setPage('dashboard');}}>
-            <span className="sidebar-item-icon">🚪</span>ออกจากระบบ
-          </div>
-        </div>
+return (
+<div className="app">
+{/* Sidebar */}
+<div className="sidebar">
+<div className="sidebar-logo">
+<div className="sidebar-logo-icon">🎫</div>
+<div className="sidebar-logo-text">IT Ticket</div>
+</div>
+<div style={{padding:‘10px 0’,flex:1}}>
+<div className="sidebar-section">เมนูหลัก</div>
+{NAV.map(n=>(
+<div key={n.id} className={`sidebar-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
+<span className="sidebar-item-icon">{n.icon}</span>
+<span>{n.label}</span>
+{n.badge!==undefined && <span className="sidebar-badge">{n.badge}</span>}
+</div>
+))}
+<div className="sidebar-section" style={{marginTop:10}}>แบรนด์</div>
+{(currentUser.brand===‘ALL’?BRANDS.slice(1):BRANDS.filter(b=>b===currentUser.brand)).map(b=>(
+<div key={b} className=“sidebar-item” style={{fontSize:12.5}} onClick={()=>{setPage(‘tickets’);}}>
+<span style={{width:6,height:6,borderRadius:‘50%’,background:avatarColor(b),flexShrink:0}}/>
+{b}
+<span className="sidebar-badge" style={{fontSize:10}}>{tickets.filter(t=>t.brand===b).length}</span>
+</div>
+))}
+</div>
+<div className="sidebar-bottom">
+<div className=“sidebar-user” onClick={()=>{if(currentUser.role===‘admin’)setPage(‘users’);}}>
+<div className="sidebar-avatar" style={{background:avatarColor(currentUser.name)}}>{initials(currentUser.name)}</div>
+<div className="sidebar-user-info">
+<div className="sidebar-user-name">{currentUser.name}</div>
+<div className="sidebar-user-role">{roleLabel(currentUser.role)} · {currentUser.brand===‘ALL’?‘ทุกแบรนด์’:currentUser.brand}</div>
+</div>
+</div>
+<div className=“sidebar-item” onClick={()=>{setCurrentUser(null);setPage(‘dashboard’);}}>
+<span className="sidebar-item-icon">🚪</span>ออกจากระบบ
+</div>
+</div>
+</div>
+
+```
+  {/* Main */}
+  <div className="main">
+    <div className="topbar">
+      <div className="topbar-breadcrumb">
+        <span onClick={()=>setPage('dashboard')}>IT Portal</span>
+        <span className="topbar-sep">›</span>
+        <span style={{color:'var(--text)'}}>{NAV.find(n=>n.id===page)?.label||page}</span>
       </div>
-
-      {/* Main */}
-      <div className="main">
-        <div className="topbar">
-          <div className="topbar-breadcrumb">
-            <span onClick={()=>setPage('dashboard')}>IT Portal</span>
-            <span className="topbar-sep">›</span>
-            <span style={{color:'var(--text)'}}>{NAV.find(n=>n.id===page)?.label||page}</span>
-          </div>
-          <div className="topbar-actions">
-            <span style={{fontSize:12,color:'var(--text2)',fontFamily:'monospace'}}>{currentUser.brand==='ALL'?'ทุกแบรนด์':currentUser.brand}</span>
-            <span className={`badge ${roleBadge(currentUser.role)}`} style={{fontSize:11}}>{roleLabel(currentUser.role)}</span>
-          </div>
-        </div>
-
-        {page==='dashboard' && <DashboardPage tickets={myTickets} users={users} currentUser={currentUser}/>}
-        {(page==='tickets'||page==='inprogress') && (
-          <TicketsPage
-            tickets={ticketsForPage(page)}
-            setTickets={setTickets}
-            currentUser={currentUser}
-            showToast={showToast}
-          />
-        )}
-        {page==='users' && <UsersPage users={users} setUsers={setUsers} currentUser={currentUser} showToast={showToast}/>}
+      <div className="topbar-actions">
+        <span style={{fontSize:12,color:'var(--text2)',fontFamily:'monospace'}}>{currentUser.brand==='ALL'?'ทุกแบรนด์':currentUser.brand}</span>
+        <span className={`badge ${roleBadge(currentUser.role)}`} style={{fontSize:11}}>{roleLabel(currentUser.role)}</span>
       </div>
-
-      {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
     </div>
-  );
+
+    {page==='dashboard' && <DashboardPage tickets={myTickets} users={users} currentUser={currentUser}/>}
+    {(page==='tickets'||page==='inprogress') && (
+      <TicketsPage
+        tickets={ticketsForPage(page)}
+        setTickets={setTickets}
+        currentUser={currentUser}
+        showToast={showToast}
+      />
+    )}
+    {page==='users' && <UsersPage users={users} setUsers={setUsers} currentUser={currentUser} showToast={showToast}/>}
+  </div>
+
+  {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
+</div>
+```
+
+);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById(‘root’)).render(<App/>);
 </script>
+
 </body>
 </html>
