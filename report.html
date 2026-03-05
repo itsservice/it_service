@@ -410,8 +410,9 @@ async function submitTicket(){
     location:   loc,
     detail,
     status:     'ตรวจงาน',
+    // sentDate and createdAt will be set by larkService if column exists
+    // 'Sent Date' is in WRITABLE, so pass it:
     sentDate:   new Date().toLocaleDateString('th-TH'),
-    createdAt:  new Date().toISOString(),
   };
 
   try{
