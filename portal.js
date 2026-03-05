@@ -1,12 +1,12 @@
 // ======================
-// CONFIG  <- แก้ URL ที่นี่
+// CONFIG — แก้ URL ที่นี่
 // ======================
 const BRAND_CONFIG = {
-  "Au Bon Pain"         : { report: 'https://example.com', track: 'https://example.com' },
-  "Dunkin'"             : { report: 'https://example.com', track: 'https://example.com' },
-  "Funky Fries"         : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Coffee"    : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Original"  : { report: 'https://example.com', track: 'https://example.com' },
+  "Au Bon Pain"       : { report: '/ticket-system/au-bon-pain',      track: '/report/au-bon-pain' },
+  "Dunkin'"           : { report: '/ticket-system/dunkin',           track: '/report/dunkin' },
+  "Funky Fries"       : { report: '/ticket-system/funky-fries',      track: '/report/funky-fries' },
+  "Greyhound Coffee"  : { report: '/ticket-system/greyhound-coffee', track: '/report/greyhound-coffee' },
+  "Greyhound Original": { report: '/ticket-system/greyhound-original',track: '/report/greyhound-original' },
 };
 
 // ======================
@@ -28,7 +28,6 @@ const mixSlider  = document.getElementById('mixSlider');
 const clockText  = document.getElementById('clockText');
 const tempText   = document.getElementById('tempText');
 
-// notReady element — create it if not in HTML
 let notReady = document.getElementById('notReady');
 if (!notReady) {
   notReady = document.createElement('div');
@@ -86,26 +85,38 @@ function setActiveBrandUI(brand, animate = false) {
     brandTitle.textContent = brand;
   }
   currentBrand = brand;
-  brandSub.textContent = '';
+  brandSub.textContent = 'เลือกบริการที่ต้องการ';
 
   [...brandList.querySelectorAll('.brandItem')].forEach(btn => {
     btn.classList.toggle('active', btn.dataset.brand === brand);
   });
 
   const cfg = BRAND_CONFIG[brand];
-  const invalid = !cfg || !cfg.report || !cfg.track || cfg.report === cfg.track;
-  if (invalid) {
+  if (!cfg) {
     notReady.hidden = false;
     btnReport.onclick = btnTrack.onclick = null;
     btnReport.style.opacity = '0.45';
     btnTrack.style.opacity  = '0.45';
     return;
   }
+
   notReady.hidden = true;
   btnReport.style.opacity = '';
   btnTrack.style.opacity  = '';
-  btnReport.onclick = (e) => { addRipple(btnReport, e); setTimeout(() => location.href = cfg.report, 220); };
-  btnTrack.onclick  = (e) => { addRipple(btnTrack,  e); setTimeout(() => location.href = cfg.track,  220); };
+
+  // ปุ่มแจ้งปัญหา — สีเด่น
+  btnReport.style.cssText = '';
+  btnReport.onclick = (e) => {
+    addRipple(btnReport, e);
+    setTimeout(() => location.href = cfg.report, 220);
+  };
+
+  // ปุ่มติดตาม Ticket
+  btnTrack.style.cssText = '';
+  btnTrack.onclick = (e) => {
+    addRipple(btnTrack, e);
+    setTimeout(() => location.href = cfg.track, 220);
+  };
 }
 
 // ======================
@@ -142,11 +153,8 @@ function toggleMenu() { isOpen ? closeMenu() : openMenu(); }
 menuBtn.addEventListener('click', (e) => { addRipple(menuBtn, e); toggleMenu(); });
 closeBtn.addEventListener('click', (e) => { addRipple(closeBtn, e); closeMenu(); });
 scrim.addEventListener('click', closeMenu);
-
-// Keyboard: Escape closes menu
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 
-// Swipe left to close
 let tx0 = null, ty0 = null;
 sidebar.addEventListener('touchstart', e => {
   const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY;
@@ -161,7 +169,7 @@ sidebar.addEventListener('touchmove', e => {
 sidebar.addEventListener('touchend', () => { tx0 = ty0 = null; }, { passive: true });
 
 // ======================
-// Brand list — sorted A-Z
+// Brand list
 // ======================
 function renderBrandList() {
   const brands = Object.keys(BRAND_CONFIG).sort((a, b) =>
@@ -227,18 +235,15 @@ document.addEventListener('click', e => {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W, H;
-
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize, { passive: true });
   resize();
-
   const mobile = window.innerWidth < 600;
   const COUNT  = mobile ? 25 : 55;
   const CONNECT_DIST = mobile ? 70 : 110;
-
   const pts = Array.from({ length: COUNT }, () => ({
     x: Math.random() * W,
     y: Math.random() * H,
@@ -247,15 +252,12 @@ document.addEventListener('click', e => {
     vy: (Math.random() - 0.5) * 0.16,
     o: Math.random() * 0.45 + 0.12,
   }));
-
   let mx = -999, my = -999;
   window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
-
   function draw() {
     ctx.clearRect(0, 0, W, H);
     const light = document.body.classList.contains('theme-light');
     const col = light ? '30,50,120' : '150,190,255';
-
     pts.forEach(p => {
       if (!mobile) {
         const dx = p.x - mx, dy = p.y - my;
@@ -272,7 +274,6 @@ document.addEventListener('click', e => {
       ctx.fillStyle = `rgba(${col},${p.o})`;
       ctx.fill();
     });
-
     for (let i = 0; i < pts.length; i++) {
       for (let j = i + 1; j < pts.length; j++) {
         const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
