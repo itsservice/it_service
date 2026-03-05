@@ -38,11 +38,8 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);font-s
 .field label{display:block;font-size:11px;font-weight:600;color:var(--fg2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
 .field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--fg);outline:none;transition:border-color .15s;background:var(--s1)}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
-.field select option{background:#0c1220;color:#fff}
+.field select option{background:#0c1220;color:var(--fg)}
 .field textarea{resize:vertical;min-height:80px}
-/* Fix all selects (not just .field) */
-select{color-scheme:dark}
-select option{background:#0c1220 !important;color:#fff !important}
 .login-btn{width:100%;padding:12px;background:var(--accent);color:#070b12;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
 .login-btn:hover{opacity:.85}
 .login-btn:disabled{opacity:.5;cursor:default}
@@ -215,6 +212,28 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
 
 /* ── RESPONSIVE ── */
+
+/* ── MOBILE CARD LAYOUT (≤640px) ── */
+@media(max-width:640px){
+  .tbl-scroll table,.tbl-scroll thead,.tbl-scroll tbody,.tbl-scroll tr,.tbl-scroll td,.tbl-scroll th{display:block!important;width:100%!important}
+  .tbl-scroll thead{display:none!important}
+  .tbl-scroll tbody tr{border:1px solid var(--b1);border-radius:var(--r2);margin-bottom:10px;padding:0;background:var(--bg2);overflow:hidden}
+  .tbl-scroll tbody tr.row-group{border:none!important;border-radius:0;margin-bottom:5px;padding:4px 8px;background:transparent;overflow:visible}
+  .tbl-scroll td{padding:8px 12px!important;border-bottom:1px solid var(--b1)!important;font-size:13px!important;display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
+  .tbl-scroll td.td-id{background:rgba(96,165,250,.07);font-size:13.5px!important;font-weight:600}
+  .tbl-scroll td.td-sq{padding:8px 10px!important}
+  .tbl-scroll td:last-child{border-bottom:none!important;padding:6px 10px!important}
+  .tbl-scroll td:empty{display:none!important}
+  .sq-btn{padding:4px 9px!important;font-size:11px!important}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .user-grid{grid-template-columns:repeat(2,1fr)}
+  .modal-grid{grid-template-columns:1fr}
+}
+
+/* ── Engineer/Admin action bar ── */
+.eng-sec{font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--b1)}
+.eng-sec:first-child{margin-top:0}
+.action-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 @media(max-width:768px){
   .stat-grid{grid-template-columns:repeat(2,1fr)}
   .user-grid{grid-template-columns:repeat(2,1fr)}
@@ -250,7 +269,7 @@ const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(
 const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const BRANDS=['ALL','Au Bon Pain',"Dunkin'",'Funky Fries','Greyhound Coffee','Greyhound Original'];
+const BRANDS=['ALL','Animal House','Another Hound Cafe','Au Bon Pain',"Dunkin'",'Greyhound Cafe','Greyhound Coffee','Greyhound Original','Kin+Hey','Le Grand Vefour','M-Kitchen','Smileyhound'];
 const STATUSES=['\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19','\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23','\u0E23\u0E2D\u0E0A\u0E34\u0E49\u0E19\u0E2A\u0E48\u0E27\u0E19','\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19','\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'];
 const TYPES=['\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E44\u0E1F\u0E1F\u0E49\u0E32','\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E31\u0E1A\u0E2D\u0E32\u0E01\u0E32\u0E28','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E19\u0E49\u0E33\u0E23\u0E49\u0E2D\u0E19','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E01\u0E32\u0E41\u0E1F','\u0E07\u0E32\u0E19\u0E0B\u0E48\u0E2D\u0E21\u0E41\u0E0B\u0E21','\u0E07\u0E32\u0E19\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07','\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E04\u0E23\u0E37\u0E2D\u0E02\u0E48\u0E32\u0E22'];
 const SLA_LIST=['K.0001','K.0002','K.0003','K.0006'];
@@ -288,18 +307,31 @@ let STATE={
   userSearch:'',userView:'grid',
   larkOnline:false,lastSync:null,
   toastTimer:null,
+  showEngModal:false,engTicket:null,
+  showAdminModal:false,adminTicket:null,adminModalType:'close',
 };
 const PER_PAGE=15;
 
+// แปลง timestamp (Unix ms หรือ string ตัวเลข) → วันที่ไทย
+function fmtDate(val){
+  if(!val&&val!==0)return'-';
+  const n=typeof val==='number'?val:Number(val);
+  if(!isNaN(n)&&n>1_000_000_000_000){
+    return new Date(n).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  return String(val||'-');
+}
+
+
 // ── LOCAL USERS (auth only, not synced to Lark) ────────────────────────────
 const LOCAL_USERS_DEFAULT=[
-  {id:'u1',name:'Super Admin',    username:'superadmin',password:'super1234',  role:'superadmin',brand:'ALL',              active:true},
-  {id:'u2',name:'Admin System',   username:'admin',     password:'admin1234',  role:'admin',     brand:'ALL',              active:true},
-  {id:'u3',name:'Manager IT',     username:'manager',   password:'mgr1234',    role:'manager',   brand:'ALL',              active:true},
-  {id:'u4',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 1',username:'eng1',password:'eng1234',  role:'engineer',  brand:'Greyhound Coffee',active:true},
-  {id:'u5',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 2',username:'eng2',password:'eng5678',  role:'engineer',  brand:'Au Bon Pain',    active:true},
-  {id:'u6',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 3',username:'eng3',password:'eng9012',  role:'engineer',  brand:"Dunkin'",         active:true},
-  {id:'u7',name:'Staff User',     username:'staff1',    password:'staff1234',  role:'staff',     brand:'Funky Fries',     active:true},
+  {id:'u1',name:'Super Admin',    username:'superadmin',password:'super1234',  role:'superadmin',brand:'ALL',          active:true},
+  {id:'u2',name:'Admin System',   username:'admin',     password:'admin1234',  role:'admin',     brand:'ALL',          active:true},
+  {id:'u3',name:'Manager IT',     username:'manager',   password:'mgr1234',    role:'manager',   brand:'ALL',          active:true},
+  {id:'u4',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 1',username:'eng1',password:'eng1234',  role:'engineer',  brand:'Greyhound Cafe',active:true},
+  {id:'u5',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 2',username:'eng2',password:'eng5678',  role:'engineer',  brand:'Au Bon Pain',  active:true},
+  {id:'u6',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 3',username:'eng3',password:'eng9012',  role:'engineer',  brand:'Smileyhound',  active:true},
+  {id:'u7',name:'Staff User',     username:'staff1',    password:'staff1234',  role:'staff',     brand:'Smileyhound',  active:true},
 ];
 
 function loadData(){
@@ -693,19 +725,18 @@ function renderTickets(){
           <span style="margin-left:8px;color:var(--fg3)">${rows.length} \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23</span>
         </td></tr>
         ${rows.map(t=>`<tr>
-          <td><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" data-open="${esc(t._recordId||t.id)}">${esc(t.id||t._recordId||'-')}</span></td>
+          <td style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600;font-size:14px" data-open="${esc(t._recordId||t.id)}">${esc(t.id||t._recordId||'-')}</span>
+            <div style="display:flex;gap:3px;flex-shrink:0">
+              <button class="btn btn-ghost btn-xs" data-open="${esc(t._recordId||t.id)}" title="\u0E14\u0E39">\u{1F441}</button>
+              ${can('manageTickets')?`<button class="btn btn-ghost btn-xs" data-edit="${esc(t._recordId||t.id)}" title="\u0E41\u0E01\u0E49\u0E44\u0E02">\u270F\uFE0F</button>`:''}
+            </div>
+          </td>
           <td>${sqBtns(t,true)}</td>
-          <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.branchCode||'-')}</span></td>
-          <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.sla||'-')}</span></td>
-          <td class="mono" style="font-size:11.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
-          <td style="font-weight:500;white-space:nowrap">${esc(t.reporter||'-')}</td>
-          <td class="mono" style="font-size:11.5px">${esc(t.phone||'-')}</td>
-          <td><span style="background:var(--s2);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--fg2);white-space:nowrap">${esc((t.type||'-').slice(0,14))}</span></td>
-          <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--fg2)">${esc(t.detail||'-')}</td>
-          <td><div style="display:flex;gap:3px">
-            <button class="btn btn-ghost btn-xs" data-open="${esc(t._recordId||t.id)}" title="\u0E14\u0E39">\u{1F441}</button>
-            ${can('manageTickets')?`<button class="btn btn-ghost btn-xs" data-edit="${esc(t._recordId||t.id)}" title="\u0E41\u0E01\u0E49\u0E44\u0E02">\u270F\uFE0F</button>`:''}
-          </div></td>
+          <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07:</span><span style="font-weight:500">${esc(t.reporter||'-')}</span> <span class="mono" style="font-size:11.5px;color:var(--fg2)">${esc(t.phone||'-')}</span></td>
+          <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E2A\u0E32\u0E02\u0E32:</span><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.branchCode||'-')}</span> <span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.sla||'-')}</span></td>
+          <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48:</span><span class="mono" style="font-size:12px;color:var(--fg2)">${fmtDate(t.sentDate)}</span> <span style="background:var(--s2);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--fg2)">${esc((t.type||'-').slice(0,14))}</span></td>
+          ${t.detail?`<td style="font-size:12px;color:var(--fg2);border-top:1px solid var(--b1)!important;padding-top:6px!important">${esc(t.detail.slice(0,80))}${t.detail.length>80?'…':''}</td>`:''}
         </tr>`).join('')}`).join('')}
         ${paged.length===0?`<tr><td colspan="20"><div class="empty"><div class="empty-icon">\u{1F50D}</div><div>\u0E44\u0E21\u0E48\u0E1E\u0E1A Ticket</div><div style="font-size:12px;color:var(--fg3)">\u0E25\u0E2D\u0E07\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19 filter</div></div></td></tr>`:''}
       </tbody>
@@ -788,6 +819,8 @@ ${STATE.userView==='grid'?`
 
 // ── MODAL ─────────────────────────────────────────────────────────────────
 function renderModal(){
+  if(STATE.showEngModal&&STATE.engTicket)return renderEngineerModal();
+  if(STATE.showAdminModal&&STATE.adminTicket)return renderAdminModal();
   if(STATE.showAddTicket||STATE.editTicket)return renderTicketModal();
   if(STATE.showAddUser||STATE.editUser)return renderUserModal();
   return'';
@@ -865,6 +898,10 @@ function renderDrawer(){
   if(!STATE.drawerTicket)return'';
   const t=STATE.tickets.find(x=>x._recordId===STATE.drawerTicket||x.id===STATE.drawerTicket);
   if(!t)return'';
+  const rid=t._recordId||t.id;
+  const u=STATE.currentUser;
+  const isEng=u.role==='engineer';
+  const isAdmin=['superadmin','admin','manager'].includes(u.role);
   return`<div class="drawer-overlay" id="drawer-overlay"></div>
 <div class="drawer">
   <div class="drawer-head">
@@ -877,32 +914,47 @@ function renderDrawer(){
   </div>
   <div class="drawer-body">
     ${can('editStatus')?`<div class="drawer-sec">\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30 (\u0E01\u0E14\u0E40\u0E25\u0E22)</div>
-    <div class="sq-wrap" style="gap:8px;margin-bottom:4px">
-      ${STATUSES.map(s=>{const c=statusColor(s);const active=t.status===s;return`<button class="sq-btn ${active?'sq-active':''}" data-sq-s="${esc(s)}" data-sq-r="${esc(t._recordId||t.id)}"
-        style="color:${c};background:${active?c:'transparent'};border-color:${active?'transparent':c+'55'};padding:7px 14px;font-size:12.5px">${esc(s)}</button>`;}).join('')}
+    <div class="sq-wrap" style="gap:7px;margin-bottom:12px">
+      ${STATUSES.map(s=>{const c=statusColor(s);const active=t.status===s;return`<button class="sq-btn ${active?'sq-active':''}" data-sq-s="${esc(s)}" data-sq-r="${esc(rid)}" style="color:${c};background:${active?c:'transparent'};border-color:${active?'transparent':c+'55'};padding:7px 13px;font-size:12.5px">${esc(s)}</button>`;}).join('')}
     </div>`:''}
-    <div class="drawer-sec" style="margin-top:20px">\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25 Ticket</div>
-    ${[
-      ['\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02',t.id||t._recordId],
-      ['\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C',t.brand],
-      ['\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32',t.branchCode],
-      ['SLA',t.sla],
-      ['\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E48\u0E07',t.sentDate],
-      ['SLA Date',t.slaDate],
-    ].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value mono" style="font-size:12.5px">${esc(v||'-')}</div></div>`).join('')}
-    <div class="drawer-sec">\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</div>
-    ${[
-      ['\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07',t.reporter],
-      ['\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D',t.phone],
-      ['\u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48',t.location],
-    ].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value">${esc(v||'-')}</div></div>`).join('')}
-    <div class="drawer-sec">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</div>
+
+    ${isEng?`<div class="eng-sec" style="color:var(--teal)">\u{1F527} \u0E01\u0E32\u0E23\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E07\u0E32\u0E19 (\u0E0A\u0E48\u0E32\u0E07)</div>
+    <div class="action-bar" style="margin-bottom:14px">
+      <button class="btn btn-primary" id="btn-eng-submit" data-rid="${esc(rid)}">\u{1F4E4} \u0E2A\u0E48\u0E07\u0E07\u0E32\u0E19 / \u0E23\u0E32\u0E22\u0E07\u0E32\u0E19\u0E0A\u0E48\u0E32\u0E07</button>
+    </div>
+    ${t.workDetail?`<div class="eng-sec">\u{1F4CB} \u0E23\u0E32\u0E22\u0E07\u0E32\u0E19\u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14</div>
+    <div style="padding:10px 12px;background:rgba(45,212,191,.06);border:1px solid rgba(45,212,191,.2);border-radius:8px;font-size:13px;line-height:1.7">${esc(t.workDetail)}</div>
+    ${t.partsUsed?`<div style="font-size:12px;color:var(--fg2);margin-top:6px">\u{1F527} \u0E2D\u0E30\u0E44\u0E2B\u0E25\u0E48: ${esc(t.partsUsed)}</div>`:''}
+    ${t.workHours?`<div style="font-size:12px;color:var(--fg2)">\u23F1 ${esc(t.workHours)} \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07</div>`:''}
+    `:''}`:'' }
+
+    ${isAdmin?`<div class="eng-sec" style="color:var(--orange)">\u{1F6E1}\uFE0F \u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23 (Admin)</div>
+    <div class="action-bar" style="margin-bottom:12px">
+      ${t.workDetail&&t.status!=='\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19'?`<button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a" id="btn-admin-close" data-rid="${esc(rid)}">\u2705 \u0E08\u0E1A\u0E07\u0E32\u0E19 / \u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19</button>`:''}
+      <button class="btn btn-outline btn-sm" id="btn-admin-note" data-rid="${esc(rid)}">\u{1F4DD} \u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38</button>
+    </div>
+    ${t.workDetail?`<div class="eng-sec">\u{1F4CB} \u0E23\u0E32\u0E22\u0E07\u0E32\u0E19\u0E08\u0E32\u0E01\u0E0A\u0E48\u0E32\u0E07</div>
+    <div style="padding:10px 12px;background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2);border-radius:8px;font-size:13px;line-height:1.7">
+      <div><strong>\u0E0A\u0E48\u0E32\u0E07:</strong> ${esc(t.engineerName||'-')}</div>
+      <div><strong>\u0E07\u0E32\u0E19:</strong> ${esc(t.workDetail)}</div>
+      ${t.partsUsed?`<div><strong>\u0E2D\u0E30\u0E44\u0E2B\u0E25\u0E48:</strong> ${esc(t.partsUsed)}</div>`:''}
+      ${t.workHours?`<div><strong>\u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07:</strong> ${esc(t.workHours)}</div>`:''}
+    </div>`:'<div style="font-size:12.5px;color:var(--fg3);padding:6px 0">\u23F3 \u0E22\u0E31\u0E07\u0E23\u0E2D\u0E0A\u0E48\u0E32\u0E07\u0E2A\u0E48\u0E07\u0E07\u0E32\u0E19...</div>'}
+    ${t.adminNote?`<div class="eng-sec">Admin Note</div>
+    <div style="padding:10px 12px;background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.2);border-radius:8px;font-size:13px">${esc(t.adminNote)}</div>`:''}
+    `:''}
+
+    <div class="eng-sec" style="margin-top:18px">\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25 Ticket</div>
+    ${[['\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02',t.id||t._recordId],['\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C',t.brand],['\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32',t.branchCode],['SLA',t.sla],['\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E48\u0E07',t.sentDate],['SLA Date',t.slaDate]].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value mono" style="font-size:12.5px">${esc(v||'-')}</div></div>`).join('')}
+    <div class="eng-sec">\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</div>
+    ${[['\u0E0A\u0E37\u0E48\u0E2D',t.reporter],['\u0E40\u0E1A\u0E2D\u0E23\u0E4C',t.phone],['\u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48',t.location]].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value">${esc(v||'-')}</div></div>`).join('')}
+    <div class="eng-sec">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</div>
     <div style="padding:13px 15px;background:var(--s2);border-radius:10px;font-size:13.5px;line-height:1.75;color:var(--fg)">${esc(t.detail||'-')}</div>
   </div>
 </div>`;
 }
 
-// ── SIDEBAR ───────────────────────────────────────────────────────────────
+// ── SIDEBAR // ── SIDEBAR ───────────────────────────────────────────────────────────────
 let sidebarOpen=false;
 function openSidebar(){
   sidebarOpen=true;
@@ -1055,11 +1107,59 @@ function bindApp(){
   if(drawerOverlay)drawerOverlay.onclick=()=>{STATE.drawerTicket=null;render();};
   const closeDrawer=document.getElementById('close-drawer');
   if(closeDrawer)closeDrawer.onclick=()=>{STATE.drawerTicket=null;render();};
+  const engBtn=document.getElementById('btn-eng-submit');
+  if(engBtn)engBtn.onclick=()=>{const rid=engBtn.dataset.rid;STATE.engTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.showEngModal=true;render();};
+  const adminCloseBtn=document.getElementById('btn-admin-close');
+  if(adminCloseBtn)adminCloseBtn.onclick=()=>{const rid=adminCloseBtn.dataset.rid;STATE.adminTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.adminModalType='close';STATE.showAdminModal=true;render();};
+  const adminNoteBtn=document.getElementById('btn-admin-note');
+  if(adminNoteBtn)adminNoteBtn.onclick=()=>{const rid=adminNoteBtn.dataset.rid;STATE.adminTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.adminModalType='note';STATE.showAdminModal=true;render();};
 }
 
 // ── MODAL ACTIONS ─────────────────────────────────────────────────────────
-function closeModal(){STATE.showAddTicket=false;STATE.editTicket=null;STATE.showAddUser=false;STATE.editUser=null;render();}
-function saveModal(){if(STATE.showAddTicket||STATE.editTicket)saveTicketModal();else saveUserModal();}
+function closeModal(){STATE.showAddTicket=false;STATE.editTicket=null;STATE.showAddUser=false;STATE.editUser=null;STATE.showEngModal=false;STATE.engTicket=null;STATE.showAdminModal=false;STATE.adminTicket=null;render();}
+function saveModal(){
+  if(STATE.showEngModal)return saveEngineerModal();
+  if(STATE.showAdminModal)return saveAdminModal();
+  if(STATE.showAddTicket||STATE.editTicket)return saveTicketModal();
+  saveUserModal();
+}
+async function saveEngineerModal(){
+  const t=STATE.engTicket;if(!t)return;
+  const wd=(document.getElementById('eng-workDetail')||{}).value?.trim();
+  if(!wd){alert('กรุณากรอกรายละเอียดงาน');return;}
+  const btn=document.getElementById('modal-save');
+  if(btn){btn.disabled=true;btn.textContent='⏳ กำลังส่ง...';}
+  const fields={workDetail:wd,partsUsed:(document.getElementById('eng-partsUsed')||{}).value?.trim()||'',
+    workHours:(document.getElementById('eng-workHours')||{}).value||'',
+    engineerName:STATE.currentUser.name,status:document.getElementById('eng-status').value,
+    completedAt:new Date().toLocaleDateString('th-TH')};
+  const rid=t._recordId||t.id;
+  const ok=await apiPatchFields(rid,fields);
+  if(ok){STATE.tickets=STATE.tickets.map(x=>(x._recordId===rid||x.id===rid)?{...x,...fields}:x);
+    showToast('✅ ส่งงานแล้ว — แจ้ง Admin ทาง LINE','ok');STATE.drawerTicket=null;
+  }else showToast('❌ บันทึกไม่สำเร็จ','err');
+  closeModal();
+}
+
+async function saveAdminModal(){
+  const t=STATE.adminTicket;if(!t)return;
+  const isClose=STATE.adminModalType==='close';
+  const note=(document.getElementById('admin-note')||{}).value?.trim()||'';
+  if(isClose&&!note){alert('กรุณากรอกหมายเหตุ');return;}
+  const btn=document.getElementById('modal-save');
+  if(btn){btn.disabled=true;btn.textContent='⏳...';}
+  const fields={adminNote:note,closedBy:STATE.currentUser.name};
+  if(isClose){fields.status='เสร็จสิ้น';fields.closedAt=new Date().toLocaleDateString('th-TH');}
+  const rid=t._recordId||t.id;
+  const ok=await apiPatchFields(rid,fields);
+  if(ok){STATE.tickets=STATE.tickets.map(x=>(x._recordId===rid||x.id===rid)?{...x,...fields}:x);
+    showToast(isClose?'✅ จบงานแล้ว — แจ้ง User ทาง LINE':'💾 บันทึกหมายเหตุแล้ว','ok');
+    if(isClose)STATE.drawerTicket=null;
+  }else showToast('❌ บันทึกไม่สำเร็จ','err');
+  closeModal();
+}
+
+
 
 async function saveTicketModal(){
   const reporter=(document.getElementById('m-reporter')||{}).value?.trim();
