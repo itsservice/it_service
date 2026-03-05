@@ -1,17 +1,9 @@
 // =============================================
 // larkService.js  —  Lark Base API client
 // =============================================
-// ENV ที่ต้องตั้งใน Render:
-//   LARK_APP_ID      = cli_xxxxxxxxxxxxxxxx
-//   LARK_APP_SECRET  = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-//   LARK_APP_TOKEN   = RUkWwDUisiBmkrk9pzYjVok6pAe   (จาก URL ของ Base)
-//   LARK_TABLE_ID    = tblCqCvo7GOEB1uN               (จาก URL)
-// =============================================
-
 const axios = require('axios');
 const BASE_URL = 'https://open.larksuite.com/open-apis';
 
-// Token cache
 let _token = null;
 let _tokenExp = 0;
 
@@ -32,24 +24,31 @@ function larkHeaders(token) {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
 
-// *** ปรับ field name ให้ตรงกับ Lark Base ของคุณ ***
+// ชื่อ column ใน Lark Base (ภาษาไทย) → key ที่ใช้ใน JS
 const FIELD_MAP = {
-  'Ticket ID':    'id',
-  'Status':       'status',
-  'Brand':        'brand',
-  'Branch Code':  'branchCode',
-  'SLA':          'sla',
-  'Reporter':     'reporter',
-  'Phone':        'phone',
-  'Type':         'type',
-  'Detail':       'detail',
-  'Location':     'location',
-  'Sent Date':    'sentDate',
-  'SLA Date':     'slaDate',
-  'Created At':   'createdAt',
-  'LINE User ID': 'line_user_id',
-  'LINE Group ID':'line_group_id',
-  'Record URL':   'recordUrl',
+  'Number Ticket':      'id',
+  'สถานะ':              'status',
+  'ช่าง':               'engineer',
+  'รหัสสาขา':           'branchCode',
+  'ผู้แจ้งซ่อม':        'reporter',
+  'เบอร์ติดต่อ':        'phone',
+  'ประเภท/อุปกรณ์':     'type',
+  'รายละเอียด/อาการ':   'detail',
+  'สถานที่':            'location',
+  'ส่งเมื่อ':           'sentDate',
+  'SLA':               'sla',
+  'แนบรูป':            'attachments',
+  'แบรนด์':            'brand',
+  'LINE User ID':      'line_user_id',
+  'LINE Group ID':     'line_group_id',
+  'Record URL':        'recordUrl',
+  'ความสำคัญงาน':      'priority',
+  'ID ช่าง':           'engineerId',
+  'ปุ่มเริ่งงานช่าง':   'startBtn',
+  'ปุ่มเสร็จงาน':      'doneBtn',
+  'ลิงก์งานช่าง':      'engineerLink',
+  'รูปงาน':            'workPhoto',
+  'คำอธิบายเพิ่มเติม':  'note',
 };
 const REVERSE_MAP = Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
 
@@ -65,6 +64,7 @@ function parseRecord(record) {
       out[key] = val;
     }
   }
+  // ใช้ Number Ticket เป็น id หลัก ถ้าไม่มีใช้ record_id
   if (!out.id) out.id = record.record_id;
   return out;
 }
