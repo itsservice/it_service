@@ -7,11 +7,6 @@ const { getUserProfileInGroup, getGroupSummary } = require('./lineLookup');
 
 const router = express.Router();
 
-/**
- * Verify LINE signature (Production)
- * - ใช้ raw body ที่ได้รับจริง (bytes) + HMAC-SHA256(channel secret)
- * - ถ้า parse/format ก่อน verify จะ fail ได้ (LINE เตือนชัด) 
- */
 function verifyLineSignature(req) {
   const signature = req.get('x-line-signature');
 
@@ -34,7 +29,6 @@ function verifyLineSignature(req) {
 }
 
 router.post('/webhook', async (req, res) => {
-  // ✅ ตอบไวกัน timeout (แต่ “คง verify ก่อนประมวลผล” ตามแนวทาง LINE)
   const v = verifyLineSignature(req);
 
   if (!v.ok) {
@@ -54,12 +48,9 @@ router.post('/webhook', async (req, res) => {
     console.error('============');
     console.error('(จบขั้นตอน Error)');
     console.error('❌❌❌❌❌\n');
-
-    // ตามเอกสาร LINE: ถ้า signature ไม่ match ไม่ควร process และควรจบด้วย error  [oai_citation:1‡LINE Developers](https://developers.line.biz/en/docs/messaging-api/verify-webhook-signature/?utm_source=chatgpt.com)
     return res.status(401).send('invalid signature');
   }
 
-  // signature ผ่านแล้ว ค่อยตอบ 200
   res.status(200).json({ ok: true });
 
   try {
@@ -75,7 +66,6 @@ router.post('/webhook', async (req, res) => {
       let userName = '';
       let groupName = '';
 
-      // ดึงชื่อ (ถ้าเป็น group)
       if (groupId && userId) {
         try {
           const [profile, summary] = await Promise.all([
@@ -89,7 +79,6 @@ router.post('/webhook', async (req, res) => {
         }
       }
 
-      // ✅ log ตาม format ที่เต้ต้องการ
       logLineMessage({ userName, userId, groupName, groupId });
     }
   } catch (err) {
