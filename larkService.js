@@ -1,11 +1,8 @@
-// =============================================
-// larkService.js  —  Lark Base API client
-// =============================================
+// larkService.js — Lark Base API client
 const axios = require('axios');
 const BASE_URL = 'https://open.larksuite.com/open-apis';
 
-let _token = null;
-let _tokenExp = 0;
+let _token = null, _tokenExp = 0;
 
 async function getTenantToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -15,85 +12,121 @@ async function getTenantToken() {
     { timeout: 10_000 }
   );
   if (r.data.code !== 0) throw new Error(`Lark auth error: ${r.data.msg}`);
-  _token    = r.data.tenant_access_token;
+  _token = r.data.tenant_access_token;
   _tokenExp = Date.now() + r.data.expire * 1000;
   return _token;
 }
 
-function larkHeaders(token) {
-  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+function larkHeaders(t) {
+  return { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' };
 }
 
-// ชื่อ column ใน Lark Base (ภาษาไทย) → key ที่ใช้ใน JS
+// *** ปรับ Column name ให้ตรงกับ Lark Base ***
 const FIELD_MAP = {
-  'Number Ticket':      'id',
-  'สถานะ':              'status',
-  'ช่าง':               'engineer',
-  'รหัสสาขา':           'branchCode',
-  'ผู้แจ้งซ่อม':        'reporter',
-  'เบอร์ติดต่อ':        'phone',
-  'ประเภท/อุปกรณ์':     'type',
-  'รายละเอียด/อาการ':   'detail',
-  'สถานที่':            'location',
-  'ส่งเมื่อ':           'sentDate',
-  'SLA':               'sla',
-  'แนบรูป':            'attachments',
-  'แบรนด์':            'brand',
-  'LINE User ID':      'line_user_id',
-  'LINE Group ID':     'line_group_id',
-  'Record URL':        'recordUrl',
-  'ความสำคัญงาน':      'priority',
-  'ID ช่าง':           'engineerId',
-  'ปุ่มเริ่งงานช่าง':   'startBtn',
-  'ปุ่มเสร็จงาน':      'doneBtn',
-  'ลิงก์งานช่าง':      'engineerLink',
-  'รูปงาน':            'workPhoto',
-  'คำอธิบายเพิ่มเติม':  'note',
+  'Ticket ID':     'id',
+  'Status':        'status',
+  'Brand':         'brand',
+  'Branch Code':   'branchCode',
+  'SLA':           'sla',
+  'Reporter':      'reporter',
+  'Phone':         'phone',
+  'Type':          'type',
+  'Detail':        'detail',
+  'Location':      'location',
+  'Sent Date':     'sentDate',
+  'SLA Date':      'slaDate',
+  'Created At':    'createdAt',
+  'LINE User ID':  'line_user_id',
+  'LINE Group ID': 'line_group_id',
+  'Record URL':    'recordUrl',
+  'Work Detail':   'workDetail',
+  'Parts Used':    'partsUsed',
+  'Work Hours':    'workHours',
+  'Completed At':  'completedAt',
+  'Engineer Name': 'engineerName',
+  'Admin Note':    'adminNote',
+  'Closed At':     'closedAt',
+  'Closed By':     'closedBy',
 };
+
+const WRITABLE = new Set([
+  'Status','Brand','Branch Code','SLA','Reporter','Phone','Type','Detail','Location','Sent Date',
+  'LINE User ID','LINE Group ID',
+  'Work Detail','Parts Used','Work Hours','Completed At','Engineer Name',
+  'Admin Note','Closed At','Closed By',
+]);
+
 const REVERSE_MAP = Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
+
+// FIX: แปลง Unix ms → วันที่ไทย
+function fmtDate(val) {
+  if (val === null || val === undefined || val === '') return null;
+  const n = typeof val === 'number' ? val : Number(val);
+  if (!isNaN(n) && n > 1_000_000_000_000) {
+    return new Date(n).toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+  if (typeof val === 'string' && (val.includes('T') || /^\d{4}-/.test(val))) {
+    const d = new Date(val);
+    if (!isNaN(d)) return d.toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+  return String(val);
+}
+
+const DATE_KEYS = new Set(['sentDate','slaDate','createdAt','completedAt','closedAt']);
+
+function parseValue(val, key) {
+  if (Array.isArray(val) && val.length > 0 && val[0]?.text !== undefined)
+    return val.map(v => v.text || '').join('');
+  if (val && typeof val === 'object' && !Array.isArray(val) && val.text !== undefined)
+    return val.text;
+  if (DATE_KEYS.has(key)) return fmtDate(val);
+  return val;
+}
 
 function parseRecord(record) {
   const out = { _recordId: record.record_id };
-  for (const [larkField, val] of Object.entries(record.fields || {})) {
-    const key = FIELD_MAP[larkField] || larkField;
-    if (Array.isArray(val) && val[0]?.text !== undefined) {
-      out[key] = val.map(v => v.text).join('');
-    } else if (val && typeof val === 'object' && val.text !== undefined) {
-      out[key] = val.text;
-    } else {
-      out[key] = val;
-    }
+  for (const [lk, val] of Object.entries(record.fields || {})) {
+    const key = FIELD_MAP[lk] || lk;
+    out[key] = parseValue(val, key);
   }
-  // ใช้ Number Ticket เป็น id หลัก ถ้าไม่มีใช้ record_id
   if (!out.id) out.id = record.record_id;
+  return out;
+}
+
+// FIX WrongRequestBody: กรองเฉพาะ WRITABLE + val ที่มีค่า
+function toWriteFields(fields) {
+  const out = {};
+  for (const [key, val] of Object.entries(fields)) {
+    if (val === undefined || val === null || val === '') continue;
+    const lk = REVERSE_MAP[key] || key;
+    if (WRITABLE.has(lk)) out[lk] = val;
+    else console.warn(`[Lark] skip non-writable: ${key} -> ${lk}`);
+  }
   return out;
 }
 
 async function listTickets() {
   const token = await getTenantToken();
-  const appToken = process.env.LARK_APP_TOKEN;
-  const tableId  = process.env.LARK_TABLE_ID;
-  let allRecords = [], pageToken = undefined;
+  let all = [], pt;
   do {
     const params = { page_size: 100 };
-    if (pageToken) params.page_token = pageToken;
+    if (pt) params.page_token = pt;
     const r = await axios.get(
-      `${BASE_URL}/bitable/v1/apps/${appToken}/tables/${tableId}/records`,
+      `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records`,
       { headers: larkHeaders(token), params, timeout: 15_000 }
     );
     if (r.data.code !== 0) throw new Error(`Lark list error: ${r.data.msg}`);
-    allRecords = allRecords.concat((r.data.data?.items || []).map(parseRecord));
-    pageToken  = r.data.data?.has_more ? r.data.data.page_token : undefined;
-  } while (pageToken);
-  return allRecords;
+    all = all.concat((r.data.data?.items || []).map(parseRecord));
+    pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
+  } while (pt);
+  return all;
 }
 
 async function updateTicketField(recordId, fields) {
   const token = await getTenantToken();
-  const larkFields = {};
-  for (const [key, val] of Object.entries(fields)) {
-    larkFields[REVERSE_MAP[key] || key] = val;
-  }
+  const larkFields = toWriteFields(fields);
+  if (!Object.keys(larkFields).length) { console.warn('[Lark] no writable fields'); return {}; }
+  console.log('[Lark] PATCH', recordId, JSON.stringify(larkFields));
   const r = await axios.put(
     `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records/${recordId}`,
     { fields: larkFields },
@@ -105,10 +138,9 @@ async function updateTicketField(recordId, fields) {
 
 async function createTicket(fields) {
   const token = await getTenantToken();
-  const larkFields = {};
-  for (const [key, val] of Object.entries(fields)) {
-    larkFields[REVERSE_MAP[key] || key] = val;
-  }
+  const larkFields = toWriteFields(fields);
+  if (!Object.keys(larkFields).length) throw new Error('No valid writable fields');
+  console.log('[Lark] POST', JSON.stringify(larkFields));
   const r = await axios.post(
     `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records`,
     { fields: larkFields },
