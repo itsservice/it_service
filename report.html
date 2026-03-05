@@ -6,643 +6,1132 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>แจ้งปัญหา / ติดตาม — IT Support</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<title>IT Ticket System</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#070b12;--bg2:#0c1220;--bg3:#101828;
-  --s1:rgba(255,255,255,.05);--s2:rgba(255,255,255,.08);--s3:rgba(255,255,255,.13);
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
-  --fg:rgba(255,255,255,.9);--fg2:rgba(255,255,255,.5);--fg3:rgba(255,255,255,.22);
-  --accent:#60a5fa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--yellow:#facc15;
-  --r:12px;--r2:16px;
+  --bg:#070b12;--bg2:#0c1220;
+  --s1:rgba(255,255,255,.05);--s2:rgba(255,255,255,.09);--s3:rgba(255,255,255,.14);
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);
+  --fg:rgba(255,255,255,.90);--fg2:rgba(255,255,255,.45);--fg3:rgba(255,255,255,.22);
+  --accent:#60a5fa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--yellow:#facc15;--teal:#2dd4bf;
+  --r:10px;--r2:14px;
+  --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
   --safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);font-size:15px}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+html,body{height:100%}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);font-size:14px;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 #bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 
+/* ── LOGIN ── */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;padding:20px}
+.login-card{background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:40px 36px;width:380px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6);backdrop-filter:blur(20px)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.login-logo-icon{width:44px;height:44px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.login-logo-text{font-size:19px;font-weight:600}
+.login-subtitle{font-size:12px;color:var(--fg2);margin-top:2px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--fg2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--fg);outline:none;transition:border-color .15s;background:var(--s1)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field select option{background:#0c1220;color:#fff}
+.field textarea{resize:vertical;min-height:80px}
+/* Fix all selects (not just .field) */
+select{color-scheme:dark}
+select option{background:#0c1220 !important;color:#fff !important}
+.login-btn{width:100%;padding:12px;background:var(--accent);color:#070b12;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.login-btn:hover{opacity:.85}
+.login-btn:disabled{opacity:.5;cursor:default}
+.error-msg{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+.demo-box{margin-top:14px;padding:12px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:8px;font-size:12px;color:var(--fg2)}
+.demo-box strong{display:block;margin-bottom:6px;color:var(--fg3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.demo-row{display:grid;grid-template-columns:100px 90px 1fr;gap:6px;margin-bottom:4px;align-items:center}
+.demo-u{font-family:'DM Mono',monospace;color:var(--accent);font-size:11px}
+.demo-p{font-family:'DM Mono',monospace;font-size:11px}
+.demo-r{font-size:11px;color:var(--fg3)}
+
+/* ── HAMBURGER FAB ── */
+.menu-fab{position:fixed;top:calc(16px + var(--safe-top));left:calc(14px + var(--safe-left));z-index:90;width:44px;height:44px;border-radius:12px;background:var(--s3);border:1px solid var(--b2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:opacity .25s,transform .2s var(--spring);overflow:hidden}
+.menu-fab:hover{transform:scale(1.07)}
+.menu-fab:active{transform:scale(.93)}
+.bar{display:block;width:17px;height:1.5px;background:var(--fg);border-radius:2px;transition:.28s var(--ease)}
+.bar-2{width:11px;margin-left:-6px}
+.menu-open .menu-fab{opacity:0;pointer-events:none}
+
+/* ── SCRIM ── */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:85;animation:scrimIn .22s ease}
+@keyframes scrimIn{from{opacity:0}to{opacity:1}}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:0;left:0;height:100%;width:clamp(240px,80vw,280px);background:var(--bg2);border-right:1px solid var(--b1);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);z-index:86;display:flex;flex-direction:column;clip-path:circle(0% at 36px 36px);transition:clip-path .42s var(--ease);will-change:clip-path;padding-top:var(--safe-top)}
+.sidebar.open{clip-path:circle(200% at 36px 36px)}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:16px 13px 12px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.sidebar-logo-wrap{display:flex;align-items:center;gap:9px}
+.sidebar-logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sidebar-logo-text{font-size:15px;font-weight:600}
+.close-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--b1);background:var(--s1);color:var(--fg2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s,transform .2s var(--spring);overflow:hidden;position:relative;flex-shrink:0}
+.close-btn:hover{background:var(--s2);color:var(--fg);transform:scale(1.1)}
+.sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px calc(12px + var(--safe-bottom));scrollbar-width:thin;scrollbar-color:var(--b2) transparent;-webkit-overflow-scrolling:touch}
+.sidebar-sec{padding:9px 7px 3px;font-size:10px;font-weight:600;color:var(--fg3);letter-spacing:.08em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;margin:1px 0;border-radius:9px;border:1px solid transparent;cursor:pointer;color:var(--fg2);font-size:13.5px;transition:background .12s,color .12s,transform .18s var(--ease);position:relative;overflow:hidden;opacity:0;transform:translateX(-10px)}
+.nav-item.visible{animation:slideIn .3s var(--ease) forwards}
+@keyframes slideIn{to{opacity:1;transform:translateX(0)}}
+.nav-item:hover{background:var(--s2);color:var(--fg);transform:translateX(4px)}
+.nav-item.active{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.25);color:var(--accent)}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--s3);color:var(--fg2);font-size:10px;padding:2px 7px;border-radius:99px;font-family:'DM Mono',monospace;flex-shrink:0}
+.nav-item.active .nav-badge{background:rgba(96,165,250,.2);color:var(--accent)}
+.sidebar-user-wrap{border-top:1px solid var(--b1);padding:8px 8px calc(8px + var(--safe-bottom));flex-shrink:0}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.sidebar-user:hover{background:var(--s2)}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
+.sidebar-username{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-role{font-size:11px;color:var(--fg2)}
+.logout-btn{display:flex;align-items:center;gap:8px;padding:8px 11px;margin:2px 0;border-radius:9px;cursor:pointer;color:var(--fg2);font-size:13px;transition:background .12s,color .12s}
+.logout-btn:hover{background:rgba(248,113,113,.1);color:var(--red)}
+
 /* ── TOPBAR ── */
-.topbar{position:sticky;top:0;z-index:50;background:rgba(7,11,18,.92);border-bottom:1px solid var(--b1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:0 20px;height:calc(56px + var(--safe-top));padding-top:var(--safe-top);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.topbar-logo{display:flex;align-items:center;gap:10px}
-.topbar-logo-icon{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.topbar-title{font-size:16px;font-weight:600}
-.topbar-sub{font-size:11px;color:var(--fg2)}
-.online-pill{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;background:var(--s1);border:1px solid var(--b1);font-size:12px;color:var(--fg2);flex-shrink:0}
-.odot{width:7px;height:7px;border-radius:50%;background:var(--red);transition:background .4s}
-.odot.live{background:var(--green)}
+.topbar{position:fixed;top:0;left:0;right:0;height:calc(56px + var(--safe-top));padding-top:var(--safe-top);background:rgba(7,11,18,.9);border-bottom:1px solid var(--b1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;padding-left:calc(68px + var(--safe-left));padding-right:calc(14px + var(--safe-right));gap:8px;z-index:70}
+.breadcrumb{font-size:13px;color:var(--fg2);flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;min-width:0}
+.breadcrumb span{cursor:pointer;white-space:nowrap;flex-shrink:0}
+.breadcrumb span:hover{color:var(--accent)}
+.breadcrumb-cur{color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.clock-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;background:var(--s1);border:1px solid var(--b1);font-family:'DM Mono',monospace;font-size:11px;color:var(--fg2);white-space:nowrap}
+.pill-sep{width:1px;height:9px;background:var(--b2);flex-shrink:0}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;transition:background .5s}
+.online-dot.live{background:var(--green)}
+.refresh-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--b1);background:var(--s1);color:var(--fg2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .12s,transform .3s;flex-shrink:0}
+.refresh-btn:hover{background:var(--s2);color:var(--fg)}
+.refresh-btn.spinning{animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refresh-btn:disabled{opacity:.4;cursor:default}
 
-/* ── LAYOUT ── */
-.page-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:24px 16px calc(40px + var(--safe-bottom));display:flex;flex-direction:column;gap:20px}
+/* ── MAIN LAYOUT ── */
+.main{position:relative;z-index:1;padding-top:calc(56px + var(--safe-top));min-height:100vh}
+.content{padding:16px 15px calc(32px + var(--safe-bottom))}
 
-/* ── TABS ── */
-.tabs{display:flex;gap:6px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:5px}
-.tab{flex:1;padding:10px 16px;border-radius:10px;border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;color:var(--fg2);background:transparent}
-.tab.active{background:var(--accent);color:#070b12;font-weight:600}
-.tab:not(.active):hover{background:var(--s2);color:var(--fg)}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none;position:relative;overflow:hidden}
+.btn-primary{background:var(--accent);color:#070b12;border-color:var(--accent)}.btn-primary:hover{opacity:.85}
+.btn-outline{background:var(--s2);color:var(--fg);border-color:var(--b2)}.btn-outline:hover{background:var(--s3)}
+.btn-danger{background:rgba(248,113,113,.12);color:var(--red);border-color:rgba(248,113,113,.25)}.btn-danger:hover{background:rgba(248,113,113,.2)}
+.btn-ghost{background:transparent;color:var(--fg2);border-color:transparent;padding:5px 8px}.btn-ghost:hover{background:var(--s2);color:var(--fg)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 7px;font-size:11px;border-radius:6px}
+.btn-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);transform:scale(0);pointer-events:none;animation:ripple .5s ease-out forwards}
+@keyframes ripple{to{transform:scale(5);opacity:0}}
 
-/* ── CARD ── */
-.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:22px;backdrop-filter:blur(8px)}
-.card-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:10px}
-.card-title-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+/* ── STATUS QUICK BUTTONS ── */
+.sq-wrap{display:flex;flex-wrap:wrap;gap:4px}
+.sq-btn{padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .15s;white-space:nowrap;background:transparent}
+.sq-btn:hover{transform:scale(1.05);opacity:.9}
+.sq-btn.sq-active{border-color:currentColor!important;background:currentColor;color:#07090f!important;transform:scale(1.07)}
+.sq-btn:disabled{opacity:.4;cursor:default}
 
-/* ── FORM ── */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:11.5px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
-.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--fg);outline:none;transition:border-color .15s,background .15s;background:rgba(255,255,255,.04);-webkit-appearance:none}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:rgba(96,165,250,.05)}
-.field select option{background:#0c1220;color:var(--fg)}
-.field textarea{resize:vertical;min-height:90px;line-height:1.6}
-.field-full{grid-column:1/-1}
-.req{color:var(--red);margin-left:2px}
-
-.submit-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:#070b12;transition:opacity .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:6px}
-.submit-btn:hover{opacity:.88}
-.submit-btn:active{transform:scale(.98)}
-.submit-btn:disabled{opacity:.45;cursor:default}
-
-/* ── SUCCESS ── */
-.success-box{display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px;gap:14px;display:none}
-.success-icon{width:68px;height:68px;border-radius:50%;background:rgba(74,222,128,.12);border:2px solid rgba(74,222,128,.3);display:flex;align-items:center;justify-content:center;font-size:32px}
-.success-id{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);padding:6px 18px;background:rgba(96,165,250,.08);border-radius:8px;border:1px solid rgba(96,165,250,.2)}
-
-/* ── TRACK ── */
-.track-bar{display:flex;gap:10px;align-items:stretch}
-.track-input{flex:1;padding:11px 14px;border:1.5px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--fg);background:rgba(255,255,255,.04);outline:none;transition:border-color .15s}
-.track-input:focus{border-color:var(--accent)}
-.track-btn{padding:11px 20px;border:none;border-radius:var(--r);background:var(--accent);color:#070b12;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s}
-.track-btn:hover{opacity:.85}
-.track-btn:disabled{opacity:.45;cursor:default}
-
-/* ── TICKET CARD ── */
-.ticket-card{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;animation:fadeUp .25s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.ticket-header{padding:16px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.ticket-id-wrap{display:flex;flex-direction:column;gap:4px}
-.ticket-id{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent)}
-.ticket-type{font-size:13.5px;color:var(--fg2)}
-.ticket-body{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.t-field{display:flex;flex-direction:column;gap:2px}
-.t-label{font-size:10.5px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.05em}
-.t-value{font-size:13.5px;color:var(--fg)}
-.ticket-detail{padding:0 18px 16px;font-size:13.5px;color:var(--fg2);line-height:1.7;border-top:1px solid var(--b1);padding-top:14px}
-.ticket-footer{padding:14px 18px;border-top:1px solid var(--b1);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-
-/* ── STATUS BADGE ── */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:500;white-space:nowrap}
+.badge-blue{background:rgba(96,165,250,.12);color:#60a5fa}
+.badge-green{background:rgba(74,222,128,.12);color:#4ade80}
+.badge-orange{background:rgba(251,146,60,.12);color:#fb923c}
+.badge-red{background:rgba(248,113,113,.12);color:#f87171}
+.badge-yellow{background:rgba(250,204,21,.12);color:#facc15}
+.badge-teal{background:rgba(45,212,191,.12);color:#2dd4bf}
+.badge-purple{background:rgba(168,85,247,.12);color:#a855f7}
+.badge-gray{background:var(--s2);color:var(--fg2)}
 .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-.b-yellow{background:rgba(250,204,21,.12);color:#facc15}
-.b-blue{background:rgba(96,165,250,.12);color:#60a5fa}
-.b-orange{background:rgba(251,146,60,.12);color:#fb923c}
-.b-green{background:rgba(74,222,128,.12);color:#4ade80}
-.b-red{background:rgba(248,113,113,.12);color:#f87171}
-.b-gray{background:var(--s2);color:var(--fg2)}
 
-/* ── STATUS TIMELINE ── */
-.timeline{padding:16px 18px;border-top:1px solid var(--b1)}
-.timeline-title{font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
-.tl-steps{display:flex;gap:0;position:relative}
-.tl-steps::before{content:'';position:absolute;top:12px;left:12px;right:12px;height:2px;background:var(--b2);z-index:0}
-.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
-.tl-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--b2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .3s;flex-shrink:0}
-.tl-dot.done{border-color:var(--green);background:rgba(74,222,128,.15);color:var(--green)}
-.tl-dot.current{border-color:var(--accent);background:rgba(96,165,250,.15);color:var(--accent);box-shadow:0 0 0 4px rgba(96,165,250,.12)}
-.tl-dot.cancelled{border-color:var(--red);background:rgba(248,113,113,.12);color:var(--red)}
-.tl-label{font-size:10.5px;color:var(--fg2);text-align:center;max-width:64px;line-height:1.3}
-.tl-label.active{color:var(--fg);font-weight:600}
+/* ── STATS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px}
+.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:15px 17px;backdrop-filter:blur(8px)}
+.stat-label{font-size:10px;color:var(--fg2);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.stat-val{font-size:26px;font-weight:700;line-height:1}
 
-/* ── RECENT LIST ── */
-.recent-wrap{display:flex;flex-direction:column;gap:10px;max-height:480px;overflow-y:auto}
-.recent-item{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s,background .12s}
-.recent-item:hover{border-color:var(--b2);background:var(--s2)}
-.ri-left{flex:1;min-width:0}
-.ri-id{font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);font-weight:600}
-.ri-type{font-size:12.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-.ri-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.ri-date{font-size:11px;color:var(--fg3)}
+/* ── TABLE ── */
+.table-wrap{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden}
+.table-toolbar{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--b1);flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--b2);border-radius:var(--r);background:var(--s1);flex:1;max-width:260px;min-width:120px}
+.search-box input{border:none;outline:none;font-family:'Outfit',sans-serif;font-size:13px;color:var(--fg);width:100%;background:transparent}
+.search-box input::placeholder{color:var(--fg3)}
+.filter-chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--b2);color:var(--fg2);background:var(--s1);transition:all .12s}
+.chip:hover,.chip.active{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:var(--accent)}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;color:var(--fg2);border-bottom:1px solid var(--b1);background:rgba(255,255,255,.025);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em}
+td{padding:9px 12px;border-bottom:1px solid var(--b1);font-size:13px;color:var(--fg);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover td{background:rgba(255,255,255,.03)}
+.mono{font-family:'DM Mono',monospace;font-size:12px}
+.row-group td{background:rgba(255,255,255,.025);padding:5px 12px;font-size:11px;font-weight:600;color:var(--fg2)}
+.sla-chip{display:inline-block;padding:2px 8px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-top:1px solid var(--b1);flex-wrap:wrap;gap:8px}
+.page-info{font-size:12px;color:var(--fg2)}
+.page-btns{display:flex;gap:3px;flex-wrap:wrap}
+.page-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--b2);background:var(--s1);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--fg2);transition:all .12s}
+.page-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-btn.active{background:var(--accent);color:#070b12;border-color:var(--accent)}
+.page-btn:disabled{opacity:.3;cursor:default}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);padding:16px}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:24px;width:580px;max-width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:9px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--b1);padding-top:14px}
+
+/* ── DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;backdrop-filter:blur(2px)}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:480px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:151;overflow-y:auto;display:flex;flex-direction:column}
+.drawer-head{padding:18px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.drawer-body{padding:20px;flex:1}
+.drawer-sec{font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;margin-top:20px}
+.drawer-sec:first-child{margin-top:0}
+.drawer-field{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--b1)}
+.drawer-field:last-child{border-bottom:none}
+.drawer-field-label{font-size:12px;color:var(--fg2);min-width:110px}
+.drawer-field-value{font-size:13px;color:var(--fg);text-align:right;flex:1}
+
+/* ── USER GRID ── */
+.user-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.user-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;position:relative;transition:border-color .2s}
+.user-card:hover{border-color:var(--b2)}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--b2);color:var(--fg);font-size:13.5px;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.5);z-index:500;animation:toastIn .2s ease;pointer-events:none;white-space:nowrap;backdrop-filter:blur(16px)}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.toast{position:fixed;bottom:calc(22px + var(--safe-bottom));right:calc(18px + var(--safe-right));padding:10px 16px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--b2);color:var(--fg);font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:500;animation:toastIn .2s ease;pointer-events:none;backdrop-filter:blur(16px);max-width:300px}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SYNC BAR ── */
+.sync-bar{height:2px;background:linear-gradient(90deg,transparent 0%,var(--accent) 50%,transparent 100%);position:fixed;top:0;left:0;right:0;z-index:300;animation:syncMove 1s ease-in-out infinite}
+@keyframes syncMove{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--fg2)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
 
 /* ── RESPONSIVE ── */
-@media(max-width:560px){
-  .form-grid{grid-template-columns:1fr}
-  .ticket-body{grid-template-columns:1fr}
-  .tl-label{font-size:9.5px;max-width:52px}
-  .topbar-sub{display:none}
+@media(max-width:768px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .user-grid{grid-template-columns:repeat(2,1fr)}
+  .modal-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .drawer{width:100%;max-width:100%;border-left:none;border-top:1px solid var(--b1)}
+  #ts-temp,.pill-sep{display:none}
+  .topbar{padding-left:calc(62px + var(--safe-left))}
+}
+@media(max-width:420px){
+  .user-grid{grid-template-columns:1fr}
+  .stat-val{font-size:22px}
+  .clock-pill{font-size:10px;padding:4px 8px}
 }
 </style>
 </head>
 <body>
 <canvas id="bgCanvas" aria-hidden="true"></canvas>
-
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="topbar-logo">
-    <div class="topbar-logo-icon">🎫</div>
-    <div>
-      <div class="topbar-title">IT Support</div>
-      <div class="topbar-sub">แจ้งปัญหา &amp; ติดตาม Ticket</div>
-    </div>
-  </div>
-  <div class="online-pill">
-    <span id="odot" class="odot" title="การเชื่อมต่อ"></span>
-    <span id="online-txt">เชื่อมต่อ...</span>
-  </div>
-</div>
-
-<!-- MAIN -->
-<div class="page-wrap">
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab active" id="tab-report" onclick="switchTab('report')">📝 แจ้งปัญหา</button>
-    <button class="tab" id="tab-track"  onclick="switchTab('track')">🔍 ติดตาม Ticket</button>
-  </div>
-
-  <!-- ══ TAB: REPORT ══ -->
-  <div id="panel-report">
-    <div class="card">
-      <div class="card-title">
-        <div class="card-title-icon" style="background:rgba(96,165,250,.12)">📝</div>
-        แจ้งปัญหา IT
-      </div>
-
-      <!-- FORM -->
-      <div id="form-wrap">
-        <div class="form-grid">
-          <!-- ชื่อ -->
-          <div class="field">
-            <label>ชื่อ-นามสกุล<span class="req">*</span></label>
-            <input id="f-name" type="text" placeholder="กรอกชื่อ-นามสกุล" maxlength="80"/>
-          </div>
-          <!-- เบอร์ -->
-          <div class="field">
-            <label>เบอร์ติดต่อ<span class="req">*</span></label>
-            <input id="f-phone" type="tel" placeholder="0XX-XXX-XXXX" maxlength="20"/>
-          </div>
-          <!-- แบรนด์ -->
-          <div class="field">
-            <label>แบรนด์<span class="req">*</span></label>
-            <select id="f-brand">
-              <option value="">— เลือกแบรนด์ —</option>
-              <option>Animal House</option>
-              <option>Another Hound Cafe</option>
-              <option>Au Bon Pain</option>
-              <option>Dunkin'</option>
-              <option>Greyhound Cafe</option>
-              <option>Greyhound Coffee</option>
-              <option>Greyhound Original</option>
-              <option>Kin+Hey</option>
-              <option>Le Grand Vefour</option>
-              <option>M-Kitchen</option>
-              <option>Smileyhound</option>
-            </select>
-          </div>
-          <!-- รหัสสาขา -->
-          <div class="field">
-            <label>รหัสสาขา</label>
-            <input id="f-branch" type="text" placeholder="K.XXXX" maxlength="20"/>
-          </div>
-          <!-- ประเภท -->
-          <div class="field">
-            <label>ประเภทปัญหา<span class="req">*</span></label>
-            <select id="f-type">
-              <option value="">— เลือกประเภท —</option>
-              <option>งานระบบไฟฟ้า</option>
-              <option>งานระบบปรับอากาศ</option>
-              <option>เครื่องทำน้ำร้อน</option>
-              <option>เครื่องทำกาแฟ</option>
-              <option>งานซ่อมแซม</option>
-              <option>งานติดตั้ง</option>
-              <option>อุปกรณ์เครือข่าย</option>
-            </select>
-          </div>
-          <!-- สถานที่ -->
-          <div class="field">
-            <label>สถานที่/โซน</label>
-            <input id="f-location" type="text" placeholder="ชั้น 2 / ครัว / เคาน์เตอร์" maxlength="80"/>
-          </div>
-          <!-- รายละเอียด -->
-          <div class="field field-full">
-            <label>รายละเอียดปัญหา<span class="req">*</span></label>
-            <textarea id="f-detail" placeholder="อธิบายอาการปัญหาให้ชัดเจน เพื่อให้ช่างสามารถเตรียมอุปกรณ์ได้ถูกต้อง..." rows="4"></textarea>
-          </div>
-        </div>
-        <button class="submit-btn" id="submit-btn" onclick="submitTicket()">
-          <span>📤</span><span>ส่งแจ้งปัญหา</span>
-        </button>
-        <div id="form-err" style="color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px"></div>
-      </div>
-
-      <!-- SUCCESS -->
-      <div class="success-box" id="success-box">
-        <div class="success-icon">✅</div>
-        <div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:6px">ส่งแจ้งปัญหาสำเร็จ!</div>
-          <div style="font-size:13.5px;color:var(--fg2)">หมายเลข Ticket ของคุณ</div>
-        </div>
-        <div class="success-id" id="success-id">—</div>
-        <div style="font-size:13px;color:var(--fg2);max-width:320px;line-height:1.6">
-          บันทึกหมายเลขนี้ไว้เพื่อติดตามสถานะในแท็บ <strong>"ติดตาม Ticket"</strong><br/>
-          ทีม IT จะดำเนินการโดยเร็วที่สุด
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-          <button class="submit-btn" style="max-width:200px;margin-top:0" onclick="trackMyTicket()">
-            <span>🔍</span><span>ติดตาม Ticket</span>
-          </button>
-          <button class="submit-btn" style="max-width:200px;margin-top:0;background:var(--s2);color:var(--fg)" onclick="resetForm()">
-            <span>➕</span><span>แจ้งปัญหาใหม่</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ TAB: TRACK ══ -->
-  <div id="panel-track" style="display:none">
-    <!-- SEARCH BAR -->
-    <div class="card">
-      <div class="card-title">
-        <div class="card-title-icon" style="background:rgba(250,204,21,.1)">🔍</div>
-        ติดตามสถานะ Ticket
-      </div>
-      <div class="track-bar">
-        <input class="track-input" id="track-input" placeholder="กรอก Ticket ID หรือ เบอร์โทรศัพท์..." maxlength="60"
-          onkeydown="if(event.key==='Enter')searchTicket()"/>
-        <button class="track-btn" id="track-btn" onclick="searchTicket()">ค้นหา</button>
-      </div>
-      <div id="track-hint" style="font-size:12.5px;color:var(--fg3);margin-top:9px">
-        💡 กรอก Ticket ID (เช่น IT-XXXXXX) หรือ เบอร์โทรที่ใช้แจ้ง
-      </div>
-    </div>
-
-    <!-- RESULT -->
-    <div id="track-result"></div>
-
-    <!-- RECENT FROM THIS DEVICE -->
-    <div id="recent-wrap" style="display:none">
-      <div class="card">
-        <div class="card-title" style="margin-bottom:12px">
-          <div class="card-title-icon" style="background:rgba(45,212,191,.1)">📋</div>
-          Ticket ล่าสุดจากอุปกรณ์นี้
-        </div>
-        <div class="recent-wrap" id="recent-list"></div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- end page-wrap -->
-
-<div id="toast" style="display:none" class="toast"></div>
+<button class="menu-fab" id="menuFab" aria-label="Menu">
+  <span class="bar bar-1"></span>
+  <span class="bar bar-2"></span>
+  <span class="bar bar-3"></span>
+</button>
+<div id="sync-bar" class="sync-bar" style="display:none"></div>
+<div id="app"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────
-const STATUSES = ['ตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น','ยกเลิก'];
-const TL_MAIN  = ['ตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น'];
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const AVATAR_COLORS=['#2563eb','#7c3aed','#db2777','#0d9488','#ea580c','#16a34a','#ca8a04'];
+const avatarColor=s=>AVATAR_COLORS[(s||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0)%AVATAR_COLORS.length];
+const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const SC = {
-  'ตรวจงาน':'#facc15','อยู่ระหว่างดำเนินการ':'#60a5fa',
-  'รอชิ้นส่วน':'#fb923c','เสร็จสิ้น':'#4ade80','ยกเลิก':'#f87171'
+const BRANDS=['ALL','Au Bon Pain',"Dunkin'",'Funky Fries','Greyhound Coffee','Greyhound Original'];
+const STATUSES=['\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19','\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23','\u0E23\u0E2D\u0E0A\u0E34\u0E49\u0E19\u0E2A\u0E48\u0E27\u0E19','\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19','\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'];
+const TYPES=['\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E44\u0E1F\u0E1F\u0E49\u0E32','\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E31\u0E1A\u0E2D\u0E32\u0E01\u0E32\u0E28','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E19\u0E49\u0E33\u0E23\u0E49\u0E2D\u0E19','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E01\u0E32\u0E41\u0E1F','\u0E07\u0E32\u0E19\u0E0B\u0E48\u0E2D\u0E21\u0E41\u0E0B\u0E21','\u0E07\u0E32\u0E19\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07','\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E04\u0E23\u0E37\u0E2D\u0E02\u0E48\u0E32\u0E22'];
+const SLA_LIST=['K.0001','K.0002','K.0003','K.0006'];
+
+// Status → color mapping
+const SC={
+  '\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19':'#facc15',
+  '\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23':'#60a5fa',
+  '\u0E23\u0E2D\u0E0A\u0E34\u0E49\u0E19\u0E2A\u0E48\u0E27\u0E19':'#fb923c',
+  '\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19':'#4ade80',
+  '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01':'#f87171'
 };
-const SB = {
-  'ตรวจงาน':'b-yellow','อยู่ระหว่างดำเนินการ':'b-blue',
-  'รอชิ้นส่วน':'b-orange','เสร็จสิ้น':'b-green','ยกเลิก':'b-red'
+const statusColor=s=>SC[s]||'#94a3b8';
+const statusBadge=s=>({'\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19':'badge-yellow','\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23':'badge-blue','\u0E23\u0E2D\u0E0A\u0E34\u0E49\u0E19\u0E2A\u0E48\u0E27\u0E19':'badge-orange','\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19':'badge-green','\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01':'badge-red'}[s]||'badge-gray');
+const slaColor=s=>({'K.0001':'#f97316','K.0002':'#3b82f6','K.0003':'#a855f7','K.0006':'#6b7280'}[s]||'#6b7280');
+
+// Roles: superadmin > admin > manager > engineer > staff
+const ROLE_META={
+  superadmin:{label:'Super Admin',badge:'badge-red',seeAll:true,manageUsers:true,manageTickets:true,editStatus:true},
+  admin:     {label:'Admin',      badge:'badge-red',seeAll:true,manageUsers:false,manageTickets:true,editStatus:true},
+  manager:   {label:'Manager',    badge:'badge-blue',seeAll:true,manageUsers:false,manageTickets:true,editStatus:true},
+  engineer:  {label:'Engineer',   badge:'badge-teal',seeAll:false,manageUsers:false,manageTickets:false,editStatus:true},
+  staff:     {label:'Staff',      badge:'badge-gray',seeAll:false,manageUsers:false,manageTickets:false,editStatus:false},
 };
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const roleMeta=r=>ROLE_META[r]||ROLE_META.staff;
+const can=p=>roleMeta(STATE.currentUser?.role)[p]||false;
 
-// ── LOCAL HISTORY ─────────────────────────────────────────────────────────
-function myTickets(){
-  try{ return JSON.parse(localStorage.getItem('my_tickets')||'[]'); }catch{ return []; }
+// ── STATE ──────────────────────────────────────────────────────────────────
+let STATE={
+  users:null,tickets:[],
+  currentUser:null,page:'dashboard',
+  drawerTicket:null,editTicket:null,showAddTicket:false,
+  editUser:null,showAddUser:false,
+  filterStatus:'ALL',filterBrand:'ALL',search:'',ticketPage:1,
+  userSearch:'',userView:'grid',
+  larkOnline:false,lastSync:null,
+  toastTimer:null,
+};
+const PER_PAGE=15;
+
+// ── LOCAL USERS (auth only, not synced to Lark) ────────────────────────────
+const LOCAL_USERS_DEFAULT=[
+  {id:'u1',name:'Super Admin',    username:'superadmin',password:'super1234',  role:'superadmin',brand:'ALL',              active:true},
+  {id:'u2',name:'Admin System',   username:'admin',     password:'admin1234',  role:'admin',     brand:'ALL',              active:true},
+  {id:'u3',name:'Manager IT',     username:'manager',   password:'mgr1234',    role:'manager',   brand:'ALL',              active:true},
+  {id:'u4',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 1',username:'eng1',password:'eng1234',  role:'engineer',  brand:'Greyhound Coffee',active:true},
+  {id:'u5',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 2',username:'eng2',password:'eng5678',  role:'engineer',  brand:'Au Bon Pain',    active:true},
+  {id:'u6',name:'\u0E0A\u0E48\u0E32\u0E07\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04 3',username:'eng3',password:'eng9012',  role:'engineer',  brand:"Dunkin'",         active:true},
+  {id:'u7',name:'Staff User',     username:'staff1',    password:'staff1234',  role:'staff',     brand:'Funky Fries',     active:true},
+];
+
+function loadData(){
+  try{STATE.users=JSON.parse(localStorage.getItem('ts_users')||'null');}catch{}
+  if(!STATE.users)STATE.users=LOCAL_USERS_DEFAULT;
 }
-function saveMyTicket(t){
-  const arr = myTickets().filter(x=>x.id!==t.id);
-  arr.unshift(t);
-  try{ localStorage.setItem('my_tickets', JSON.stringify(arr.slice(0,20))); }catch{}
+function saveData(){
+  try{localStorage.setItem('ts_users',JSON.stringify(STATE.users));}catch{}
 }
 
-// ── SSE ───────────────────────────────────────────────────────────────────
-let _sse = null;
-let _trackedId = null;   // currently showing ticket id
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg,type=''){
+  if(STATE.toastTimer)clearTimeout(STATE.toastTimer);
+  const t=document.getElementById('toast');
+  if(!t)return;
+  t.textContent=msg;
+  t.style.display='block';
+  t.style.borderColor=type==='ok'?'rgba(74,222,128,.35)':type==='err'?'rgba(248,113,113,.35)':'';
+  STATE.toastTimer=setTimeout(()=>{const t2=document.getElementById('toast');if(t2)t2.style.display='none';},3000);
+}
+
+// ── LARK API CLIENT ────────────────────────────────────────────────────────
+let _sseConn=null,_autoInt=null;
+
+function setSyncUI(on){
+  const bar=document.getElementById('sync-bar');
+  const btn=document.getElementById('ts-refresh-btn');
+  if(bar)bar.style.display=on?'block':'none';
+  if(btn){btn.disabled=!!on;btn.classList.toggle('spinning',!!on);}
+}
+function setOnlineUI(on){
+  STATE.larkOnline=on;
+  const dot=document.getElementById('ts-online-dot');
+  if(dot){dot.classList.toggle('live',on);dot.title='Lark: '+(on?'Connected':'Disconnected');}
+}
+
+async function loadTicketsFromAPI(silent=false){
+  if(!silent)setSyncUI(true);
+  try{
+    const r=await fetch('/api/tickets',{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'api error');
+    STATE.tickets=j.tickets||[];
+    STATE.lastSync=new Date();
+    setOnlineUI(true);
+    if(!silent)showToast('\u2713 \u0E42\u0E2B\u0E25\u0E14\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E08\u0E32\u0E01 Lark \u0E41\u0E25\u0E49\u0E27','ok');
+    renderPageContent();
+  }catch(err){
+    setOnlineUI(false);
+    if(!silent)showToast('\u26A0\uFE0F \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D Lark: '+err.message,'err');
+  }finally{
+    setSyncUI(false);
+  }
+}
+
+async function apiPatchStatus(recordId,status){
+  if(!recordId)return false;
+  try{
+    const r=await fetch('/api/tickets/'+recordId+'/status',{
+      method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({status,updatedBy:STATE.currentUser?.name||'?'}),
+    });
+    return (await r.json()).ok;
+  }catch{return false;}
+}
+
+async function apiPatchFields(recordId,fields){
+  if(!recordId)return false;
+  try{
+    const r=await fetch('/api/tickets/'+recordId,{
+      method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(fields),
+    });
+    return (await r.json()).ok;
+  }catch{return false;}
+}
 
 function connectSSE(){
-  if(_sse){ try{_sse.close();}catch{} }
+  if(_sseConn){try{_sseConn.close();}catch{}_sseConn=null;}
   try{
-    _sse = new EventSource('/api/events');
-    _sse.onopen = () => setOnline(true);
-    _sse.onerror = () => { setOnline(false); setTimeout(connectSSE, 5000); };
-    _sse.addEventListener('ticket_updated', e => {
+    _sseConn=new EventSource('/api/events');
+    _sseConn.onopen=()=>setOnlineUI(true);
+    _sseConn.onerror=()=>{setOnlineUI(false);setTimeout(connectSSE,5000);};
+    _sseConn.addEventListener('ticket_updated',e=>{
       try{
-        const d = JSON.parse(e.data);
-        if(d.status && _trackedId && (d.recordId === _trackedId || d.ticketId === _trackedId)){
-          // re-render the shown ticket card with new status
-          const el = document.getElementById('track-result');
-          if(el){
-            const card = el.querySelector('[data-ticket-status]');
-            if(card) card.setAttribute('data-ticket-status', d.status);
-            const badgeEl = el.querySelector('.t-status-badge');
-            if(badgeEl) badgeEl.outerHTML = renderBadge(d.status);
-            const tlEl = el.querySelector('.tl-steps');
-            if(tlEl) tlEl.innerHTML = renderTimelineSteps(d.status);
-          }
-          showToast('🔄 สถานะ Ticket อัพเดทแล้ว!');
-        }
+        const d=JSON.parse(e.data);
+        STATE.tickets=STATE.tickets.map(t=>{
+          const match=t._recordId===d.recordId||t.id===d.recordId;
+          if(!match)return t;
+          if(d.status)return{...t,status:d.status};
+          if(d.fields)return{...t,...d.fields};
+          return t;
+        });
+        renderPageContent();
+        showToast('\u{1F504} Ticket \u0E2D\u0E31\u0E1E\u0E40\u0E14\u0E17');
       }catch{}
     });
-    _sse.addEventListener('ticket_created', e => {
+    _sseConn.addEventListener('ticket_created',e=>{
       try{
-        const d = JSON.parse(e.data);
-        if(d.ticket){ saveMyTicket({id:d.ticket.id||d.ticket._recordId, status:d.ticket.status, type:d.ticket.type, brand:d.ticket.brand, sentDate:d.ticket.sentDate}); }
+        const d=JSON.parse(e.data);
+        if(d.ticket)STATE.tickets=[d.ticket,...STATE.tickets];
+        renderPageContent();
+        showToast('\u{1F4E8} Ticket \u0E43\u0E2B\u0E21\u0E48\u0E08\u0E32\u0E01 Lark!');
       }catch{}
     });
-  }catch{ setTimeout(connectSSE, 5000); }
+  }catch{setTimeout(connectSSE,5000);}
 }
 
-function setOnline(on){
-  const dot = document.getElementById('odot');
-  const txt = document.getElementById('online-txt');
-  if(dot) dot.classList.toggle('live', on);
-  if(txt) txt.textContent = on ? 'เชื่อมต่อแล้ว' : 'ออฟไลน์';
+function startAutoRefresh(){
+  if(_autoInt)clearInterval(_autoInt);
+  _autoInt=setInterval(()=>loadTicketsFromAPI(true),30000);
 }
 
-// ── TABS ─────────────────────────────────────────────────────────────────
-function switchTab(tab){
-  document.getElementById('panel-report').style.display = tab==='report' ? '' : 'none';
-  document.getElementById('panel-track').style.display  = tab==='track'  ? '' : 'none';
-  document.getElementById('tab-report').classList.toggle('active', tab==='report');
-  document.getElementById('tab-track').classList.toggle('active', tab==='track');
-  if(tab === 'track') loadRecent();
+// ── RENDER ENGINE ──────────────────────────────────────────────────────────
+function render(){
+  const root=document.getElementById('app');
+  if(!root)return;
+  if(!STATE.currentUser){root.innerHTML=renderLogin();bindLogin();return;}
+  root.innerHTML=renderApp();
+  bindApp();
 }
 
-// ── FORM ─────────────────────────────────────────────────────────────────
-async function submitTicket(){
-  const name    = document.getElementById('f-name').value.trim();
-  const phone   = document.getElementById('f-phone').value.trim();
-  const brand   = document.getElementById('f-brand').value;
-  const type    = document.getElementById('f-type').value;
-  const detail  = document.getElementById('f-detail').value.trim();
-  const branch  = document.getElementById('f-branch').value.trim();
-  const loc     = document.getElementById('f-location').value.trim();
-
-  const errEl = document.getElementById('form-err');
-  errEl.textContent = '';
-
-  if(!name){   errEl.textContent='กรุณากรอกชื่อ-นามสกุล';   return;}
-  if(!phone){  errEl.textContent='กรุณากรอกเบอร์ติดต่อ';    return;}
-  if(!brand){  errEl.textContent='กรุณาเลือกแบรนด์';         return;}
-  if(!type){   errEl.textContent='กรุณาเลือกประเภทปัญหา';   return;}
-  if(!detail){ errEl.textContent='กรุณากรอกรายละเอียดปัญหา';return;}
-
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span><span>กำลังส่ง...</span>';
-
-  const payload = {
-    reporter:   name,
-    phone,
-    brand,
-    branchCode: branch,
-    type,
-    location:   loc,
-    detail,
-    status:     'ตรวจงาน',
-    // sentDate and createdAt will be set by larkService if column exists
-    // 'Sent Date' is in WRITABLE, so pass it:
-    sentDate:   new Date().toLocaleDateString('th-TH'),
-  };
-
-  try{
-    const r = await fetch('/api/tickets', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error||'เกิดข้อผิดพลาด');
-
-    const ticket = j.ticket;
-    const tId = ticket?.id || ticket?._recordId || ('IT-'+ Math.random().toString(36).slice(2,8).toUpperCase());
-    saveMyTicket({ id:tId, status:'ตรวจงาน', type, brand, sentDate:payload.sentDate });
-
-    // show success
-    document.getElementById('form-wrap').style.display = 'none';
-    const sb = document.getElementById('success-box');
-    sb.style.display = 'flex';
-    document.getElementById('success-id').textContent = tId;
-    window._lastTicketId = tId;
-    showToast('✅ ส่งแจ้งปัญหาสำเร็จ!');
-
-  }catch(err){
-    errEl.textContent = '❌ '+err.message;
-    btn.disabled = false;
-    btn.innerHTML = '<span>📤</span><span>ส่งแจ้งปัญหา</span>';
-  }
+function visibleTickets(){
+  if(!STATE.currentUser)return[];
+  return can('seeAll')?STATE.tickets:STATE.tickets.filter(t=>t.brand===STATE.currentUser.brand);
 }
 
-function resetForm(){
-  ['f-name','f-phone','f-branch','f-location','f-detail'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
-  ['f-brand','f-type'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.selectedIndex = 0;
-  });
-  document.getElementById('form-err').textContent = '';
-  document.getElementById('form-wrap').style.display = '';
-  document.getElementById('success-box').style.display = 'none';
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = false;
-  btn.innerHTML = '<span>📤</span><span>ส่งแจ้งปัญหา</span>';
-}
-
-function trackMyTicket(){
-  const id = window._lastTicketId;
-  if(!id) return;
-  switchTab('track');
-  document.getElementById('track-input').value = id;
-  searchTicket();
-}
-
-// ── SEARCH / TRACK ────────────────────────────────────────────────────────
-async function searchTicket(){
-  const q = (document.getElementById('track-input').value||'').trim();
-  if(!q) return;
-
-  const btn = document.getElementById('track-btn');
-  const res = document.getElementById('track-result');
-  btn.disabled = true; btn.textContent = '⏳';
-  res.innerHTML = '<div style="text-align:center;padding:30px;color:var(--fg2)">⏳ กำลังค้นหา...</div>';
-
-  try{
-    const r = await fetch('/api/tickets', {cache:'no-store'});
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error);
-
-    const tickets = (j.tickets||[]).filter(t =>{
-      const tid = t.id||t._recordId||'';
-      return tid.toLowerCase().includes(q.toLowerCase()) ||
-             (t.phone||'').includes(q);
-    });
-
-    if(tickets.length === 0){
-      res.innerHTML = `<div class="card" style="text-align:center;padding:30px">
-        <div style="font-size:30px;margin-bottom:12px;opacity:.3">🔍</div>
-        <div style="font-weight:600">ไม่พบ Ticket</div>
-        <div style="font-size:13px;color:var(--fg2);margin-top:5px">ลองใช้ Ticket ID หรือเบอร์โทรอื่น</div>
-      </div>`;
-    }else if(tickets.length === 1){
-      _trackedId = tickets[0]._recordId || tickets[0].id;
-      res.innerHTML = renderTicketCard(tickets[0]);
-    }else{
-      // multiple results
-      _trackedId = null;
-      res.innerHTML = `<div class="card">
-        <div class="card-title" style="margin-bottom:12px">📋 พบ ${tickets.length} รายการ</div>
-        <div class="recent-wrap">
-          ${tickets.map(t=>`<div class="recent-item" onclick="showSingleTicket(${JSON.stringify(t).replace(/"/g,'&quot;')})">
-            <div class="ri-left">
-              <div class="ri-id">${esc(t.id||t._recordId||'-')}</div>
-              <div class="ri-type">${esc(t.type||'-')} · ${esc(t.brand||'-')}</div>
-            </div>
-            <div class="ri-right">
-              <span class="badge ${SB[t.status]||'b-gray'}"><span class="badge-dot"></span>${esc(t.status||'-')}</span>
-              <span class="ri-date">${esc(t.sentDate||'-')}</span>
-            </div>
-          </div>`).join('')}
-        </div>
-      </div>`;
-    }
-  }catch(err){
-    res.innerHTML = `<div class="card" style="text-align:center;padding:28px;color:var(--red)">
-      ❌ ${esc(err.message)}
-    </div>`;
-  }finally{
-    btn.disabled = false; btn.textContent = 'ค้นหา';
-  }
-}
-
-function showSingleTicket(t){
-  _trackedId = t._recordId || t.id;
-  document.getElementById('track-result').innerHTML = renderTicketCard(t);
-}
-
-// ── RECENT ────────────────────────────────────────────────────────────────
-function loadRecent(){
-  const arr = myTickets();
-  const wrap = document.getElementById('recent-wrap');
-  const list = document.getElementById('recent-list');
-  if(arr.length === 0){ wrap.style.display='none'; return; }
-  wrap.style.display = '';
-  list.innerHTML = arr.map(t=>`
-  <div class="recent-item" onclick="quickTrack('${esc(t.id)}')">
-    <div class="ri-left">
-      <div class="ri-id">${esc(t.id)}</div>
-      <div class="ri-type">${esc(t.type||'-')} · ${esc(t.brand||'-')}</div>
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+function renderLogin(){
+  return`<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">\u{1F3AB}</div>
+      <div><div class="login-logo-text">IT Ticket System</div><div class="login-subtitle">\u0E23\u0E30\u0E1A\u0E1A\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23 Ticket \u0E20\u0E32\u0E22\u0E43\u0E19</div></div>
     </div>
-    <div class="ri-right">
-      <span class="badge ${SB[t.status]||'b-gray'}"><span class="badge-dot"></span>${esc(t.status||'-')}</span>
-      <span class="ri-date">${esc(t.sentDate||'-')}</span>
+    <div class="field"><label>Username</label><input id="inp-user" placeholder="\u0E01\u0E23\u0E2D\u0E01 Username" autocomplete="username"/></div>
+    <div class="field"><label>Password</label><input id="inp-pass" type="password" placeholder="\u0E01\u0E23\u0E2D\u0E01 Password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="btn-login">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A</button>
+    <div class="error-msg" id="login-err"></div>
+    <div class="demo-box">
+      <strong>Demo Accounts</strong>
+      <div class="demo-row"><span class="demo-u">superadmin</span><span class="demo-p">super1234</span><span class="demo-r">Super Admin</span></div>
+      <div class="demo-row"><span class="demo-u">admin</span><span class="demo-p">admin1234</span><span class="demo-r">Admin</span></div>
+      <div class="demo-row"><span class="demo-u">manager</span><span class="demo-p">mgr1234</span><span class="demo-r">Manager</span></div>
+      <div class="demo-row"><span class="demo-u">eng1</span><span class="demo-p">eng1234</span><span class="demo-r">Engineer (\u0E0A\u0E48\u0E32\u0E07 1)</span></div>
+      <div class="demo-row"><span class="demo-u">eng2</span><span class="demo-p">eng5678</span><span class="demo-r">Engineer (\u0E0A\u0E48\u0E32\u0E07 2)</span></div>
+      <div class="demo-row"><span class="demo-u">staff1</span><span class="demo-p">staff1234</span><span class="demo-r">Staff</span></div>
     </div>
-  </div>`).join('');
-}
-
-function quickTrack(id){
-  document.getElementById('track-input').value = id;
-  searchTicket();
-}
-
-// ── RENDER HELPERS ────────────────────────────────────────────────────────
-function renderBadge(status){
-  const c = SC[status]||'#94a3b8';
-  return `<span class="badge t-status-badge ${SB[status]||'b-gray'}"><span class="badge-dot"></span>${esc(status||'-')}</span>`;
-}
-
-function renderTimelineSteps(status){
-  const cancelled = status === 'ยกเลิก';
-  return TL_MAIN.map((s,i)=>{
-    const idx = TL_MAIN.indexOf(status);
-    let cls = '';
-    if(cancelled) cls = i===0?'done':'';
-    else if(i < idx)  cls = 'done';
-    else if(i === idx) cls = 'current';
-    const icon = cls==='done'?'✓': cls==='current'?'●':'○';
-    return `<div class="tl-step">
-      <div class="tl-dot ${cls}">${icon}</div>
-      <div class="tl-label ${cls?'active':''}">${esc(s)}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderTicketCard(t){
-  const status = t.status||'ตรวจงาน';
-  const cancelled = status==='ยกเลิก';
-  return`<div class="ticket-card" data-ticket-status="${esc(status)}">
-  <div class="ticket-header">
-    <div class="ticket-id-wrap">
-      <div class="ticket-id">${esc(t.id||t._recordId||'-')}</div>
-      <div class="ticket-type">${esc(t.type||'-')}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-      ${renderBadge(status)}
-      <span style="font-size:11px;color:var(--fg3)">วันที่: ${esc(t.sentDate||'-')}</span>
-    </div>
-  </div>
-  <div class="ticket-body">
-    <div class="t-field"><div class="t-label">แบรนด์</div><div class="t-value">${esc(t.brand||'-')}</div></div>
-    <div class="t-field"><div class="t-label">รหัสสาขา</div><div class="t-value mono">${esc(t.branchCode||'-')}</div></div>
-    <div class="t-field"><div class="t-label">ผู้แจ้ง</div><div class="t-value">${esc(t.reporter||'-')}</div></div>
-    <div class="t-field"><div class="t-label">เบอร์ติดต่อ</div><div class="t-value mono">${esc(t.phone||'-')}</div></div>
-    <div class="t-field"><div class="t-label">SLA</div><div class="t-value mono">${esc(t.sla||'-')}</div></div>
-    <div class="t-field"><div class="t-label">สถานที่</div><div class="t-value">${esc(t.location||'-')}</div></div>
-  </div>
-  ${t.detail?`<div class="ticket-detail"><strong style="color:var(--fg2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">รายละเอียด</strong><br/>${esc(t.detail)}</div>`:''}
-  ${cancelled?`<div style="padding:14px 18px;background:rgba(248,113,113,.07);border-top:1px solid rgba(248,113,113,.15);color:var(--red);font-size:13px">⛔ Ticket นี้ถูกยกเลิกแล้ว</div>`:`
-  <div class="timeline">
-    <div class="timeline-title">สถานะการดำเนินงาน</div>
-    <div class="tl-steps">${renderTimelineSteps(status)}</div>
-  </div>`}
-  <div class="ticket-footer">
-    <span style="font-size:12px;color:var(--fg3)">🔴 Live — อัพเดท real-time</span>
-    <button onclick="searchTicket()" style="padding:6px 14px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--fg2);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;">🔄 รีเฟรช</button>
   </div>
 </div>`;
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────
-let _toastTimer = null;
-function showToast(msg){
-  if(_toastTimer) clearTimeout(_toastTimer);
-  const t = document.getElementById('toast');
-  if(!t) return;
-  t.textContent = msg; t.style.display = 'block';
-  _toastTimer = setTimeout(()=>{ if(t)t.style.display='none'; }, 3000);
+function bindLogin(){
+  const doLogin=async()=>{
+    const uname=document.getElementById('inp-user').value.trim();
+    const pass=document.getElementById('inp-pass').value;
+    const found=STATE.users.find(x=>x.username===uname&&x.password===pass&&x.active);
+    const errEl=document.getElementById('login-err');
+    if(!found){if(errEl)errEl.textContent='Username \u0E2B\u0E23\u0E37\u0E2D Password \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07';return;}
+    STATE.currentUser=found;
+    STATE.filterBrand=can('seeAll')?'ALL':found.brand;
+    const btn=document.getElementById('btn-login');
+    if(btn){btn.disabled=true;btn.textContent='\u0E01\u0E33\u0E25\u0E31\u0E07\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D...';}
+    render();
+    await loadTicketsFromAPI(false);
+    connectSSE();
+    startAutoRefresh();
+  };
+  const loginBtn=document.getElementById('btn-login');
+  const passInp=document.getElementById('inp-pass');
+  const userInp=document.getElementById('inp-user');
+  if(loginBtn)loginBtn.onclick=doLogin;
+  if(passInp)passInp.onkeydown=e=>{if(e.key==='Enter')doLogin();};
+  if(userInp){userInp.onkeydown=e=>{if(e.key==='Enter')doLogin();};userInp.focus();}
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────────
-connectSSE();
+// ── APP SHELL ──────────────────────────────────────────────────────────────
+function renderApp(){
+  const u=STATE.currentUser;
+  const myT=visibleTickets();
+  const pendCnt=myT.filter(t=>t.status==='\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23').length;
+  const rm=roleMeta(u.role);
+  const NAV=[
+    {id:'dashboard',label:'Dashboard',icon:'\u{1F4CA}',badge:null},
+    {id:'tickets',label:'All Ticket',icon:'\u{1F3AB}',badge:myT.length},
+    {id:'inprogress',label:'\u0E01\u0E33\u0E25\u0E31\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23',icon:'\u2699\uFE0F',badge:pendCnt},
+    ...(rm.manageUsers?[{id:'users',label:'\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49',icon:'\u{1F465}',badge:STATE.users.length}]:[]),
+  ];
+  const bl=can('seeAll')?BRANDS.slice(1):[u.brand];
+  const pageLabel=NAV.find(n=>n.id===STATE.page)?.label||STATE.page;
+  return`<div id="ts-scrim" class="scrim" hidden></div>
+<aside id="ts-sidebar" class="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-logo-wrap">
+      <div class="sidebar-logo-icon">\u{1F3AB}</div>
+      <div class="sidebar-logo-text">IT Ticket</div>
+    </div>
+    <button class="close-btn" id="ts-close-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sidebar-scroll">
+    <div class="sidebar-sec">\u0E40\u0E21\u0E19\u0E39\u0E2B\u0E25\u0E31\u0E01</div>
+    ${NAV.map(n=>`<div class="nav-item ${STATE.page===n.id?'active':''}" data-nav="${n.id}">
+      <span class="nav-icon">${n.icon}</span><span>${n.label}</span>
+      ${n.badge!==null?`<span class="nav-badge">${n.badge}</span>`:''}
+    </div>`).join('')}
+    <div class="sidebar-sec" style="margin-top:6px">\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C</div>
+    ${bl.map(b=>`<div class="nav-item" data-nav-brand="${esc(b)}" style="font-size:12.5px">
+      <span style="width:7px;height:7px;border-radius:50%;background:${avatarColor(b)};flex-shrink:0;display:inline-block"></span>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(b)}</span>
+      <span class="nav-badge">${STATE.tickets.filter(t=>t.brand===b).length}</span>
+    </div>`).join('')}
+  </div>
+  <div class="sidebar-user-wrap">
+    <div class="sidebar-user" id="sidebar-user-btn">
+      <div class="avatar" style="width:30px;height:30px;font-size:12px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sidebar-username">${esc(u.name)}</div>
+        <div class="sidebar-role">${rm.label} \u00b7 ${u.brand==='ALL'?'\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C':esc(u.brand)}</div>
+      </div>
+    </div>
+    <div class="logout-btn" id="btn-logout"><span>\u{1F6AA}</span><span>\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E23\u0E30\u0E1A\u0E1A</span></div>
+  </div>
+</aside>
+<div class="topbar">
+  <div class="breadcrumb">
+    <span data-nav="dashboard">IT Portal</span>
+    <span style="color:var(--fg3);margin:0 2px">\u203a</span>
+    <span class="breadcrumb-cur">${pageLabel}</span>
+  </div>
+  <div class="topbar-right">
+    <div class="clock-pill">
+      <span id="ts-online-dot" class="online-dot ${STATE.larkOnline?'live':''}" title="Lark"></span>
+      <span id="ts-clock">--:--</span>
+      <span class="pill-sep"></span>
+      <span id="ts-temp">--\u00b0C</span>
+    </div>
+    <button id="ts-refresh-btn" class="refresh-btn" title="Refresh">\u{1F504}</button>
+    <span class="badge ${rm.badge}" style="font-size:10.5px">${rm.label}</span>
+  </div>
+</div>
+<div class="main"><div class="content" id="page-content">${renderPage()}</div></div>
+${renderModal()}${renderDrawer()}
+<div id="toast" class="toast" style="display:none"></div>`;
+}
 
-// ── PARTICLES ────────────────────────────────────────────────────────────
+function renderPage(){
+  if(STATE.page==='dashboard')return renderDashboard();
+  if(STATE.page==='tickets'||STATE.page==='inprogress')return renderTickets();
+  if(STATE.page==='users')return renderUsers();
+  return'';
+}
+
+// ── QUICK STATUS BUTTONS ──────────────────────────────────────────────────
+function sqBtns(ticket,compact=false){
+  if(!can('editStatus'))return`<span class="badge ${statusBadge(ticket.status)}" style="font-size:11px"><span class="badge-dot"></span>${esc((ticket.status||'').slice(0,8))}</span>`;
+  const rid=ticket._recordId||ticket.id;
+  return`<div class="sq-wrap">${STATUSES.map(s=>{
+    const c=statusColor(s);
+    const active=ticket.status===s;
+    return`<button class="sq-btn ${active?'sq-active':''}" data-sq-s="${esc(s)}" data-sq-r="${esc(rid)}"
+      style="color:${c};background:${active?c:'transparent'};border-color:${active?'transparent':c+'44'}"
+      title="${esc(s)}">${compact?esc(s.slice(0,3)):esc(s)}</button>`;
+  }).join('')}</div>`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const u=STATE.currentUser,rm=roleMeta(u.role);
+  const my=visibleTickets();
+  const cnt={};my.forEach(t=>{cnt[t.status]=(cnt[t.status]||0)+1;});
+  const bCnt={};my.forEach(t=>{bCnt[t.brand]=(bCnt[t.brand]||0)+1;});
+  const recent=[...my].sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)).slice(0,8);
+  const maxB=Math.max(1,...Object.values(bCnt));
+  return`<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  <div>
+    <h2 style="font-size:20px;font-weight:700">\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35, ${esc(u.name)} \u{1F44B}</h2>
+    <p style="font-size:13px;color:var(--fg2);margin-top:3px">${new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+    ${STATE.lastSync?`<p style="font-size:11px;color:var(--fg3);margin-top:2px">Sync \u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14: ${STATE.lastSync.toLocaleTimeString('th-TH')}</p>`:''}
+  </div>
+  <span class="badge ${rm.badge}" style="font-size:12px">${rm.label}</span>
+</div>
+<div class="stat-grid">
+  ${[
+    {label:'Ticket \u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14',val:my.length,c:'#60a5fa',i:'\u{1F3AB}'},
+    {label:'\u0E01\u0E33\u0E25\u0E31\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23',val:cnt['\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23']||0,c:'#60a5fa',i:'\u2699\uFE0F'},
+    {label:'\u0E23\u0E2D\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19',val:cnt['\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19']||0,c:'#facc15',i:'\u{1F50D}'},
+    {label:'\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19',val:cnt['\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19']||0,c:'#4ade80',i:'\u2705'},
+  ].map(s=>`<div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="stat-label"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${s.c};margin-right:5px"></span>${s.label}</div>
+      <span style="font-size:18px">${s.i}</span>
+    </div>
+    <div class="stat-val" style="color:${s.c};margin-top:8px">${s.val}</div>
+  </div>`).join('')}
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+  <div class="table-wrap">
+    <div style="padding:13px 15px;border-bottom:1px solid var(--b1);font-weight:600;font-size:14px">\u{1F3AB} Ticket \u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14</div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>ID</th><th>\u0E2A\u0E16\u0E32\u0E19\u0E30</th><th>\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</th>${can('editStatus')?'<th>\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30</th>':''}</tr></thead>
+      <tbody>${recent.map(t=>`<tr>
+        <td><span class="mono" style="color:var(--accent);cursor:pointer" data-open="${esc(t._recordId||t.id)}">${esc(t.id||t._recordId||'-')}</span></td>
+        <td><span class="badge ${statusBadge(t.status)}" style="font-size:10.5px"><span class="badge-dot"></span>${esc((t.status||'').slice(0,8))}</span></td>
+        <td style="font-size:12.5px">${esc(t.reporter||'-')}</td>
+        ${can('editStatus')?`<td>${sqBtns(t,true)}</td>`:''}
+      </tr>`).join('')}
+      ${recent.length===0?`<tr><td colspan="4"><div class="empty"><div class="empty-icon">\u{1F3AB}</div><div>\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35 Ticket</div></div></td></tr>`:''}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="table-wrap">
+    <div style="padding:13px 15px;border-bottom:1px solid var(--b1);font-weight:600;font-size:14px">\u{1F4CA} \u0E41\u0E22\u0E01\u0E15\u0E32\u0E21\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C</div>
+    <div style="padding:14px 16px">
+      ${Object.entries(bCnt).sort((a,b)=>b[1]-a[1]).slice(0,9).map(([brand,count])=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+        <div style="flex:1;font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(brand)}</div>
+        <div style="width:90px;background:var(--s3);border-radius:99px;height:6px;overflow:hidden">
+          <div style="height:100%;background:var(--accent);border-radius:99px;width:${Math.round(count/maxB*100)}%"></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--accent);min-width:22px;text-align:right">${count}</div>
+      </div>`).join('')}
+      ${Object.keys(bCnt).length===0?`<div class="empty" style="padding:20px 0"><div>\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25</div></div>`:''}
+    </div>
+  </div>
+</div>`;
+}
+
+// ── TICKETS PAGE ──────────────────────────────────────────────────────────
+function getFiltered(){
+  const u=STATE.currentUser;
+  return STATE.tickets.filter(t=>{
+    if(STATE.page==='inprogress'&&t.status!=='\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23')return false;
+    if(!can('seeAll')&&t.brand!==u.brand)return false;
+    if(STATE.filterBrand!=='ALL'&&t.brand!==STATE.filterBrand)return false;
+    if(STATE.filterStatus!=='ALL'&&t.status!==STATE.filterStatus)return false;
+    if(STATE.search){const q=STATE.search.toLowerCase();if(!(t.id+' '+t.reporter+' '+t.type+' '+t.detail+' '+t.branchCode).toLowerCase().includes(q))return false;}
+    return true;
+  });
+}
+
+function renderTickets(){
+  const u=STATE.currentUser;
+  const filtered=getFiltered();
+  const cnt={};filtered.forEach(t=>{cnt[t.status]=(cnt[t.status]||0)+1;});
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PER_PAGE));
+  const page=Math.min(STATE.ticketPage,totalPages);
+  const paged=filtered.slice((page-1)*PER_PAGE,page*PER_PAGE);
+  const grouped={};paged.forEach(t=>{if(!grouped[t.status])grouped[t.status]=[];grouped[t.status].push(t);});
+  const brandOpts=can('seeAll')?BRANDS:[u.brand];
+  return`<div class="stat-grid">
+  ${[
+    {label:'\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14',val:filtered.length,c:'#60a5fa'},
+    {label:'\u0E01\u0E33\u0E25\u0E31\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23',val:cnt['\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23']||0,c:'#60a5fa'},
+    {label:'\u0E23\u0E2D\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19',val:cnt['\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19']||0,c:'#facc15'},
+    {label:'\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19',val:cnt['\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19']||0,c:'#4ade80'},
+  ].map(s=>`<div class="stat-card">
+    <div class="stat-label"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${s.c};margin-right:5px"></span>${s.label}</div>
+    <div class="stat-val" style="color:${s.c}">${s.val}</div>
+  </div>`).join('')}
+</div>
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <div class="search-box">
+      <span style="color:var(--fg3)">\u{1F50D}</span>
+      <input id="search-inp" value="${esc(STATE.search)}" placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32 Ticket..."/>
+    </div>
+    <div class="filter-chips">
+      ${['ALL',...STATUSES].map(s=>`<button class="chip ${STATE.filterStatus===s?'active':''}" data-fst="${esc(s)}">
+        ${s==='ALL'?'\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14':esc(s)}${s!=='ALL'?` <span style="opacity:.6;font-size:10px">${cnt[s]||0}</span>`:''}
+      </button>`).join('')}
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      ${can('seeAll')?`<select id="brand-filter" style="padding:6px 10px;border:1px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:12.5px;color:var(--fg);background:var(--s1)">
+        ${brandOpts.map(b=>`<option value="${esc(b)}" ${STATE.filterBrand===b?'selected':''}>${b==='ALL'?'\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C':esc(b)}</option>`).join('')}
+      </select>`:''}
+      ${can('manageTickets')?`<button class="btn btn-primary btn-sm" id="btn-add-ticket">\u2795 \u0E40\u0E1E\u0E34\u0E48\u0E21 Ticket</button>`:''}
+    </div>
+  </div>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th>Ticket ID</th>
+        ${can('editStatus')?'<th>\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30</th>':'<th>\u0E2A\u0E16\u0E32\u0E19\u0E30</th>'}
+        <th>\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32</th><th>SLA</th><th>\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E48\u0E07</th><th>\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</th><th>\u0E40\u0E1A\u0E2D\u0E23\u0E4C</th><th>\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17</th><th>\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${Object.entries(grouped).map(([status,rows])=>`
+        <tr class="row-group"><td colspan="20">
+          <span class="badge ${statusBadge(status)}" style="font-size:11px"><span class="badge-dot"></span>${esc(status)}</span>
+          <span style="margin-left:8px;color:var(--fg3)">${rows.length} \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23</span>
+        </td></tr>
+        ${rows.map(t=>`<tr>
+          <td><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" data-open="${esc(t._recordId||t.id)}">${esc(t.id||t._recordId||'-')}</span></td>
+          <td>${sqBtns(t,true)}</td>
+          <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.branchCode||'-')}</span></td>
+          <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.sla||'-')}</span></td>
+          <td class="mono" style="font-size:11.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
+          <td style="font-weight:500;white-space:nowrap">${esc(t.reporter||'-')}</td>
+          <td class="mono" style="font-size:11.5px">${esc(t.phone||'-')}</td>
+          <td><span style="background:var(--s2);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--fg2);white-space:nowrap">${esc((t.type||'-').slice(0,14))}</span></td>
+          <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--fg2)">${esc(t.detail||'-')}</td>
+          <td><div style="display:flex;gap:3px">
+            <button class="btn btn-ghost btn-xs" data-open="${esc(t._recordId||t.id)}" title="\u0E14\u0E39">\u{1F441}</button>
+            ${can('manageTickets')?`<button class="btn btn-ghost btn-xs" data-edit="${esc(t._recordId||t.id)}" title="\u0E41\u0E01\u0E49\u0E44\u0E02">\u270F\uFE0F</button>`:''}
+          </div></td>
+        </tr>`).join('')}`).join('')}
+        ${paged.length===0?`<tr><td colspan="20"><div class="empty"><div class="empty-icon">\u{1F50D}</div><div>\u0E44\u0E21\u0E48\u0E1E\u0E1A Ticket</div><div style="font-size:12px;color:var(--fg3)">\u0E25\u0E2D\u0E07\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19 filter</div></div></td></tr>`:''}
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <div class="page-info">\u0E41\u0E2A\u0E14\u0E07 ${filtered.length===0?0:Math.min((page-1)*PER_PAGE+1,filtered.length)}-${Math.min(page*PER_PAGE,filtered.length)} \u0E08\u0E32\u0E01 ${filtered.length} \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23</div>
+    <div class="page-btns">
+      <button class="page-btn" ${page===1?'disabled':''} data-page="${page-1}">\u2039</button>
+      ${Array.from({length:totalPages},(_,i)=>i+1).filter(p=>p===1||p===totalPages||Math.abs(p-page)<=1).map((p,i,arr)=>
+        (i>0&&arr[i-1]!==p-1?'<span style="padding:0 4px;color:var(--fg3)">...</span>':'')+
+        `<button class="page-btn ${page===p?'active':''}" data-page="${p}">${p}</button>`).join('')}
+      <button class="page-btn" ${page>=totalPages?'disabled':''} data-page="${page+1}">\u203a</button>
+    </div>
+  </div>
+</div>`;
+}
+
+// ── USERS PAGE ────────────────────────────────────────────────────────────
+function renderUsers(){
+  if(!can('manageUsers'))return`<div class="empty"><div class="empty-icon">\u{1F512}</div><div>\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E40\u0E02\u0E49\u0E32\u0E16\u0E36\u0E07</div></div>`;
+  const filtered=STATE.users.filter(u=>`${u.name} ${u.username} ${u.brand} ${u.role}`.toLowerCase().includes(STATE.userSearch.toLowerCase()));
+  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  <div>
+    <h2 style="font-size:20px;font-weight:700">\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</h2>
+    <p style="font-size:13px;color:var(--fg2);margin-top:3px">\u0E40\u0E1E\u0E34\u0E48\u0E21 \u0E25\u0E1A \u0E41\u0E01\u0E49\u0E44\u0E02 \u0E41\u0E25\u0E30\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C</p>
+  </div>
+  <button class="btn btn-primary" id="btn-add-user">\u2795 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49</button>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+  <div class="search-box" style="max-width:280px">
+    <span style="color:var(--fg3)">\u{1F50D}</span>
+    <input id="user-search-inp" value="${esc(STATE.userSearch)}" placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49..."/>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:4px">
+    ${['grid','table'].map(v=>`<button class="btn btn-sm ${STATE.userView===v?'btn-primary':'btn-outline'}" data-uview="${v}">${v==='grid'?'\u229E \u0E01\u0E32\u0E23\u0E4C\u0E14':'\u2261 \u0E15\u0E32\u0E23\u0E32\u0E07'}</button>`).join('')}
+  </div>
+</div>
+${STATE.userView==='grid'?`
+<div class="user-grid">
+  ${filtered.map(u=>`
+  <div class="user-card" style="opacity:${u.active?1:.6}">
+    ${!u.active?`<div style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700">\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>`:''}
+    <div style="position:absolute;top:12px;right:12px;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--fg3)" data-eu="${esc(u.id)}" title="\u0E41\u0E01\u0E49\u0E44\u0E02">\u22EF</div>
+    <div class="avatar" style="width:52px;height:52px;font-size:20px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
+    <div>
+      <div style="font-size:15px;font-weight:600">${esc(u.name)}</div>
+      <div style="font-size:12px;color:var(--fg2);font-family:'DM Mono',monospace">@${esc(u.username)}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+      <span class="badge ${roleMeta(u.role).badge}">${roleMeta(u.role).label}</span>
+      <span class="badge badge-gray">${u.brand==='ALL'?'\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C':esc(u.brand)}</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-outline btn-sm" data-eu="${esc(u.id)}">\u270F\uFE0F \u0E41\u0E01\u0E49\u0E44\u0E02</button>
+      <button class="btn btn-outline btn-sm" data-tu="${esc(u.id)}">${u.active?'\u{1F512} \u0E1B\u0E34\u0E14':'\u{1F513} \u0E40\u0E1B\u0E34\u0E14'}</button>
+      ${u.id!==STATE.currentUser.id?`<button class="btn btn-danger btn-sm" data-du="${esc(u.id)}">\u{1F5D1}</button>`:''}
+    </div>
+  </div>`).join('')}
+</div>`:`
+<div class="table-wrap"><div class="tbl-scroll"><table>
+  <thead><tr><th>\u0E0A\u0E37\u0E48\u0E2D</th><th>Username</th><th>Role</th><th>\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C</th><th>\u0E2A\u0E16\u0E32\u0E19\u0E30</th><th>\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23</th></tr></thead>
+  <tbody>${filtered.map(u=>`<tr style="opacity:${u.active?1:.55}">
+    <td><div style="display:flex;align-items:center;gap:9px">
+      <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
+      <div><div style="font-weight:500">${esc(u.name)}</div>${u.id===STATE.currentUser.id?`<div style="font-size:11px;color:var(--accent)">\u25C4 \u0E04\u0E38\u0E13</div>`:''}</div>
+    </div></td>
+    <td class="mono">@${esc(u.username)}</td>
+    <td><span class="badge ${roleMeta(u.role).badge}">${roleMeta(u.role).label}</span></td>
+    <td style="font-size:12.5px;color:var(--fg2)">${u.brand==='ALL'?'\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C':esc(u.brand)}</td>
+    <td><span class="badge ${u.active?'badge-green':'badge-red'}"><span class="badge-dot"></span>${u.active?'\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19':'\u0E1B\u0E34\u0E14'}</span></td>
+    <td><div style="display:flex;gap:3px">
+      <button class="btn btn-ghost btn-sm" data-eu="${esc(u.id)}">\u270F\uFE0F</button>
+      <button class="btn btn-ghost btn-sm" data-tu="${esc(u.id)}">${u.active?'\u{1F512}':'\u{1F513}'}</button>
+      ${u.id!==STATE.currentUser.id?`<button class="btn btn-ghost btn-sm" data-du="${esc(u.id)}">\u{1F5D1}</button>`:''}
+    </div></td>
+  </tr>`).join('')}</tbody>
+</table></div></div>`}`;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+function renderModal(){
+  if(STATE.showAddTicket||STATE.editTicket)return renderTicketModal();
+  if(STATE.showAddUser||STATE.editUser)return renderUserModal();
+  return'';
+}
+
+function renderTicketModal(){
+  const t=STATE.editTicket||{};
+  const isEdit=!!STATE.editTicket;
+  const v=(k,d='')=>esc(t[k]||d);
+  return`<div class="overlay" id="modal-overlay">
+  <div class="modal" style="width:600px">
+    <div class="modal-title">${isEdit?'\u{1F4DD} \u0E41\u0E01\u0E49\u0E44\u0E02 '+(t.id||t._recordId||''):'\u2795 \u0E40\u0E1E\u0E34\u0E48\u0E21 Ticket \u0E43\u0E2B\u0E21\u0E48'}</div>
+    <div class="modal-grid">
+      <div class="field"><label>\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C</label>
+        <select id="m-brand">${BRANDS.slice(1).map(b=>`<option ${t.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select></div>
+      <div class="field"><label>\u0E2A\u0E16\u0E32\u0E19\u0E30</label>
+        <select id="m-status">${STATUSES.map(s=>`<option ${(t.status||STATUSES[0])===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+      <div class="field"><label>\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07 *</label><input id="m-reporter" value="${v('reporter')}" placeholder="\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25"/></div>
+      <div class="field"><label>\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D *</label><input id="m-phone" value="${v('phone')}" placeholder="0XX-XXX-XXXX"/></div>
+      <div class="field"><label>\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32</label><input id="m-branch" value="${v('branchCode')}" placeholder="K.XXXX"/></div>
+      <div class="field"><label>SLA</label>
+        <select id="m-sla">${SLA_LIST.map(s=>`<option ${(t.sla||SLA_LIST[0])===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field"><label>\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17</label>
+        <select id="m-type">${TYPES.map(s=>`<option ${t.type===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+      <div class="field"><label>\u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48</label><input id="m-location" value="${v('location')}" placeholder="\u0E0A\u0E31\u0E49\u0E19/\u0E42\u0E0B\u0E19"/></div>
+    </div>
+    <div class="field"><label>\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</label>
+      <textarea id="m-detail" rows="3" placeholder="\u0E2D\u0E18\u0E34\u0E1A\u0E32\u0E22\u0E1B\u0E31\u0E0D\u0E2B\u0E32...">${v('detail')}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modal-cancel">\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01</button>
+      <button class="btn btn-primary" id="modal-save">${isEdit?'\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E1B\u0E22\u0E31\u0E07 Lark':'\u0E40\u0E1E\u0E34\u0E48\u0E21 Ticket'}</button>
+    </div>
+  </div>
+</div>`;
+}
+
+function renderUserModal(){
+  const u=STATE.editUser||{};
+  const isEdit=!!STATE.editUser;
+  const v=(k,d='')=>esc(u[k]||d);
+  return`<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">
+      <div class="avatar" style="width:32px;height:32px;font-size:13px;background:${avatarColor(u.name||'')}">${initials(u.name||'')}</div>
+      ${isEdit?'\u0E41\u0E01\u0E49\u0E44\u0E02\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49':'\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E43\u0E2B\u0E21\u0E48'}
+    </div>
+    <div class="field"><label>\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25 *</label><input id="m-name" value="${v('name')}" placeholder="\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E15\u0E47\u0E21"/></div>
+    <div class="modal-grid">
+      <div class="field"><label>Username *</label><input id="m-username" value="${v('username')}" placeholder="\u0E15\u0E31\u0E49\u0E07 username"/></div>
+      <div class="field"><label>Password *</label><input id="m-password" value="${v('password')}" placeholder="\u0E15\u0E31\u0E49\u0E07 password"/></div>
+      <div class="field"><label>Role</label>
+        <select id="m-role">
+          <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Super Admin</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+          <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
+          <option value="engineer" ${(!u.role||u.role==='engineer')?'selected':''}>Engineer</option>
+          <option value="staff" ${u.role==='staff'?'selected':''}>Staff</option>
+        </select></div>
+      <div class="field"><label>\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C</label>
+        <select id="m-ubrand">${BRANDS.map(b=>`<option ${u.brand===b?'selected':''}>${b==='ALL'?'ALL (\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C)':esc(b)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400">
+      <input type="checkbox" id="m-active" ${u.active!==false?'checked':''}/>\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 Account
+    </label></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modal-cancel">\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01</button>
+      <button class="btn btn-primary" id="modal-save">${isEdit?'\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01':'\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49'}</button>
+    </div>
+  </div>
+</div>`;
+}
+
+// ── DRAWER ────────────────────────────────────────────────────────────────
+function renderDrawer(){
+  if(!STATE.drawerTicket)return'';
+  const t=STATE.tickets.find(x=>x._recordId===STATE.drawerTicket||x.id===STATE.drawerTicket);
+  if(!t)return'';
+  return`<div class="drawer-overlay" id="drawer-overlay"></div>
+<div class="drawer">
+  <div class="drawer-head">
+    <div>
+      <div class="mono" style="font-size:12px;color:var(--fg2);margin-bottom:3px">${esc(t.id||t._recordId||'-')}</div>
+      <div style="font-size:17px;font-weight:700">${esc(t.type||'\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17')}</div>
+      <div style="margin-top:5px"><span class="badge ${statusBadge(t.status)}"><span class="badge-dot"></span>${esc(t.status||'-')}</span></div>
+    </div>
+    <button class="btn btn-ghost" id="close-drawer" style="font-size:18px;flex-shrink:0">\u2715</button>
+  </div>
+  <div class="drawer-body">
+    ${can('editStatus')?`<div class="drawer-sec">\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30 (\u0E01\u0E14\u0E40\u0E25\u0E22)</div>
+    <div class="sq-wrap" style="gap:8px;margin-bottom:4px">
+      ${STATUSES.map(s=>{const c=statusColor(s);const active=t.status===s;return`<button class="sq-btn ${active?'sq-active':''}" data-sq-s="${esc(s)}" data-sq-r="${esc(t._recordId||t.id)}"
+        style="color:${c};background:${active?c:'transparent'};border-color:${active?'transparent':c+'55'};padding:7px 14px;font-size:12.5px">${esc(s)}</button>`;}).join('')}
+    </div>`:''}
+    <div class="drawer-sec" style="margin-top:20px">\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25 Ticket</div>
+    ${[
+      ['\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02',t.id||t._recordId],
+      ['\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C',t.brand],
+      ['\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32',t.branchCode],
+      ['SLA',t.sla],
+      ['\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E48\u0E07',t.sentDate],
+      ['SLA Date',t.slaDate],
+    ].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value mono" style="font-size:12.5px">${esc(v||'-')}</div></div>`).join('')}
+    <div class="drawer-sec">\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</div>
+    ${[
+      ['\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07',t.reporter],
+      ['\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D',t.phone],
+      ['\u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48',t.location],
+    ].map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value">${esc(v||'-')}</div></div>`).join('')}
+    <div class="drawer-sec">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</div>
+    <div style="padding:13px 15px;background:var(--s2);border-radius:10px;font-size:13.5px;line-height:1.75;color:var(--fg)">${esc(t.detail||'-')}</div>
+  </div>
+</div>`;
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────
+let sidebarOpen=false;
+function openSidebar(){
+  sidebarOpen=true;
+  const sb=document.getElementById('ts-sidebar'),sc=document.getElementById('ts-scrim');
+  if(!sb||!sc)return;
+  sb.classList.add('open');sc.hidden=false;document.body.classList.add('menu-open');
+  sb.querySelectorAll('.nav-item').forEach((el,i)=>{el.classList.remove('visible');el.style.animationDelay=i*28+40+'ms';void el.offsetWidth;el.classList.add('visible');});
+}
+function closeSidebar(){
+  sidebarOpen=false;
+  const sb=document.getElementById('ts-sidebar'),sc=document.getElementById('ts-scrim');
+  if(!sb||!sc)return;
+  sb.classList.remove('open');sc.hidden=true;document.body.classList.remove('menu-open');
+}
+function addRipple(el,e){
+  const rect=el.getBoundingClientRect(),src=e?.touches?.[0]||e;
+  const x=src?src.clientX-rect.left:rect.width/2,y=src?src.clientY-rect.top:rect.height/2;
+  const size=Math.max(rect.width,rect.height),r=document.createElement('span');
+  r.className='btn-ripple';r.style.cssText=`width:${size}px;height:${size}px;left:${x-size/2}px;top:${y-size/2}px;`;
+  el.appendChild(r);r.addEventListener('animationend',()=>r.remove());
+}
+
+// ── BIND APP ──────────────────────────────────────────────────────────────
+function bindApp(){
+  const menuFab=document.getElementById('menuFab');
+  const tsClose=document.getElementById('ts-close-btn');
+  const tsScrim=document.getElementById('ts-scrim');
+  const tsSb=document.getElementById('ts-sidebar');
+
+  if(menuFab)menuFab.onclick=e=>{addRipple(menuFab,e);openSidebar();};
+  if(tsClose)tsClose.onclick=e=>{addRipple(tsClose,e);closeSidebar();};
+  if(tsScrim)tsScrim.onclick=closeSidebar;
+
+  let tx0=null,ty0=null;
+  if(tsSb){
+    tsSb.addEventListener('touchstart',e=>{const t=e.touches[0];tx0=t.clientX;ty0=t.clientY;},{passive:true});
+    tsSb.addEventListener('touchmove',e=>{if(!sidebarOpen||tx0==null)return;const t=e.touches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;if(Math.abs(dy)>Math.abs(dx))return;if(dx<-50){closeSidebar();tx0=ty0=null;}},{passive:true});
+    tsSb.addEventListener('touchend',()=>{tx0=ty0=null;},{passive:true});
+  }
+  document.onkeydown=e=>{if(e.key==='Escape'){closeSidebar();if(STATE.drawerTicket){STATE.drawerTicket=null;render();}}};
+
+  // NAV
+  document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>{STATE.page=el.dataset.nav;STATE.ticketPage=1;closeSidebar();render();});
+  document.querySelectorAll('[data-nav-brand]').forEach(el=>el.onclick=()=>{STATE.page='tickets';STATE.filterBrand=el.dataset.navBrand;STATE.ticketPage=1;closeSidebar();render();});
+
+  // LOGOUT
+  const logoutBtn=document.getElementById('btn-logout');
+  if(logoutBtn)logoutBtn.onclick=()=>{
+    STATE.currentUser=null;closeSidebar();
+    if(_sseConn){try{_sseConn.close();}catch{}_sseConn=null;}
+    if(_autoInt){clearInterval(_autoInt);_autoInt=null;}
+    render();
+  };
+
+  // SIDEBAR USER → go to users page
+  const subBtn=document.getElementById('sidebar-user-btn');
+  if(subBtn)subBtn.onclick=()=>{if(can('manageUsers')){STATE.page='users';closeSidebar();render();}};
+
+  // CLOCK
+  function updateClock(){
+    const el=document.getElementById('ts-clock');if(!el)return;
+    const now=new Date(),m=window.innerWidth<480;
+    el.textContent=m?now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}):now.toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  clearInterval(window._ck);window._ck=setInterval(updateClock,1000);updateClock();
+  if(!window._tempLoaded){
+    window._tempLoaded=true;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m',{cache:'no-store'})
+      .then(r=>r.json()).then(j=>{const t=Math.round(j?.current?.temperature_2m);if(Number.isFinite(t)){const el=document.getElementById('ts-temp');if(el)el.textContent=t+'\u00b0C';}}).catch(()=>{});
+  }
+
+  // REFRESH
+  const rfBtn=document.getElementById('ts-refresh-btn');
+  if(rfBtn)rfBtn.onclick=()=>loadTicketsFromAPI(false);
+
+  // SEARCH + FILTER
+  const searchInp=document.getElementById('search-inp');
+  if(searchInp)searchInp.oninput=e=>{STATE.search=e.target.value;STATE.ticketPage=1;renderPageContent();};
+  const brandFilter=document.getElementById('brand-filter');
+  if(brandFilter)brandFilter.onchange=e=>{STATE.filterBrand=e.target.value;STATE.ticketPage=1;renderPageContent();};
+  document.querySelectorAll('[data-fst]').forEach(el=>el.onclick=()=>{STATE.filterStatus=el.dataset.fst;STATE.ticketPage=1;renderPageContent();});
+  document.querySelectorAll('[data-page]').forEach(el=>el.onclick=()=>{if(!el.disabled){STATE.ticketPage=parseInt(el.dataset.page);renderPageContent();}});
+
+  // OPEN DRAWER
+  document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>{STATE.drawerTicket=el.dataset.open;render();});
+
+  // EDIT TICKET
+  document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>{
+    const rid=el.dataset.edit;
+    STATE.editTicket=STATE.tickets.find(t=>t._recordId===rid||t.id===rid)||null;
+    STATE.showAddTicket=false;render();
+  });
+
+  // ADD TICKET
+  const addTBtn=document.getElementById('btn-add-ticket');
+  if(addTBtn)addTBtn.onclick=()=>{STATE.showAddTicket=true;STATE.editTicket=null;render();};
+
+  // QUICK STATUS BUTTONS (table + dashboard rows)
+  document.querySelectorAll('[data-sq-s]').forEach(el=>el.onclick=async ev=>{
+    ev.stopPropagation();
+    const s=el.dataset.sqS,rid=el.dataset.sqR;
+    el.disabled=true;
+    // optimistic update
+    STATE.tickets=STATE.tickets.map(t=>(t._recordId===rid||t.id===rid)?{...t,status:s}:t);
+    // update all sq buttons for this rid
+    document.querySelectorAll(`[data-sq-r="${rid}"]`).forEach(b=>{
+      const c=statusColor(b.dataset.sqS);
+      const active=b.dataset.sqS===s;
+      b.classList.toggle('sq-active',active);
+      b.style.color=c;
+      b.style.background=active?c:'transparent';
+      b.style.borderColor=active?'transparent':c+'44';
+    });
+    const ok=await apiPatchStatus(rid,s);
+    if(ok)showToast('\u2713 \u0E2A\u0E16\u0E32\u0E19\u0E30 \u2192 '+s,'ok');
+    else{showToast('\u26A0\uFE0F Lark \u0E2D\u0E31\u0E1E\u0E40\u0E14\u0E17\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08','err');}
+    el.disabled=false;
+  });
+
+  // USERS PAGE
+  const addUBtn=document.getElementById('btn-add-user');
+  if(addUBtn)addUBtn.onclick=()=>{STATE.showAddUser=true;STATE.editUser=null;render();};
+  const userSearchInp=document.getElementById('user-search-inp');
+  if(userSearchInp)userSearchInp.oninput=e=>{STATE.userSearch=e.target.value;renderPageContent();};
+  document.querySelectorAll('[data-uview]').forEach(el=>el.onclick=()=>{STATE.userView=el.dataset.uview;renderPageContent();});
+  document.querySelectorAll('[data-eu]').forEach(el=>el.onclick=()=>{STATE.editUser=STATE.users.find(u=>u.id===el.dataset.eu)||null;STATE.showAddUser=false;render();});
+  document.querySelectorAll('[data-tu]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.tu;
+    if(id===STATE.currentUser.id){showToast('\u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1B\u0E34\u0E14\u0E15\u0E31\u0E27\u0E40\u0E2D\u0E07\u0E44\u0E14\u0E49');return;}
+    const u=STATE.users.find(x=>x.id===id);
+    STATE.users=STATE.users.map(x=>x.id===id?{...x,active:!x.active}:x);
+    saveData();showToast(u?.active?'\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27':'\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27');renderPageContent();
+  });
+  document.querySelectorAll('[data-du]').forEach(el=>el.onclick=()=>{
+    if(!confirm('\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E01\u0E32\u0E23\u0E25\u0E1A\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49?'))return;
+    STATE.users=STATE.users.filter(u=>u.id!==el.dataset.du);
+    saveData();showToast('\u0E25\u0E1A\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27');renderPageContent();
+  });
+
+  // MODAL
+  const modalOverlay=document.getElementById('modal-overlay');
+  if(modalOverlay)modalOverlay.onclick=e=>{if(e.target.id==='modal-overlay')closeModal();};
+  const modalCancel=document.getElementById('modal-cancel');
+  if(modalCancel)modalCancel.onclick=closeModal;
+  const modalSave=document.getElementById('modal-save');
+  if(modalSave)modalSave.onclick=saveModal;
+
+  // DRAWER
+  const drawerOverlay=document.getElementById('drawer-overlay');
+  if(drawerOverlay)drawerOverlay.onclick=()=>{STATE.drawerTicket=null;render();};
+  const closeDrawer=document.getElementById('close-drawer');
+  if(closeDrawer)closeDrawer.onclick=()=>{STATE.drawerTicket=null;render();};
+}
+
+// ── MODAL ACTIONS ─────────────────────────────────────────────────────────
+function closeModal(){STATE.showAddTicket=false;STATE.editTicket=null;STATE.showAddUser=false;STATE.editUser=null;render();}
+function saveModal(){if(STATE.showAddTicket||STATE.editTicket)saveTicketModal();else saveUserModal();}
+
+async function saveTicketModal(){
+  const reporter=(document.getElementById('m-reporter')||{}).value?.trim();
+  const phone=(document.getElementById('m-phone')||{}).value?.trim();
+  if(!reporter||!phone){alert('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07\u0E41\u0E25\u0E30\u0E40\u0E1A\u0E2D\u0E23\u0E4C');return;}
+  const fields={
+    brand:document.getElementById('m-brand').value,
+    status:document.getElementById('m-status').value,
+    reporter,phone,
+    branchCode:document.getElementById('m-branch').value,
+    sla:document.getElementById('m-sla').value,
+    type:document.getElementById('m-type').value,
+    location:document.getElementById('m-location').value,
+    detail:document.getElementById('m-detail').value,
+  };
+  const saveBtn=document.getElementById('modal-save');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='\u0E01\u0E33\u0E25\u0E31\u0E07\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01...';}
+  if(STATE.editTicket&&STATE.editTicket._recordId){
+    const ok=await apiPatchFields(STATE.editTicket._recordId,fields);
+    if(ok){STATE.tickets=STATE.tickets.map(t=>t._recordId===STATE.editTicket._recordId?{...t,...fields}:t);showToast('\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E1B\u0E22\u0E31\u0E07 Lark \u0E41\u0E25\u0E49\u0E27 \u2713','ok');}
+  }else{
+    try{
+      const r=await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...fields,sentDate:new Date().toLocaleDateString('th-TH'),createdAt:new Date().toISOString()})});
+      const j=await r.json();
+      if(j.ok){STATE.tickets=[j.ticket,...STATE.tickets];showToast('\u0E40\u0E1E\u0E34\u0E48\u0E21 Ticket \u0E43\u0E19 Lark \u0E41\u0E25\u0E49\u0E27 \u2713','ok');}
+      else throw new Error(j.error);
+    }catch(err){showToast('\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08: '+err.message,'err');if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='\u0E40\u0E1E\u0E34\u0E48\u0E21 Ticket';}return;}
+  }
+  closeModal();
+}
+
+function saveUserModal(){
+  const name=(document.getElementById('m-name')||{}).value?.trim();
+  const username=(document.getElementById('m-username')||{}).value?.trim();
+  const password=(document.getElementById('m-password')||{}).value;
+  if(!name||!username||!password){alert('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A');return;}
+  const brand=document.getElementById('m-ubrand').value.replace(' (\u0E17\u0E38\u0E01\u0E41\u0E1A\u0E23\u0E19\u0E14\u0E4C)','');
+  const user={id:STATE.editUser?.id||('u'+uid()),name,username,password,role:document.getElementById('m-role').value,brand,active:document.getElementById('m-active').checked};
+  if(STATE.editUser)STATE.users=STATE.users.map(u=>u.id===user.id?user:u);
+  else{if(STATE.users.find(u=>u.username===username)){alert('Username \u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27');return;}STATE.users=[...STATE.users,user];}
+  saveData();showToast(STATE.editUser?'\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E41\u0E25\u0E49\u0E27':'\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27','ok');closeModal();
+}
+
+function renderPageContent(){
+  const pc=document.getElementById('page-content');
+  if(pc){pc.innerHTML=renderPage();bindApp();}
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadData();
+render();
+
+// ── PARTICLE CANVAS ───────────────────────────────────────────────────────
 (function(){
-  const cv = document.getElementById('bgCanvas'); if(!cv) return;
-  const ctx = cv.getContext('2d'); let W, H;
-  function resize(){ W=cv.width=window.innerWidth; H=cv.height=window.innerHeight; }
-  window.addEventListener('resize', resize, {passive:true}); resize();
-  const mob = window.innerWidth < 600, COUNT = mob?16:35, DIST = mob?60:90;
-  const pts = Array.from({length:COUNT},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+.3,vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12,o:Math.random()*.3+.08}));
+  const cv=document.getElementById('bgCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');let W,H;
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  window.addEventListener('resize',resize,{passive:true});resize();
+  const mob=window.innerWidth<600,COUNT=mob?20:45,DIST=mob?65:100;
+  const pts=Array.from({length:COUNT},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+.3,vx:(Math.random()-.5)*.14,vy:(Math.random()-.5)*.14,o:Math.random()*.38+.1}));
+  let mx=-999,my=-999;
+  if(!mob)window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;},{passive:true});
   function draw(){
     ctx.clearRect(0,0,W,H);
     pts.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy;
-      if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(150,190,255,${p.o})`; ctx.fill();
+      if(!mob){const dx=p.x-mx,dy=p.y-my,d=Math.sqrt(dx*dx+dy*dy);if(d<100){p.vx+=dx/d*.03;p.vy+=dy/d*.03;}const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);if(sp>.5){p.vx*=.5/sp;p.vy*=.5/sp;}}
+      p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(150,190,255,${p.o})`;ctx.fill();
     });
-    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
-      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
-      if(d<DIST){ ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.strokeStyle=`rgba(150,190,255,${.06*(1-d/DIST)})`; ctx.lineWidth=.6; ctx.stroke(); }
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<DIST){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(150,190,255,${.07*(1-d/DIST)})`;ctx.lineWidth=.6;ctx.stroke();}
     }
     requestAnimationFrame(draw);
   }
