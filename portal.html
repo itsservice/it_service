@@ -1,1091 +1,130 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>IT Ticket System</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
-<style>
-:root{
-  --bg:#070b12;--bg2:#0c1220;
-  --s1:rgba(255,255,255,.05);--s2:rgba(255,255,255,.09);--s3:rgba(255,255,255,.14);
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);
-  --fg:rgba(255,255,255,.90);--fg2:rgba(255,255,255,.45);--fg3:rgba(255,255,255,.22);
-  --accent:#60a5fa;--glow:rgba(96,165,250,.22);
-  --green:#4ade80;--orange:#fb923c;--red:#f87171;--yellow:#facc15;--teal:#2dd4bf;
-  --r:10px;--r2:14px;
-  --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);
-  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-  --safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);font-size:14px;min-height:100vh;overflow-x:hidden}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
-#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-
-/* ── LOGIN ── */
-.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#070b12,#0c1a2e);position:relative;z-index:1}
-.login-card{background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:40px 36px;width:360px;max-width:92vw;box-shadow:0 24px 64px rgba(0,0,0,.6);backdrop-filter:blur(20px)}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px}
-.login-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.login-logo-text{font-size:19px;font-weight:600;color:var(--fg)}
-.login-subtitle{font-size:12px;color:var(--fg2);margin-top:2px}
-.field{margin-bottom:13px}
-.field label{display:block;font-size:11px;font-weight:600;color:var(--fg2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
-.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--b2);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:14px;color:var(--fg);outline:none;transition:border-color .15s;background:var(--s1)}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
-.field select option{background:#0c1220;color:var(--fg)}
-.field textarea{resize:vertical}
-.login-btn{width:100%;padding:11px;background:var(--accent);color:#070b12;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
-.login-btn:hover{opacity:.85}
-.error-msg{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
-.demo-box{margin-top:13px;padding:11px 13px;background:var(--s1);border:1px solid var(--b1);border-radius:8px;font-size:12px;color:var(--fg2)}
-.demo-box strong{display:block;margin-bottom:5px;color:var(--fg3)}
-.demo-row{display:flex;gap:8px;margin-bottom:3px}
-.demo-u{font-family:'DM Mono',monospace;color:var(--accent);min-width:80px}
-.demo-p{font-family:'DM Mono',monospace;min-width:80px}
-
-/* ── HAMBURGER FAB ── */
-.menu-fab{
-  position:fixed;top:calc(16px + var(--safe-top));left:calc(14px + var(--safe-left));
-  z-index:90;width:44px;height:44px;border-radius:12px;
-  background:var(--s3);border:1px solid var(--b2);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  transition:opacity .25s,transform .2s var(--spring);overflow:hidden;
-}
-.menu-fab:hover{transform:scale(1.07)}
-.menu-fab:active{transform:scale(.93)}
-.bar{display:block;width:17px;height:1.5px;background:var(--fg);border-radius:2px;transition:.28s var(--ease)}
-.bar-2{width:11px;margin-left:-6px}
-.menu-open .menu-fab{opacity:0;pointer-events:none}
-
-/* ── SCRIM ── */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:85;animation:scrimIn .22s ease}
-@keyframes scrimIn{from{opacity:0}to{opacity:1}}
-
-/* ── SIDEBAR (portal style) ── */
-.sidebar{
-  position:fixed;top:0;left:0;height:100%;width:clamp(240px,80vw,280px);
-  background:var(--bg2);border-right:1px solid var(--b1);
-  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-  z-index:86;display:flex;flex-direction:column;
-  clip-path:circle(0% at 36px 36px);
-  transition:clip-path .42s var(--ease);will-change:clip-path;
-  padding-top:var(--safe-top);
-}
-.sidebar.open{clip-path:circle(200% at 36px 36px)}
-.sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:16px 13px 12px;border-bottom:1px solid var(--b1);flex-shrink:0}
-.sidebar-logo-wrap{display:flex;align-items:center;gap:9px}
-.sidebar-logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.sidebar-logo-text{font-size:15px;font-weight:600;color:var(--fg)}
-.close-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--b1);background:var(--s1);color:var(--fg2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s,transform .2s var(--spring);overflow:hidden;position:relative;flex-shrink:0}
-.close-btn:hover{background:var(--s2);color:var(--fg);transform:scale(1.1)}
-.close-btn:active{transform:scale(.92)}
-.sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px calc(12px + var(--safe-bottom));scrollbar-width:thin;scrollbar-color:var(--b2) transparent;-webkit-overflow-scrolling:touch}
-.sidebar-sec{padding:9px 7px 3px;font-size:10px;font-weight:600;color:var(--fg3);letter-spacing:.08em;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;margin:1px 0;border-radius:9px;border:1px solid transparent;cursor:pointer;color:var(--fg2);font-size:13.5px;transition:background .12s,color .12s,transform .18s var(--ease);position:relative;overflow:hidden;opacity:0;transform:translateX(-10px)}
-.nav-item.visible{animation:slideIn .3s var(--ease) forwards}
-@keyframes slideIn{to{opacity:1;transform:translateX(0)}}
-.nav-item:hover{background:var(--s2);color:var(--fg);transform:translateX(4px)}
-.nav-item.active{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.25);color:var(--accent)}
-.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
-.nav-badge{margin-left:auto;background:var(--s3);color:var(--fg2);font-size:10px;padding:2px 7px;border-radius:99px;font-family:'DM Mono',monospace;flex-shrink:0}
-.nav-item.active .nav-badge{background:rgba(96,165,250,.2);color:var(--accent)}
-.sidebar-user-wrap{border-top:1px solid var(--b1);padding:8px 8px calc(8px + var(--safe-bottom));flex-shrink:0}
-.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
-.sidebar-user:hover{background:var(--s2)}
-.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
-.sidebar-username{font-size:13px;font-weight:500;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sidebar-role{font-size:11px;color:var(--fg2)}
-.logout-btn{display:flex;align-items:center;gap:8px;padding:8px 11px;margin:2px 0;border-radius:9px;cursor:pointer;color:var(--fg2);font-size:13px;transition:background .12s,color .12s}
-.logout-btn:hover{background:rgba(248,113,113,.1);color:var(--red)}
-
-/* ── TOPBAR ── */
-.topbar{
-  position:fixed;top:0;left:0;right:0;
-  height:calc(56px + var(--safe-top));padding-top:var(--safe-top);
-  background:rgba(7,11,18,.88);border-bottom:1px solid var(--b1);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  display:flex;align-items:center;
-  padding-left:calc(68px + var(--safe-left));padding-right:calc(14px + var(--safe-right));
-  gap:10px;z-index:70;
-}
-.breadcrumb{font-size:13px;color:var(--fg2);flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;min-width:0}
-.breadcrumb span{cursor:pointer;white-space:nowrap;flex-shrink:0}
-.breadcrumb span:hover{color:var(--accent)}
-.breadcrumb-cur{color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.topbar-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
-.clock-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;background:var(--s1);border:1px solid var(--b1);font-family:'DM Mono',monospace;font-size:11px;color:var(--fg2);white-space:nowrap}
-.pill-sep{width:1px;height:9px;background:var(--b2)}
-
-/* ── MAIN ── */
-.main{position:relative;z-index:1;padding-top:calc(56px + var(--safe-top));min-height:100vh}
-.content{padding:16px 15px calc(30px + var(--safe-bottom))}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none;position:relative;overflow:hidden}
-.btn-primary{background:var(--accent);color:#070b12;border-color:var(--accent)}.btn-primary:hover{opacity:.85}
-.btn-outline{background:var(--s2);color:var(--fg);border-color:var(--b2)}.btn-outline:hover{background:var(--s3)}
-.btn-danger{background:rgba(248,113,113,.12);color:var(--red);border-color:rgba(248,113,113,.25)}.btn-danger:hover{background:rgba(248,113,113,.22)}
-.btn-ghost{background:transparent;color:var(--fg2);border-color:transparent;padding:5px 8px}.btn-ghost:hover{background:var(--s2);color:var(--fg)}
-.btn-sm{padding:5px 10px;font-size:12px}
-.btn-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);transform:scale(0);pointer-events:none;animation:ripple .5s ease-out forwards}
-@keyframes ripple{to{transform:scale(5);opacity:0}}
-
-/* ── BADGES ── */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:500;white-space:nowrap}
-.badge-blue{background:rgba(96,165,250,.12);color:#60a5fa}
-.badge-green{background:rgba(74,222,128,.12);color:#4ade80}
-.badge-orange{background:rgba(251,146,60,.12);color:#fb923c}
-.badge-red{background:rgba(248,113,113,.12);color:#f87171}
-.badge-yellow{background:rgba(250,204,21,.12);color:#facc15}
-.badge-teal{background:rgba(45,212,191,.12);color:#2dd4bf}
-.badge-gray{background:var(--s2);color:var(--fg2)}
-.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-
-/* ── STATS ── */
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px}
-.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:15px 17px;backdrop-filter:blur(8px)}
-.stat-label{font-size:10.5px;color:var(--fg2);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.stat-val{font-size:26px;font-weight:600;line-height:1}
-
-/* ── TABLE ── */
-.table-wrap{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden}
-.table-toolbar{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--b1);flex-wrap:wrap}
-.search-box{display:flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--b2);border-radius:var(--r);background:var(--s1);flex:1;max-width:250px}
-.search-box input{border:none;outline:none;font-family:'Outfit',sans-serif;font-size:13px;color:var(--fg);width:100%;background:transparent}
-.search-box input::placeholder{color:var(--fg3)}
-.filter-chips{display:flex;gap:5px;flex-wrap:wrap}
-.chip{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--b2);color:var(--fg2);background:var(--s1);transition:all .12s}
-.chip:hover,.chip.active{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:var(--accent)}
-.tbl-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:9px 12px;font-size:10.5px;font-weight:600;color:var(--fg2);border-bottom:1px solid var(--b1);background:rgba(255,255,255,.025);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
-td{padding:9px 12px;border-bottom:1px solid var(--b1);font-size:13px;color:var(--fg);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--s1)}
-.mono{font-family:'DM Mono',monospace;font-size:12px}
-.row-group td{background:rgba(255,255,255,.02);padding:5px 12px;font-size:11px;font-weight:600;color:var(--fg2)}
-.sla-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600}
-.pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-top:1px solid var(--b1)}
-.page-info{font-size:12px;color:var(--fg2)}
-.page-btns{display:flex;gap:3px}
-.page-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--b2);background:var(--s1);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--fg2);transition:all .12s}
-.page-btn:hover{border-color:var(--accent);color:var(--accent)}
-.page-btn.active{background:var(--accent);color:#070b12;border-color:var(--accent)}
-.page-btn:disabled{opacity:.3;cursor:default}
-
-/* ── MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
-.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:9px;color:var(--fg)}
-.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid var(--b1);padding-top:13px}
-
-/* ── DRAWER ── */
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;backdrop-filter:blur(2px)}
-.drawer{position:fixed;right:0;top:0;bottom:0;width:450px;max-width:95vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:151;overflow-y:auto;display:flex;flex-direction:column}
-.drawer-head{padding:17px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
-.drawer-body{padding:20px;flex:1}
-.drawer-sec-title{font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px}
-.drawer-field{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--b1)}
-.drawer-field:last-child{border-bottom:none}
-.drawer-field-label{font-size:12px;color:var(--fg2);min-width:110px}
-.drawer-field-value{font-size:12.5px;color:var(--fg);text-align:right;flex:1}
-.status-btns{display:flex;gap:6px;flex-wrap:wrap}
-.status-btn{cursor:pointer;border:1.5px solid transparent;transition:all .15s;border-radius:99px}
-.status-btn.selected{border-color:currentColor;transform:scale(1.06)}
-
-/* ── USER GRID ── */
-.user-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.user-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:17px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;position:relative;transition:border-color .2s}
-.user-card:hover{border-color:var(--b2)}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:calc(22px + var(--safe-bottom));right:calc(18px + var(--safe-right));padding:10px 15px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--b2);color:var(--fg);font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:300;animation:toastIn .22s ease;pointer-events:none;backdrop-filter:blur(12px)}
-@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── EMPTY ── */
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 20px;color:var(--fg2)}
-.empty-icon{font-size:34px;margin-bottom:11px;opacity:.3}
-
-/* ── RESPONSIVE ── */
-@media(max-width:640px){
-  .stat-grid{grid-template-columns:1fr 1fr}
-  .user-grid{grid-template-columns:1fr 1fr}
-  .drawer{width:100%;max-width:100%}
-  .modal-grid{grid-template-columns:1fr}
-  #ts-temp,.pill-sep{display:none}
-}
-@media(max-width:380px){
-  .user-grid{grid-template-columns:1fr}
-  .clock-pill{font-size:10px;padding:4px 8px}
-  .topbar{padding-left:calc(62px + var(--safe-left))}
-  .stat-val{font-size:22px}
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>IT Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/portal.css"/>
 </head>
 <body>
-<canvas id="bgCanvas" aria-hidden="true"></canvas>
-<button class="menu-fab" id="menuFab" aria-label="Menu">
-  <span class="bar bar-1"></span>
-  <span class="bar bar-2"></span>
-  <span class="bar bar-3"></span>
-</button>
-<div id="app"></div>
-<script>
 
-// =====================
-// DATA & HELPERS
-// =====================
-const AVATAR_COLORS = ['#2563eb','#7c3aed','#db2777','#0d9488','#ea580c','#16a34a','#ca8a04'];
-const avatarColor = s => AVATAR_COLORS[(s||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % AVATAR_COLORS.length];
-const initials = n => (n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-const uid = () => Math.random().toString(36).slice(2,8).toUpperCase();
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
-const BRANDS = ['ALL','Animal House','Another Hound Cafe','Au Bon Pain',"Dunkin'","Greyhound Cafe",'Greyhound Coffee','Greyhound Original','Kin+Hey','Le Grand Vefour','M-Kitchen','Smileyhound'];
-const STATUSES = ['ตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น','ยกเลิก'];
-const TYPES = ['งานระบบไฟฟ้า','งานระบบปรับอากาศ','เครื่องทำน้ำร้อน','เครื่องทำกาแฟ','งานซ่อมแซม','งานติดตั้ง','อุปกรณ์เครือข่าย'];
-const SLA_LIST = ['K.0001','K.0002','K.0003','K.0006'];
+  <button id="menuBtn" class="menu-fab" aria-label="Menu" aria-expanded="false">
+    <span class="bar bar-1"></span>
+    <span class="bar bar-2"></span>
+    <span class="bar bar-3"></span>
+  </button>
 
-const statusBadge = s => {
-  const m = {ตรวจงาน:'badge-yellow',อยู่ระหว่างดำเนินการ:'badge-blue',รอชิ้นส่วน:'badge-orange',เสร็จสิ้น:'badge-green',ยกเลิก:'badge-red'};
-  return m[s]||'badge-gray';
-};
-const slaColor = s => ({K:'#f97316','K.0001':'#f97316','K.0002':'#3b82f6','K.0003':'#a855f7','K.0006':'#6b7280'}[s]||'#6b7280');
-const roleBadge = r => r==='admin'?'badge-red':r==='manager'?'badge-blue':'badge-teal';
-const roleLabel = r => ({admin:'Admin',manager:'Manager',staff:'Staff'}[r]||r);
-
-// State
-let STATE = {
-  users: null, tickets: null,
-  currentUser: null, page: 'dashboard',
-  drawerTicket: null, editTicket: null, showAddTicket: false,
-  editUser: null, showAddUser: false,
-  filterStatus: 'ALL', filterBrand: 'ALL', search: '', ticketPage: 1,
-  userSearch: '', userView: 'grid',
-  toast: null, toastTimer: null,
-};
-const PER_PAGE = 15;
-
-function loadData() {
-  try { STATE.users = JSON.parse(localStorage.getItem('ts_users')||'null'); } catch{}
-  try { STATE.tickets = JSON.parse(localStorage.getItem('ts_tickets')||'null'); } catch{}
-  if(!STATE.users) STATE.users = [
-    {id:'u1',name:'Admin System',username:'admin',password:'admin1234',role:'admin',brand:'ALL',active:true},
-    {id:'u2',name:'Greyhound IT',username:'gd_it',password:'gd1234',role:'manager',brand:'Greyhound Cafe',active:true},
-    {id:'u3',name:'Au Bon Pain IT',username:'abp_it',password:'abp1234',role:'staff',brand:'Au Bon Pain',active:true},
-    {id:'u4',name:'Smileyhound IT',username:'smile_it',password:'smile1234',role:'staff',brand:'Smileyhound',active:true},
-  ];
-  if(!STATE.tickets) {
-    const brandSamples=['Greyhound Cafe','Au Bon Pain',"Dunkin'",'Smileyhound','M-Kitchen'];
-    const reporters=['สมชาย','วิไล','ประเสริฐ','สุดา','มานะ'];
-    STATE.tickets=[];
-    for(let i=43;i>=1;i--){
-      const brand=brandSamples[i%brandSamples.length];
-      const sla=SLA_LIST[i%4];
-      STATE.tickets.push({
-        id:`GD-${String(i).padStart(5,'0')}`,
-        status: i<=5?'เสร็จสิ้น':i===35?'ตรวจงาน':'อยู่ระหว่างดำเนินการ',
-        branchCode: sla, sla,
-        sentDate:`${new Date(Date.now()-i*3600000).toLocaleDateString('th-TH')}`,
-        slaDate:'09/03/2569',
-        reporter:reporters[i%reporters.length],
-        phone:`0${Math.floor(800000000+Math.random()*99999999)}`,
-        type:TYPES[i%TYPES.length],
-        detail:`รายละเอียดงาน GD-${String(i).padStart(5,'0')} -- ${TYPES[i%TYPES.length]}`,
-        location:['ชั้น 1','ชั้น 2','ครัว','หน้าร้าน'][i%4],
-        brand, createdAt:new Date(Date.now()-i*3600000).toISOString(),
-      });
-    }
-  }
-}
-function saveData() {
-  try{localStorage.setItem('ts_users',JSON.stringify(STATE.users));}catch{}
-  try{localStorage.setItem('ts_tickets',JSON.stringify(STATE.tickets));}catch{}
-}
-
-// =====================
-// TOAST
-// =====================
-function showToast(msg) {
-  if(STATE.toastTimer) clearTimeout(STATE.toastTimer);
-  STATE.toast = msg;
-  const t = document.getElementById('toast');
-  if(t){t.textContent=msg;t.style.display='block';}
-  STATE.toastTimer = setTimeout(()=>{
-    STATE.toast=null;
-    const t2=document.getElementById('toast');
-    if(t2) t2.style.display='none';
-  },2400);
-}
-
-// =====================
-// RENDER ENGINE
-// =====================
-function render() {
-  const root = document.getElementById('app');
-  if(!STATE.currentUser) { root.innerHTML = renderLogin(); bindLogin(); return; }
-  root.innerHTML = renderApp();
-  bindApp();
-}
-
-// =====================
-// LOGIN
-// =====================
-function renderLogin() {
-  return `
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-logo">
-        <div class="login-logo-icon">🎫</div>
-        <div>
-          <div class="login-logo-text">IT Ticket System</div>
-          <div class="login-subtitle">ระบบจัดการ Ticket ภายใน</div>
+  <div class="topright">
+    <div class="clock-pill">
+      <span class="clock-icon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </span>
+      <span id="clockText">--:--:--</span>
+      <span class="pill-sep"></span>
+      <span id="tempText">--&deg;C</span>
+    </div>
+    <div class="theme-wrap">
+      <button id="themeBtn" class="icon-btn" aria-label="Theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      </button>
+      <div id="themePopup" class="theme-popup" role="menu" aria-hidden="true">
+        <button class="popItem" data-theme="dark"><span class="pop-ico">&#127769;</span>Dark</button>
+        <button class="popItem" data-theme="light"><span class="pop-ico">&#9728;&#65039;</span>Light</button>
+        <button class="popItem" data-theme="auto"><span class="pop-ico">&#127450;</span>Auto</button>
+        <div class="sliderWrap" id="sliderWrap" hidden>
+          <div class="slider-row">
+            <span>&#9728;</span>
+            <input id="mixSlider" type="range" min="0" max="100" value="100"/>
+            <span>&#127769;</span>
+          </div>
         </div>
       </div>
-      <div class="field"><label>Username</label><input id="inp-user" placeholder="กรอก Username" autocomplete="username"/></div>
-      <div class="field"><label>Password</label><input id="inp-pass" type="password" placeholder="กรอก Password" autocomplete="current-password"/></div>
-      <button class="login-btn" id="btn-login">เข้าสู่ระบบ</button>
-      <div class="error-msg" id="login-err"></div>
-      <div class="demo-box">
-        <strong>Demo Accounts</strong>
-        <div class="demo-row"><span class="demo-u">admin</span><span class="demo-p">admin1234</span><span>Admin</span></div>
-        <div class="demo-row"><span class="demo-u">gd_it</span><span class="demo-p">gd1234</span><span>Manager</span></div>
-        <div class="demo-row"><span class="demo-u">smile_it</span><span class="demo-p">smile1234</span><span>Staff</span></div>
-      </div>
     </div>
-  </div>`;
-}
-function bindLogin() {
-  const doLogin = () => {
-    const u = document.getElementById('inp-user').value.trim();
-    const p = document.getElementById('inp-pass').value;
-    const found = STATE.users.find(x=>x.username===u&&x.password===p&&x.active);
-    if(found){ STATE.currentUser=found; STATE.filterBrand=found.brand==='ALL'?'ALL':found.brand; render(); }
-    else { document.getElementById('login-err').textContent='Username หรือ Password ไม่ถูกต้อง'; }
-  };
-  document.getElementById('btn-login').onclick = doLogin;
-  document.getElementById('inp-pass').onkeydown = e=>{ if(e.key==='Enter') doLogin(); };
-  document.getElementById('inp-user').focus();
-}
+  </div>
 
-// =====================
-// APP SHELL
-// =====================
+  <div id="scrim" class="scrim" hidden></div>
 
-
-// =====================
-// SIDEBAR (PORTAL STYLE)
-// =====================
-let sidebarOpen = false;
-function openSidebar() {
-  sidebarOpen = true;
-  const sb=document.getElementById('ts-sidebar'),sc=document.getElementById('ts-scrim');
-  if(!sb||!sc)return;
-  sb.classList.add('open');sc.hidden=false;
-  document.body.classList.add('menu-open');
-  sb.querySelectorAll('.nav-item').forEach((el,i)=>{
-    el.classList.remove('visible');
-    el.style.animationDelay=i*28+40+'ms';
-    void el.offsetWidth;
-    el.classList.add('visible');
-  });
-}
-function closeSidebar() {
-  sidebarOpen=false;
-  const sb=document.getElementById('ts-sidebar'),sc=document.getElementById('ts-scrim');
-  if(!sb||!sc)return;
-  sb.classList.remove('open');sc.hidden=true;
-  document.body.classList.remove('menu-open');
-}
-function addRipple(el,e){
-  const rect=el.getBoundingClientRect(),src=e?.touches?.[0]||e;
-  const x=src?src.clientX-rect.left:rect.width/2,y=src?src.clientY-rect.top:rect.height/2;
-  const size=Math.max(rect.width,rect.height),r=document.createElement('span');
-  r.className='btn-ripple';
-  r.style.cssText=`width:${size}px;height:${size}px;left:${x-size/2}px;top:${y-size/2}px;`;
-  el.appendChild(r);r.addEventListener('animationend',()=>r.remove());
-}
-
-function renderApp() {
-  const u = STATE.currentUser;
-  const myTickets = u.brand==='ALL'?STATE.tickets:STATE.tickets.filter(t=>t.brand===u.brand);
-  const pendingCount = myTickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ').length;
-  const NAV = [
-    {id:'dashboard',label:'Dashboard',icon:'\u{1F4CA}',badge:null},
-    {id:'tickets',label:'All Ticket',icon:'\u{1F3AB}',badge:myTickets.length},
-    {id:'inprogress',label:'กำลังดำเนินการ',icon:'\u2699\uFE0F',badge:pendingCount},
-    ...(u.role==='admin'?[{id:'users',label:'จัดการผู้ใช้',icon:'\u{1F465}',badge:STATE.users.length}]:[]),
-  ];
-  const bl = u.brand==='ALL'?BRANDS.slice(1):BRANDS.filter(b=>b===u.brand);
-  const pageLabel = NAV.find(n=>n.id===STATE.page)?.label||STATE.page;
-  return `
-  <div id="ts-scrim" class="scrim" hidden></div>
-  <aside id="ts-sidebar" class="sidebar">
-    <div class="sidebar-head">
-      <div class="sidebar-logo-wrap">
-        <div class="sidebar-logo-icon">\u{1F3AB}</div>
-        <div class="sidebar-logo-text">IT Ticket</div>
+  <aside id="sidebar" class="sidebar" aria-hidden="true">
+    <div class="side-head">
+      <div>
+        <div class="side-h1">Brands</div>
+        <div class="side-h2">เลือกแบรนด์</div>
       </div>
-      <button class="close-btn" id="ts-close-btn" aria-label="Close">
+      <button id="closeBtn" class="close-btn" aria-label="Close">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
-    <div class="sidebar-scroll">
-      <div class="sidebar-sec">เมนูหลัก</div>
-      ${NAV.map(n=>`
-      <div class="nav-item ${STATE.page===n.id?'active':''}" data-nav="${n.id}">
-        <span class="nav-icon">${n.icon}</span><span>${n.label}</span>
-        ${n.badge!==null?`<span class="nav-badge">${n.badge}</span>`:''}
-      </div>`).join('')}
-      <div class="sidebar-sec" style="margin-top:6px">แบรนด์</div>
-      ${bl.map(b=>`
-      <div class="nav-item" data-nav-brand="${esc(b)}" style="font-size:12.5px">
-        <span style="width:7px;height:7px;border-radius:50%;background:${avatarColor(b)};flex-shrink:0;display:inline-block"></span>
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(b)}</span>
-        <span class="nav-badge">${STATE.tickets.filter(t=>t.brand===b).length}</span>
-      </div>`).join('')}
-    </div>
-    <div class="sidebar-user-wrap">
-      <div class="sidebar-user" id="sidebar-user-btn">
-        <div class="avatar" style="width:30px;height:30px;font-size:12px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
-        <div style="flex:1;min-width:0">
-          <div class="sidebar-username">${esc(u.name)}</div>
-          <div class="sidebar-role">${roleLabel(u.role)} · ${u.brand==='ALL'?'ทุกแบรนด์':esc(u.brand)}</div>
-        </div>
-      </div>
-      <div class="logout-btn" id="btn-logout">
-        <span>\u{1F6AA}</span><span>ออกจากระบบ</span>
-      </div>
-    </div>
+    <div id="brandList" class="brand-list" role="list"></div>
   </aside>
-  <div class="topbar">
-    <div class="breadcrumb">
-      <span data-nav="dashboard">IT Portal</span>
-      <span style="color:var(--fg3);margin:0 2px">›</span>
-      <span class="breadcrumb-cur">${pageLabel}</span>
-    </div>
-    <div class="topbar-right">
-      <div class="clock-pill"><span id="ts-clock">--:--</span><span class="pill-sep"></span><span id="ts-temp">--°C</span></div>
-      <span class="badge ${roleBadge(u.role)}" style="font-size:10.5px">${roleLabel(u.role)}</span>
-    </div>
-  </div>
-  <div class="main"><div class="content" id="page-content">${renderPage()}</div></div>
-  ${renderModal()}${renderDrawer()}
-  <div id="toast" class="toast" style="display:none"></div>`;
-}
 
-
-function renderPage() {
-  if(STATE.page==='dashboard') return renderDashboard();
-  if(STATE.page==='tickets'||STATE.page==='inprogress') return renderTickets();
-  if(STATE.page==='users') return renderUsers();
-  return '';
-}
-
-// =====================
-// DASHBOARD
-// =====================
-function renderDashboard() {
-  const u = STATE.currentUser;
-  const my = u.brand==='ALL'?STATE.tickets:STATE.tickets.filter(t=>t.brand===u.brand);
-  const cnt={};my.forEach(t=>{cnt[t.status]=(cnt[t.status]||0)+1;});
-  const bCnt={};my.forEach(t=>{bCnt[t.brand]=(bCnt[t.brand]||0)+1;});
-  const recent=[...my].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
-  return `
-  <div style="margin-bottom:20px">
-    <h2 style="font-size:20px;font-weight:700">สวัสดี, ${esc(u.name)} 👋</h2>
-    <p style="font-size:13px;color:var(--text2);margin-top:3px">${new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
-  </div>
-  <div class="stat-grid">
-    ${[
-      {label:'Ticket ทั้งหมด',val:my.length,color:'#2563eb',icon:'🎫'},
-      {label:'กำลังดำเนินการ',val:cnt['อยู่ระหว่างดำเนินการ']||0,color:'#3b82f6',icon:'⚙️'},
-      {label:'รอตรวจงาน',val:cnt['ตรวจงาน']||0,color:'#ca8a04',icon:'🔍'},
-      {label:'เสร็จสิ้น',val:cnt['เสร็จสิ้น']||0,color:'#16a34a',icon:'✅'},
-    ].map(s=>`
-    <div class="stat-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div class="stat-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.color};margin-right:5px"></span>${s.label}</div>
-        <span style="font-size:20px">${s.icon}</span>
+  <main class="main">
+    <div class="hero" id="centerBox">
+      <div class="brand-wrap">
+        <div id="brandTitle" class="brand-name">&#8212;</div>
+        <div class="brand-sub" id="brandSub">เลือกแบรนด์จากเมนู</div>
       </div>
-      <div class="stat-val" style="color:${s.color};margin-top:8px">${s.val}</div>
-    </div>`).join('')}
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="table-wrap">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">🎫 Ticket ล่าสุด</div>
-      <table><thead><tr><th>ID</th><th>สถานะ</th><th>ผู้แจ้ง</th><th>ประเภท</th></tr></thead>
-      <tbody>${recent.map(t=>`<tr>
-        <td class="mono" style="color:var(--accent);font-weight:600;cursor:pointer" data-open-ticket="${esc(t.id)}">${esc(t.id)}</td>
-        <td><span class="badge ${statusBadge(t.status)}" style="font-size:11px"><span class="badge-dot"></span>${esc(t.status.slice(0,8))}</span></td>
-        <td style="font-size:12.5px">${esc(t.reporter)}</td>
-        <td style="font-size:11.5px;color:var(--text2);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.type)}</td>
-      </tr>`).join('')}</tbody></table>
-    </div>
-    <div class="table-wrap">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">📊 Ticket แยกตามแบรนด์</div>
-      <div style="padding:12px 14px">
-        ${Object.entries(bCnt).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([brand,count])=>`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(brand)}</div>
-          <div style="flex:2;background:var(--surface2);border-radius:99px;height:8px;overflow:hidden">
-            <div style="height:100%;background:var(--accent);border-radius:99px;width:${(count/my.length*100).toFixed(0)}%"></div>
+      <div class="cards">
+        <button id="btnReport" class="card">
+          <div class="card-glow"></div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
           </div>
-          <div style="font-size:13px;font-weight:600;color:var(--accent);min-width:24px;text-align:right">${count}</div>
-        </div>`).join('')}
-      </div>
-    </div>
-  </div>`;
-}
-
-// =====================
-// TICKETS PAGE
-// =====================
-function getFilteredTickets() {
-  const u = STATE.currentUser;
-  return STATE.tickets.filter(t=>{
-    if(STATE.page==='inprogress'&&t.status!=='อยู่ระหว่างดำเนินการ') return false;
-    if(u.brand!=='ALL'&&t.brand!==u.brand) return false;
-    if(STATE.filterBrand!=='ALL'&&t.brand!==STATE.filterBrand) return false;
-    if(STATE.filterStatus!=='ALL'&&t.status!==STATE.filterStatus) return false;
-    if(STATE.search){
-      const q=STATE.search.toLowerCase();
-      if(!(t.id+' '+t.reporter+' '+t.type+' '+t.detail+' '+t.branchCode).toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
-}
-
-function renderTickets() {
-  const filtered = getFilteredTickets();
-  const u = STATE.currentUser;
-  const cnt={};filtered.forEach(t=>{cnt[t.status]=(cnt[t.status]||0)+1;});
-  const totalPages = Math.ceil(filtered.length/PER_PAGE);
-  const page = Math.min(STATE.ticketPage, Math.max(1,totalPages));
-  const paged = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
-
-  // group by status
-  const grouped={};
-  paged.forEach(t=>{ if(!grouped[t.status])grouped[t.status]=[]; grouped[t.status].push(t); });
-
-  const brandOpts = u.brand==='ALL'?BRANDS:[u.brand];
-
-  return `
-  <div class="stat-grid">
-    ${[
-      {label:'ทั้งหมด',val:filtered.length,color:'#2563eb'},
-      {label:'กำลังดำเนินการ',val:cnt['อยู่ระหว่างดำเนินการ']||0,color:'#3b82f6'},
-      {label:'รอตรวจงาน',val:cnt['ตรวจงาน']||0,color:'#ca8a04'},
-      {label:'เสร็จสิ้น',val:cnt['เสร็จสิ้น']||0,color:'#16a34a'},
-    ].map(s=>`
-    <div class="stat-card">
-      <div class="stat-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.color};margin-right:5px"></span>${s.label}</div>
-      <div class="stat-val" style="color:${s.color}">${s.val}</div>
-    </div>`).join('')}
-  </div>
-  <div class="table-wrap">
-    <div class="table-toolbar">
-      <div class="search-box">
-        <span style="color:var(--text3)">🔍</span>
-        <input id="search-inp" value="${esc(STATE.search)}" placeholder="ค้นหา Ticket..."/>
-      </div>
-      <div class="filter-chips">
-        ${['ALL',...STATUSES].map(s=>`
-        <button class="chip ${STATE.filterStatus===s?'active':''}" data-filter-status="${esc(s)}">
-          ${s==='ALL'?'ทั้งหมด':esc(s)}${s!=='ALL'?` <span style="opacity:.7;font-size:10px">${cnt[s]||0}</span>`:''}
-        </button>`).join('')}
-      </div>
-      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        ${u.brand==='ALL'?`
-        <select id="brand-filter" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--r);font-family:Outfit,sans-serif;font-size:12.5px;color:var(--text);background:#fff">
-          ${brandOpts.map(b=>`<option value="${esc(b)}" ${STATE.filterBrand===b?'selected':''}>${b==='ALL'?'ทุกแบรนด์':esc(b)}</option>`).join('')}
-        </select>`:''}
-        <button class="btn btn-primary btn-sm" id="btn-add-ticket">➕ เพิ่ม Ticket</button>
-      </div>
-    </div>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr>
-          <th>Number Ticket</th><th>สถานะ</th><th>รหัสสาขา</th><th>SLA</th>
-          <th>วันที่ส่ง</th><th>SLA Date</th><th>ผู้แจ้ง</th><th>เบอร์</th>
-          <th>ประเภท</th><th>รายละเอียด</th><th></th>
-        </tr></thead>
-        <tbody>
-          ${Object.entries(grouped).map(([status,rows])=>`
-          <tr class="row-group"><td colspan="11">
-            <span class="badge ${statusBadge(status)}" style="font-size:11px"><span class="badge-dot"></span>${esc(status)}</span>
-            <span style="margin-left:8px;color:var(--text3)">${rows.length} รายการ</span>
-          </td></tr>
-          ${rows.map(t=>`<tr>
-            <td><span class="mono" style="color:var(--accent);font-weight:600;cursor:pointer" data-open-ticket="${esc(t.id)}">${esc(t.id)}</span></td>
-            <td><span class="badge ${statusBadge(t.status)}" style="cursor:pointer" data-open-ticket="${esc(t.id)}"><span class="badge-dot"></span>${esc(t.status.slice(0,10))}</span></td>
-            <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.branchCode)}</span></td>
-            <td><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.sla)}</span></td>
-            <td class="mono" style="font-size:12px;color:var(--text2)">${esc(t.sentDate)}</td>
-            <td class="mono" style="font-size:12px;color:var(--text2)">${esc(t.slaDate)}</td>
-            <td style="font-weight:500">${esc(t.reporter)}</td>
-            <td class="mono" style="font-size:12px">${esc(t.phone)}</td>
-            <td><span style="background:var(--surface2);padding:2px 8px;border-radius:5px;font-size:12px;color:var(--text2);white-space:nowrap;max-width:120px;display:inline-block;overflow:hidden;text-overflow:ellipsis">${esc(t.type)}</span></td>
-            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--text2)">${esc(t.detail)}</td>
-            <td>
-              <div style="display:flex;gap:3px">
-                <button class="btn btn-ghost btn-sm" data-open-ticket="${esc(t.id)}" title="ดู">👁</button>
-                <button class="btn btn-ghost btn-sm" data-edit-ticket="${esc(t.id)}" title="แก้ไข">✏️</button>
-                <button class="btn btn-ghost btn-sm" data-del-ticket="${esc(t.id)}" title="ลบ">🗑</button>
-              </div>
-            </td>
-          </tr>`).join('')}`).join('')}
-          ${paged.length===0?`<tr><td colspan="11"><div class="empty"><div class="empty-icon">🔍</div><div style="font-weight:500">ไม่พบ Ticket</div><div style="font-size:13px;color:var(--text3)">ลองเปลี่ยน filter</div></div></td></tr>`:''}
-        </tbody>
-      </table>
-    </div>
-    <div class="pagination">
-      <div class="page-info">แสดง ${Math.min((page-1)*PER_PAGE+1,filtered.length)}--${Math.min(page*PER_PAGE,filtered.length)} จาก ${filtered.length} รายการ</div>
-      <div class="page-btns">
-        <button class="page-btn" ${page===1?'disabled':''} data-page="${page-1}">‹</button>
-        ${Array.from({length:totalPages},(_,i)=>i+1)
-          .filter(p=>p===1||p===totalPages||Math.abs(p-page)<=1)
-          .map((p,i,arr)=>(i>0&&arr[i-1]!==p-1?'<span style="padding:0 4px;color:var(--text3)">...</span>':'')+
-            `<button class="page-btn ${page===p?'active':''}" data-page="${p}">${p}</button>`).join('')}
-        <button class="page-btn" ${page>=totalPages?'disabled':''} data-page="${page+1}">›</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-// =====================
-// USERS PAGE
-// =====================
-function renderUsers() {
-  if(STATE.currentUser.role!=='admin') return `<div class="empty"><div class="empty-icon">🔒</div><div style="font-weight:500">ไม่มีสิทธิ์เข้าถึง</div></div>`;
-  const filtered = STATE.users.filter(u=>`${u.name} ${u.username} ${u.brand} ${u.role}`.toLowerCase().includes(STATE.userSearch.toLowerCase()));
-  return `
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-    <div>
-      <h2 style="font-size:20px;font-weight:700">จัดการผู้ใช้งาน</h2>
-      <p style="font-size:13px;color:var(--text2);margin-top:3px">เพิ่ม ลบ แก้ไข และจัดการสิทธิ์</p>
-    </div>
-    <button class="btn btn-primary" id="btn-add-user">➕ เพิ่มผู้ใช้</button>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <div class="search-box" style="max-width:280px">
-      <span style="color:var(--text3)">🔍</span>
-      <input id="user-search-inp" value="${esc(STATE.userSearch)}" placeholder="ค้นหาผู้ใช้..."/>
-    </div>
-    <div style="margin-left:auto;display:flex;gap:4px">
-      ${['grid','table'].map(v=>`<button class="btn btn-sm ${STATE.userView===v?'btn-primary':'btn-outline'}" data-user-view="${v}">${v==='grid'?'⊞ การ์ด':'≡ ตาราง'}</button>`).join('')}
-    </div>
-  </div>
-  ${STATE.userView==='grid'?`
-  <div class="user-grid">
-    ${filtered.map(u=>`
-    <div class="user-card" style="opacity:${u.active?1:.6}">
-      ${!u.active?`<div style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700">ปิดใช้งาน</div>`:''}
-      <div style="position:absolute;top:12px;right:12px;cursor:pointer;color:var(--text3);padding:4px 6px;border-radius:6px;transition:background .12s" data-edit-user="${esc(u.id)}" title="แก้ไข">⋯</div>
-      <div class="avatar" style="width:52px;height:52px;font-size:20px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
-      <div>
-        <div style="font-size:15px;font-weight:600">${esc(u.name)}</div>
-        <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace">@${esc(u.username)}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-        <span class="badge ${roleBadge(u.role)}">${roleLabel(u.role)}</span>
-        <span class="badge badge-gray">${u.brand==='ALL'?'ทุกแบรนด์':esc(u.brand)}</span>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-        <button class="btn btn-outline btn-sm" data-edit-user="${esc(u.id)}">✏️ แก้ไข</button>
-        <button class="btn btn-outline btn-sm" data-toggle-user="${esc(u.id)}">${u.active?'🔒 ปิด':'🔓 เปิด'}</button>
-        ${u.id!==STATE.currentUser.id?`<button class="btn btn-danger btn-sm" data-del-user="${esc(u.id)}">🗑</button>`:''}
-      </div>
-    </div>`).join('')}
-  </div>`:`
-  <div class="table-wrap"><div class="tbl-scroll"><table>
-    <thead><tr><th>ชื่อ</th><th>Username</th><th>Password</th><th>Role</th><th>แบรนด์</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-    <tbody>${filtered.map(u=>`<tr style="opacity:${u.active?1:.55}">
-      <td>
-        <div style="display:flex;align-items:center;gap:9px">
-          <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${avatarColor(u.name)}">${initials(u.name)}</div>
-          <div>
-            <div style="font-weight:500">${esc(u.name)}</div>
-            ${u.id===STATE.currentUser.id?`<div style="font-size:11px;color:var(--accent)">◀ คุณ</div>`:''}
+          <div class="card-body">
+            <div class="card-th">แจ้งปัญหา</div>
+            <div class="card-en">Report Issue</div>
           </div>
-        </div>
-      </td>
-      <td class="mono">@${esc(u.username)}</td>
-      <td><span class="mono" style="background:var(--surface2);padding:2px 8px;border-radius:5px;font-size:12px">${esc(u.password)}</span></td>
-      <td><span class="badge ${roleBadge(u.role)}">${roleLabel(u.role)}</span></td>
-      <td style="font-size:12.5px;color:var(--text2)">${u.brand==='ALL'?'ทุกแบรนด์':esc(u.brand)}</td>
-      <td><span class="badge ${u.active?'badge-green':'badge-red'}"><span class="badge-dot"></span>${u.active?'ใช้งาน':'ปิด'}</span></td>
-      <td><div style="display:flex;gap:3px">
-        <button class="btn btn-ghost btn-sm" data-edit-user="${esc(u.id)}" title="แก้ไข">✏️</button>
-        <button class="btn btn-ghost btn-sm" data-toggle-user="${esc(u.id)}">${u.active?'🔒':'🔓'}</button>
-        ${u.id!==STATE.currentUser.id?`<button class="btn btn-ghost btn-sm" data-del-user="${esc(u.id)}" title="ลบ">🗑</button>`:''}
-      </div></td>
-    </tr>`).join('')}</tbody>
-  </table></div></div>`}`;
-}
-
-// =====================
-// MODALS
-// =====================
-function renderModal() {
-  if(STATE.showAddTicket||STATE.editTicket) return renderTicketModal();
-  if(STATE.showAddUser||STATE.editUser) return renderUserModal();
-  return '';
-}
-
-function renderTicketModal() {
-  const t = STATE.editTicket || {};
-  const isEdit = !!STATE.editTicket;
-  const val = (k,def) => esc(t[k]||def||'');
-  return `
-  <div class="overlay" id="modal-overlay">
-    <div class="modal" style="width:600px">
-      <div class="modal-title">${isEdit?'📝 แก้ไข '+t.id:'➕ เพิ่ม Ticket ใหม่'}</div>
-      <div class="modal-grid">
-        <div class="field"><label>แบรนด์</label>
-          <select id="m-brand">${BRANDS.slice(1).map(b=>`<option ${t.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select></div>
-        <div class="field"><label>สถานะ</label>
-          <select id="m-status">${STATUSES.map(s=>`<option ${(t.status||STATUSES[1])===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
-        <div class="field"><label>ชื่อผู้แจ้ง *</label><input id="m-reporter" value="${val('reporter')}" placeholder="ชื่อ-นามสกุล"/></div>
-        <div class="field"><label>เบอร์ติดต่อ *</label><input id="m-phone" value="${val('phone')}" placeholder="0XX-XXX-XXXX"/></div>
-        <div class="field"><label>รหัสสาขา</label><input id="m-branch" value="${val('branchCode')}" placeholder="K.XXXX"/></div>
-        <div class="field"><label>SLA</label>
-          <select id="m-sla">${SLA_LIST.map(s=>`<option ${(t.sla||SLA_LIST[0])===s?'selected':''}>${s}</option>`).join('')}</select></div>
-        <div class="field"><label>ประเภท</label>
-          <select id="m-type">${TYPES.map(s=>`<option ${t.type===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
-        <div class="field"><label>สถานที่</label><input id="m-location" value="${val('location')}" placeholder="ชั้น/โซน"/></div>
+          <div class="card-arrow">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </button>
+        <button id="btnTrack" class="card">
+          <div class="card-glow"></div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <div class="card-th">ติดตาม Ticket</div>
+            <div class="card-en">Track Status</div>
+          </div>
+          <div class="card-arrow">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </button>
       </div>
-      <div class="field"><label>รายละเอียด</label>
-        <textarea id="m-detail" rows="3" placeholder="อธิบายปัญหา..." style="resize:vertical">${val('detail')}</textarea></div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" id="modal-cancel">ยกเลิก</button>
-        <button class="btn btn-primary" id="modal-save">${isEdit?'บันทึก':'เพิ่ม Ticket'}</button>
+      <div id="notReady" class="not-ready" hidden>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        ขณะนี้หน้าเว็บยังไม่พร้อมใช้งาน
       </div>
     </div>
-  </div>`;
-}
+  </main>
 
-function renderUserModal() {
-  const u = STATE.editUser || {};
-  const isEdit = !!STATE.editUser;
-  const val = (k,def) => esc(u[k]||def||'');
-  return `
-  <div class="overlay" id="modal-overlay">
-    <div class="modal">
-      <div class="modal-title">
-        <div class="avatar" style="width:32px;height:32px;font-size:13px;background:${avatarColor(u.name||'')}">${initials(u.name||'')}</div>
-        ${isEdit?'แก้ไขผู้ใช้':'เพิ่มผู้ใช้ใหม่'}
-      </div>
-      <div class="field"><label>ชื่อ-นามสกุล *</label><input id="m-name" value="${val('name')}" placeholder="ชื่อเต็ม"/></div>
-      <div class="modal-grid">
-        <div class="field"><label>Username *</label><input id="m-username" value="${val('username')}" placeholder="ตั้ง username"/></div>
-        <div class="field"><label>Password *</label><input id="m-password" value="${val('password')}" placeholder="ตั้ง password"/></div>
-        <div class="field"><label>Role</label>
-          <select id="m-role">
-            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-            <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
-            <option value="staff" ${(!u.role||u.role==='staff')?'selected':''}>Staff</option>
-          </select></div>
-        <div class="field"><label>แบรนด์</label>
-          <select id="m-ubrand">${BRANDS.map(b=>`<option ${u.brand===b?'selected':''}>${b==='ALL'?'ALL (ทุกแบรนด์)':esc(b)}</option>`).join('')}</select></div>
-      </div>
-      <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0">
-        <input type="checkbox" id="m-active" ${u.active!==false?'checked':''}/>
-        <span style="font-size:13px;font-weight:400">เปิดใช้งาน Account</span>
-      </label></div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" id="modal-cancel">ยกเลิก</button>
-        <button class="btn btn-primary" id="modal-save">${isEdit?'บันทึก':'เพิ่มผู้ใช้'}</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-// =====================
-// DRAWER
-// =====================
-function renderDrawer() {
-  if(!STATE.drawerTicket) return '';
-  const t = STATE.tickets.find(x=>x.id===STATE.drawerTicket)||STATE.drawerTicket;
-  return `
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer">
-    <div class="drawer-head">
-      <div>
-        <div class="mono" style="font-size:13px;color:var(--text2);margin-bottom:2px">${esc(t.id)}</div>
-        <div style="font-size:17px;font-weight:700">${esc(t.type)}</div>
-      </div>
-      <button class="btn btn-ghost" id="close-drawer" style="font-size:16px">✕</button>
-    </div>
-    <div class="drawer-body">
-      <div style="margin-bottom:24px">
-        <div class="drawer-sec-title">สถานะ</div>
-        <div class="status-btns">
-          ${STATUSES.map(s=>`
-          <button class="badge ${statusBadge(s)} status-btn ${t.status===s?'selected':''}" data-set-status="${esc(s)}" style="cursor:pointer">
-            <span class="badge-dot"></span>${esc(s)}
-          </button>`).join('')}
-        </div>
-      </div>
-      <div style="margin-bottom:24px">
-        <div class="drawer-sec-title">ข้อมูล Ticket</div>
-        ${[['หมายเลข',t.id],['รหัสสาขา',t.branchCode],['SLA',t.sla],['แบรนด์',t.brand],['วันที่ส่ง',t.sentDate],['SLA Date',t.slaDate]]
-          .map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value mono" style="font-size:13px">${esc(v)}</div></div>`).join('')}
-      </div>
-      <div style="margin-bottom:24px">
-        <div class="drawer-sec-title">ผู้แจ้ง</div>
-        ${[['ชื่อผู้แจ้ง',t.reporter],['เบอร์ติดต่อ',t.phone],['สถานที่',t.location]]
-          .map(([l,v])=>`<div class="drawer-field"><div class="drawer-field-label">${esc(l)}</div><div class="drawer-field-value">${esc(v)}</div></div>`).join('')}
-      </div>
-      <div>
-        <div class="drawer-sec-title">รายละเอียด</div>
-        <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13.5px;line-height:1.7">${esc(t.detail)}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-// =====================
-// EVENT BINDING
-// =====================
-
-function bindApp() {
-  // ── Sidebar ──
-  const menuFab = document.getElementById('menuFab');
-  const tsClose = document.getElementById('ts-close-btn');
-  const tsScrim = document.getElementById('ts-scrim');
-  const tsSb    = document.getElementById('ts-sidebar');
-  if(menuFab) menuFab.onclick = e=>{ addRipple(menuFab,e); openSidebar(); };
-  if(tsClose) tsClose.onclick = e=>{ addRipple(tsClose,e); closeSidebar(); };
-  if(tsScrim) tsScrim.onclick = closeSidebar;
-  // swipe-left to close
-  let tx0=null,ty0=null;
-  if(tsSb){
-    tsSb.addEventListener('touchstart',e=>{const t=e.touches[0];tx0=t.clientX;ty0=t.clientY;},{passive:true});
-    tsSb.addEventListener('touchmove',e=>{
-      if(!sidebarOpen||tx0==null)return;
-      const t=e.touches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;
-      if(Math.abs(dy)>Math.abs(dx))return;
-      if(dx<-50){closeSidebar();tx0=ty0=null;}
-    },{passive:true});
-    tsSb.addEventListener('touchend',()=>{tx0=ty0=null;},{passive:true});
-  }
-  document.onkeydown=e=>{if(e.key==='Escape'){closeSidebar();if(STATE.drawerTicket){STATE.drawerTicket=null;render();}}};
-
-  // ── Navigation ──
-  document.querySelectorAll('[data-nav]').forEach(el=>{
-    el.onclick=()=>{STATE.page=el.dataset.nav;STATE.ticketPage=1;closeSidebar();render();};
-  });
-  document.querySelectorAll('[data-nav-brand]').forEach(el=>{
-    el.onclick=()=>{STATE.page='tickets';STATE.filterBrand=el.dataset.navBrand;STATE.ticketPage=1;closeSidebar();render();};
-  });
-  if(document.getElementById('btn-logout'))
-    document.getElementById('btn-logout').onclick=()=>{STATE.currentUser=null;closeSidebar();render();};
-  if(document.getElementById('sidebar-user-btn'))
-    document.getElementById('sidebar-user-btn').onclick=()=>{if(STATE.currentUser.role==='admin'){STATE.page='users';closeSidebar();render();}};
-
-  // ── Clock ──
-  function updateClock(){
-    const el=document.getElementById('ts-clock');if(!el)return;
-    const now=new Date(),m=window.innerWidth<480;
-    el.textContent=m?now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})
-      :now.toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }
-  clearInterval(window._ck);window._ck=setInterval(updateClock,1000);updateClock();
-  if(!window._tempDone){
-    window._tempDone=true;
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m',{cache:'no-store'})
-      .then(r=>r.json()).then(j=>{const t=Math.round(j?.current?.temperature_2m);if(Number.isFinite(t)){const el=document.getElementById('ts-temp');if(el)el.textContent=t+'\u00b0C';}}).catch(()=>{});
-  }
-
-  // ── Tickets ──
-  if(document.getElementById('btn-add-ticket'))
-    document.getElementById('btn-add-ticket').onclick=()=>{STATE.showAddTicket=true;STATE.editTicket=null;render();};
-  if(document.getElementById('search-inp'))
-    document.getElementById('search-inp').oninput=e=>{STATE.search=e.target.value;STATE.ticketPage=1;renderPageContent();};
-  if(document.getElementById('brand-filter'))
-    document.getElementById('brand-filter').onchange=e=>{STATE.filterBrand=e.target.value;STATE.ticketPage=1;renderPageContent();};
-  document.querySelectorAll('[data-filter-status]').forEach(el=>{
-    el.onclick=()=>{STATE.filterStatus=el.dataset.filterStatus;STATE.ticketPage=1;renderPageContent();};
-  });
-  document.querySelectorAll('[data-page]').forEach(el=>{
-    el.onclick=()=>{if(!el.disabled){STATE.ticketPage=parseInt(el.dataset.page);renderPageContent();}};
-  });
-  document.querySelectorAll('[data-open-ticket]').forEach(el=>{
-    el.onclick=()=>{STATE.drawerTicket=el.dataset.openTicket;render();};
-  });
-  document.querySelectorAll('[data-edit-ticket]').forEach(el=>{
-    el.onclick=()=>{STATE.editTicket=STATE.tickets.find(t=>t.id===el.dataset.editTicket)||null;STATE.showAddTicket=false;render();};
-  });
-  document.querySelectorAll('[data-del-ticket]').forEach(el=>{
-    el.onclick=()=>{
-      if(!confirm('ลบ '+el.dataset.delTicket+' ?'))return;
-      STATE.tickets=STATE.tickets.filter(t=>t.id!==el.dataset.delTicket);
-      saveData();showToast('ลบ Ticket แล้ว');renderPageContent();
-    };
-  });
-
-  // ── Users ──
-  if(document.getElementById('btn-add-user'))
-    document.getElementById('btn-add-user').onclick=()=>{STATE.showAddUser=true;STATE.editUser=null;render();};
-  if(document.getElementById('user-search-inp'))
-    document.getElementById('user-search-inp').oninput=e=>{STATE.userSearch=e.target.value;renderPageContent();};
-  document.querySelectorAll('[data-user-view]').forEach(el=>{
-    el.onclick=()=>{STATE.userView=el.dataset.userView;renderPageContent();};
-  });
-  document.querySelectorAll('[data-edit-user]').forEach(el=>{
-    el.onclick=()=>{STATE.editUser=STATE.users.find(u=>u.id===el.dataset.editUser)||null;STATE.showAddUser=false;render();};
-  });
-  document.querySelectorAll('[data-toggle-user]').forEach(el=>{
-    el.onclick=()=>{
-      const id=el.dataset.toggleUser;
-      if(id===STATE.currentUser.id){showToast('ไม่สามารถปิดตัวเองได้');return;}
-      const u=STATE.users.find(x=>x.id===id);
-      STATE.users=STATE.users.map(x=>x.id===id?{...x,active:!x.active}:x);
-      saveData();showToast(u?.active?'ปิดใช้งานแล้ว':'เปิดใช้งานแล้ว');renderPageContent();
-    };
-  });
-  document.querySelectorAll('[data-del-user]').forEach(el=>{
-    el.onclick=()=>{
-      if(!confirm('ยืนยันการลบผู้ใช้?'))return;
-      STATE.users=STATE.users.filter(u=>u.id!==el.dataset.delUser);
-      saveData();showToast('ลบผู้ใช้แล้ว');renderPageContent();
-    };
-  });
-
-  // ── Modal ──
-  if(document.getElementById('modal-overlay'))
-    document.getElementById('modal-overlay').onclick=e=>{if(e.target.id==='modal-overlay')closeModal();};
-  if(document.getElementById('modal-cancel'))
-    document.getElementById('modal-cancel').onclick=closeModal;
-  if(document.getElementById('modal-save'))
-    document.getElementById('modal-save').onclick=saveModal;
-
-  // ── Drawer ──
-  if(document.getElementById('drawer-overlay'))
-    document.getElementById('drawer-overlay').onclick=()=>{STATE.drawerTicket=null;render();};
-  if(document.getElementById('close-drawer'))
-    document.getElementById('close-drawer').onclick=()=>{STATE.drawerTicket=null;render();};
-  document.querySelectorAll('[data-set-status]').forEach(el=>{
-    el.onclick=()=>{
-      const s=el.dataset.setStatus;
-      STATE.tickets=STATE.tickets.map(t=>t.id===STATE.drawerTicket?{...t,status:s}:t);
-      saveData();showToast('สถานะ → '+s);
-      document.querySelectorAll('.status-btn').forEach(b=>b.classList.toggle('selected',b.dataset.setStatus===s));
-    };
-  });
-  if(STATE.toast)showToast(STATE.toast);
-}
-
-
-function closeModal() {
-  STATE.showAddTicket=false; STATE.editTicket=null;
-  STATE.showAddUser=false; STATE.editUser=null;
-  render();
-}
-
-function saveModal() {
-  if(STATE.showAddTicket||STATE.editTicket) saveTicketModal();
-  else saveUserModal();
-}
-
-function saveTicketModal() {
-  const reporter=document.getElementById('m-reporter').value.trim();
-  const phone=document.getElementById('m-phone').value.trim();
-  if(!reporter||!phone){alert('กรุณากรอกชื่อผู้แจ้งและเบอร์');return;}
-  const ticket = {
-    id: STATE.editTicket?.id||('GD-'+uid()),
-    brand: document.getElementById('m-brand').value,
-    status: document.getElementById('m-status').value,
-    reporter, phone,
-    branchCode: document.getElementById('m-branch').value,
-    sla: document.getElementById('m-sla').value,
-    type: document.getElementById('m-type').value,
-    location: document.getElementById('m-location').value,
-    detail: document.getElementById('m-detail').value,
-    sentDate: STATE.editTicket?.sentDate||new Date().toLocaleDateString('th-TH'),
-    slaDate: STATE.editTicket?.slaDate||'09/03/2569',
-    createdAt: STATE.editTicket?.createdAt||new Date().toISOString(),
-  };
-  if(STATE.editTicket) STATE.tickets=STATE.tickets.map(t=>t.id===ticket.id?ticket:t);
-  else STATE.tickets=[ticket,...STATE.tickets];
-  saveData(); showToast(STATE.editTicket?'บันทึกแล้ว':'เพิ่ม Ticket แล้ว');
-  closeModal();
-}
-
-function saveUserModal() {
-  const name=document.getElementById('m-name').value.trim();
-  const username=document.getElementById('m-username').value.trim();
-  const password=document.getElementById('m-password').value;
-  if(!name||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
-  const brand=document.getElementById('m-ubrand').value.replace(' (ทุกแบรนด์)','');
-  const user={
-    id:STATE.editUser?.id||('u'+uid()),
-    name,username,password,
-    role:document.getElementById('m-role').value,
-    brand, active:document.getElementById('m-active').checked,
-  };
-  if(STATE.editUser) STATE.users=STATE.users.map(u=>u.id===user.id?user:u);
-  else {
-    if(STATE.users.find(u=>u.username===username)){alert('Username นี้ถูกใช้แล้ว');return;}
-    STATE.users=[...STATE.users,user];
-  }
-  saveData(); showToast(STATE.editUser?'บันทึกแล้ว':'เพิ่มผู้ใช้แล้ว');
-  closeModal();
-}
-
-function renderPageContent() {
-  const pc=document.getElementById('page-content');
-  if(pc){pc.innerHTML=renderPage();bindApp();}
-}
-
-// =====================
-// INIT
-// =====================
-loadData();
-render();
-
-
-// =====================
-// PARTICLE CANVAS
-// =====================
-(function(){
-  const cv=document.getElementById('bgCanvas');if(!cv)return;
-  const ctx=cv.getContext('2d');let W,H;
-  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
-  window.addEventListener('resize',resize,{passive:true});resize();
-  const mob=window.innerWidth<600,COUNT=mob?20:45,DIST=mob?65:100;
-  const pts=Array.from({length:COUNT},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+.3,vx:(Math.random()-.5)*.14,vy:(Math.random()-.5)*.14,o:Math.random()*.38+.1}));
-  let mx=-999,my=-999;
-  window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;},{passive:true});
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    pts.forEach(p=>{
-      if(!mob){const dx=p.x-mx,dy=p.y-my,d=Math.sqrt(dx*dx+dy*dy);if(d<100){p.vx+=dx/d*.03;p.vy+=dy/d*.03;}const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);if(sp>.5){p.vx*=.5/sp;p.vy*=.5/sp;}}
-      p.x+=p.vx;p.y+=p.vy;
-      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(150,190,255,${p.o})`;ctx.fill();
-    });
-    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
-      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<DIST){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(150,190,255,${.07*(1-d/DIST)})`;ctx.lineWidth=.6;ctx.stroke();}
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
-
-</script>
+  <script src="/assets/portal.js"></script>
 </body>
 </html>
