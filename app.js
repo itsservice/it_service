@@ -1,4 +1,4 @@
-// app.js  —  แก้ไขแล้ว: เพิ่ม Lark API routes + SSE real-time
+// app.js
 const express = require('express');
 const path    = require('path');
 
@@ -44,6 +44,7 @@ app.get('/debug/env', (_req, res) => {
 
 const PORTAL_DIR = __dirname;
 
+// Portal
 app.get(['/portal', '/portal/:brand'], (_req, res) =>
   res.sendFile(path.join(PORTAL_DIR, 'portal.html')));
 
@@ -57,10 +58,12 @@ app.get('/assets/portal.js', (_req, res) => {
   res.sendFile(path.join(PORTAL_DIR, 'portal.js'));
 });
 
-app.get('/ticket-system', (_req, res) =>
+// Ticket system — รองรับทั้ง /ticket-system และ /ticket-system/:brand
+app.get(['/ticket-system', '/ticket-system/:brand'], (_req, res) =>
   res.sendFile(path.join(PORTAL_DIR, 'ticket-system.html')));
 
-app.get('/report', (_req, res) =>
+// Report — รองรับทั้ง /report และ /report/:brand
+app.get(['/report', '/report/:brand'], (_req, res) =>
   res.sendFile(path.join(PORTAL_DIR, 'report.html')));
 
 // ─────────────────────────────────────────
