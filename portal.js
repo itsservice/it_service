@@ -2,18 +2,11 @@
 // CONFIG  <- แก้ URL ที่นี่
 // ======================
 const BRAND_CONFIG = {
-  "Animal House"        : { report: 'https://example.com', track: 'https://example.com' },
-  "Another Hound Cafe"  : { report: 'https://example.com', track: 'https://example.com' },
   "Au Bon Pain"         : { report: 'https://example.com', track: 'https://example.com' },
   "Dunkin'"             : { report: 'https://example.com', track: 'https://example.com' },
   "Funky Fries"         : { report: 'https://example.com', track: 'https://example.com' },
-  "Greyhound Cafe"      : { report: 'https://example.com', track: 'https://example.com' },
   "Greyhound Coffee"    : { report: 'https://example.com', track: 'https://example.com' },
   "Greyhound Original"  : { report: 'https://example.com', track: 'https://example.com' },
-  "Kin+Hey"             : { report: 'https://example.com', track: 'https://example.com' },
-  "Le Grand Vefour"     : { report: 'https://example.com', track: 'https://example.com' },
-  "M-Kitchen"           : { report: 'https://example.com', track: 'https://example.com' },
-  "Smileyhound"         : { report: 'https://example.com', track: 'https://example.com' },
 };
 
 // ======================
