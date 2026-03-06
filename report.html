@@ -266,6 +266,12 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
   .fab-wrap{bottom:16px}
 }
 
+
+/* CLOCK + TEMP widget — report header */
+.clock-widget{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0;margin-top:6px}
+#clock-time{font-family:monospace;font-size:12px;color:rgba(255,255,255,.9);font-weight:500}
+#clock-temp{color:#00e5a0;font-weight:600}
+
 </style>
 </head>
 <body>
@@ -300,9 +306,12 @@ setTimeout(window.hideSplash, 8000);
       <h1>IT Support</h1>
       <p>ระบบแจ้งปัญหาและติดตามงาน</p>
     </div>
-    <div class="header-right">
-    <div class="refresh-dot" id="refresh-dot"></div>
-    <div class="online-dot" id="dot"></div>
+    <div class="header-right" style="flex-direction:column;align-items:flex-end;gap:4px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="refresh-dot" id="refresh-dot"></div>
+      <div class="online-dot" id="dot"></div>
+    </div>
+    <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
   </div>
   </div>
 
@@ -853,6 +862,56 @@ document.addEventListener("DOMContentLoaded", (function(){
   window.addEventListener('scroll',()=>{ if(fabSearchOpen) closeSearch(); },{passive:true});
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFab(); });
 })());
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK + TEMPERATURE
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  // อัป clock ทุก 1 วินาที
+  function tickClock(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const el = document.getElementById('clock-time');
+    if(el) el.textContent = hh+':'+mm+':'+ss;
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // ดึงอุณหภูมิจาก Open-Meteo (Bangkok default, ถ้าได้ GPS ใช้ตำแหน่งจริง)
+  async function fetchTemp(lat, lon){
+    try{
+      const r = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+      );
+      const d = await r.json();
+      const t = d.current_weather?.temperature;
+      const el = document.getElementById('clock-temp');
+      if(el && t !== undefined) el.textContent = Math.round(t)+'°C';
+    }catch(_){}
+  }
+
+  // ขอ GPS ถ้าได้ ใช้ตำแหน่งจริง ถ้าไม่ได้ใช้กรุงเทพ
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
+      ()  => fetchTemp(13.75, 100.52) // กรุงเทพ fallback
+    );
+  } else {
+    fetchTemp(13.75, 100.52);
+  }
+  // refresh อุณหภูมิทุก 10 นาที
+  setInterval(()=>{
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
+        ()  => fetchTemp(13.75, 100.52)
+      );
+    } else { fetchTemp(13.75, 100.52); }
+  }, 600_000);
+})();
+
 </script>
 
 </body>
