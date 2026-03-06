@@ -306,12 +306,12 @@ function connectSSE(){
     try{ const d=JSON.parse(e.data); allTickets.unshift(d.ticket); } catch(_){}
     document.getElementById('dot').style.background='#00e5a0';
   });
-  sseConn.addEventListener('ticket_updated', e => {
+  sseConn.addEventListener('ticket_updated', async e => {
     try{
       const d=JSON.parse(e.data);
       allTickets=allTickets.map(t=>(t._recordId===d.recordId)?{...t,status:d.status||t.status}:t);
       // Re-render history ทันทีเมื่อ ticket ที่เราสนใจมี update
-      await renderHistory();
+      renderHistory();
       // ถ้า search result เปิดอยู่ก็ refresh ด้วย
       const shown = document.getElementById('track-result').dataset.rid;
       if(shown && shown === d.recordId) searchById(d.recordId, true); // silent
