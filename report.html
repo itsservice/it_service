@@ -348,6 +348,8 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', async () => {
+
 // ── State ────────────────────────────────────────────────────
 const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
 let allTickets = [];
@@ -644,6 +646,8 @@ document.getElementById('btn-copy') && (document.getElementById('btn-copy').oncl
   setTimeout(()=>{ document.getElementById('btn-copy').textContent='คัดลอก'; },2000);
 });
 document.getElementById('btn-new') && (document.getElementById('btn-new').onclick = resetForm);
+
+});
 </script>
 </body>
 </html>
