@@ -86,7 +86,9 @@ app.post('/api/tickets', async (req, res) => {
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
     const t = await createTicket({
       reporter, phone, brand, branchCode:branchCode||'', type, detail,
-      location:location||'', status:'แก้ไข', sentDate:now,
+      location:location||'',
+      // ไม่ส่ง status ตอน create — ให้ Lark ใช้ default option แรก
+      // sentDate ส่งเป็น Unix ms ผ่าน toUnixMs() ใน larkService
     });
     const log = addLog({ action:'create_ticket', ticketId:t._recordId, ticketLabel:t.id, detail:`สร้างโดย ${reporter}` });
     broadcast('ticket_created', { ticket:t });
