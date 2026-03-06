@@ -193,6 +193,11 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .empty-sub{font-size:13px;margin-top:6px;opacity:.6}
 
 /* ── LOADING ── */
+.filter-row{display:flex;gap:8px;align-items:stretch}
+.filter-select{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r);color:var(--fg);font-size:13px;padding:0 12px;height:46px;min-width:0;flex:1;outline:none;appearance:none;-webkit-appearance:none}
+.filter-select:focus{border-color:var(--accent)}
+.filter-select::placeholder{color:var(--fg3)}
+@media(max-width:480px){.filter-row{flex-wrap:wrap}.filter-select{flex:1 1 45%}}
 .loading{display:flex;align-items:center;gap:10px;padding:30px;justify-content:center;color:var(--fg3)}
 .spinner{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -312,11 +317,28 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 
     <!-- TRACK TAB -->
     <div class="section" id="tab-track">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" id="track-input" type="text" placeholder="ค้นหาด้วย Ticket ID หรือเบอร์โทร"/>
+      <div class="filter-row">
+        <div class="search-wrap" style="flex:1">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="track-input" type="text" placeholder="Ticket ID / เบอร์ / ชื่อ (ไม่บังคับ)"/>
+        </div>
+        <select class="filter-select" id="f-filter-brand" required>
+          <option value="">— แบรนด์ —</option>
+          <option>Dunkin'</option>
+          <option>Greyhound Cafe</option>
+          <option>Au Bon Pain</option>
+          <option>Durian Chantira</option>
+          <option>BR</option>
+          <option>Mkitchen</option>
+          <option>Simon Says Shabu</option>
+          <option>Funky Fries</option>
+          <option>Shop</option>
+        </select>
+        <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required/>
       </div>
-      <div class="search-hint">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
+      <div class="search-hint" id="filter-hint" style="color:#ff8099;display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
+      <div class="search-hint" id="filter-hint-ok" style="display:none">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
+      <div class="search-hint" id="filter-hint-default">กรอกแบรนด์และรหัสสาขาเพื่อค้นหา</div>
       <div id="track-result"></div>
       <div id="track-history-wrap" style="position:relative">
         <div id="track-history"></div>
@@ -394,30 +416,53 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 // ── Search input ──────────────────────────────────────────────
-document.getElementById('track-input').oninput = e => {
+function triggerSearch(){
   clearTimeout(trackTimer);
-  const q = e.target.value.trim();
-  if(!q){ document.getElementById('track-result').innerHTML=''; document.getElementById('track-result').dataset.rid=''; renderHistory(); return; }
+  const brand  = (document.getElementById('f-filter-brand')?.value||'').trim();
+  const branch = (document.getElementById('f-filter-branch')?.value||'').trim();
+  const q      = (document.getElementById('track-input')?.value||'').trim();
+  // Brand และ Branch บังคับ
+  if(!brand || !branch){
+    document.getElementById('filter-hint').style.display = 'flex';
+    document.getElementById('filter-hint-default').style.display = 'none';
+    document.getElementById('filter-hint-ok').style.display = 'none';
+    document.getElementById('track-result').innerHTML='';
+    document.getElementById('track-result').dataset.rid='';
+    renderHistory();
+    return;
+  }
+  document.getElementById('filter-hint').style.display = 'none';
+  document.getElementById('filter-hint-default').style.display = 'none';
+  document.getElementById('filter-hint-ok').style.display = 'block';
   document.getElementById('track-result').innerHTML='<div class="loading"><div class="spinner"></div> กำลังค้นหา...</div>';
-  trackTimer = setTimeout(()=>doSearch(q), 400);
-};
+  trackTimer = setTimeout(()=>doSearch(q, brand, branch), 300);
+}
+document.getElementById('track-input').oninput = triggerSearch;
+document.getElementById('f-filter-brand').onchange = triggerSearch;
+document.getElementById('f-filter-branch').oninput = triggerSearch;
 
-async function doSearch(q){
-  // ค้นหาจาก allTickets ก่อน (ไม่ต้อง fetch ใหม่)
+async function doSearch(q, brand, branch){
   if(!allTickets.length) await loadTickets();
-  const ql = q.toLowerCase();
-  const found = allTickets.filter(t =>
-    (t.id||'').toLowerCase().includes(ql) ||
-    (t.phone||'').includes(ql) ||
-    (t.reporter||'').toLowerCase().includes(ql)
-  );
+  const ql = (q||'').toLowerCase();
+  const bl = (branch||'').toLowerCase();
+  let found = allTickets.filter(t => {
+    // Brand และ Branch บังคับตรง
+    const brandOk  = brand  ? (t.brand||'').toLowerCase().includes(brand.toLowerCase()) : true;
+    const branchOk = branch ? (t.branchCode||'').toLowerCase().includes(bl) : true;
+    if(!brandOk || !branchOk) return false;
+    // keyword ไม่บังคับ
+    if(!ql) return true;
+    return (t.id||'').toLowerCase().includes(ql) ||
+           (t.phone||'').includes(ql) ||
+           (t.reporter||'').toLowerCase().includes(ql) ||
+           (t.detail||'').toLowerCase().includes(ql);
+  });
   const el = document.getElementById('track-result');
   el.dataset.rid = '';
   if(!found.length){
-    el.innerHTML='<div class="alert alert-err">⚠️ ไม่พบ Ticket ที่ตรงกับ "'+esc(q)+'"</div>';
+    el.innerHTML='<div class="alert alert-err">⚠️ ไม่พบ Ticket ของ <b>'+esc(brand)+'</b> สาขา <b>'+esc(branch)+'</b>'+(ql?' ที่ตรงกับ "'+esc(q)+'"':'')+'</div>';
     return;
   }
-  // แสดงผลแบบ grouped
   el.innerHTML = renderGrouped(found);
 }
 
