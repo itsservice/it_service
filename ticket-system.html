@@ -269,6 +269,15 @@ const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(
 const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+const FIELD_MAP={
+  'Ticket ID':'id','Status':'status','Brand':'brand','Branch Code':'branchCode',
+  'SLA':'sla','Reporter':'reporter','Phone':'phone','Type':'type','Detail':'detail',
+  'Location':'location','Sent Date':'sentDate','SLA Date':'slaDate','Created At':'createdAt',
+  'LINE User ID':'line_user_id','LINE Group ID':'line_group_id','Record URL':'recordUrl',
+  'Work Detail':'workDetail','Parts Used':'partsUsed','Work Hours':'workHours',
+  'Completed At':'completedAt','Engineer Name':'engineerName',
+  'Admin Note':'adminNote','Closed At':'closedAt','Closed By':'closedBy',
+};
 const BRANDS=['ALL','Animal House','Another Hound Cafe','Au Bon Pain',"Dunkin'",'Greyhound Cafe','Greyhound Coffee','Greyhound Original','Kin+Hey','Le Grand Vefour','M-Kitchen','Smileyhound'];
 const STATUSES=['\u0E15\u0E23\u0E27\u0E08\u0E07\u0E32\u0E19','\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23','\u0E23\u0E2D\u0E0A\u0E34\u0E49\u0E19\u0E2A\u0E48\u0E27\u0E19','\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E2A\u0E34\u0E49\u0E19','\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'];
 const TYPES=['\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E44\u0E1F\u0E1F\u0E49\u0E32','\u0E07\u0E32\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E31\u0E1A\u0E2D\u0E32\u0E01\u0E32\u0E28','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E19\u0E49\u0E33\u0E23\u0E49\u0E2D\u0E19','\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E17\u0E33\u0E01\u0E32\u0E41\u0E1F','\u0E07\u0E32\u0E19\u0E0B\u0E48\u0E2D\u0E21\u0E41\u0E0B\u0E21','\u0E07\u0E32\u0E19\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07','\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E04\u0E23\u0E37\u0E2D\u0E02\u0E48\u0E32\u0E22'];
@@ -309,16 +318,27 @@ let STATE={
   toastTimer:null,
   showEngModal:false,engTicket:null,
   showAdminModal:false,adminTicket:null,adminModalType:'close',
+  showFieldDebug:false,
 };
 const PER_PAGE=15;
 
 // แปลง timestamp (Unix ms หรือ string ตัวเลข) → วันที่ไทย
 function fmtDate(val){
-  if(!val&&val!==0)return'-';
-  const n=typeof val==='number'?val:Number(val);
-  if(!isNaN(n)&&n>1_000_000_000_000){
+  if(val===null||val===undefined||val===''||val==='-')return'-';
+  // Already formatted Thai date dd/mm/yyyy
+  if(typeof val==='string'&&/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(val))return val;
+  // Unix ms (13 digits)
+  const n=typeof val==='number'?val:(typeof val==='string'?Number(val):NaN);
+  if(!isNaN(n)&&n>1_000_000_000_000)
     return new Date(n).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-  }
+  // ISO string
+  if(typeof val==='string'&&(val.includes('T')||val.includes('-'))){const d=new Date(val);if(!isNaN(d))return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});}
+  return String(val);
+}\/\d{1,2}\/\d{4}$/.test(val))return val;
+  const n=typeof val==='number'?val:(typeof val==='string'?Number(val):NaN);
+  if(!isNaN(n)&&n>1_000_000_000_000)
+    return new Date(n).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+  if(typeof val==='string'){const d=new Date(val);if(!isNaN(d))return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});}
   return String(val||'-');
 }
 
@@ -520,6 +540,7 @@ function renderApp(){
     {id:'tickets',label:'All Ticket',icon:'\u{1F3AB}',badge:myT.length},
     {id:'inprogress',label:'\u0E01\u0E33\u0E25\u0E31\u0E07\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23',icon:'\u2699\uFE0F',badge:pendCnt},
     ...(rm.manageUsers?[{id:'users',label:'\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49',icon:'\u{1F465}',badge:STATE.users.length}]:[]),
+    ...(u.role==='superadmin'?[{id:'debug',label:'\u{1F527} Debug Fields',icon:'\u{1F9EA}',badge:null}]:[]),
   ];
   const bl=can('seeAll')?BRANDS.slice(1):[u.brand];
   const pageLabel=NAV.find(n=>n.id===STATE.page)?.label||STATE.page;
@@ -570,6 +591,7 @@ function renderApp(){
       <span id="ts-temp">--\u00b0C</span>
     </div>
     <button id="ts-refresh-btn" class="refresh-btn" title="Refresh">\u{1F504}</button>
+    ${['superadmin','admin'].includes(u?.role)?`<button id="btn-field-debug" class="refresh-btn" title="Lark Field Debug" style="font-size:10px;opacity:.65">🔍</button>`:''}
     <span class="badge ${rm.badge}" style="font-size:10.5px">${rm.label}</span>
   </div>
 </div>
@@ -581,6 +603,7 @@ ${renderModal()}${renderDrawer()}
 function renderPage(){
   if(STATE.page==='dashboard')return renderDashboard();
   if(STATE.page==='tickets'||STATE.page==='inprogress')return renderTickets();
+  if(STATE.page==='debug')return renderDebugPage();
   if(STATE.page==='users')return renderUsers();
   return'';
 }
@@ -680,7 +703,7 @@ function renderTickets(){
   const totalPages=Math.max(1,Math.ceil(filtered.length/PER_PAGE));
   const page=Math.min(STATE.ticketPage,totalPages);
   const paged=filtered.slice((page-1)*PER_PAGE,page*PER_PAGE);
-  const grouped={};paged.forEach(t=>{if(!grouped[t.status])grouped[t.status]=[];grouped[t.status].push(t);});
+  const grouped={};paged.forEach(t=>{const sk=t.status&&t.status.trim()?t.status.trim():'ตรวจงาน';if(!grouped[sk])grouped[sk]=[];grouped[sk].push(t);});
   const brandOpts=can('seeAll')?BRANDS:[u.brand];
   return`<div class="stat-grid">
   ${[
@@ -715,8 +738,9 @@ function renderTickets(){
     <table>
       <thead><tr>
         <th>Ticket ID</th>
-        ${can('editStatus')?'<th>\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30</th>':'<th>\u0E2A\u0E16\u0E32\u0E19\u0E30</th>'}
-        <th>\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E32\u0E02\u0E32</th><th>SLA</th><th>\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E48\u0E07</th><th>\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07</th><th>\u0E40\u0E1A\u0E2D\u0E23\u0E4C</th><th>\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17</th><th>\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</th><th></th>
+        ${can('editStatus')?'<th>เปลี่ยนสถานะ</th>':'<th>สถานะ</th>'}
+        <th>แบรนด์</th>
+        <th>รหัสสาขา</th><th>SLA</th><th>วันที่ส่ง</th><th>ผู้แจ้ง</th><th>เบอร์</th><th>ประเภท</th><th>รายละเอียด</th><th></th>
       </tr></thead>
       <tbody>
         ${Object.entries(grouped).map(([status,rows])=>`
@@ -726,13 +750,15 @@ function renderTickets(){
         </td></tr>
         ${rows.map(t=>`<tr>
           <td style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-            <span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600;font-size:14px" data-open="${esc(t._recordId||t.id)}">${esc(t.id||t._recordId||'-')}</span>
+            <span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600;font-size:14px" data-open="${esc(t._recordId||t.id)}">${esc(t.id&&t.id!==t._recordId?t.id:(t._recordId?'#'+t._recordId.slice(-6):'-'))}</span>
+            ${t.brand?`<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(96,165,250,.15);color:#60a5fa;font-weight:600;margin-left:2px">${esc(t.brand)}</span>`:``}
             <div style="display:flex;gap:3px;flex-shrink:0">
               <button class="btn btn-ghost btn-xs" data-open="${esc(t._recordId||t.id)}" title="\u0E14\u0E39">\u{1F441}</button>
               ${can('manageTickets')?`<button class="btn btn-ghost btn-xs" data-edit="${esc(t._recordId||t.id)}" title="\u0E41\u0E01\u0E49\u0E44\u0E02">\u270F\uFE0F</button>`:''}
             </div>
           </td>
           <td>${sqBtns(t,true)}</td>
+          <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">แบรนด์:</span><span style="font-weight:600;font-size:13px">${esc(t.brand||'-')}</span></td>
           <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E1C\u0E39\u0E49\u0E41\u0E08\u0E49\u0E07:</span><span style="font-weight:500">${esc(t.reporter||'-')}</span> <span class="mono" style="font-size:11.5px;color:var(--fg2)">${esc(t.phone||'-')}</span></td>
           <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E2A\u0E32\u0E02\u0E32:</span><span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.branchCode||'-')}</span> <span class="sla-chip" style="background:${slaColor(t.sla)}18;color:${slaColor(t.sla)}">${esc(t.sla||'-')}</span></td>
           <td><span style="font-size:11px;color:var(--fg3);margin-right:4px">\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48:</span><span class="mono" style="font-size:12px;color:var(--fg2)">${fmtDate(t.sentDate)}</span> <span style="background:var(--s2);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--fg2)">${esc((t.type||'-').slice(0,14))}</span></td>
@@ -819,6 +845,7 @@ ${STATE.userView==='grid'?`
 
 // ── MODAL ─────────────────────────────────────────────────────────────────
 function renderModal(){
+  if(STATE.showFieldDebug)return renderFieldDebugModal();
   if(STATE.showEngModal&&STATE.engTicket)return renderEngineerModal();
   if(STATE.showAdminModal&&STATE.adminTicket)return renderAdminModal();
   if(STATE.showAddTicket||STATE.editTicket)return renderTicketModal();
@@ -894,6 +921,70 @@ function renderUserModal(){
 }
 
 // ── DRAWER ────────────────────────────────────────────────────────────────
+function renderFieldDebugModal(){
+  const d=_fieldDebugData;
+  if(!d){return`<div class="overlay" id="modal-overlay"><div class="modal">
+    <div class="modal-title"><span>🔍</span><div>Lark Field Map</div></div>
+    <div style="text-align:center;padding:30px;color:var(--fg2)">⏳ กำลังโหลด...</div>
+    <div class="modal-footer"><button class="btn btn-outline" id="modal-cancel">ปิด</button></div>
+  </div></div>`;}
+  const schema=d.schema||[];
+  const dm=d.detectedMap||{};
+  const sample=d.parsedSample||{};
+  const unmapped=schema.filter(f=>f.mapped_to==='(unmapped)');
+  const mapped=schema.filter(f=>f.mapped_to!=='(unmapped)');
+  return`<div class="overlay" id="modal-overlay"><div class="modal" style="width:680px;max-height:88vh;overflow:auto">
+    <div class="modal-title"><span>🔍</span><div>
+      <div>Lark Field Map — Debug</div>
+      <div style="font-size:11px;font-weight:400;color:var(--fg2)">ชื่อ column จริงจาก Lark Base + การ map</div>
+    </div></div>
+    
+    <div style="margin-bottom:12px;padding:10px 14px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;font-size:12.5px">
+      <div style="font-weight:600;margin-bottom:6px;color:var(--accent)">✅ Mapped Fields (${mapped.length})</div>
+      ${mapped.map(f=>`<div style="display:flex;gap:8px;margin-bottom:3px;font-family:'DM Mono',monospace;font-size:11.5px">
+        <span style="color:var(--fg2);min-width:140px">"${esc(f.name)}"</span>
+        <span style="color:var(--fg3)">→</span>
+        <span style="color:var(--green)">${esc(f.mapped_to)}</span>
+        ${sample[f.mapped_to]!==undefined?`<span style="color:var(--fg3);margin-left:8px">= ${esc(String(sample[f.mapped_to]||'').slice(0,30))}</span>`:''}
+      </div>`).join('')}
+    </div>
+    
+    ${unmapped.length?`<div style="padding:10px 14px;background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.2);border-radius:8px;font-size:12.5px;margin-bottom:12px">
+      <div style="font-weight:600;margin-bottom:6px;color:var(--orange)">⚠️ Unmapped Fields (${unmapped.length}) — ยังไม่ได้ map</div>
+      ${unmapped.map(f=>`<div style="font-family:'DM Mono',monospace;font-size:11.5px;color:var(--fg2);margin-bottom:2px">"${esc(f.name)}" (type:${esc(String(f.type))})</div>`).join('')}
+    </div>`:''}
+    
+    <div style="padding:10px 14px;background:var(--s2);border-radius:8px;font-size:12px;margin-bottom:12px">
+      <div style="font-weight:600;margin-bottom:6px;color:var(--fg2)">📦 Sample Ticket (parsed)</div>
+      <pre style="font-family:'DM Mono',monospace;font-size:11px;color:var(--fg2);overflow-x:auto;max-height:160px">${esc(JSON.stringify({...sample,_rawFields:undefined},null,2))}</pre>
+    </div>
+    
+    <div style="padding:10px 14px;background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2);border-radius:8px;font-size:12px">
+      <div style="font-weight:600;color:var(--green);margin-bottom:4px">💡 วิธีแก้ถ้า field ไม่ map ถูก</div>
+      <div style="color:var(--fg2);line-height:1.7">
+        1. ดูชื่อ column ใน "Unmapped Fields" ด้านบน<br>
+        2. แจ้ง Dev เพิ่ม keyword ใน <code style="background:var(--s2);padding:1px 5px;border-radius:3px">larkService.js → KEYWORD_MAP</code><br>
+        3. หรือเปลี่ยนชื่อ column ใน Lark Base ให้ตรงกับ keyword ที่ระบบรู้จัก
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btn-reload-debug" style="font-size:12px">🔄 รีโหลด</button>
+      <button class="btn btn-outline" id="modal-cancel">ปิด</button>
+    </div>
+  </div></div>`;}
+
+STATE.showFieldDebug=false;
+
+function renderDebugPage(){
+  return`<div style="max-width:900px">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">🔧 Debug — ชื่อ Column จริงใน Lark Base</h2>
+    <p style="color:var(--fg2);font-size:13px;margin-bottom:16px">ใช้เพื่อตรวจสอบว่าชื่อ Column ใน Lark ตรงกับ FIELD_MAP หรือไม่</p>
+    <button class="btn btn-primary" id="btn-load-debug">📡 โหลด Field จาก Lark</button>
+    <div id="debug-result" style="margin-top:18px"></div>
+  </div>`;
+}
+
 function renderDrawer(){
   if(!STATE.drawerTicket)return'';
   const t=STATE.tickets.find(x=>x._recordId===STATE.drawerTicket||x.id===STATE.drawerTicket);
@@ -1107,16 +1198,71 @@ function bindApp(){
   if(drawerOverlay)drawerOverlay.onclick=()=>{STATE.drawerTicket=null;render();};
   const closeDrawer=document.getElementById('close-drawer');
   if(closeDrawer)closeDrawer.onclick=()=>{STATE.drawerTicket=null;render();};
+  const dbgBtn=document.getElementById('btn-load-debug');
+  if(dbgBtn)dbgBtn.onclick=async()=>{
+    dbgBtn.disabled=true;dbgBtn.textContent='⏳ กำลังโหลด...';
+    const res=await fetch('/api/debug/lark-fields').then(r=>r.json()).catch(e=>({ok:false,error:e.message}));
+    const el=document.getElementById('debug-result');
+    if(!el)return;
+    if(!res.ok){el.innerHTML=`<div style="color:var(--red);padding:12px;background:rgba(248,113,113,.1);border-radius:8px">❌ ${res.error}</div>`;dbgBtn.disabled=false;dbgBtn.textContent='📡 โหลดอีกครั้ง';return;}
+    const cols=res.columns||[];
+    const sample=res.sampleRecord||{};
+    el.innerHTML=`
+      <div style="padding:12px 16px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);border-radius:8px;margin-bottom:14px;font-size:13px">
+        ✅ พบ <strong>${cols.length} columns</strong> | <strong>${res.totalRecords||0} records</strong>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="background:rgba(255,255,255,.05)">
+            <th style="padding:8px 12px;text-align:left;color:var(--fg3);font-weight:600;border-bottom:1px solid var(--b1)">#</th>
+            <th style="padding:8px 12px;text-align:left;color:var(--fg3);font-weight:600;border-bottom:1px solid var(--b1)">ชื่อ Column (ใน Lark)</th>
+            <th style="padding:8px 12px;text-align:left;color:var(--fg3);font-weight:600;border-bottom:1px solid var(--b1)">Type</th>
+            <th style="padding:8px 12px;text-align:left;color:var(--fg3);font-weight:600;border-bottom:1px solid var(--b1)">ตัวอย่างค่า (record แรก)</th>
+          </tr></thead>
+          <tbody>
+            ${cols.map((f,i)=>{
+              const raw=sample[f.name];
+              const preview=raw===undefined?'<span style="color:var(--fg3)">-</span>'
+                :(Array.isArray(raw)&&raw[0]?.text!==undefined?raw.map(x=>x.text).join('')
+                :(typeof raw==='number'&&raw>1e12?new Date(raw).toLocaleDateString('th-TH')
+                :JSON.stringify(raw).slice(0,60)));
+              const inMap=Object.keys(FIELD_MAP||{}).includes(f.name);
+              return\`<tr style="border-bottom:1px solid var(--b1);background:${i%2===0?'transparent':'rgba(255,255,255,.02)'}">
+                <td style="padding:7px 12px;color:var(--fg3)">${i+1}</td>
+                <td style="padding:7px 12px"><span class="mono" style="color:${inMap?'var(--green)':'var(--orange)'}">${f.name}</span>
+                  ${inMap?'<span style="font-size:10px;color:var(--green);margin-left:6px">✅ mapped</span>':'<span style="font-size:10px;color:var(--orange);margin-left:6px">⚠️ ไม่มีใน FIELD_MAP</span>'}
+                </td>
+                <td style="padding:7px 12px;color:var(--fg2);font-size:11px">${f.type}</td>
+                <td style="padding:7px 12px;color:var(--fg);font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis">${preview}</td>
+              </tr>\`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;padding:12px 14px;background:var(--bg2);border:1px solid var(--b1);border-radius:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;margin-bottom:6px">📋 แก้ไข larkService.js — FIELD_MAP ให้ตรงกับชื่อ Column ด้านบน</div>
+        <div class="mono" style="font-size:11px;color:var(--fg2);line-height:1.8;white-space:pre">${cols.filter(f=>!Object.keys(FIELD_MAP||{}).includes(f.name)).map(f=>\`// '${f.name}': 'key',\`).join('\n')||'✅ ทุก column ถูก map แล้ว'}</div>
+      </div>`;
+    dbgBtn.disabled=false;dbgBtn.textContent='📡 โหลดอีกครั้ง';
+  };
   const engBtn=document.getElementById('btn-eng-submit');
   if(engBtn)engBtn.onclick=()=>{const rid=engBtn.dataset.rid;STATE.engTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.showEngModal=true;render();};
   const adminCloseBtn=document.getElementById('btn-admin-close');
   if(adminCloseBtn)adminCloseBtn.onclick=()=>{const rid=adminCloseBtn.dataset.rid;STATE.adminTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.adminModalType='close';STATE.showAdminModal=true;render();};
   const adminNoteBtn=document.getElementById('btn-admin-note');
   if(adminNoteBtn)adminNoteBtn.onclick=()=>{const rid=adminNoteBtn.dataset.rid;STATE.adminTicket=STATE.tickets.find(x=>x._recordId===rid||x.id===rid)||null;STATE.adminModalType='note';STATE.showAdminModal=true;render();};
+  // Field debug button
+  const dbgBtn=document.getElementById('btn-field-debug');
+  if(dbgBtn)dbgBtn.onclick=async()=>{
+    STATE.showFieldDebug=true;render();
+    await fetchFieldDebug();render();
+    const reloadBtn=document.getElementById('btn-reload-debug');
+    if(reloadBtn)reloadBtn.onclick=async()=>{_fieldDebugData=null;render();await fetchFieldDebug();render();};
+  };
 }
 
 // ── MODAL ACTIONS ─────────────────────────────────────────────────────────
-function closeModal(){STATE.showAddTicket=false;STATE.editTicket=null;STATE.showAddUser=false;STATE.editUser=null;STATE.showEngModal=false;STATE.engTicket=null;STATE.showAdminModal=false;STATE.adminTicket=null;render();}
+function closeModal(){STATE.showAddTicket=false;STATE.editTicket=null;STATE.showAddUser=false;STATE.editUser=null;STATE.showEngModal=false;STATE.engTicket=null;STATE.showAdminModal=false;STATE.adminTicket=null;STATE.showFieldDebug=false;render();}
 function saveModal(){
   if(STATE.showEngModal)return saveEngineerModal();
   if(STATE.showAdminModal)return saveAdminModal();
