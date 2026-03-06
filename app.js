@@ -29,10 +29,20 @@ app.get('/api/events', (req, res) => {
 });
 
 // ── Static pages ─────────────────────────────────────────────
-app.get('/',         (_, res) => res.redirect('/report'));
-app.get('/report',   (_, res) => res.sendFile(path.join(__dirname,'report.html')));
-app.get('/admin',    (_, res) => res.sendFile(path.join(__dirname,'admin.html')));
-app.get('/engineer', (_, res) => res.sendFile(path.join(__dirname,'engineer.html')));
+app.get('/', (_, res) => res.redirect('/report'));
+
+// No-cache headers สำหรับ HTML ทุกหน้า — บังคับ browser โหลดใหม่ทุกครั้ง
+const noCacheHtml = (file) => (_, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  });
+  res.sendFile(path.join(__dirname, file));
+};
+app.get('/report',   noCacheHtml('report.html'));
+app.get('/admin',    noCacheHtml('admin.html'));
+app.get('/engineer', noCacheHtml('engineer.html'));
 
 // ── Auth ──────────────────────────────────────────────────────
 app.post('/api/auth/login', (req, res) => {
@@ -198,6 +208,40 @@ app.get('/debug/env', (_, res) => {
 app.get('/debug/lark-fields', async (_, res) => {
   try { const d = await debugSchema(); res.json({ ok:true, ...d }); }
   catch(e) { res.json({ ok:false, error:e.message }); }
+});
+
+// ── Test LINE push ───────────────────────────────────────────
+app.get('/debug/test-line', async (_, res) => {
+  const axios = require('axios');
+  const AT = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  const group = process.env.LINE_ADMIN_GROUP_ID;
+  if (!AT) return res.json({ ok:false, error:'LINE_CHANNEL_ACCESS_TOKEN not set' });
+  if (!group) return res.json({ ok:false, error:'LINE_ADMIN_GROUP_ID not set' });
+  try {
+    await axios.post('https://api.line.me/v2/bot/message/push',
+      { to: group, messages:[{ type:'text', text:'✅ Test จาก IT Ticket System' }] },
+      { headers:{ Authorization:'Bearer '+AT }, timeout:8000 }
+    );
+    res.json({ ok:true, msg:'LINE sent to group: '+group.slice(0,8)+'...' });
+  } catch(e) {
+    res.json({ ok:false, error: e.response?.data || e.message });
+  }
+});
+
+// ── Test webhook manually ────────────────────────────────────
+app.post('/debug/test-webhook', async (req, res) => {
+  const { record_id } = req.body || {};
+  if (!record_id) return res.json({ ok:false, error:'send { "record_id": "recXXX" }' });
+  try {
+    const { getTicket, invalidateCache } = require('./larkService');
+    invalidateCache();
+    const t = await getTicket(record_id);
+    res.json({ ok:true, ticket:t, env:{
+      hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+      hasAdminGroup: !!process.env.LINE_ADMIN_GROUP_ID,
+      adminGroup: (process.env.LINE_ADMIN_GROUP_ID||'').slice(0,8)+'...',
+    }});
+  } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
 // ── Webhooks ──────────────────────────────────────────────────
