@@ -1,153 +1,242 @@
-// larkService.js — Lark Base API client
+// larkService.js — Auto field-detection + full Lark Base integration
 const axios = require('axios');
-const BASE_URL = 'https://open.larksuite.com/open-apis';
+const BASE = 'https://open.larksuite.com/open-apis';
 
 let _token = null, _tokenExp = 0;
+let _fieldMap = null; // detected at runtime: internalKey → larkColumnName
 
-async function getTenantToken() {
+async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
-  const r = await axios.post(
-    `${BASE_URL}/auth/v3/tenant_access_token/internal`,
-    { app_id: process.env.LARK_APP_ID, app_secret: process.env.LARK_APP_SECRET },
-    { timeout: 10_000 }
-  );
-  if (r.data.code !== 0) throw new Error(`Lark auth error: ${r.data.msg}`);
+  const r = await axios.post(`${BASE}/auth/v3/tenant_access_token/internal`, {
+    app_id: process.env.LARK_APP_ID,
+    app_secret: process.env.LARK_APP_SECRET,
+  }, { timeout: 10_000 });
+  if (r.data.code !== 0) throw new Error(`Lark auth: ${r.data.msg}`);
   _token = r.data.tenant_access_token;
   _tokenExp = Date.now() + r.data.expire * 1000;
   return _token;
 }
+const hdr = t => ({ Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' });
+const APP = () => process.env.LARK_APP_TOKEN;
+const TBL = () => process.env.LARK_TABLE_ID;
 
-function larkHeaders(t) {
-  return { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' };
+// ── Keyword → internal key mapping ────────────────────────────
+const KEYWORDS = [
+  { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','หมายเลข ticket','เลข ticket','ticket number','no.'] },
+  { key: 'status',       words: ['status','สถานะ','state','สถานะงาน'] },
+  { key: 'brand',        words: ['brand','แบรนด์','แบรนด','brand name'] },
+  { key: 'branchCode',   words: ['branch code','branchcode','รหัสสาขา','รหัส สาขา','สาขา','branch no','code'] },
+  { key: 'sla',          words: ['sla','sla level','priority'] },
+  { key: 'reporter',     words: ['reporter','ผู้แจ้ง','ผู้แจ้งปัญหา','ชื่อผู้แจ้ง','name','ชื่อ'] },
+  { key: 'phone',        words: ['phone','เบอร์','เบอร์ติดต่อ','mobile','tel','โทร'] },
+  { key: 'type',         words: ['type','ประเภท','ประเภทงาน','ประเภทปัญหา','job type','หมวดหมู่'] },
+  { key: 'detail',       words: ['detail','รายละเอียด','รายละเอียดปัญหา','อาการ','problem','issue'] },
+  { key: 'location',     words: ['location','สถานที่','สถานที่/โซน','zone','area'] },
+  { key: 'sentDate',     words: ['sent date','sentdate','วันที่ส่ง','วันที่แจ้ง','วันที่','date','submission date'] },
+  { key: 'slaDate',      words: ['sla date','sladate','วันนัดงาน','due date','นัดวันซ่อม'] },
+  { key: 'line_user_id', words: ['line user id','line user','line uid','line_user_id'] },
+  { key: 'line_group_id',words: ['line group id','line group','line_group_id'] },
+  { key: 'assignedTo',   words: ['assigned to','assigned','มอบหมาย','ช่างที่รับงาน','engineer assigned'] },
+  { key: 'workDetail',   words: ['work detail','รายละเอียดงาน','ผลการซ่อม','รายงานช่าง'] },
+  { key: 'partsUsed',    words: ['parts used','อะไหล่','อะไหล่ที่ใช้'] },
+  { key: 'workHours',    words: ['work hours','ชั่วโมงทำงาน','man hour'] },
+  { key: 'completedAt',  words: ['completed at','วันที่เสร็จ','เสร็จเมื่อ'] },
+  { key: 'engineerName', words: ['engineer name','ชื่อช่าง','ช่าง','engineer'] },
+  { key: 'adminNote',    words: ['admin note','หมายเหตุ admin','หมายเหตุ','remark'] },
+  { key: 'closedAt',     words: ['closed at','วันที่ปิด','ปิดเมื่อ'] },
+  { key: 'closedBy',     words: ['closed by','ปิดโดย','จบโดย'] },
+];
+
+const FAST = {};
+for (const { key, words } of KEYWORDS) {
+  for (const w of words) FAST[w.toLowerCase().trim()] = key;
 }
 
-// *** ปรับ Column name ให้ตรงกับ Lark Base ***
-const FIELD_MAP = {
-  'Ticket ID':     'id',
-  'Status':        'status',
-  'Brand':         'brand',
-  'Branch Code':   'branchCode',
-  'SLA':           'sla',
-  'Reporter':      'reporter',
-  'Phone':         'phone',
-  'Type':          'type',
-  'Detail':        'detail',
-  'Location':      'location',
-  'Sent Date':     'sentDate',
-  'SLA Date':      'slaDate',
-  'Created At':    'createdAt',
-  'LINE User ID':  'line_user_id',
-  'LINE Group ID': 'line_group_id',
-  'Record URL':    'recordUrl',
-  'Work Detail':   'workDetail',
-  'Parts Used':    'partsUsed',
-  'Work Hours':    'workHours',
-  'Completed At':  'completedAt',
-  'Engineer Name': 'engineerName',
-  'Admin Note':    'adminNote',
-  'Closed At':     'closedAt',
-  'Closed By':     'closedBy',
-};
+function detectKey(larkName) {
+  const n = (larkName || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  if (FAST[n]) return FAST[n];
+  for (const [w, k] of Object.entries(FAST)) {
+    if (n.includes(w) || w.includes(n)) return k;
+  }
+  return null;
+}
 
-const WRITABLE = new Set([
-  'Status','Brand','Branch Code','SLA','Reporter','Phone','Type','Detail','Location','Sent Date',
-  'LINE User ID','LINE Group ID',
-  'Work Detail','Parts Used','Work Hours','Completed At','Engineer Name',
-  'Admin Note','Closed At','Closed By',
+// Fields we can write back
+const WRITABLE_KEYS = new Set([
+  'status','brand','branchCode','sla','reporter','phone','type','detail',
+  'location','sentDate','line_user_id','line_group_id','assignedTo',
+  'workDetail','partsUsed','workHours','completedAt','engineerName',
+  'adminNote','closedAt','closedBy'
 ]);
 
-const REVERSE_MAP = Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
-
-// FIX: แปลง Unix ms → วันที่ไทย
-function fmtDate(val) {
-  if (val === null || val === undefined || val === '') return null;
-  const n = typeof val === 'number' ? val : Number(val);
-  if (!isNaN(n) && n > 1_000_000_000_000) {
+// ── Date formatter ─────────────────────────────────────────────
+function fmtDate(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v)) return v;
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!isNaN(n) && n > 1_000_000_000_000)
     return new Date(n).toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
-  }
-  if (typeof val === 'string' && (val.includes('T') || /^\d{4}-/.test(val))) {
-    const d = new Date(val);
+  if (typeof v === 'string') {
+    const d = new Date(v);
     if (!isNaN(d)) return d.toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
-  return String(val);
+  return String(v);
+}
+const DATE_KEYS = new Set(['sentDate','slaDate','completedAt','closedAt']);
+
+function parseVal(v, key) {
+  if (Array.isArray(v) && v[0]?.text !== undefined) return v.map(x => x.text || '').join('');
+  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v) return v.text;
+  if (v && typeof v === 'object' && !Array.isArray(v) && ('link' in v || 'url' in v)) return v.link || v.url || '';
+  if (DATE_KEYS.has(key)) return fmtDate(v);
+  if (typeof v === 'number' && v > 1_000_000_000_000) return fmtDate(v);
+  return v;
 }
 
-const DATE_KEYS = new Set(['sentDate','slaDate','createdAt','completedAt','closedAt']);
-
-function parseValue(val, key) {
-  if (Array.isArray(val) && val.length > 0 && val[0]?.text !== undefined)
-    return val.map(v => v.text || '').join('');
-  if (val && typeof val === 'object' && !Array.isArray(val) && val.text !== undefined)
-    return val.text;
-  if (DATE_KEYS.has(key)) return fmtDate(val);
-  return val;
-}
-
-function parseRecord(record) {
-  const out = { _recordId: record.record_id };
-  for (const [lk, val] of Object.entries(record.fields || {})) {
-    const key = FIELD_MAP[lk] || lk;
-    out[key] = parseValue(val, key);
+// ── Auto-detect field map ──────────────────────────────────────
+function buildFieldMap(record) {
+  const map = {}; // internalKey → larkColName (for write-back)
+  for (const larkName of Object.keys(record.fields || {})) {
+    const key = detectKey(larkName);
+    if (key && !map[key]) map[key] = larkName;
   }
-  if (!out.id) out.id = record.record_id;
+  console.log('\n[Lark] Field map detected:');
+  Object.entries(map).forEach(([k, v]) => console.log(`  ${k.padEnd(14)} ← "${v}"`));
+  const unmapped = Object.keys(record.fields || {}).filter(n => !detectKey(n));
+  if (unmapped.length) console.log('[Lark] Unmapped:', unmapped.join(', '));
+  return map;
+}
+
+// ── Ticket ID counter ──────────────────────────────────────────
+let _seq = 0;
+const _idCache = new Map();
+function makeId(recordId) {
+  if (_idCache.has(recordId)) return _idCache.get(recordId);
+  const id = 'TK-' + String(++_seq).padStart(4, '0');
+  _idCache.set(recordId, id);
+  return id;
+}
+
+// ── Parse a Lark record → internal object ─────────────────────
+function parseRecord(rec) {
+  const out = { _recordId: rec.record_id };
+  for (const [larkName, val] of Object.entries(rec.fields || {})) {
+    const key = detectKey(larkName) || larkName;
+    out[key] = parseVal(val, key);
+  }
+  if (!out.id || String(out.id).startsWith('rec')) {
+    out.id = makeId(rec.record_id);
+  }
   return out;
 }
 
-// FIX WrongRequestBody: กรองเฉพาะ WRITABLE + val ที่มีค่า
+// ── toWriteFields ──────────────────────────────────────────────
 function toWriteFields(fields) {
   const out = {};
+  const fm = _fieldMap || {};
   for (const [key, val] of Object.entries(fields)) {
     if (val === undefined || val === null || val === '') continue;
-    const lk = REVERSE_MAP[key] || key;
-    if (WRITABLE.has(lk)) out[lk] = val;
-    else console.warn(`[Lark] skip non-writable: ${key} -> ${lk}`);
+    if (!WRITABLE_KEYS.has(key)) continue;
+    const colName = fm[key] || key; // use detected name or fallback
+    out[colName] = typeof val === 'number' ? String(val) : val;
   }
   return out;
 }
 
-async function listTickets() {
-  const token = await getTenantToken();
+// ── LIST tickets ───────────────────────────────────────────────
+async function listTickets({ brand, status } = {}) {
+  const token = await getToken();
   let all = [], pt;
   do {
     const params = { page_size: 100 };
     if (pt) params.page_token = pt;
     const r = await axios.get(
-      `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records`,
-      { headers: larkHeaders(token), params, timeout: 15_000 }
+      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
+      { headers: hdr(token), params, timeout: 15_000 }
     );
-    if (r.data.code !== 0) throw new Error(`Lark list error: ${r.data.msg}`);
-    all = all.concat((r.data.data?.items || []).map(parseRecord));
+    if (r.data.code !== 0) throw new Error(`Lark list: ${r.data.msg}`);
+    const items = r.data.data?.items || [];
+    if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
+    all = all.concat(items.map(parseRecord));
     pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
   } while (pt);
+
+  // Filter server-side
+  if (brand && brand !== 'ALL') all = all.filter(t => t.brand === brand);
+  if (status) all = all.filter(t => t.status === status);
+
+  // Sort: newest first (by id descending)
+  all.sort((a, b) => {
+    const na = String(a.id || '').replace(/\D/g, '');
+    const nb = String(b.id || '').replace(/\D/g, '');
+    return Number(nb) - Number(na);
+  });
+
+  console.log(`[Lark] Loaded ${all.length} tickets`);
   return all;
 }
 
-async function updateTicketField(recordId, fields) {
-  const token = await getTenantToken();
+// ── GET single ticket ──────────────────────────────────────────
+async function getTicket(recordId) {
+  const token = await getToken();
+  const r = await axios.get(
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`,
+    { headers: hdr(token), timeout: 10_000 }
+  );
+  if (r.data.code !== 0) throw new Error(`Lark get: ${r.data.msg}`);
+  return parseRecord(r.data.data?.record || {});
+}
+
+// ── UPDATE ticket ──────────────────────────────────────────────
+async function updateTicket(recordId, fields) {
+  const token = await getToken();
   const larkFields = toWriteFields(fields);
-  if (!Object.keys(larkFields).length) { console.warn('[Lark] no writable fields'); return {}; }
-  console.log('[Lark] PATCH', recordId, JSON.stringify(larkFields));
+  if (!Object.keys(larkFields).length) {
+    console.warn('[Lark] update: no writable fields', Object.keys(fields));
+    return {};
+  }
+  console.log('[Lark] PUT', recordId, JSON.stringify(larkFields));
   const r = await axios.put(
-    `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records/${recordId}`,
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`,
     { fields: larkFields },
-    { headers: larkHeaders(token), timeout: 15_000 }
+    { headers: hdr(token), timeout: 15_000 }
   );
-  if (r.data.code !== 0) throw new Error(`Lark update error: ${r.data.msg}`);
+  if (r.data.code !== 0) throw new Error(`Lark update: ${r.data.msg}`);
   return parseRecord(r.data.data?.record || {});
 }
 
+// ── CREATE ticket ──────────────────────────────────────────────
 async function createTicket(fields) {
-  const token = await getTenantToken();
+  const token = await getToken();
   const larkFields = toWriteFields(fields);
-  if (!Object.keys(larkFields).length) throw new Error('No valid writable fields');
-  console.log('[Lark] POST', JSON.stringify(larkFields));
+  if (!Object.keys(larkFields).length) throw new Error('No valid fields');
+  console.log('[Lark] POST ticket:', JSON.stringify(larkFields));
   const r = await axios.post(
-    `${BASE_URL}/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records`,
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
     { fields: larkFields },
-    { headers: larkHeaders(token), timeout: 15_000 }
+    { headers: hdr(token), timeout: 15_000 }
   );
-  if (r.data.code !== 0) throw new Error(`Lark create error: ${r.data.msg}`);
+  if (r.data.code !== 0) throw new Error(`Lark create: ${r.data.msg}`);
   return parseRecord(r.data.data?.record || {});
 }
 
-module.exports = { listTickets, updateTicketField, createTicket, getTenantToken };
+// ── DEBUG: get raw field schema ────────────────────────────────
+async function debugSchema() {
+  const token = await getToken();
+  const rf = await axios.get(
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`,
+    { headers: hdr(token), timeout: 10_000 }
+  );
+  const schema = (rf.data.data?.items || []).map(f => ({
+    name: f.field_name, type: f.type,
+    mapped_to: detectKey(f.field_name) || '(unmapped)'
+  }));
+  const rr = await axios.get(
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
+    { headers: hdr(token), params: { page_size: 1 }, timeout: 10_000 }
+  );
+  const sample = rr.data.data?.items?.[0] ? parseRecord(rr.data.data.items[0]) : null;
+  return { schema, fieldMap: _fieldMap, sample };
+}
+
+module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken };
