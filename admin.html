@@ -762,7 +762,7 @@ function connectSSE(){
 // ════════════════════════════════════════════════════════════════
 async function loadTickets(){
   const d=await api('/api/tickets');
-  if(d.ok){ tickets=d.tickets; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
+  if(d.ok){ tickets=d.tickets||[]; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
 }
 async function loadLogs(){
   const d=await api('/api/logs?limit=200');
@@ -770,7 +770,7 @@ async function loadLogs(){
 }
 async function loadUsers(){
   const d=await api('/api/users');
-  if(d.ok){ users=d.users; if(currentPage==='users') renderUsersPage(); }
+  if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
 }
 
 function updateBadge(){
@@ -919,7 +919,7 @@ function renderTicketsPage(){
 
   if(!paged.length){
     document.getElementById('ticket-tbody').innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">ไม่พบ Ticket</div></div></td></tr>`;
-    document.getElementById('tbl-pagination').innerHTML=''; return;
+    const _pg=document.getElementById('tbl-pagination'); if(_pg) _pg.innerHTML=''; return;
   }
   document.getElementById('ticket-tbody').innerHTML=paged.map(t=>{
     const sc=statusColor(t.status);
@@ -946,8 +946,7 @@ function renderTicketsPage(){
   }).join('');
 
   // ── FAB pagination update ───────────────────────────────────
-  const total = Math.max(1, Math.ceil(data.length / PER_PAGE));
-  if(window.renderFabPagination) renderFabPagination(total, tbPage, PER_PAGE);
+  if(window.renderFabPagination) renderFabPagination(Math.max(1, Math.ceil(data.length / PER_PAGE)), tbPage, PER_PAGE);
 }
 function sqBtn(t,status,color,label){
   const active=t.status===status;
