@@ -50,9 +50,11 @@ a{color:inherit;text-decoration:none}
 .sidebar{
   width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);
   border-right:1px solid var(--b1);display:flex;flex-direction:column;
-  height:100vh;overflow:hidden;transition:width .25s;
+  height:100vh;overflow:hidden;transition:transform .3s cubic-bezier(.22,.61,.36,1);
   padding-top:calc(var(--safe-top)+0px)
 }
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:149;display:none;backdrop-filter:blur(1px)}
+.sidebar-overlay.open{display:block}
 .sb-head{padding:20px 18px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px}
 .sb-logo{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:15px;font-weight:800;color:#000;flex-shrink:0}
 .sb-title{font-family:var(--font-h);font-size:15px;font-weight:700;line-height:1.1}
@@ -78,14 +80,15 @@ a{color:inherit;text-decoration:none}
 .btn-logout:hover{background:rgba(239,68,68,.1);border-color:var(--danger);color:var(--danger)}
 
 /* MAIN */
-.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 
 /* TOPBAR (mobile) */
 .topbar-mobile{
   display:none;background:var(--bg2);border-bottom:1px solid var(--b1);
   padding:12px 14px;padding-top:calc(var(--safe-top)+12px);
   align-items:center;gap:10px;flex-shrink:0;
-  position:sticky;top:0;z-index:100
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.4)
 }
 .btn-menu{background:transparent;border:none;color:var(--fg2);font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .topbar-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
@@ -93,7 +96,7 @@ a{color:inherit;text-decoration:none}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 
 /* PAGE CONTENT */
-.page-content{flex:1;overflow-y:auto;padding:0;padding-bottom:calc(var(--safe-bottom)+80px)}
+.page-content{flex:1;overflow-y:auto;padding:0;padding-bottom:56px}
 
 /* PAGE HEADER */
 .ph{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -143,15 +146,29 @@ a{color:inherit;text-decoration:none}
 .chip-cancel.active{background:rgba(239,68,68,.12);border-color:var(--danger);color:var(--danger)}
 
 /* ═══════════ TICKET TABLE ═══════════ */
-.tbl-wrap{padding:0 24px;padding-bottom:140px}
+.tbl-wrap{padding:0 24px;padding-bottom:160px}
 .float-bar{
-  position:fixed;bottom:calc(60px + var(--safe-bottom));left:0;right:0;
+  /* Desktop: sticky to bottom inside main-area — not fixed */
   display:none;align-items:center;justify-content:space-between;
-  gap:8px;padding:8px 14px;
-  background:rgba(13,13,18,.92);backdrop-filter:blur(10px);
-  border-top:1px solid var(--b1);z-index:80;flex-wrap:wrap
+  gap:8px;padding:10px 24px;
+  background:var(--bg2);
+  border-top:1px solid var(--b2);
+  flex-shrink:0;flex-wrap:wrap;
+  position:sticky;bottom:0;z-index:90;
+  box-shadow:0 -4px 20px rgba(0,0,0,.4)
 }
 .float-bar.visible{display:flex}
+/* Mobile: float-bar จะ fixed ลอยเหนือ bottom-nav */
+@media(max-width:768px){
+  .float-bar{
+    position:fixed!important;
+    bottom:calc(56px + var(--safe-bottom))!important;
+    left:0!important;right:0!important;
+    background:rgba(7,7,10,.97)!important;
+    backdrop-filter:blur(14px);
+    z-index:89
+  }
+}
 .float-pag{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .pag-btn{min-width:34px;height:34px;padding:0 8px;border-radius:8px;border:1px solid var(--b2);
   background:transparent;color:var(--fg2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -327,18 +344,20 @@ a{color:inherit;text-decoration:none}
 
 /* ═══════════ RESPONSIVE ═══════════ */
 @media(max-width:768px){
-  .sidebar{display:none}
-  .sidebar.mobile-open{display:flex;position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0)}
   .topbar-mobile{display:flex}
   .bottom-nav{display:block}
-  .page-content{padding-bottom:calc(var(--safe-bottom)+140px)}
+  /* page-content: แค่เผื่อ bottom-nav (60px) — float-bar จะ fixed แยก */
+  .page-content{padding-bottom:0}
   .stats-grid{grid-template-columns:repeat(2,1fr);padding:14px}
   .filter-bar,.status-chips{padding-left:14px;padding-right:14px}
-  .tbl-wrap{padding:0 14px;padding-bottom:100px}
+  /* tbl-wrap ต้องเผื่อ float-bar (52px) + bottom-nav (60px) */
+  .tbl-wrap{padding:0 14px;padding-bottom:130px}
   .ph{padding:16px 14px 0}
-  .dash-grid{grid-template-columns:1fr;padding:0 14px 14px}
-  .user-grid{padding:0 14px 100px;grid-template-columns:1fr}
-  .log-list{padding:0 14px;padding-bottom:100px}
+  .dash-grid{grid-template-columns:1fr;padding:0 14px 80px}
+  .user-grid{padding:0 14px 80px;grid-template-columns:1fr}
+  .log-list{padding:0 14px;padding-bottom:80px}
   .drawer{width:100%;border-left:none;border-radius:var(--r3) var(--r3) 0 0;top:auto;height:92vh}
   .tbl{display:block}
   .tbl thead{display:none}
@@ -404,6 +423,8 @@ setTimeout(window.hideSplash, 8000);
 
 <!-- ══ APP ════════════════════════════════════════════════════ -->
 <div id="app">
+  <!-- SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
@@ -437,7 +458,10 @@ setTimeout(window.hideSplash, 8000);
     <div class="topbar-mobile" id="topbar-mobile">
       <button class="btn-menu" id="btn-menu">☰</button>
       <span class="topbar-title" id="mobile-title">ภาพรวม</span>
-      <div class="topbar-sync"><div class="sync-dot" id="sync-dot"></div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="topbar-sync"><div class="sync-dot" id="sync-dot"></div></div>
+        <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">ออก</button>
+      </div>
     </div>
 
     <div class="page-content" id="page-content">
@@ -533,17 +557,6 @@ setTimeout(window.hideSplash, 8000);
       </div>
 
     </div><!-- end page-content -->
-
-  <!-- FLOATING PAGINATION BAR -->
-  <div class="float-bar" id="float-bar">
-    <div class="float-pag" id="tbl-pagination"></div>
-    <select class="per-page-select" id="per-page-select" title="แสดงต่อหน้า">
-      <option value="10">10/หน้า</option>
-      <option value="20" selected>20/หน้า</option>
-      <option value="50">50/หน้า</option>
-      <option value="999">ทั้งหมด</option>
-    </select>
-  </div>
   </div><!-- end main-area -->
 
   <!-- BOTTOM NAV (mobile) -->
@@ -648,6 +661,7 @@ document.getElementById('btn-login').onclick = async()=>{
 ['l-user','l-pass'].forEach(id=>{ document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}; });
 
 document.getElementById('btn-logout').onclick = logout;
+document.getElementById('btn-logout-mobile')?.addEventListener('click', logout);
 async function logout(){
   try{await api('/api/auth/logout',{method:'POST'});}catch(_){}
   AUTH=null; localStorage.removeItem('admin_auth');
@@ -744,17 +758,25 @@ function navTo(page){
   if(page==='tickets') renderTicketsPage();
   // show/hide float-bar based on page
   const fb=document.getElementById('float-bar');
-  if(fb) fb.classList.toggle('visible', page==='tickets');
+  if(fb){ if(page==='tickets') fb.classList.add('visible'); else fb.classList.remove('visible'); }
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
-  // Close mobile sidebar
+  // Close mobile sidebar + overlay
   document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
 }
 document.querySelectorAll('[data-page]').forEach(btn=>{
   btn.onclick=()=>navTo(btn.dataset.page);
 });
 document.getElementById('btn-menu').onclick=()=>{
-  document.getElementById('sidebar').classList.toggle('mobile-open');
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const open = sb.classList.toggle('mobile-open');
+  if(ov) ov.classList.toggle('open', open);
+};
+document.getElementById('sidebar-overlay').onclick=()=>{
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -847,6 +869,7 @@ function getFiltered(){
 }
 
 function renderTicketsPage(){
+  syncPerPageSelect();
   // Populate brand filter
   const brands=[...new Set(tickets.map(t=>t.brand).filter(Boolean))].sort();
   const fb=document.getElementById('filter-brand');
@@ -888,23 +911,29 @@ function renderTicketsPage(){
   // Floating pagination
   const floatBar = document.getElementById('float-bar');
   const pagEl    = document.getElementById('tbl-pagination');
+  // Always show float-bar on tickets page
+  if(floatBar) floatBar.classList.add('visible');
   if(total > 1){
     let pag = '';
     // Show prev/next + limited pages
     if(tbPage > 1) pag += `<button class="pag-btn" onclick="tbPage=${tbPage-1};renderTicketsPage()">‹</button>`;
+    let lastWasEllipsis = false;
     for(let i=1;i<=total;i++){
       if(total<=7 || i===1 || i===total || Math.abs(i-tbPage)<=1){
         pag += `<button class="pag-btn${i===tbPage?' active':''}" onclick="tbPage=${i};renderTicketsPage()">${i}</button>`;
-      } else if(Math.abs(i-tbPage)===2){
-        pag += `<span style="color:var(--fg3);padding:0 2px">…</span>`;
+        lastWasEllipsis = false;
+      } else if(!lastWasEllipsis){
+        pag += `<span style="color:var(--fg3);padding:0 4px;line-height:34px">…</span>`;
+        lastWasEllipsis = true;
       }
     }
     if(tbPage < total) pag += `<button class="pag-btn" onclick="tbPage=${tbPage+1};renderTicketsPage()">›</button>`;
     if(pagEl) pagEl.innerHTML = pag;
     if(floatBar) floatBar.classList.add('visible');
   } else {
-    if(pagEl) pagEl.innerHTML = '';
-    if(floatBar) floatBar.classList.remove('visible');
+    // 1 page or no results — still show per-page selector
+    if(pagEl) pagEl.innerHTML = '<span style="font-size:12px;color:var(--fg3)">'+data.length+' รายการ</span>';
+    if(floatBar) floatBar.classList.add('visible');
   }
 }
 function sqBtn(t,status,color,label){
@@ -917,6 +946,16 @@ document.getElementById('search-input').oninput=function(){searchQ=this.value;tb
 document.getElementById('filter-brand').onchange=function(){filterBrand=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-sla') && (document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
 document.getElementById('per-page-select').onchange=function(){PER_PAGE=Number(this.value)||20;tbPage=1;renderTicketsPage();};
+// Sync per-page select value inside renderTicketsPage
+function syncPerPageSelect(){
+  const el = document.getElementById('per-page-select');
+  if(el && el.value !== String(PER_PAGE)){
+    // find closest matching option
+    let best = '20';
+    for(const opt of el.options){ if(Number(opt.value)===PER_PAGE){ best=opt.value; break; } }
+    el.value = best;
+  }
+}
 document.getElementById('filter-status').onchange=function(){
   filterStatus=this.value; tbPage=1; renderTicketsPage();
 };
