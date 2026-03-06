@@ -22,29 +22,54 @@ const TBL = () => process.env.LARK_TABLE_ID;
 
 // ── Keyword → internal key mapping ────────────────────────────
 const KEYWORDS = [
-  { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','หมายเลข ticket','เลข ticket','ticket number','no.'] },
-  { key: 'status',       words: ['status','สถานะ','state','สถานะงาน'] },
-  { key: 'brand',        words: ['brand','แบรนด์','แบรนด','brand name'] },
+  // Ticket ID
+  { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','number ticket','หมายเลข ticket','เลข ticket','ticket number','no.'] },
+  // Status
+  { key: 'status',       words: ['status','สถานะ','state','สถานะงาน','สถานะ.'] },
+  // Brand
+  { key: 'brand',        words: ['brand','แบรนด์','แบรนด','brand name','บริษัท','ร้าน'] },
+  // Branch
   { key: 'branchCode',   words: ['branch code','branchcode','รหัสสาขา','รหัส สาขา','สาขา','branch no','code'] },
-  { key: 'sla',          words: ['sla','sla level','priority'] },
-  { key: 'reporter',     words: ['reporter','ผู้แจ้ง','ผู้แจ้งปัญหา','ชื่อผู้แจ้ง','name','ชื่อ'] },
-  { key: 'phone',        words: ['phone','เบอร์','เบอร์ติดต่อ','mobile','tel','โทร'] },
-  { key: 'type',         words: ['type','ประเภท','ประเภทงาน','ประเภทปัญหา','job type','หมวดหมู่'] },
-  { key: 'detail',       words: ['detail','รายละเอียด','รายละเอียดปัญหา','อาการ','problem','issue'] },
+  // SLA / Priority
+  { key: 'sla',          words: ['sla','sla level','priority','ความสำคัญงาน','ความสำคัญ','ลำดับความสำคัญ'] },
+  // Reporter
+  { key: 'reporter',     words: ['reporter','ผู้แจ้ง','ผู้แจ้งซ่อม','ผู้แจ้งปัญหา','ชื่อผู้แจ้ง','ผู้แจ้งซ่อม','name','ชื่อ'] },
+  // Phone
+  { key: 'phone',        words: ['phone','เบอร์','เบอร์ติดต่อ','เบอร์ติดต่อ','เบอร์โทรติดต่อ','mobile','tel','โทร'] },
+  // Type
+  { key: 'type',         words: ['type','ประเภท','ประเภทงาน','ประเภทปัญหา','ประเภท/อุปกรณ์','job type','หมวดหมู่'] },
+  // Detail / Problem
+  { key: 'detail',       words: ['detail','รายละเอียด','รายละเอียด/อาการ','รายละเอียดปัญหา','คำอธิบายเพิ่มเติม','อาการ','problem','issue'] },
+  // Location
   { key: 'location',     words: ['location','สถานที่','สถานที่/โซน','zone','area'] },
-  { key: 'sentDate',     words: ['sent date','sentdate','วันที่ส่ง','วันที่แจ้ง','วันที่','date','submission date'] },
+  // Sent Date
+  { key: 'sentDate',     words: ['sent date','sentdate','ส่งเมื่อ','วันที่ส่ง','วันที่แจ้ง','วันที่','date','submission date'] },
+  // SLA Date
   { key: 'slaDate',      words: ['sla date','sladate','วันนัดงาน','due date','นัดวันซ่อม'] },
+  // LINE
   { key: 'line_user_id', words: ['line user id','line user','line uid','line_user_id'] },
   { key: 'line_group_id',words: ['line group id','line group','line_group_id'] },
-  { key: 'assignedTo',   words: ['assigned to','assigned','มอบหมาย','ช่างที่รับงาน','engineer assigned'] },
-  { key: 'workDetail',   words: ['work detail','รายละเอียดงาน','ผลการซ่อม','รายงานช่าง'] },
-  { key: 'partsUsed',    words: ['parts used','อะไหล่','อะไหล่ที่ใช้'] },
+  // Assign
+  { key: 'assignedTo',   words: ['assigned to','assigned','มอบหมาย','ช่างที่รับงาน','engineer assigned','id ช่าง'] },
+  // Work detail
+  { key: 'workDetail',   words: ['work detail','รายละเอียดงาน','ผลการซ่อม','รายงานช่าง','คำอธิบายเพิ่มเติม'] },
+  // Parts
+  { key: 'partsUsed',    words: ['parts used','อะไหล่','อะไหล่ที่ใช้','แนบรูป'] },
+  // Hours
   { key: 'workHours',    words: ['work hours','ชั่วโมงทำงาน','man hour'] },
-  { key: 'completedAt',  words: ['completed at','วันที่เสร็จ','เสร็จเมื่อ'] },
-  { key: 'engineerName', words: ['engineer name','ชื่อช่าง','ช่าง','engineer'] },
-  { key: 'adminNote',    words: ['admin note','หมายเหตุ admin','หมายเหตุ','remark'] },
+  // Completed
+  { key: 'completedAt',  words: ['completed at','วันที่เสร็จ','เสร็จเมื่อ','ปุ่มเสร็จงาน'] },
+  // Engineer name
+  { key: 'engineerName', words: ['engineer name','ชื่อช่าง','ช่าง','engineer','ลิงก์งานช่าง','ปุ่มส่งงานช่าง','id ช่าง'] },
+  // Admin note
+  { key: 'adminNote',    words: ['admin note','หมายเหตุ admin','หมายเหตุ','remark','แก้ไข'] },
+  // Closed
   { key: 'closedAt',     words: ['closed at','วันที่ปิด','ปิดเมื่อ'] },
-  { key: 'closedBy',     words: ['closed by','ปิดโดย','จบโดย'] },
+  { key: 'closedBy',     words: ['closed by','ปิดโดย','จบโดย','แก้ไขโดย'] },
+  // Photo
+  { key: 'photo',        words: ['photo','รูปงาน','รูป','แนบรูป','รูปภาพ','image'] },
+  // Done button
+  { key: 'doneBtn',      words: ['ปุ่มเสร็จงาน','ปุ่มส่งงานช่าง','ปุ่มจบงาน'] },
 ];
 
 const FAST = {};
@@ -126,6 +151,10 @@ function parseRecord(rec) {
   }
   if (!out.id || String(out.id).startsWith('rec')) {
     out.id = makeId(rec.record_id);
+  }
+  // Default brand fallback (ถ้าไม่มี column Brand ใน Lark)
+  if (!out.brand) {
+    out.brand = process.env.DEFAULT_BRAND || 'Dunkin\'';
   }
   return out;
 }
