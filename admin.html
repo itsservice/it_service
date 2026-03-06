@@ -429,10 +429,6 @@ a{color:inherit;text-decoration:none}
           <select class="filter-select" id="filter-brand">
             <option value="">ทุกแบรนด์</option>
           </select>
-          <select class="filter-select" id="filter-sla">
-            <option value="">ทุก SLA</option>
-            <option>สูง</option><option>กลาง</option><option>ต่ำ</option>
-          </select>
         </div>
         <div class="status-chips">
           <button class="chip chip-all active" data-s="">ทั้งหมด</button>
@@ -701,7 +697,19 @@ document.getElementById('btn-menu').onclick=()=>{
 // ════════════════════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════════════════════
-function renderDashboard(){
+          <select class="filter-select" id="filter-sla">
+            <option value="">ทุก SLA</option>
+            <option>
+            const waiting  = tickets.filter(t=>t.status==='แก้ไข').length;
+            </option>
+            <option>
+            const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
+            </option>
+            <option>
+             const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length; 
+            </option>
+          </select>
+  function renderDashboard(){
   const total    = tickets.length;
   const waiting  = tickets.filter(t=>t.status==='แก้ไข').length;
   const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
