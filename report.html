@@ -297,7 +297,7 @@ window.hideSplash = function(){
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
 // บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 8000);
+setTimeout(window.hideSplash, 3000);
 </script>
 <div class="app">
   <div class="header">
@@ -511,7 +511,7 @@ connectSSE();
 async function loadTickets(){
   try{
     const ctrl = new AbortController();
-    const tid  = setTimeout(()=>ctrl.abort(), 8000); // timeout 8s
+    const tid  = setTimeout(()=>ctrl.abort(), 12000); // timeout 8s
     const r = await fetch('/api/tickets', { signal: ctrl.signal });
     clearTimeout(tid);
     const d = await r.json();
@@ -523,12 +523,13 @@ async function loadTickets(){
 
 // ── Initial load ─────────────────────────────────────────────
 (async()=>{
+  // แสดงหน้าทันที แล้วโหลด data ใน background
+  renderHistory();
+  window.hideSplash?.(); // แสดง UI ก่อนเลย
   try{
-    renderHistory();
     await loadTickets();
     renderHistory();
   }catch(e){ console.error('boot error:',e); }
-  finally{ window.hideSplash?.(); }
 })();
 
 // ── Auto-refresh ทุก 30 วิ ────────────────────────────────────
