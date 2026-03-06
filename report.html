@@ -204,6 +204,19 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
   .tabs,.main{padding-left:0;padding-right:0}
   .btn-submit{max-width:100%}
 }
+
+.group-section{margin-bottom:8px}
+.group-toggle{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--b1);cursor:pointer;font-size:13px;font-weight:600;color:var(--fg);user-select:none}
+.group-toggle .ht-arrow{transition:transform .2s;font-size:10px}
+.group-toggle.open .ht-arrow{transform:rotate(180deg)}
+.g-count{background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px}
+.group-body{overflow:hidden;max-height:0;transition:max-height .25s ease}
+.group-body.open{max-height:1000px}
+.ticket-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .15s}
+.ticket-row:hover{background:var(--bg3,#1a1a22)}
+.ticket-row:last-child{border-bottom:none}
+.ticket-row-type{font-size:12px;color:var(--fg2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket-row-branch{font-size:11px;color:var(--fg3);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -313,35 +326,34 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────
+// ── State ────────────────────────────────────────────────────
 const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
 let allTickets = [];
 let sseConn = null;
+let trackTimer = null;
 
-// ── SSE ────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
+function safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
+
+// ── SSE ──────────────────────────────────────────────────────
 function connectSSE(){
   sseConn = new EventSource('/api/events');
-  sseConn.addEventListener('ticket_created', e => {
-    try{ const d=JSON.parse(e.data); allTickets.unshift(d.ticket); } catch(_){}
-    document.getElementById('dot').style.background='#00e5a0';
-  });
   sseConn.addEventListener('ticket_updated', async e => {
     try{
-      const d=JSON.parse(e.data);
-      allTickets=allTickets.map(t=>(t._recordId===d.recordId)?{...t,status:d.status||t.status}:t);
-      // Re-render history ทันทีเมื่อ ticket ที่เราสนใจมี update
+      const d = JSON.parse(e.data);
+      allTickets = allTickets.map(t => t._recordId===d.recordId ? {...t, status:d.status||t.status} : t);
       renderHistory();
-      // ถ้า search result เปิดอยู่ก็ refresh ด้วย
       const shown = document.getElementById('track-result').dataset.rid;
-      if(shown && shown === d.recordId) searchById(d.recordId, true); // silent
+      if(shown && shown===d.recordId) searchById(d.recordId, true);
     }catch(_){}
   });
-  sseConn.onopen = ()=>{ document.getElementById('dot').style.background='#00e5a0'; };
-  sseConn.onerror = ()=>{ document.getElementById('dot').style.background='#ff4d6d'; setTimeout(connectSSE,5000); };
+  sseConn.onopen  = () => { document.getElementById('dot').style.background='#00e5a0'; };
+  sseConn.onerror = () => { document.getElementById('dot').style.background='#ff4d6d'; setTimeout(connectSSE,5000); };
 }
 connectSSE();
 
-// ── Fetch tickets ──────────────────────────────────────────────
+// ── Load tickets (cached) ────────────────────────────────────
 async function loadTickets(){
   try{
     const r = await fetch('/api/tickets');
@@ -349,29 +361,28 @@ async function loadTickets(){
     if(d.ok) allTickets = d.tickets;
   }catch(_){}
 }
+
 // ── Initial load ─────────────────────────────────────────────
-(async () => {
+(async()=>{
   await loadTickets();
-  renderHistory(); // แสดง dropdown ทันทีหลัง load
+  renderHistory();
 })();
 
-// ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
-setInterval(async () => {
-  // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
+// ── Auto-refresh ทุก 30 วิ ────────────────────────────────────
+setInterval(async()=>{
   const rdot = document.getElementById('refresh-dot');
   if(rdot) rdot.classList.add('spinning');
-  try {
+  try{
     await loadTickets();
-    await renderHistory();
-    // อัพเดท search result ที่เปิดอยู่ — แต่ไม่แสดง loading spinner
+    renderHistory();
     const shown = document.getElementById('track-result').dataset.rid;
-    if(shown) await searchById(shown, true); // true = silent refresh
+    if(shown) searchById(shown, true);
   } finally {
     if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
   }
-}, 30_000);
+}, 30000);
 
-// ── Tabs ───────────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(t => {
   t.onclick = () => {
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -382,164 +393,80 @@ document.querySelectorAll('.tab').forEach(t => {
   };
 });
 
-// ── Char count ────────────────────────────────────────────────
-const textarea = document.getElementById('f-detail');
-textarea.oninput = () => {
-  document.getElementById('char-num').textContent = textarea.value.length;
-};
-
-// ── Submit ────────────────────────────────────────────────────
-document.getElementById('btn-submit').onclick = async () => {
-  const err = document.getElementById('form-error');
-  err.style.display='none';
-  const name   = document.getElementById('f-name').value.trim();
-  const phone  = document.getElementById('f-phone').value.trim();
-  const brand  = document.getElementById('f-brand').value;
-  const branch = document.getElementById('f-branch').value.trim();
-  const type   = document.getElementById('f-type').value;
-  const loc    = document.getElementById('f-location').value.trim();
-  const detail = document.getElementById('f-detail').value.trim();
-
-  if(!name)      return showErr('กรุณากรอกชื่อผู้แจ้ง');
-  if(!phone)     return showErr('กรุณากรอกเบอร์ติดต่อ');
-  if(!brand)     return showErr('กรุณาเลือกแบรนด์');
-  if(!type)      return showErr('กรุณาเลือกประเภทปัญหา');
-  if(!detail)    return showErr('กรุณากรอกรายละเอียดปัญหา');
-  if(detail.length < 10) return showErr('กรุณากรอกรายละเอียดให้มากกว่านี้ (อย่างน้อย 10 ตัวอักษร)');
-
-  const btn = document.getElementById('btn-submit');
-  const txt = document.getElementById('submit-text');
-  btn.disabled=true; txt.textContent='⏳ กำลังส่ง...';
-
-  try{
-    const r = await fetch('/api/tickets',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ reporter:name, phone, brand, branchCode:branch, type, detail, location:loc })
-    });
-    const d = await r.json();
-    if(!d.ok) throw new Error(d.error||'เกิดข้อผิดพลาด');
-
-    const ticket = d.ticket;
-    // Save to history
-    saveHistory(ticket);
-    showSuccess(ticket);
-  }catch(e){
-    showErr(e.message||'ไม่สามารถส่งได้ กรุณาลองใหม่');
-  }finally{
-    btn.disabled=false; txt.textContent='📤 ส่งแจ้งปัญหา';
-  }
-};
-
-function showErr(msg){
-  const el = document.getElementById('form-error');
-  el.textContent = '⚠️ '+msg;
-  el.style.display='flex';
-  el.scrollIntoView({behavior:'smooth',block:'center'});
-}
-
-function showSuccess(ticket){
-  document.getElementById('form-area').style.display='none';
-  const tid = ticket.id || ticket._recordId || '—';
-  document.getElementById('success-area').style.display='block';
-  document.getElementById('success-area').innerHTML = `
-    <div class="success-card">
-      <div class="success-icon">✅</div>
-      <div class="success-title">แจ้งปัญหาสำเร็จ!</div>
-      <div class="ticket-badge">
-        <span>🎫</span>
-        <span id="copy-id">${esc(tid)}</span>
-        <button class="btn-copy" id="btn-copy-id">คัดลอก</button>
-      </div>
-      <div class="success-note">
-        บันทึก Ticket ID ไว้ใช้ติดตามสถานะงาน<br>
-        ทีมงานจะติดต่อกลับภายใน 30 นาทีในเวลาทำการ
-      </div>
-      <button class="btn-new" onclick="resetForm()">➕ แจ้งปัญหาใหม่</button>
-    </div>`;
-  document.getElementById('btn-copy-id').onclick = () => {
-    navigator.clipboard.writeText(tid).then(()=>{
-      document.getElementById('btn-copy-id').textContent='✅ คัดลอกแล้ว';
-      setTimeout(()=>{document.getElementById('btn-copy-id').textContent='คัดลอก';},2000);
-    });
-  };
-}
-
-function resetForm(){
-  document.getElementById('form-area').style.display='block';
-  document.getElementById('success-area').style.display='none';
-  document.getElementById('form-error').style.display='none';
-  ['f-name','f-phone','f-branch','f-location','f-detail'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  ['f-brand','f-type'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.selectedIndex=0;
-  });
-  document.getElementById('char-num').textContent='0';
-}
-
-// ── Track ─────────────────────────────────────────────────────
-let trackTimer = null;
-document.getElementById('track-input').oninput = function(){
+// ── Search input ──────────────────────────────────────────────
+document.getElementById('track-input').oninput = e => {
   clearTimeout(trackTimer);
-  const q = this.value.trim();
-  if(!q){ document.getElementById('track-result').innerHTML=''; renderHistory(); return; }
+  const q = e.target.value.trim();
+  if(!q){ document.getElementById('track-result').innerHTML=''; document.getElementById('track-result').dataset.rid=''; renderHistory(); return; }
   document.getElementById('track-result').innerHTML='<div class="loading"><div class="spinner"></div> กำลังค้นหา...</div>';
-  trackTimer = setTimeout(()=>doSearch(q), 500);
+  trackTimer = setTimeout(()=>doSearch(q), 400);
 };
 
 async function doSearch(q){
-  await // ── Initial load ─────────────────────────────────────────────
-(async () => {
-  await loadTickets();
-  renderHistory(); // แสดง dropdown ทันทีหลัง load
-})();
-
-// ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
-setInterval(async () => {
-  // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
-  const rdot = document.getElementById('refresh-dot');
-  if(rdot) rdot.classList.add('spinning');
-  try {
-    await loadTickets();
-    await renderHistory();
-    // อัพเดท search result ที่เปิดอยู่ — แต่ไม่แสดง loading spinner
-    const shown = document.getElementById('track-result').dataset.rid;
-    if(shown) await searchById(shown, true); // true = silent refresh
-  } finally {
-    if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
-  }
-}, 30_000);
-  const lower = q.toLowerCase();
+  // ค้นหาจาก allTickets ก่อน (ไม่ต้อง fetch ใหม่)
+  if(!allTickets.length) await loadTickets();
+  const ql = q.toLowerCase();
   const found = allTickets.filter(t =>
-    String(t.id||'').toLowerCase().includes(lower) ||
-    String(t._recordId||'').toLowerCase().includes(lower) ||
-    String(t.phone||'').includes(q)
+    (t.id||'').toLowerCase().includes(ql) ||
+    (t.phone||'').includes(ql) ||
+    (t.reporter||'').toLowerCase().includes(ql)
   );
-  document.getElementById('track-history').innerHTML='';
+  const el = document.getElementById('track-result');
+  el.dataset.rid = '';
   if(!found.length){
-    document.getElementById('track-result').innerHTML=`
-      <div class="empty">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-text">ไม่พบ Ticket</div>
-        <div class="empty-sub">ลองค้นหาด้วย Ticket ID หรือเบอร์โทรศัพท์</div>
-      </div>`;
+    el.innerHTML='<div class="alert alert-err">⚠️ ไม่พบ Ticket ที่ตรงกับ "'+esc(q)+'"</div>';
     return;
   }
-  document.getElementById('track-result').innerHTML = found.map(t=>ticketCard(t)).join('');
+  // แสดงผลแบบ grouped
+  el.innerHTML = renderGrouped(found);
 }
 
-// ── History from localStorage ─────────────────────────────────
-function saveHistory(t){
-  const key='it_history';
-  let hist=[];
-  try{ hist=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-  hist = hist.filter(x=>x._recordId!==t._recordId);
-  hist.unshift({ _recordId:t._recordId, id:t.id, brand:t.brand, status:t.status, ts:Date.now() });
-  if(hist.length>10) hist=hist.slice(0,10);
-  localStorage.setItem(key,JSON.stringify(hist));
+async function searchById(rid, silent=false){
+  if(!rid) return;
+  const resultEl = document.getElementById('track-result');
+  resultEl.dataset.rid = rid;
+  if(!silent){
+    document.getElementById('track-input').value='';
+    resultEl.innerHTML='<div class="loading"><div class="spinner"></div> กำลังโหลด...</div>';
+    await loadTickets();
+  }
+  const t = allTickets.find(x => x._recordId===rid || x.id===rid);
+  if(t) resultEl.innerHTML = ticketCard(t, true);
+  else  resultEl.innerHTML = '<div class="alert alert-err">ไม่พบ Ticket นี้</div>';
 }
 
+// ── Render grouped by status ──────────────────────────────────
+function renderGrouped(tickets){
+  const GROUPS = [
+    { label:'⏱️ รอดำเนินการ',      statuses:['รอดำเนินการ ⏱️','แก้ไข'] },
+    { label:'⚙️ กำลังดำเนินการ',   statuses:['อยู่ระหว่างดำเนินการ ⚙️'] },
+    { label:'🔍 ตรวจสอบ',           statuses:['ตรวจงาน'] },
+    { label:'✅ เสร็จสิ้น',         statuses:['เสร็จสิ้น ✅'] },
+    { label:'❌ ยกเลิก',            statuses:['ยกเลิก ❌'] },
+  ];
+  let html = '';
+  GROUPS.forEach(g => {
+    const items = tickets.filter(t => g.statuses.includes(t.status||'แก้ไข'));
+    if(!items.length) return;
+    html += `<div class="group-section">
+      <div class="group-toggle open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span>${g.label}</span>
+        <span class="g-count">${items.length}</span>
+        <span class="ht-arrow" style="margin-left:auto">▼</span>
+      </div>
+      <div class="group-body open">
+        ${items.map(t => `<div class="ticket-row" onclick="searchById('${esc(t._recordId||t.id)}')">
+          <span class="hi-id">🎫 ${esc(t.id||'—')}</span>
+          <span class="ticket-row-type">${esc(t.type||'-')}</span>
+          <span class="ticket-row-branch">${esc(t.branchCode||t.brand||'-')}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  return html || '<div class="alert alert-info">ไม่มีข้อมูล</div>';
+}
+
+// ── History dropdown (10 latest from API) ────────────────────
 function toggleHistory(el){
   el.classList.toggle('open');
   el.nextElementSibling.classList.toggle('open');
@@ -549,42 +476,129 @@ async function renderHistory(){
   const el = document.getElementById('track-history');
   if(!el) return;
   if(!allTickets.length) await loadTickets();
-  const latest = [...allTickets].slice(0, 10);
+  const latest = allTickets.slice(0, 10);
   const count  = allTickets.length;
   const isOpen = !!(el.querySelector && el.querySelector('.history-dropdown.open'));
   if(!latest.length){
-    el.innerHTML='<div class="history-toggle"><span>\u{1F4CB} Ticket \u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14</span><span class="ht-arrow" style="margin-left:auto">\u25BC</span></div><div class="history-dropdown"><div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35 Ticket</div></div>';
+    el.innerHTML='<div class="history-toggle"><span>📋 Ticket ล่าสุด</span><span class="ht-arrow" style="margin-left:auto">▼</span></div><div class="history-dropdown"><div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">ยังไม่มี Ticket</div></div>';
     return;
   }
-  const rows = latest.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')"><span class="hi-id">\uD83C\uDFAB ${esc(h.id||'\u2014')}</span><span style="font-size:11px;color:var(--fg3);margin:0 6px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span><span class="hi-status"><span class="status-pill s-${(h.status||'').replace(/[\u2705\u2699\uFE0F\u23F1\u274C\u270F]/g,'').trim()}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'\u0E41\u0E01\u0E49\u0E44\u0E02')}</span></span></div>`).join('');
-  el.innerHTML='<div class="history-toggle '+(isOpen?'open':'')+'" onclick="toggleHistory(this)"><span>\u{1F4CB} Ticket \u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14</span><span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">'+count+'</span><span class="ht-arrow">\u25BC</span></div><div class="history-dropdown '+(isOpen?'open':'')+'">'+rows+'</div>';
+  const rows = latest.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
+    <span class="hi-id">🎫 ${esc(h.id||'—')}</span>
+    <span style="font-size:11px;color:var(--fg3);margin:0 6px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span>
+    <span class="hi-status"><span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'แก้ไข')}</span></span>
+  </div>`).join('');
+  el.innerHTML=`<div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
+    <span>📋 Ticket ล่าสุด</span>
+    <span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${count}</span>
+    <span class="ht-arrow">▼</span>
+  </div>
+  <div class="history-dropdown ${isOpen?'open':''}">${rows}</div>`;
 }
 
-function toggleHistory(el){
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
+// ── Ticket card ───────────────────────────────────────────────
+function ticketCard(t, expanded=false){
+  const TL        = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
+  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
+  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
+  const STATUS_IDX = {'แก้ไข':0,'รอดำเนินการ ⏱️':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'ตรวจงาน':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':-1};
+  const si = STATUS_IDX[t.status] ?? 0;
+  const isCancelled = t.status === 'ยกเลิก ❌';
+  const steps = TL.map((s,i)=>`
+    <div class="tl-step ${isCancelled?'cancelled':(i<si?'done':i===si?'active':'')}">
+      <div class="tl-dot">${isCancelled?'✕':i<si?'✓':i===si?TL_ICONS[i]:''}</div>
+      <div class="tl-label">${TL_LABELS[i]}</div>
+    </div>`).join('');
+  return `<div class="ticket-card">
+    <div class="tc-head">
+      <div>
+        <div class="tc-id">🎫 ${esc(t.id||t._recordId||'—')}</div>
+        <div class="tc-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}</div>
+      </div>
+      <span class="status-pill s-${cssStatus(t.status)}">${esc(t.status||'แก้ไข')}</span>
+    </div>
+    <div class="tc-type">${esc(t.type||'—')}</div>
+    <div class="tc-detail">${esc(safe(t.detail)||'-')}</div>
+    <div class="tc-meta">
+      <span>👤 ${esc(t.reporter||'-')}</span>
+      <span>📅 ${esc(t.sentDate||'-')}</span>
+      ${t.engineerName?`<span>🔧 ${esc(t.engineerName)}</span>`:''}
+      ${t.location && t.location.length<100 && !t.location.startsWith('http')?`<span>📍 ${esc(t.location)}</span>`:''}
+    </div>
+    <div class="timeline">
+      <div class="tl-title">สถานะงาน</div>
+      <div class="tl-steps">${steps}</div>
+    </div>
+    ${t.workDetail?`<div style="margin-top:14px;padding:12px;background:rgba(0,229,160,.06);border-radius:8px;border:1px solid rgba(0,229,160,.15)">
+      <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">📋 รายงานช่าง</div>
+      <div style="font-size:13px;color:var(--fg2)">${esc(t.workDetail)}</div>
+      ${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:4px">อะไหล่: ${esc(t.partsUsed)}</div>`:''}
+    </div>`:''}
+  </div>`;
 }
 
-
-
-
-async function searchById(rid, silent=false){
-  if(!rid) return;
-  const resultEl = document.getElementById('track-result');
-  resultEl.dataset.rid = rid;
-  if(!silent) {
-    document.getElementById('track-input').value='';
-    resultEl.innerHTML='<div class="loading"><div class="spinner"></div> กำลังโหลด...</div>';
-  }
-  if(!silent) await loadTickets(); else await loadTickets();
-  const t = allTickets.find(x => x._recordId===rid || x.id===rid);
-  if(t){
-    resultEl.innerHTML = ticketCard(t, true);
-  } else {
-    resultEl.innerHTML = '<div class="alert alert-err">ไม่พบ Ticket นี้</div>';
-  }
+// ── Form ──────────────────────────────────────────────────────
+function showErr(msg){ const e=document.getElementById('form-error'); e.textContent='⚠️ '+msg; e.style.display='flex'; }
+function showSuccess(ticket){
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('success-section').style.display='block';
+  document.getElementById('success-id').textContent = ticket.id || ticket._recordId || '—';
+  saveHistory(ticket);
+}
+function resetForm(){
+  document.getElementById('form-section').style.display='block';
+  document.getElementById('success-section').style.display='none';
+  document.getElementById('report-form').reset();
+  document.getElementById('char-num').textContent='0';
+  document.getElementById('form-error').style.display='none';
+}
+function saveHistory(ticket){
+  const key='it_history';
+  let h=[];
+  try{ h=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
+  h.unshift({ _recordId:ticket._recordId, id:ticket.id, brand:ticket.brand, status:ticket.status, ticketId:ticket.id });
+  h = h.slice(0,20);
+  try{ localStorage.setItem(key, JSON.stringify(h)); }catch(_){}
 }
 
+document.getElementById('char-num') && (document.getElementById('f-detail').oninput = ()=>{
+  document.getElementById('char-num').textContent = document.getElementById('f-detail').value.length;
+});
+
+document.getElementById('btn-submit').onclick = async () => {
+  const err = document.getElementById('form-error');
+  err.style.display='none';
+  const name     = document.getElementById('f-name').value.trim();
+  const phone    = document.getElementById('f-phone').value.trim();
+  const brand    = document.getElementById('f-brand').value.trim();
+  const branch   = document.getElementById('f-branch').value.trim();
+  const type     = document.getElementById('f-type').value;
+  const location = document.getElementById('f-location').value.trim();
+  const detail   = document.getElementById('f-detail').value.trim();
+  if(!name)   return showErr('กรุณากรอกชื่อผู้แจ้ง');
+  if(!phone)  return showErr('กรุณากรอกเบอร์ติดต่อ');
+  if(!brand)  return showErr('กรุณากรอกแบรนด์');
+  if(!type)   return showErr('กรุณาเลือกประเภทปัญหา');
+  if(!detail) return showErr('กรุณากรอกรายละเอียดปัญหา');
+  const btn = document.getElementById('btn-submit');
+  btn.disabled=true; btn.textContent='⏳ กำลังส่ง...';
+  try{
+    const r = await fetch('/api/tickets',{ method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ reporter:name, phone, brand, branchCode:branch, type, location, detail }) });
+    const d = await r.json();
+    if(d.ok){ showSuccess(d.ticket); await loadTickets(); renderHistory(); }
+    else showErr(d.error||'เกิดข้อผิดพลาด');
+  }catch(e){ showErr('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
+  finally{ btn.disabled=false; btn.textContent='📤 ส่งแจ้งปัญหา'; }
+};
+
+document.getElementById('btn-copy') && (document.getElementById('btn-copy').onclick = ()=>{
+  const id = document.getElementById('success-id').textContent;
+  navigator.clipboard?.writeText(id);
+  document.getElementById('btn-copy').textContent='✅ คัดลอกแล้ว';
+  setTimeout(()=>{ document.getElementById('btn-copy').textContent='คัดลอก'; },2000);
+});
+document.getElementById('btn-new') && (document.getElementById('btn-new').onclick = resetForm);
 </script>
 </body>
 </html>
