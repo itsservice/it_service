@@ -5,6 +5,8 @@ const BASE = 'https://open.larksuite.com/open-apis';
 let _token = null, _tokenExp = 0;
 let _fieldMap = null;    // internalKey → larkColumnName
 let _optionMap = {};     // "optXXXX" → "text value" (for select fields)
+let _ticketCache = null, _ticketCacheExp = 0;
+const CACHE_TTL = 30_000; // cache tickets 30 วินาที
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -270,7 +272,14 @@ async function ensureFieldMap() {
 }
 
 // ── LIST tickets ───────────────────────────────────────────────
-async function listTickets({ brand, status } = {}) {
+async function listTickets({ brand, status, noCache } = {}) {
+  // Return cache ถ้ายังสด (ลด Lark API calls)
+  if (!noCache && _ticketCache && Date.now() < _ticketCacheExp) {
+    let cached = _ticketCache;
+    if (brand) cached = cached.filter(t => t.brand === brand);
+    if (status) cached = cached.filter(t => t.status === status);
+    return cached;
+  }
   const token = await getToken();
   let all = [], pt;
   do {
@@ -289,6 +298,11 @@ async function listTickets({ brand, status } = {}) {
 
   // Filter server-side
   if (brand && brand !== 'ALL') all = all.filter(t => t.brand === brand);
+  // Save to cache (ก่อน filter)
+  _ticketCache = [...all];
+  _ticketCacheExp = Date.now() + CACHE_TTL;
+
+  if (brand) all = all.filter(t => t.brand === brand);
   if (status) all = all.filter(t => t.status === status);
 
   // Sort: newest first (by id descending)
@@ -313,6 +327,9 @@ async function getTicket(recordId) {
   return parseRecord(r.data.data?.record || {});
 }
 
+// ── Invalidate cache on write ─────────────────────────────────
+function invalidateCache() { _ticketCache = null; _ticketCacheExp = 0; }
+
 // ── UPDATE ticket ──────────────────────────────────────────────
 async function updateTicket(recordId, fields) {
   await ensureFieldMap(); // ต้องมี fieldMap ก่อน write เสมอ
@@ -329,6 +346,7 @@ async function updateTicket(recordId, fields) {
     { headers: hdr(token), timeout: 15_000 }
   );
   if (r.data.code !== 0) throw new Error(`Lark update: ${r.data.msg}`);
+  invalidateCache();
   return parseRecord(r.data.data?.record || {});
 }
 
@@ -393,4 +411,4 @@ const LARK_BUTTONS = {
   changeEngineer: process.env.LARK_BTN_CHANGE_ENG    || 'ปุ่มเปลี่ยนช่าง',
 };
 
-module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap, clickButton, LARK_BUTTONS };
+module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap, clickButton, LARK_BUTTONS, invalidateCache };
