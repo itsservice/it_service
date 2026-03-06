@@ -260,18 +260,11 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
           <label>แบรนด์ <span class="req">*</span></label>
           <select id="f-brand">
             <option value="">— เลือกแบรนด์ —</option>
-            <option>Greyhound Cafe</option>
-            <option>Au Bon Pain</option>
-            <option>Smileyhound</option>
             <option>Dunkin'</option>
+            <option>Greyhound Cafe</option>
             <option>Greyhound Original</option>
-            <option>After You</option>
-            <option>Café Amazon</option>
-            <option>Starbucks</option>
-            <option>KFC</option>
-            <option>McDonald's</option>
-            <option>Pizza Hut</option>
-            <option>The Pizza Company</option>
+            <option>Au Bon Pain</option>
+            <option>Funky Fries</option>
           </select>
         </div>
         <div class="form-row">
@@ -326,13 +319,9 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
           <option value="">— แบรนด์ —</option>
           <option>Dunkin'</option>
           <option>Greyhound Cafe</option>
+          <option>Greyhound Original</option>
           <option>Au Bon Pain</option>
-          <option>Durian Chantira</option>
-          <option>BR</option>
-          <option>Mkitchen</option>
-          <option>Simon Says Shabu</option>
           <option>Funky Fries</option>
-          <option>Shop</option>
         </select>
         <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required/>
       </div>
@@ -349,6 +338,40 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
+
+// ── Brand from URL path ───────────────────────────────────────
+(function applyBrandFromUrl(){
+  const BRAND_MAP = {
+    'dunkin':             "Dunkin'",
+    'greyhound cafe':     'Greyhound Cafe',
+    'greyhound original': 'Greyhound Original',
+    'au bon pain':        'Au Bon Pain',
+    'funky fries':        'Funky Fries',
+  };
+  const raw   = decodeURIComponent(window.location.pathname.split('/').pop()||'');
+  const slug  = raw.replace(/[+]/g,' ').trim().toLowerCase();
+  const brand = BRAND_MAP[slug];
+  if(!brand) return;
+
+  // Lock form brand select
+  const fBrand = document.getElementById('f-brand');
+  if(fBrand){ fBrand.value=brand; fBrand.disabled=true; fBrand.style.cssText+='opacity:.6;cursor:not-allowed'; }
+
+  // Lock filter brand select
+  const fFilter = document.getElementById('f-filter-brand');
+  if(fFilter){ fFilter.value=brand; fFilter.disabled=true; fFilter.style.cssText+='opacity:.6;cursor:not-allowed'; }
+
+  // Show brand name under header
+  const hdr = document.querySelector('.header-text');
+  if(hdr){
+    const b = document.createElement('div');
+    b.style.cssText = 'font-size:11px;color:var(--accent);font-weight:600;margin-top:2px';
+    b.textContent = brand;
+    hdr.appendChild(b);
+  }
+  // Auto-trigger search
+  setTimeout(()=>{ if(typeof triggerSearch==='function') triggerSearch(); }, 600);
+})();
 
 // ── State ────────────────────────────────────────────────────
 const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
