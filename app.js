@@ -4,7 +4,7 @@ const path    = require('path');
 
 const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs } = require('./auth');
 const { getAllUsers, getUserByUsername, createUser, updateUser, deleteUser } = require('./users');
-const { listTickets, getTicket, updateTicket, createTicket, debugSchema } = require('./larkService');
+const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, clickButton, LARK_BUTTONS } = require('./larkService');
 const larkRouter = require('./larkWebhook');
 const lineRouter = require('./lineWebhook');
 
@@ -108,7 +108,10 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const { engineerName, assignedTo } = req.body || {};
-    const t = await updateTicket(req.params.rid, { engineerName:engineerName||'', assignedTo:assignedTo||engineerName||'', status:'อยู่ระหว่างดำเนินการ ⚙️' });
+    // 1. บันทึกชื่อช่าง
+    const t = await updateTicket(req.params.rid, { engineerName:engineerName||'', assignedTo:assignedTo||engineerName||'' });
+    // 2. Trigger ปุ่ม Lark "ปุ่มเปลี่ยนช่าง" เพื่อให้ Automation ทำงาน
+    await clickButton(req.params.rid, LARK_BUTTONS.changeEngineer);
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
     broadcast('ticket_updated', { recordId:req.params.rid, engineerName, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -120,7 +123,13 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
     const { workDetail, partsUsed, workHours } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const t = await updateTicket(req.params.rid, { workDetail, partsUsed:partsUsed||'', workHours:workHours||'', engineerName:req.user.name, completedAt:now, status:'ตรวจงาน' });
+    // 1. บันทึกข้อมูลงาน
+    const t = await updateTicket(req.params.rid, {
+      workDetail, partsUsed:partsUsed||'', workHours:workHours||'',
+      engineerName:req.user.name, completedAt:now
+    });
+    // 2. Trigger ปุ่ม Lark "ปุ่มส่งงานช่าง" เพื่อให้ Automation ทำงาน
+    await clickButton(req.params.rid, LARK_BUTTONS.sendToAdmin);
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -131,8 +140,13 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
   try {
     const { adminNote } = req.body || {};
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const t = await updateTicket(req.params.rid, { status:'เสร็จสิ้น ✅', adminNote:adminNote||'', closedAt:now, closedBy:req.user.name });
-    const log = addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:`ปิดงาน` });
+    // 1. บันทึก admin note + closedBy
+    await updateTicket(req.params.rid, { adminNote:adminNote||'', closedAt:now, closedBy:req.user.name });
+    // 2. Trigger ปุ่ม Lark "ปุ่มเสร็จงาน" เพื่อให้ Automation เปลี่ยนสถานะ
+    await clickButton(req.params.rid, LARK_BUTTONS.done);
+    // 3. update status ใน local ด้วย (เผื่อ automation ช้า)
+    const t = await updateTicket(req.params.rid, { status:'เสร็จสิ้น ✅' });
+    const log = addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:'ปิดงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', closedBy:req.user.name, ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
@@ -202,7 +216,6 @@ app.use('/lark', larkRouter);
 app.use('/line', lineRouter);
 
 // ── Pre-load fieldMap on startup ──────────────────────────────
-const { ensureFieldMap } = require('./larkService');
 setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); }
   catch(e) { console.warn('[App] fieldMap preload failed:', e.message); }
