@@ -79,9 +79,10 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .card-detail{font-size:13px;color:var(--fg2);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
 .card-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--fg3)}
 .status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap}
-.s-รอตรวจงาน{background:rgba(255,150,64,.15);color:#ff9640}
+.s-แก้ไข{background:rgba(255,150,64,.15);color:#ff9640}
+.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
 .s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.15);color:#0099ff}
-.s-รอชิ้นส่วน{background:rgba(184,123,232,.15);color:#b87be8}
+.s-รอดำเนินการ{background:rgba(184,123,232,.15);color:#b87be8}
 .s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
 .s-ยกเลิก{background:rgba(255,77,109,.15);color:#ff4d6d}
 
@@ -215,10 +216,11 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
       </div>
       <div class="filter-tabs">
         <button class="ftab active" data-f="all">ทั้งหมด</button>
-        <button class="ftab" data-f="รอตรวจงาน">รอตรวจ</button>
-        <button class="ftab" data-f="อยู่ระหว่างดำเนินการ">กำลังทำ</button>
-        <button class="ftab" data-f="รอชิ้นส่วน">รอชิ้นส่วน</button>
-        <button class="ftab" data-f="เสร็จสิ้น">เสร็จ</button>
+        <button class="ftab" data-f="แก้ไข">✏️ แก้ไข</button>
+        <button class="ftab" data-f="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ</button>
+        <button class="ftab" data-f="ตรวจงาน">🔍 ตรวจงาน</button>
+        <button class="ftab" data-f="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังทำ</button>
+        <button class="ftab" data-f="เสร็จสิ้น ✅">✅ เสร็จ</button>
       </div>
       <div id="ticket-list"></div>
     </div>
@@ -262,8 +264,7 @@ let photos = []; // base64 photos for work form
 const AVATAR_COLORS = ['#00e5a0','#0099ff','#ff9640','#b87be8','#ff4d6d','#22d3ee','#f59e0b'];
 function avatarColor(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
 function avatarInitial(name){ return (name||'?').charAt(0).toUpperCase(); }
-function statusColor(s){
-  const m={'รอตรวจงาน':'#ff9640','อยู่ระหว่างดำเนินการ':'#0099ff','รอชิ้นส่วน':'#b87be8','เสร็จสิ้น':'#00e5a0','ยกเลิก':'#ff4d6d'};
+function statusColor(s){return{'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';};
   return m[s]||'#ffffff44';
 }
 
@@ -392,10 +393,10 @@ function renderList(){
   let data = tickets;
   if(filterStatus!=='all') data = data.filter(t=>t.status===filterStatus);
   // Sort: pending first
-  const ORDER = {'รอตรวจงาน':0,'อยู่ระหว่างดำเนินการ':1,'รอชิ้นส่วน':2,'เสร็จสิ้น':3,'ยกเลิก':4};
+  const ORDER = {'แก้ไข':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'รอดำเนินการ ⏱️':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':4};
   data.sort((a,b)=>(ORDER[a.status]??9)-(ORDER[b.status]??9));
 
-  const pending = tickets.filter(t=>!['เสร็จสิ้น','ยกเลิก'].includes(t.status)).length;
+  const pending = tickets.filter(t=>!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
   document.getElementById('ticket-count').textContent = `${data.length} รายการ${pending?` (${pending} รอดำเนินการ)`:''}`;
 
   if(!data.length){
@@ -411,7 +412,7 @@ function renderList(){
           <div class="card-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}
           </div>
         </div>
-        <span class="status-pill s-${esc(t.status||'รอตรวจงาน')}">${esc(t.status||'รอตรวจงาน')}</span>
+        <span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
       </div>
       <div class="card-type">${esc(t.type||'—')}</div>
       <div class="card-detail">${esc(t.detail||'-')}</div>
@@ -447,9 +448,9 @@ function closeDetail(){
 function renderDetail(){
   const t = openTicket;
   const submitted = !!t.workDetail;
-  const done = ['เสร็จสิ้น','ยกเลิก'].includes(t.status);
-  const STATUSES = ['รอตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น','ยกเลิก'];
-  const SCOLORS  = {'รอตรวจงาน':'#ff9640','อยู่ระหว่างดำเนินการ':'#0099ff','รอชิ้นส่วน':'#b87be8','เสร็จสิ้น':'#00e5a0','ยกเลิก':'#ff4d6d'};
+  const done = ['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status);
+  const STATUSES = ['แก้ไข','อยู่ระหว่างดำเนินการ ⚙️','รอดำเนินการ ⏱️','เสร็จสิ้น ✅','ยกเลิก ❌'];
+  const SCOLORS  = {'แก้ไข':'#ff9640','อยู่ระหว่างดำเนินการ ⚙️':'#0099ff','รอดำเนินการ ⏱️':'#b87be8','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ff4d6d'};
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-head">
@@ -457,7 +458,7 @@ function renderDetail(){
         <div style="font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:4px">🎫 ${esc(t.id||t._recordId||'—')}</div>
         <div style="font-size:16px;font-weight:700;line-height:1.3">${esc(t.type||'—')}</div>
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <span class="status-pill detail-status-pill s-${esc(t.status||'รอตรวจงาน')}">${esc(t.status||'รอตรวจงาน')}</span>
+          <span class="status-pill detail-status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
           <span style="font-size:12px;color:var(--fg3)">${esc(t.brand||'-')}</span>
         </div>
       </div>
@@ -486,7 +487,7 @@ function renderDetail(){
       <div class="detail-section">
         <div class="detail-section-title">เปลี่ยนสถานะด่วน</div>
         <div class="status-grid">
-          ${STATUSES.filter(s=>s!=='ยกเลิก'&&s!=='เสร็จสิ้น').map(s=>{
+          ${STATUSES.filter(s=>s!=='ยกเลิก ❌'&&s!=='เสร็จสิ้น ✅').map(s=>{
             const c=SCOLORS[s]; const active=t.status===s;
             return `<button class="status-btn ${active?'active':''}" style="border-color:${c};color:${c};background:${active?c+'22':'transparent'}"
               onclick="quickStatus('${esc(s)}')">${esc(s)}</button>`;
@@ -592,7 +593,7 @@ async function submitWork(){
     });
     const d = await r.json();
     if(!d.ok) throw new Error(d.error);
-    openTicket={...openTicket, workDetail:detail, partsUsed:parts, workHours:hours, status:'รอตรวจงาน'};
+    openTicket={...openTicket, workDetail:detail, partsUsed:parts, workHours:hours, status:'แก้ไข'};
     tickets=tickets.map(t=>t._recordId===openTicket._recordId?openTicket:t);
     renderDetail(); renderList();
     showToast('✅ ส่งงานสำเร็จ! Admin จะตรวจรับงาน');
@@ -607,15 +608,15 @@ async function submitWork(){
 function renderProfile(){
   if(!AUTH) return;
   const u=AUTH.user;
-  const done=tickets.filter(t=>t.status==='เสร็จสิ้น').length;
-  const inprog=tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ').length;
+  const done=tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+  const inprog=tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
   document.getElementById('profile-content').innerHTML=`
     <div class="profile-avatar" style="background:${avatarColor(u.name)};color:#000">${avatarInitial(u.name)}</div>
     <div class="profile-name">${esc(u.name)}</div>
     <div class="profile-role">ช่างเทคนิค · ${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand)}</div>
     <div class="stat-row">
       <div class="stat-box"><div class="stat-num">${tickets.length}</div><div class="stat-lbl">งานทั้งหมด</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${inprog}</div><div class="stat-lbl">กำลังทำ</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${inprog}</div><div class="stat-lbl">กำลังดำเนินการ ⚙️</div></div>
       <div class="stat-box"><div class="stat-num" style="color:var(--accent)">${done}</div><div class="stat-lbl">เสร็จแล้ว</div></div>
     </div>`;
 }
