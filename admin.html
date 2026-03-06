@@ -84,7 +84,8 @@ a{color:inherit;text-decoration:none}
 .topbar-mobile{
   display:none;background:var(--bg2);border-bottom:1px solid var(--b1);
   padding:12px 14px;padding-top:calc(var(--safe-top)+12px);
-  align-items:center;gap:10px;flex-shrink:0
+  align-items:center;gap:10px;flex-shrink:0;
+  position:sticky;top:0;z-index:100
 }
 .btn-menu{background:transparent;border:none;color:var(--fg2);font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .topbar-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
@@ -143,6 +144,21 @@ a{color:inherit;text-decoration:none}
 
 /* ═══════════ TICKET TABLE ═══════════ */
 .tbl-wrap{padding:0 24px}
+.float-bar{
+  position:fixed;bottom:calc(60px + var(--safe-bottom));left:0;right:0;
+  display:none;align-items:center;justify-content:space-between;
+  gap:8px;padding:8px 14px;
+  background:rgba(13,13,18,.92);backdrop-filter:blur(10px);
+  border-top:1px solid var(--b1);z-index:80;flex-wrap:wrap
+}
+.float-bar.visible{display:flex}
+.float-pag{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pag-btn{min-width:34px;height:34px;padding:0 8px;border-radius:8px;border:1px solid var(--b2);
+  background:transparent;color:var(--fg2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pag-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.pag-btn:hover:not(.active){background:var(--b1);color:var(--fg)}
+.per-page-select{background:var(--bg3);border:1px solid var(--b2);border-radius:8px;
+  color:var(--fg);font-family:var(--font-th);font-size:12px;padding:6px 10px;outline:none;cursor:pointer}
 .tbl{width:100%;border-collapse:separate;border-spacing:0 4px}
 .tbl thead th{font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;text-align:left;white-space:nowrap}
 .tbl-row{background:var(--bg2);border-radius:var(--r);cursor:pointer;transition:background .12s}
@@ -341,6 +357,30 @@ a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
+<style>
+#app-splash{position:fixed;inset:0;background:#07070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
+#app-splash.hide{opacity:0;pointer-events:none}
+.splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+.splash-text{font-size:13px;color:rgba(255,255,255,.35);font-family:'Noto Sans Thai',sans-serif}
+.splash-bar{width:160px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.splash-fill{height:100%;background:#00e5a0;border-radius:2px;animation:splashLoad 2s ease-out forwards}
+@keyframes splashLoad{from{width:0}to{width:85%}}
+</style>
+<div id="app-splash">
+  <div class="splash-logo">IT</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="splash-text">กำลังโหลด...</div>
+</div>
+<script>
+// ซ่อน splash เมื่อหน้าพร้อม
+window.hideSplash = function(){
+  const s = document.getElementById('app-splash');
+  if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
+};
+// บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
+setTimeout(window.hideSplash, 8000);
+</script>
 
 <!-- ══ LOGIN ══════════════════════════════════════════════════ -->
 <div id="login-screen">
@@ -459,7 +499,7 @@ a{color:inherit;text-decoration:none}
             </tr></thead>
             <tbody id="ticket-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div> กำลังโหลด…</div></td></tr></tbody>
           </table>
-          <div id="tbl-pagination" style="padding:14px 0;display:flex;justify-content:center;gap:8px"></div>
+
         </div>
       </div>
 
@@ -493,6 +533,17 @@ a{color:inherit;text-decoration:none}
       </div>
 
     </div><!-- end page-content -->
+
+  <!-- FLOATING PAGINATION BAR -->
+  <div class="float-bar" id="float-bar">
+    <div class="float-pag" id="tbl-pagination"></div>
+    <select class="per-page-select" id="per-page-select" title="แสดงต่อหน้า">
+      <option value="10">10/หน้า</option>
+      <option value="20" selected>20/หน้า</option>
+      <option value="50">50/หน้า</option>
+      <option value="999">ทั้งหมด</option>
+    </select>
+  </div>
   </div><!-- end main-area -->
 
   <!-- BOTTOM NAV (mobile) -->
@@ -531,7 +582,7 @@ let AUTH = null;
 let tickets = [], users = [], logs = [];
 let currentPage = 'dashboard';
 let filterStatus = '', filterBrand = '', filterSla = '', searchQ = '';
-let tbPage = 1; const PER_PAGE = 25;
+let tbPage = 1; let PER_PAGE = 20;
 let openTicketId = null;
 let sse = null;
 
@@ -626,6 +677,7 @@ async function bootApp(){
   await Promise.all([loadTickets(), loadLogs()]);
   if(['superadmin','admin'].includes(u.role)) loadUsers();
   renderDashboard();
+  window.hideSplash?.();
   setInterval(loadTickets, 60_000);
 }
 
@@ -690,6 +742,9 @@ function navTo(page){
   // Lazy render
   if(page==='dashboard') renderDashboard();
   if(page==='tickets') renderTicketsPage();
+  // show/hide float-bar based on page
+  const fb=document.getElementById('float-bar');
+  if(fb) fb.classList.toggle('visible', page==='tickets');
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
   // Close mobile sidebar
@@ -830,14 +885,27 @@ function renderTicketsPage(){
     </tr>`;
   }).join('');
 
-  // Pagination
-  let pag='';
-  if(total>1){
+  // Floating pagination
+  const floatBar = document.getElementById('float-bar');
+  const pagEl    = document.getElementById('tbl-pagination');
+  if(total > 1){
+    let pag = '';
+    // Show prev/next + limited pages
+    if(tbPage > 1) pag += `<button class="pag-btn" onclick="tbPage=${tbPage-1};renderTicketsPage()">‹</button>`;
     for(let i=1;i<=total;i++){
-      pag+=`<button onclick="tbPage=${i};renderTicketsPage()" style="padding:6px 11px;border-radius:8px;border:1px solid ${i===tbPage?'var(--accent)':'var(--b2)'};background:${i===tbPage?'rgba(0,229,160,.12)':'transparent'};color:${i===tbPage?'var(--accent)':'var(--fg2)'};font-size:13px;cursor:pointer">${i}</button>`;
+      if(total<=7 || i===1 || i===total || Math.abs(i-tbPage)<=1){
+        pag += `<button class="pag-btn${i===tbPage?' active':''}" onclick="tbPage=${i};renderTicketsPage()">${i}</button>`;
+      } else if(Math.abs(i-tbPage)===2){
+        pag += `<span style="color:var(--fg3);padding:0 2px">…</span>`;
+      }
     }
+    if(tbPage < total) pag += `<button class="pag-btn" onclick="tbPage=${tbPage+1};renderTicketsPage()">›</button>`;
+    if(pagEl) pagEl.innerHTML = pag;
+    if(floatBar) floatBar.classList.add('visible');
+  } else {
+    if(pagEl) pagEl.innerHTML = '';
+    if(floatBar) floatBar.classList.remove('visible');
   }
-  document.getElementById('tbl-pagination').innerHTML=pag;
 }
 function sqBtn(t,status,color,label){
   const active=t.status===status;
@@ -847,7 +915,8 @@ function sqBtn(t,status,color,label){
 // Filters
 document.getElementById('search-input').oninput=function(){searchQ=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-brand').onchange=function(){filterBrand=this.value;tbPage=1;renderTicketsPage();};
-document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();};
+document.getElementById('filter-sla') && (document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
+document.getElementById('per-page-select').onchange=function(){PER_PAGE=Number(this.value)||20;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-status').onchange=function(){
   filterStatus=this.value; tbPage=1; renderTicketsPage();
 };
@@ -1298,6 +1367,7 @@ function showToast(msg,type='success'){
 // ════════════════════════════════════════════════════════════════
 (async()=>{
   if(await tryAutoLogin()) bootApp();
+  else window.hideSplash?.(); // show login screen
 })();
 </script>
 </body>
