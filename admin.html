@@ -536,7 +536,11 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
-  return fetch(path,{...opts,headers:hdrs}).then(r=>r.json());
+  const ctrl = new AbortController();
+  const tid  = setTimeout(()=>ctrl.abort(), 10000);
+  return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
+    .then(r=>{ clearTimeout(tid); return r.json(); })
+    .catch(e=>{ clearTimeout(tid); throw e; });
 }
 const AVATAR_COLORS=['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316'];
 function ac(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
@@ -944,7 +948,7 @@ function renderDrawerContent(){
         </div>
       </div>`:''}
 
- ${t.adminNote||t.closedBy?`
+      ${t.adminNote||t.closedBy?`
       <div class="d-section">
         <div class="d-section-title">หมายเหตุ Admin</div>
         <div class="d-admin-box">
