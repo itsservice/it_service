@@ -523,10 +523,12 @@ async function loadTickets(){
 
 // ── Initial load ─────────────────────────────────────────────
 (async()=>{
-  renderHistory();
-  await loadTickets();
-  renderHistory();
-  window.hideSplash?.();
+  try{
+    renderHistory();
+    await loadTickets();
+    renderHistory();
+  }catch(e){ console.error('boot error:',e); }
+  finally{ window.hideSplash?.(); }
 })();
 
 // ── Auto-refresh ทุก 30 วิ ────────────────────────────────────
