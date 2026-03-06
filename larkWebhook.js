@@ -60,6 +60,32 @@ function engineerFlex(t) {
   }};
 }
 
+function assignedFlex(t) {
+  return { type:'flex', altText:`🔧 มอบหมายช่างแล้ว ${t.id||''}`, contents:{ type:'bubble', size:'kilo',
+    header:{ type:'box', layout:'vertical', backgroundColor:'#0a1428', paddingAll:'16px', contents:[
+      { type:'text', text:'🔧 มอบหมายช่างแล้ว', size:'xs', color:'#3b82f6', weight:'bold' },
+      { type:'text', text:t.type||'แจ้งปัญหา', size:'lg', weight:'bold', color:'#ffffff', margin:'sm' },
+    ]},
+    body:{ type:'box', layout:'vertical', backgroundColor:'#0d1221', paddingAll:'16px', spacing:'sm', contents:[
+      { type:'box', layout:'horizontal', contents:[
+        { type:'text', text:'Ticket', size:'xs', color:'#666666', flex:1 },
+        { type:'text', text:t.id||'-', size:'xs', color:'#3b82f6', align:'end', flex:1 }
+      ]},
+      { type:'box', layout:'horizontal', contents:[
+        { type:'text', text:'ช่างผู้รับงาน', size:'xs', color:'#666666', flex:1 },
+        { type:'text', text:t.engineerName||'-', size:'xs', color:'#ffffff', align:'end', flex:1, weight:'bold' }
+      ]},
+      { type:'box', layout:'horizontal', contents:[
+        { type:'text', text:'สาขา', size:'xs', color:'#666666', flex:1 },
+        { type:'text', text:t.branchCode||'-', size:'xs', color:'#bbbbbb', align:'end', flex:1 }
+      ]},
+    ]},
+    footer:{ type:'box', layout:'vertical', backgroundColor:'#0a1428', paddingAll:'12px',
+      contents:[{ type:'button', action:{ type:'uri', label:'ดูสถานะงาน', uri:URL()+'/report' }, style:'primary', color:'#3b82f6', height:'sm' }]
+    }
+  }};
+}
+
 function closedFlex(t) {
   return { type:'flex', altText:`✅ งานเสร็จสิ้น ${t.id||''}`, contents:{ type:'bubble', size:'kilo',
     header:{ type:'box', layout:'vertical', backgroundColor:'#070d17', paddingAll:'16px', contents:[
@@ -83,45 +109,68 @@ router.post('/webhook', async (req, res) => {
   res.sendStatus(200); // ตอบ Lark ก่อนเสมอ
 
   try {
-    // ดึง record_id จาก event
-    const rid = body.data?.record_id
-      || body.event?.record_id
-      || body.record_id;
+    console.log('[LarkWebhook] received:', JSON.stringify(body).slice(0, 300));
 
-    if (!rid) {
-      console.log('[LarkWebhook] no record_id in body:', JSON.stringify(body).slice(0,200));
+    // รองรับหลายรูปแบบจาก Lark Automation
+    const rid      = body.record_id || body.data?.record_id || body.recordId || null;
+    const ticketId = body.ticket_id || body.ticketId || null; // เช่น "GD-00050"
+
+    if (!rid && !ticketId) {
+      console.warn('[LarkWebhook] no record_id or ticket_id:', JSON.stringify(body).slice(0,200));
       return;
     }
 
-    // Invalidate cache แล้ว fetch fresh
+    // Invalidate cache + fetch fresh
     invalidateCache();
-    await new Promise(r => setTimeout(r, 500));
-    const t = await getTicket(rid);
-    if (!t) { console.log('[LarkWebhook] ticket not found:', rid); return; }
+    await new Promise(r => setTimeout(r, 800));
 
-    console.log(`[LarkWebhook] ticket ${t.id} status="${t.status}"`);
+    let t = null;
+    if (rid) {
+      t = await getTicket(rid);
+    } else {
+      // ค้นหาจาก ticket_id (GD-XXXXX) ใน cache
+      const { listTickets } = require('./larkService');
+      const all = await listTickets({ noCache: true });
+      t = all.find(x => x.id === ticketId || x.id === String(ticketId).trim());
+    }
+    if (!t) { console.warn('[LarkWebhook] ticket not found rid=%s tid=%s', rid, ticketId); return; }
 
-    const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
-    const broadcast  = req.app.locals?.broadcast;
+    console.log(`[LarkWebhook] ticket=${t.id} status="${t.status}"`);
 
-    // Notify based on status
-    const status = (t.status || '').replace(/[✅⚙️⏱️❌]/g,'').trim();
+    const adminGroup   = process.env.LINE_ADMIN_GROUP_ID;
+    const broadcast    = req.app.locals?.broadcast;
 
-    if (status === 'เสร็จสิ้น' && t.closedBy) {
-      if (t.line_user_id)  await pushLine(t.line_user_id,  [closedFlex(t)]);
-      if (t.line_group_id) await pushLine(t.line_group_id, [closedFlex(t)]);
-      addLog({ action:'line_notify', detail:`แจ้งผู้ใช้ปิดงาน: ${t.id}` });
-    } else if (status === 'ตรวจงาน' && t.workDetail) {
+    // line_user_id: จาก body (Lark ส่งมา) หรือจาก ticket field
+    const lineUserId   = body.line_user_id || t.line_user_id || null;
+    const lineGroupId  = body.line_group_id || t.line_group_id || null;
+
+    // เทียบสถานะ (strip emoji ก่อน)
+    const rawStatus = (t.status || body.status || '').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();
+
+    if (rawStatus === 'เสร็จสิ้น') {
+      if (lineUserId)  await pushLine(lineUserId,  [closedFlex(t)]);
+      if (lineGroupId) await pushLine(lineGroupId, [closedFlex(t)]);
+      if (adminGroup)  await pushLine(adminGroup,  [closedFlex(t)]);
+      addLog({ action:'line_notify', detail:`ปิดงาน: ${t.id}` });
+
+    } else if (rawStatus === 'ตรวจงาน') {
       if (adminGroup) await pushLine(adminGroup, [engineerFlex(t)]);
-      addLog({ action:'line_notify', detail:`แจ้ง Admin ช่างส่งงาน: ${t.id}` });
-    } else if (status === 'แก้ไข' || !t.status) {
+      addLog({ action:'line_notify', detail:`ช่างส่งงาน: ${t.id}` });
+
+    } else if (rawStatus === 'อยู่ระหว่างดำเนินการ') {
+      if (lineUserId)  await pushLine(lineUserId,  [assignedFlex(t)]);
+      if (adminGroup)  await pushLine(adminGroup,  [assignedFlex(t)]);
+      addLog({ action:'line_notify', detail:`มอบหมายช่าง: ${t.id}` });
+
+    } else {
+      // Ticket ใหม่ หรือสถานะอื่น → แจ้ง Admin
       if (adminGroup) await pushLine(adminGroup, [newTicketFlex(t)]);
-      addLog({ action:'line_notify', detail:`แจ้ง Admin Ticket ใหม่: ${t.id}` });
+      addLog({ action:'line_notify', detail:`Ticket ใหม่/อัพเดท: ${t.id}` });
     }
 
     if (broadcast) broadcast('ticket_updated', { recordId:rid, status:t.status, ts:new Date().toISOString() });
 
-  } catch(err) { console.error('[LarkWebhook]', err.message); }
+  } catch(err) { console.error('[LarkWebhook] ERROR:', err.message); }
 });
 
 module.exports = router;
