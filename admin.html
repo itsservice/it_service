@@ -104,7 +104,7 @@ a{color:inherit;text-decoration:none}
 .page{display:none}.page.active{display:block}
 
 /* ═══════════ STAT CARDS ═══════════ */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:20px 24px}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:20px 24px}
 .stat-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .stat-card:hover{border-color:var(--b2)}
 .stat-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--stat-color,var(--b1))}
@@ -700,13 +700,15 @@ document.getElementById('btn-menu').onclick=()=>{
 function renderDashboard(){
   const total    = tickets.length;
   const waiting  = tickets.filter(t=>t.status==='แก้ไข').length;
+  const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
   const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
   const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
   document.getElementById('stats-grid').innerHTML=`
     ${statCard('ทั้งหมด','🎫',total,'#ffffff44','')}
-    ${statCard('แก้ไข','⏳',waiting,'#f59e0b','แก้ไข')}
-    ${statCard('กำลังดำเนินการ','🔧',inprog,'#3b82f6','อยู่ระหว่างดำเนินการ ⚙️')}
+    ${statCard('แก้ไข','✏️',waiting,'#f59e0b','แก้ไข')}
+    ${statCard('ตรวจงาน','🔍',review,'#22d3ee','ตรวจงาน')}
+    ${statCard('กำลังดำเนินการ','⚙️',inprog,'#3b82f6','อยู่ระหว่างดำเนินการ ⚙️')}
     ${statCard('เสร็จสิ้น ✅','✅',done,'#00e5a0','เสร็จสิ้น ✅')}`;
   document.querySelectorAll('.stat-card').forEach(c=>{
     c.onclick=()=>{ filterStatus=c.dataset.s||''; navTo('tickets'); renderTicketsPage(); };
