@@ -207,13 +207,20 @@ function parseRecord(rec) {
   // Normalize status
   if (out.status) out.status = normalizeStatus(out.status);
   // ลบค่าที่เป็น URL ออกจาก field ที่ไม่ควรเป็น URL
-  const URL_FIELDS = ['location','detail','type','branchCode','reporter'];
-  URL_FIELDS.forEach(k => {
-    if (out[k] && typeof out[k] === 'string' && out[k].startsWith('http')) {
-      console.log(`[Lark] skip URL value in field "${k}"`);
-      out[k] = '';
+  // (Lark อาจมี column ลิงก์หรือ wiki URL ที่ดึงมาผิด)
+  const URL_FIELDS = new Set(['location','detail','type','branchCode','reporter','phone','engineerName','sla','sentDate']);
+  for (const k of Object.keys(out)) {
+    if (typeof out[k] === 'string' && out[k].startsWith('http')) {
+      if (URL_FIELDS.has(k)) {
+        out[k] = '';
+      } else {
+        // เก็บไว้ใน link field พิเศษ
+        if (!out._links) out._links = {};
+        out._links[k] = out[k];
+        out[k] = ''; // ซ่อนจาก UI
+      }
     }
-  });
+  }
   // Use Number Ticket as ID if exists
   if (out.id && !String(out.id).startsWith('rec')) {
     // use as-is
