@@ -4,6 +4,8 @@ const BASE = 'https://open.larksuite.com/open-apis';
 
 let _token = null, _tokenExp = 0;
 let _fieldMap = null;    // internalKey → larkColumnName
+let _fieldTypes = {};    // larkColumnName → field ui_type (Text, SingleSelect, DateTime, etc.)
+let _fieldOptions = {};  // larkColumnName → Set of valid option names
 let _optionMap = {};     // "optXXXX" → "text value" (for select fields)
 let _ticketCache = null, _ticketCacheExp = 0;
 const CACHE_TTL = 30_000; // cache tickets 30 วินาที
@@ -230,12 +232,22 @@ function toWriteFields(fields) {
       console.warn('[Lark] no column mapped for key "' + key + '" — skipping');
       continue;
     }
-    // Lark datetime field ต้องการ Unix timestamp (ms) ไม่ใช่ string
+    // Lark datetime field ต้องการ Unix timestamp (ms)
     if (DATE_KEYS.has(key)) {
       const ts = toUnixMs(val);
       if (ts) { out[colName] = ts; continue; }
-      // ถ้าแปลงไม่ได้ ข้ามไปเลย — ไม่ส่ง field นี้
-      console.warn(`[Lark] skip date field "${key}" value:`, val);
+      console.warn(`[Lark] skip date field "${key}" — cannot convert:`, val);
+      continue;
+    }
+    // Lark SingleSelect field — ตรวจว่า option มีอยู่จริง
+    const fieldType = _fieldTypes[colName];
+    if (fieldType === 'SingleSelect') {
+      const validOpts = _fieldOptions[colName];
+      if (validOpts && validOpts.size > 0 && !validOpts.has(String(val))) {
+        console.warn(`[Lark] SingleSelect "${colName}" — value "${val}" not in options [${[...validOpts].join(',')}] — skipping`);
+        continue;
+      }
+      out[colName] = String(val);
       continue;
     }
     out[colName] = typeof val === 'number' ? String(val) : val;
@@ -274,14 +286,17 @@ async function ensureFieldMap() {
     );
     const items = r.data.data?.items || [];
     if (items.length) {
-      // Build option ID → text map from all select fields
+      // Build option maps and field type registry
       items.forEach(f => {
+        _fieldTypes[f.field_name] = f.ui_type;
         if (f.ui_type === 'SingleSelect' || f.ui_type === 'MultiSelect') {
           const opts = f.property?.options || [];
           opts.forEach(o => { if (o.id && o.name) _optionMap[o.id] = o.name; });
+          _fieldOptions[f.field_name] = new Set(opts.map(o => o.name));
         }
       });
       console.log('[Lark] optionMap built:', Object.keys(_optionMap).length, 'options');
+      console.log('[Lark] fieldTypes:', Object.entries(_fieldTypes).map(([k,v])=>`${k}:${v}`).join(', '));
       const fakeRecord = { record_id: 'fake', fields: {} };
       items.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
       _fieldMap = buildFieldMap(fakeRecord);
