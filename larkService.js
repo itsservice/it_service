@@ -403,7 +403,21 @@ async function createTicket(fields) {
     { headers: hdr(token), timeout: 15_000 }
   );
   if (r.data.code !== 0) throw new Error(`Lark create: ${r.data.msg}`);
-  return parseRecord(r.data.data?.record || {});
+  // Parse record จาก response ก่อน
+  const created = parseRecord(r.data.data?.record || {});
+  // Fetch กลับมาเพื่อดึง "Number Ticket" ที่ Lark generate ให้
+  // (Lark auto-number field จะถูก populate หลัง create)
+  try {
+    await new Promise(resolve => setTimeout(resolve, 800)); // รอ Lark generate
+    const fresh = await getTicket(created._recordId);
+    if (fresh && fresh.id && !String(fresh.id).startsWith('TK-')) {
+      return fresh; // ได้ GD-XXXXX จาก Lark
+    }
+  } catch(e) {
+    console.warn('[Lark] re-fetch after create failed:', e.message);
+  }
+  invalidateCache();
+  return created;
 }
 
 // ── DEBUG: get raw field schema ────────────────────────────────
