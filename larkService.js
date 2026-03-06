@@ -206,6 +206,14 @@ function parseRecord(rec) {
   }
   // Normalize status
   if (out.status) out.status = normalizeStatus(out.status);
+  // ลบค่าที่เป็น URL ออกจาก field ที่ไม่ควรเป็น URL
+  const URL_FIELDS = ['location','detail','type','branchCode','reporter'];
+  URL_FIELDS.forEach(k => {
+    if (out[k] && typeof out[k] === 'string' && out[k].startsWith('http')) {
+      console.log(`[Lark] skip URL value in field "${k}"`);
+      out[k] = '';
+    }
+  });
   // Use Number Ticket as ID if exists
   if (out.id && !String(out.id).startsWith('rec')) {
     // use as-is
