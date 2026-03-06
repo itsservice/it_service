@@ -147,35 +147,7 @@ a{color:inherit;text-decoration:none}
 
 /* ═══════════ TICKET TABLE ═══════════ */
 .tbl-wrap{padding:0 24px;padding-bottom:160px}
-.float-bar{
-  /* Desktop: sticky to bottom inside main-area — not fixed */
-  display:none;align-items:center;justify-content:space-between;
-  gap:8px;padding:10px 24px;
-  background:var(--bg2);
-  border-top:1px solid var(--b2);
-  flex-shrink:0;flex-wrap:wrap;
-  position:sticky;bottom:0;z-index:90;
-  box-shadow:0 -4px 20px rgba(0,0,0,.4)
-}
-.float-bar.visible{display:flex}
-/* Mobile: float-bar จะ fixed ลอยเหนือ bottom-nav */
-@media(max-width:768px){
-  .float-bar{
-    position:fixed!important;
-    bottom:calc(56px + var(--safe-bottom))!important;
-    left:0!important;right:0!important;
-    background:rgba(7,7,10,.97)!important;
-    backdrop-filter:blur(14px);
-    z-index:89
-  }
-}
-.float-pag{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-.pag-btn{min-width:34px;height:34px;padding:0 8px;border-radius:8px;border:1px solid var(--b2);
-  background:transparent;color:var(--fg2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.pag-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
-.pag-btn:hover:not(.active){background:var(--b1);color:var(--fg)}
-.per-page-select{background:var(--bg3);border:1px solid var(--b2);border-radius:8px;
-  color:var(--fg);font-family:var(--font-th);font-size:12px;padding:6px 10px;outline:none;cursor:pointer}
+/* FAB replaces float-bar */
 .tbl{width:100%;border-collapse:separate;border-spacing:0 4px}
 .tbl thead th{font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;text-align:left;white-space:nowrap}
 .tbl-row{background:var(--bg2);border-radius:var(--r);cursor:pointer;transition:background .12s}
@@ -373,6 +345,45 @@ a{color:inherit;text-decoration:none}
   :root{--sidebar-w:200px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
 }
+/* ═══════════════════════════════════════════════════
+   FAB NAVIGATION PANEL
+   - ปุ่มหลักมุมขวาล่าง fixed
+   - กางออก L-shape: แนวตั้ง (↑⌕↓) + แนวนอน (pagination)
+   - mobile: bottom ขยับเหนือ bottom-nav
+═══════════════════════════════════════════════════ */
+.fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
+.fab-wrap *{pointer-events:auto}
+.fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab-main:hover{background:#00c98a}
+.fab-wrap.fab-open .fab-main{transform:rotate(45deg)}
+/* Top branch — แนวตั้ง ↑⌕↓ */
+.fab-branch-top{position:absolute;right:2px;bottom:calc(50px + 12px);display:flex;flex-direction:column-reverse;align-items:center;gap:8px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
+.fab-wrap.fab-open .fab-branch-top{opacity:1;visibility:visible}
+/* Left branch — แนวนอน pagination */
+.fab-branch-left{position:absolute;right:calc(50px + 12px);bottom:2px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;max-width:calc(100vw - 90px);overflow-x:auto;padding:4px 2px;scrollbar-width:none}
+.fab-branch-left::-webkit-scrollbar{display:none}
+.fab-wrap.fab-open .fab-branch-left{opacity:1;visibility:visible}
+/* FAB buttons */
+.fab-btn{min-width:40px;height:40px;border:none;border-radius:20px;background:var(--bg3);color:var(--fg);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);padding:0 12px;font-size:13px;font-family:var(--font-th);white-space:nowrap;transition:transform .15s,background .15s,opacity .15s;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center}
+.fab-btn:hover{transform:translateY(-2px);background:var(--bg4,#1c1c24)}
+.fab-btn.fab-icon{width:40px;min-width:40px;padding:0;font-size:16px}
+.fab-btn.fab-active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+.fab-btn.fab-disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+/* Search popup */
+.fab-search-pop{position:absolute;right:calc(40px + 16px);bottom:calc(40px + 56px);width:min(260px,calc(100vw - 100px));background:var(--bg2);border:1px solid var(--b2);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .2s ease;z-index:10}
+.fab-search-pop.fab-search-open{opacity:1;visibility:visible;transform:translateY(0)}
+.fab-search-pop label{display:block;font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+.fab-search-input{width:100%;height:40px;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;padding:0 12px;outline:none;color:var(--fg);font-family:var(--font-th);font-size:14px;transition:border-color .2s}
+.fab-search-input:focus{border-color:var(--accent)}
+.fab-search-hint{margin-top:7px;font-size:11px;color:var(--fg3);line-height:1.5}
+/* per-page selector in fab */
+.fab-perpage{background:var(--bg3);border:1px solid var(--b2);border-radius:20px;color:var(--fg);font-family:var(--font-th);font-size:12px;padding:0 10px;height:40px;outline:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+/* Mobile: ขยับเหนือ bottom-nav */
+@media(max-width:768px){
+  .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
+  .fab-branch-left{max-width:calc(100vw - 80px)}
+}
+
 </style>
 </head>
 <body>
@@ -558,6 +569,34 @@ setTimeout(window.hideSplash, 8000);
 
     </div><!-- end page-content -->
   </div><!-- end main-area -->
+
+<!-- ═══════════════════════════════════════════════════
+     FAB NAVIGATION PANEL (Admin)
+     - search → เชื่อมกับ searchQ + renderTicketsPage
+     - pagination → tbl-pagination อยู่ใน left-branch
+     - per-page → ย้ายมาจาก float-bar เดิม
+═══════════════════════════════════════════════════ -->
+<div class="fab-wrap" id="admin-fab-wrap">
+  <!-- Search popup -->
+  <div class="fab-search-pop" id="fab-search-pop">
+    <label>ค้นหา Ticket</label>
+    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, เบอร์, รายละเอียด…"/>
+    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+  </div>
+  <!-- Top branch: ↑ ⌕ ↓ -->
+  <div class="fab-branch-top" id="fab-branch-top">
+    <button class="fab-btn fab-icon" id="fab-to-top" title="ขึ้นด้านบน">↑</button>
+    <button class="fab-btn fab-icon" id="fab-search-btn" title="ค้นหา">⌕</button>
+    <button class="fab-btn fab-icon" id="fab-to-bottom" title="ลงด้านล่าง">↓</button>
+  </div>
+  <!-- Left branch: pagination + per-page -->
+  <div class="fab-branch-left" id="fab-pag-bar">
+    <!-- rendered by JS -->
+  </div>
+  <!-- Main button -->
+  <button class="fab-main" id="fab-main-btn" aria-label="เปิดเมนูนำทาง">+</button>
+</div>
+
 
   <!-- BOTTOM NAV (mobile) -->
   <nav class="bottom-nav">
@@ -756,9 +795,7 @@ function navTo(page){
   // Lazy render
   if(page==='dashboard') renderDashboard();
   if(page==='tickets') renderTicketsPage();
-  // show/hide float-bar based on page
-  const fb=document.getElementById('float-bar');
-  if(fb){ if(page==='tickets') fb.classList.add('visible'); else fb.classList.remove('visible'); }
+
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
   // Close mobile sidebar + overlay
@@ -869,7 +906,6 @@ function getFiltered(){
 }
 
 function renderTicketsPage(){
-  syncPerPageSelect();
   // Populate brand filter
   const brands=[...new Set(tickets.map(t=>t.brand).filter(Boolean))].sort();
   const fb=document.getElementById('filter-brand');
@@ -908,33 +944,9 @@ function renderTicketsPage(){
     </tr>`;
   }).join('');
 
-  // Floating pagination
-  const floatBar = document.getElementById('float-bar');
-  const pagEl    = document.getElementById('tbl-pagination');
-  // Always show float-bar on tickets page
-  if(floatBar) floatBar.classList.add('visible');
-  if(total > 1){
-    let pag = '';
-    // Show prev/next + limited pages
-    if(tbPage > 1) pag += `<button class="pag-btn" onclick="tbPage=${tbPage-1};renderTicketsPage()">‹</button>`;
-    let lastWasEllipsis = false;
-    for(let i=1;i<=total;i++){
-      if(total<=7 || i===1 || i===total || Math.abs(i-tbPage)<=1){
-        pag += `<button class="pag-btn${i===tbPage?' active':''}" onclick="tbPage=${i};renderTicketsPage()">${i}</button>`;
-        lastWasEllipsis = false;
-      } else if(!lastWasEllipsis){
-        pag += `<span style="color:var(--fg3);padding:0 4px;line-height:34px">…</span>`;
-        lastWasEllipsis = true;
-      }
-    }
-    if(tbPage < total) pag += `<button class="pag-btn" onclick="tbPage=${tbPage+1};renderTicketsPage()">›</button>`;
-    if(pagEl) pagEl.innerHTML = pag;
-    if(floatBar) floatBar.classList.add('visible');
-  } else {
-    // 1 page or no results — still show per-page selector
-    if(pagEl) pagEl.innerHTML = '<span style="font-size:12px;color:var(--fg3)">'+data.length+' รายการ</span>';
-    if(floatBar) floatBar.classList.add('visible');
-  }
+  // ── FAB pagination update ───────────────────────────────────
+  const total = Math.max(1, Math.ceil(data.length / PER_PAGE));
+  if(window.renderFabPagination) renderFabPagination(total, tbPage, PER_PAGE);
 }
 function sqBtn(t,status,color,label){
   const active=t.status===status;
@@ -945,17 +957,8 @@ function sqBtn(t,status,color,label){
 document.getElementById('search-input').oninput=function(){searchQ=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-brand').onchange=function(){filterBrand=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-sla') && (document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
-document.getElementById('per-page-select').onchange=function(){PER_PAGE=Number(this.value)||20;tbPage=1;renderTicketsPage();};
-// Sync per-page select value inside renderTicketsPage
-function syncPerPageSelect(){
-  const el = document.getElementById('per-page-select');
-  if(el && el.value !== String(PER_PAGE)){
-    // find closest matching option
-    let best = '20';
-    for(const opt of el.options){ if(Number(opt.value)===PER_PAGE){ best=opt.value; break; } }
-    el.value = best;
-  }
-}
+
+
 document.getElementById('filter-status').onchange=function(){
   filterStatus=this.value; tbPage=1; renderTicketsPage();
 };
@@ -1408,6 +1411,170 @@ function showToast(msg,type='success'){
   if(await tryAutoLogin()) bootApp();
   else window.hideSplash?.(); // show login screen
 })();
+// ═══════════════════════════════════════════════════════════════
+// FAB NAVIGATION PANEL — Admin
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  let fabOpen = false, fabSearchOpen = false;
+
+  const fabWrap    = document.getElementById('admin-fab-wrap');
+  const fabMain    = document.getElementById('fab-main-btn');
+  const fabTop     = document.getElementById('fab-branch-top');
+  const fabSearch  = document.getElementById('fab-search-btn');
+  const fabPagBar  = document.getElementById('fab-pag-bar');
+  const searchPop  = document.getElementById('fab-search-pop');
+  const searchInp  = document.getElementById('fab-search-input');
+  const btnTop     = document.getElementById('fab-to-top');
+  const btnBottom  = document.getElementById('fab-to-bottom');
+
+  // ── Open/Close FAB ──────────────────────────────────────────
+  function openFab(){
+    fabOpen = true;
+    fabWrap.classList.add('fab-open');
+    // Show fab-wrap only on tickets page
+    fabPagBar.style.display = (currentPage === 'tickets') ? 'flex' : 'none';
+  }
+  function closeFab(){
+    fabOpen = false;
+    fabWrap.classList.remove('fab-open');
+    closeSearch();
+  }
+  function toggleFab(){ fabOpen ? closeFab() : openFab(); }
+
+  // ── Search Popup ────────────────────────────────────────────
+  function openSearch(){
+    openFab();
+    fabSearchOpen = true;
+    searchPop.classList.add('fab-search-open');
+    setTimeout(()=>searchInp.focus(), 60);
+  }
+  function closeSearch(){
+    fabSearchOpen = false;
+    searchPop.classList.remove('fab-search-open');
+  }
+
+  // ── Pagination Render ────────────────────────────────────────
+  // Called by renderTicketsPage after it updates tbPage/total
+  window.renderFabPagination = function(totalPages, currentPg, perPg){
+    if(!fabPagBar) return;
+    const isFirst = currentPg === 1;
+    const isLast  = currentPg === totalPages;
+
+    // Generate page range with ellipsis
+    function pageRange(cur, tot){
+      if(tot <= 7) return Array.from({length:tot},(_,i)=>i+1);
+      const pages = [1];
+      let left = Math.max(2, cur-1), right = Math.min(tot-1, cur+1);
+      if(left > 2) pages.push('…');
+      for(let i=left;i<=right;i++) pages.push(i);
+      if(right < tot-1) pages.push('…');
+      pages.push(tot);
+      return pages;
+    }
+
+    let html = '';
+    // Per-page selector (rightmost = first in row-reverse)
+    html += `<select class="fab-perpage" id="fab-perpage-sel" title="แสดงต่อหน้า">
+      <option value="10"${perPg===10?' selected':''}>10/หน้า</option>
+      <option value="20"${perPg===20?' selected':''}>20/หน้า</option>
+      <option value="50"${perPg===50?' selected':''}>50/หน้า</option>
+      <option value="999"${perPg===999?' selected':''}>ทั้งหมด</option>
+    </select>`;
+    // Last
+    html += `<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
+    // Next
+    html += `<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
+    // Page numbers
+    pageRange(currentPg, totalPages).forEach(p=>{
+      if(p==='…') html += `<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`;
+      else html += `<button class="fab-btn${p===currentPg?' fab-active':''}" data-page="${p}">${p}</button>`;
+    });
+    // Prev
+    html += `<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
+    // First
+    html += `<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
+
+    fabPagBar.innerHTML = html;
+
+    // Wire per-page select
+    const ppSel = document.getElementById('fab-perpage-sel');
+    if(ppSel) ppSel.onchange = function(){
+      PER_PAGE = Number(this.value)||20;
+      tbPage = 1;
+      renderTicketsPage();
+    };
+  };
+
+  // ── Pagination click ─────────────────────────────────────────
+  fabPagBar.addEventListener('click', e=>{
+    const btn = e.target.closest('button');
+    if(!btn || btn.classList.contains('fab-disabled')) return;
+    const page = btn.dataset.page;
+    const pag  = btn.dataset.pag;
+    const filtered = getFiltered();
+    const total = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    if(page){ tbPage = Number(page); renderTicketsPage(); return; }
+    switch(pag){
+      case 'first': tbPage=1; break;
+      case 'prev':  tbPage=Math.max(1,tbPage-1); break;
+      case 'next':  tbPage=Math.min(total,tbPage+1); break;
+      case 'last':  tbPage=total; break;
+    }
+    renderTicketsPage();
+    document.getElementById('page-content')?.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  // ── Search input → filter ────────────────────────────────────
+  searchInp.addEventListener('input', e=>{
+    searchQ = e.target.value;
+    // Sync with existing search-input
+    const si = document.getElementById('search-input');
+    if(si) si.value = searchQ;
+    tbPage = 1;
+    renderTicketsPage();
+  });
+
+  // Sync existing search-input → fab search
+  const existingSearch = document.getElementById('search-input');
+  if(existingSearch){
+    const orig = existingSearch.oninput;
+    existingSearch.addEventListener('input', e=>{
+      searchInp.value = e.target.value;
+    });
+  }
+
+  // ── Buttons ──────────────────────────────────────────────────
+  fabMain.addEventListener('click', e=>{ e.stopPropagation(); toggleFab(); });
+  fabSearch.addEventListener('click', e=>{ e.stopPropagation(); fabSearchOpen ? closeSearch() : openSearch(); });
+  btnTop.addEventListener('click', ()=>{ document.getElementById('page-content')?.scrollTo({top:0,behavior:'smooth'}); });
+  btnBottom.addEventListener('click', ()=>{
+    const pc = document.getElementById('page-content');
+    if(pc) pc.scrollTo({top:pc.scrollHeight, behavior:'smooth'});
+  });
+
+  // ── Close on outside click ───────────────────────────────────
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#admin-fab-wrap')) closeFab();
+  });
+
+  // ── Close search on scroll ───────────────────────────────────
+  document.getElementById('page-content')?.addEventListener('scroll', ()=>{
+    if(fabSearchOpen) closeSearch();
+  }, {passive:true});
+
+  // ── ESC to close ─────────────────────────────────────────────
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeFab(); });
+
+  // ── Show/hide fab based on page ──────────────────────────────
+  // Patch navTo to show/hide fab-pag-bar
+  const _origNavTo = window.navTo;
+  window.navTo = function(page){
+    _origNavTo(page);
+    if(fabPagBar) fabPagBar.style.display = (page==='tickets') ? 'flex' : 'none';
+  };
+
+})();
+
 </script>
 </body>
 </html>
