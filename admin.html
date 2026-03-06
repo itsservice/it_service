@@ -384,6 +384,12 @@ a{color:inherit;text-decoration:none}
   .fab-branch-left{max-width:calc(100vw - 80px)}
 }
 
+
+/* CLOCK + TEMP widget — admin topbar */
+.clock-widget{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2);background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0}
+#clock-time{font-family:var(--font-mono);font-size:12px;color:var(--fg);font-weight:500}
+#clock-temp{color:var(--accent);font-weight:600}
+
 </style>
 </head>
 <body>
@@ -471,7 +477,8 @@ setTimeout(window.hideSplash, 8000);
       <span class="topbar-title" id="mobile-title">ภาพรวม</span>
       <div style="display:flex;align-items:center;gap:8px">
         <div class="topbar-sync"><div class="sync-dot" id="sync-dot"></div></div>
-        <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">ออก</button>
+        <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
+        <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">Log out</button>
       </div>
     </div>
 
@@ -1574,6 +1581,56 @@ window.initAdminFab = function(){
     if(fabPagBar) fabPagBar.style.display = (page==='tickets') ? 'flex' : 'none';
   };
 };
+
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK + TEMPERATURE
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  // อัป clock ทุก 1 วินาที
+  function tickClock(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const el = document.getElementById('clock-time');
+    if(el) el.textContent = hh+':'+mm+':'+ss;
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // ดึงอุณหภูมิจาก Open-Meteo (Bangkok default, ถ้าได้ GPS ใช้ตำแหน่งจริง)
+  async function fetchTemp(lat, lon){
+    try{
+      const r = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+      );
+      const d = await r.json();
+      const t = d.current_weather?.temperature;
+      const el = document.getElementById('clock-temp');
+      if(el && t !== undefined) el.textContent = Math.round(t)+'°C';
+    }catch(_){}
+  }
+
+  // ขอ GPS ถ้าได้ ใช้ตำแหน่งจริง ถ้าไม่ได้ใช้กรุงเทพ
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
+      ()  => fetchTemp(13.75, 100.52) // กรุงเทพ fallback
+    );
+  } else {
+    fetchTemp(13.75, 100.52);
+  }
+  // refresh อุณหภูมิทุก 10 นาที
+  setInterval(()=>{
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
+        ()  => fetchTemp(13.75, 100.52)
+      );
+    } else { fetchTemp(13.75, 100.52); }
+  }, 600_000);
+})();
 
 </script>
 </body>
