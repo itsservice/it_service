@@ -139,6 +139,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .tl-step.active .tl-dot{border-color:var(--accent);box-shadow:0 0 12px rgba(0,229,160,.4)}
 .tl-label{text-align:center;font-size:10.5px;color:var(--fg3);line-height:1.3}
 .tl-step.done .tl-label,.tl-step.active .tl-label{color:var(--fg)}
+.tl-step.cancelled .tl-dot{background:rgba(255,77,109,.2);border-color:#ff4d6d;color:#ff4d6d}
 
 /* ── HISTORY (recent from localStorage) ── */
 .history-title{font-size:12px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin:20px 0 12px}
@@ -500,11 +501,20 @@ async function searchById(rid){
 }
 
 function ticketCard(t, expanded=false){
-  const si = STATUSES.indexOf(t.status||'แก้ไข');
-  const steps = STATUSES.map((s,i)=>`
-    <div class="tl-step ${i<si?'done':''} ${i===si?'active':''}">
-      <div class="tl-dot">${i<si?'✓':i===si?'●':''}</div>
-      <div class="tl-label">${s.slice(0,8)}</div>
+  // Timeline แสดงเฉพาะ 4 ขั้นตอนหลัก ลำดับที่ถูกต้อง
+  const TL = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
+  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
+  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
+  // หา index ปัจจุบันใน timeline
+  let si = TL.indexOf(t.status||'');
+  if(si < 0 && ['แก้ไข'].includes(t.status)) si = -1; // ยังไม่เริ่ม
+  if(t.status === 'เสร็จสิ้น ✅') si = 3;
+  if(t.status === 'ยกเลิก ❌') si = -2; // cancelled
+  const isCancelled = t.status === 'ยกเลิก ❌';
+  const steps = TL.map((s,i)=>`
+    <div class="tl-step ${isCancelled?'cancelled':(i<si?'done':i===si?'active':'')}">
+      <div class="tl-dot">${isCancelled?'✕':i<si?'✓':i===si?TL_ICONS[i]:''}</div>
+      <div class="tl-label">${TL_LABELS[i]}</div>
     </div>`).join('');
   return `<div class="ticket-card">
     <div class="tc-head">
@@ -516,11 +526,12 @@ function ticketCard(t, expanded=false){
       <span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
     </div>
     <div class="tc-type">${esc(t.type||'—')}</div>
-    <div class="tc-detail">${esc(t.detail||'-')}</div>
+    <div class="tc-detail">${esc(t.detail && !t.detail.startsWith("http") ? t.detail : (t.type||"-"))}</div>
     <div class="tc-meta">
       <span>👤 ${esc(t.reporter||'-')}</span>
       <span>📅 ${esc(t.sentDate||'-')}</span>
       ${t.engineerName?`<span>🔧 ${esc(t.engineerName)}</span>`:''}
+      ${t.location && !t.location.startsWith('http')?`<span>📍 ${esc(t.location)}</span>`:''}
     </div>
     <div class="timeline">
       <div class="tl-title">สถานะงาน</div>
