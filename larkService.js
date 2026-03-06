@@ -3,7 +3,8 @@ const axios = require('axios');
 const BASE = 'https://open.larksuite.com/open-apis';
 
 let _token = null, _tokenExp = 0;
-let _fieldMap = null; // detected at runtime: internalKey → larkColumnName
+let _fieldMap = null;    // internalKey → larkColumnName
+let _optionMap = {};     // "optXXXX" → "text value" (for select fields)
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -111,20 +112,37 @@ const DATE_KEYS = new Set(['sentDate','slaDate','completedAt','closedAt']);
 
 function parseVal(v, key) {
   if (v === null || v === undefined) return '';
-  // Lark option/select field: { id: 'xxx', text: 'ค่า' }
-  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v) return String(v.text || '');
-  // Lark multi-select: [{ id, text }, ...]
+
+  // ── String: อาจเป็น option ID เช่น "optBaPvMxB" ──
+  if (typeof v === 'string') {
+    if (v.startsWith('opt') && _optionMap[v]) return _optionMap[v];
+    return v;
+  }
+
+  // ── Lark option object: { id: 'optXXX', text: 'ค่า' } ──
+  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v)
+    return String(v.text || '');
+
+  // ── Lark multi-select: [{ id, text }, ...] ──
   if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'text' in v[0])
     return v.map(x => String(x.text || '')).join(', ');
-  // Lark rich text: [{ type, text }]
+
+  // ── Array of option IDs: ["optXXX", "optYYY"] ──
+  if (Array.isArray(v) && v.length && typeof v[0] === 'string' && v[0].startsWith('opt'))
+    return v.map(id => _optionMap[id] || id).join(', ');
+
+  // ── Lark rich text: [{ type, text }] ──
   if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'type' in v[0])
     return v.map(x => x.text || x.raw_value || '').join('');
-  // URL field
+
+  // ── URL field ──
   if (v && typeof v === 'object' && !Array.isArray(v) && ('link' in v || 'url' in v))
     return v.link || v.url || '';
-  // Date fields
+
+  // ── Date fields ──
   if (DATE_KEYS.has(key)) return fmtDate(v);
   if (typeof v === 'number' && v > 1_000_000_000_000) return fmtDate(v);
+
   return v;
 }
 
@@ -229,6 +247,14 @@ async function ensureFieldMap() {
     );
     const items = r.data.data?.items || [];
     if (items.length) {
+      // Build option ID → text map from all select fields
+      items.forEach(f => {
+        if (f.ui_type === 'SingleSelect' || f.ui_type === 'MultiSelect') {
+          const opts = f.property?.options || [];
+          opts.forEach(o => { if (o.id && o.name) _optionMap[o.id] = o.name; });
+        }
+      });
+      console.log('[Lark] optionMap built:', Object.keys(_optionMap).length, 'options');
       const fakeRecord = { record_id: 'fake', fields: {} };
       items.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
       _fieldMap = buildFieldMap(fakeRecord);
