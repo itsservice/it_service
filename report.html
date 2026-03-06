@@ -550,7 +550,21 @@ async function renderHistory(){
   let hist=[];
   try{ hist=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
   const el=document.getElementById('track-history');
-  if(!hist.length){ el.innerHTML=''; return; }
+  // แสดง empty state แทนการซ่อน
+  if(!hist.length){
+    el.innerHTML=`
+      <div class="history-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span>📋 Ticket ล่าสุดของคุณ</span>
+        <span style="background:var(--b2);color:var(--fg3);border-radius:99px;font-size:10px;padding:1px 7px;margin-left:6px">0</span>
+        <span class="ht-arrow" style="margin-left:auto">▼</span>
+      </div>
+      <div class="history-dropdown">
+        <div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">
+          ยังไม่มี Ticket — กดค้นหาหรือแจ้งปัญหาใหม่
+        </div>
+      </div>`;
+    return;
+  }
 
   // ── ดึงสถานะล่าสุดจาก API ──────────────────────────────────
   if(!allTickets.length) await loadTickets();
