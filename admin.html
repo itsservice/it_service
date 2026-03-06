@@ -900,7 +900,7 @@ function renderDrawerContent(){
         <div class="d-section-title">จัดการ Ticket</div>
         <div class="d-actions">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-action btn-assign" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
+            <button class="btn-action btn-assign" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เลือกช่าง</button>
             ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
             <button class="btn-action btn-note" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
           ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
@@ -990,7 +990,7 @@ function openAssignModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   const engUsers=users.filter(u=>u.role==='engineer')||[];
   openModal(`
-    <div class="modal-title">🔄 เปลี่ยนช่าง</div>
+    <div class="modal-title">🔄 เลือกช่าง</div>
     <div class="d-form-group"><label class="d-form-label">เลือกช่าง</label>
       <select class="d-form-select" id="m-eng">
         <option value="">— เลือกช่าง —</option>
