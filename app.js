@@ -113,7 +113,7 @@ app.post('/api/tickets', async (req, res) => {
     const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
     const t = await createTicket({
       reporter, phone, brand, branchCode: branchCode || '', type, detail,
-      location: location || '', status: 'รอตรวจงาน',
+      location: location || '', status: 'แก้ไข',
       sentDate: sentDate || now,
     });
     addLog({ action: 'create_ticket', ticketId: t._recordId, ticketLabel: t.id, detail: `สร้าง Ticket โดย ${reporter}` });
@@ -140,9 +140,9 @@ app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager
   const { rid } = req.params;
   const { engineerName, assignedTo } = req.body;
   try {
-    const t = await updateTicket(rid, { engineerName: engineerName || '', assignedTo: assignedTo || '', status: 'อยู่ระหว่างดำเนินการ' });
+    const t = await updateTicket(rid, { engineerName: engineerName || '', assignedTo: assignedTo || '', status: 'อยู่ระหว่างดำเนินการ ⚙️' });
     const log = addLog({ user: req.user, action: 'assign', ticketId: rid, ticketLabel: t.id, detail: `มอบหมายให้ ${engineerName || assignedTo}` });
-    broadcast('ticket_updated', { recordId: rid, engineerName, status: 'อยู่ระหว่างดำเนินการ', ts: new Date().toISOString(), log });
+    broadcast('ticket_updated', { recordId: rid, engineerName, status: 'อยู่ระหว่างดำเนินการ ⚙️', ts: new Date().toISOString(), log });
     res.json({ ok: true, ticket: t });
   } catch(e) { res.status(502).json({ ok: false, error: e.message }); }
 });
@@ -156,10 +156,10 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['superadmin','admin'
     const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
     const t = await updateTicket(rid, {
       workDetail, partsUsed: partsUsed || '', workHours: workHours || '',
-      engineerName: req.user.name, completedAt: now, status: 'รอตรวจงาน',
+      engineerName: req.user.name, completedAt: now, status: 'ตรวจงาน',
     });
     const log = addLog({ user: req.user, action: 'engineer_submit', ticketId: rid, ticketLabel: t.id, detail: `ช่างส่งงาน: ${workDetail.slice(0,50)}` });
-    broadcast('ticket_updated', { recordId: rid, status: 'รอตรวจงาน', engineerSubmit: true, engineer: req.user.name, ts: new Date().toISOString(), log });
+    broadcast('ticket_updated', { recordId: rid, status: 'ตรวจงาน', engineerSubmit: true, engineer: req.user.name, ts: new Date().toISOString(), log });
     res.json({ ok: true, ticket: t });
   } catch(e) { res.status(502).json({ ok: false, error: e.message }); }
 });
@@ -171,11 +171,11 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
   try {
     const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
     const t = await updateTicket(rid, {
-      status: 'เสร็จสิ้น', adminNote: adminNote || '',
+      status: 'เสร็จสิ้น ✅', adminNote: adminNote || '',
       closedAt: now, closedBy: req.user.name,
     });
     const log = addLog({ user: req.user, action: 'close', ticketId: rid, ticketLabel: t.id, detail: `ปิดงานโดย ${req.user.name}` });
-    broadcast('ticket_updated', { recordId: rid, status: 'เสร็จสิ้น', closedBy: req.user.name, ts: new Date().toISOString(), log });
+    broadcast('ticket_updated', { recordId: rid, status: 'เสร็จสิ้น ✅', closedBy: req.user.name, ts: new Date().toISOString(), log });
     res.json({ ok: true, ticket: t });
   } catch(e) { res.status(502).json({ ok: false, error: e.message }); }
 });
