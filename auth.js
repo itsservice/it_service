@@ -8,9 +8,12 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+// SALT ต้องตรงกับที่ใช้ pre-hash รหัสผ่านใน users.js เสมอ
+// ถ้าต้องการเปลี่ยน ต้อง pre-hash รหัสผ่านใหม่ทั้งหมดด้วย
+const HASH_SALT = 'it-ticket-salt-2025';
+
 function hashPwd(pwd) {
-  const salt = process.env.PWD_SALT || 'it-ticket-salt-2025';
-  return crypto.createHash('sha256').update(pwd + salt).digest('hex');
+  return crypto.createHash('sha256').update(pwd + HASH_SALT).digest('hex');
 }
 
 function createSession(user) {
