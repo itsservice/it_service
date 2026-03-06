@@ -302,7 +302,12 @@ function connectSSE(){
   sseConn.addEventListener('ticket_updated', e => {
     try{
       const d=JSON.parse(e.data);
-      allTickets=allTickets.map(t=>(t._recordId===d.recordId)?{...t,...d}:t);
+      allTickets=allTickets.map(t=>(t._recordId===d.recordId)?{...t,status:d.status||t.status}:t);
+      // Re-render history ทันทีเมื่อ ticket ที่เราสนใจมี update
+      renderHistory();
+      // ถ้า search result เปิดอยู่ก็ refresh ด้วย
+      const shown = document.getElementById('track-result').dataset.rid;
+      if(shown && shown === d.recordId) searchById(d.recordId);
     }catch(_){}
   });
   sseConn.onopen = ()=>{ document.getElementById('dot').style.background='#00e5a0'; };
@@ -319,6 +324,14 @@ async function loadTickets(){
   }catch(_){}
 }
 loadTickets();
+// ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
+setInterval(async () => {
+  await loadTickets();
+  renderHistory();
+  // อัพเดท search result ที่เปิดอยู่
+  const shown = document.getElementById('track-result').dataset.rid;
+  if(shown) searchById(shown);
+}, 30_000);
 
 // ── Tabs ───────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(t => {
@@ -439,6 +452,14 @@ document.getElementById('track-input').oninput = function(){
 
 async function doSearch(q){
   await loadTickets();
+// ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
+setInterval(async () => {
+  await loadTickets();
+  renderHistory();
+  // อัพเดท search result ที่เปิดอยู่
+  const shown = document.getElementById('track-result').dataset.rid;
+  if(shown) searchById(shown);
+}, 30_000);
   const lower = q.toLowerCase();
   const found = allTickets.filter(t =>
     String(t.id||'').toLowerCase().includes(lower) ||
@@ -469,28 +490,48 @@ function saveHistory(t){
   localStorage.setItem(key,JSON.stringify(hist));
 }
 
-function renderHistory(){
+async function renderHistory(){
   const key='it_history';
   let hist=[];
   try{ hist=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
   const el=document.getElementById('track-history');
-  const res=document.getElementById('track-result');
   if(!hist.length){ el.innerHTML=''; return; }
-  el.innerHTML=`<div class="history-title">📋 Ticket ล่าสุดของคุณ</div>` +
-    hist.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId)}')">
+
+  // ── ดึงสถานะล่าสุดจาก API ──────────────────────────────────
+  if(!allTickets.length) await loadTickets();
+  hist = hist.map(h => {
+    const live = allTickets.find(t =>
+      t._recordId === h._recordId || t.id === h.id || t.id === h.ticketId
+    );
+    return live ? { ...h, id:live.id||h.id, status:live.status, brand:live.brand } : h;
+  });
+  try{ localStorage.setItem(key, JSON.stringify(hist)); }catch(_){}
+
+  el.innerHTML = `<div class="history-title">📋 TICKET ล่าสุดของคุณ</div>` +
+    hist.map(h => `<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
       <span class="history-icon">🎫</span>
       <span class="hi-id">${esc(h.id||h._recordId||'—')}</span>
       <span class="hi-brand">${esc(h.brand||'-')}</span>
-      <span class="hi-status"><span class="status-pill s-${esc(h.status||'แก้ไข')}" style="font-size:10px;padding:3px 8px">${esc(h.status||'แก้ไข')}</span></span>
+      <span class="hi-status"><span class="status-pill s-${(h.status||'แก้ไข').replace(/[✅⚙️⏱️❌]/g,'').trim()}" style="font-size:10px;padding:3px 8px">${esc(h.status||'แก้ไข')}</span></span>
     </div>`).join('');
-  res.innerHTML='';
 }
 renderHistory();
 
 async function searchById(rid){
+  if(!rid) return;
   document.getElementById('track-input').value='';
-  document.getElementById('track-result').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const resultEl = document.getElementById('track-result');
+  resultEl.dataset.rid = rid; // เก็บไว้ให้ SSE refresh ได้
+  resultEl.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   await loadTickets();
+// ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
+setInterval(async () => {
+  await loadTickets();
+  renderHistory();
+  // อัพเดท search result ที่เปิดอยู่
+  const shown = document.getElementById('track-result').dataset.rid;
+  if(shown) searchById(shown);
+}, 30_000);
   const t = allTickets.find(x=>x._recordId===rid||x.id===rid);
   if(t){
     document.getElementById('track-history').innerHTML='';
