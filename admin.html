@@ -436,7 +436,7 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="status-chips">
           <button class="chip chip-all active" data-s="">ทั้งหมด</button>
-          <button class="chip chip-wait" data-s="แก้ไข">✏️ แก้ไข</button>
+          
           <button class="chip chip-review" data-s="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ</button>
           <button class="chip chip-review" data-s="ตรวจงาน">🔍 ตรวจงาน</button>
           <button class="chip chip-inprog" data-s="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ</button>
@@ -755,7 +755,7 @@ document.getElementById('btn-refresh-dash').onclick=async()=>{
 // ════════════════════════════════════════════════════════════════
 function getFiltered(){
   let data=[...tickets];
-  if(filterStatus) data=data.filter(t=>t.status===filterStatus);
+  if(filterStatus) data=data.filter(t=>(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()===filterStatus.replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim());
   if(filterBrand)  data=data.filter(t=>t.brand===filterBrand);
   if(filterSla)    data=data.filter(t=>t.sla===filterSla);
   if(searchQ){
@@ -801,13 +801,13 @@ function renderTicketsPage(){
         <div class="cell-detail">${esc(t.detail||'-')}</div>
       </td>
       <td class="td-hide-mobile" style="font-size:13px">${esc(t.branchCode||'-')}</td>
-      <td><span class="status-pill s-${esc(t.status||'')}">${esc(t.status||'-')}</span></td>
+      <td><span class="status-pill s-${(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()}">${esc(t.status||'-')}</span></td>
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
       <td onclick="event.stopPropagation()">
         <div class="sq-btns">
-          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','อยู่')}
-          ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','เสร็จ')}
-          ${sqBtn(t,'ยกเลิก ❌','#ef4444','ยกเลิก ❌')}
+          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','⚙️ รับงาน')}
+          ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','✅ เสร็จ')}
+          ${sqBtn(t,'ยกเลิก ❌','#ef4444','❌ ยกเลิก')}
         </div>
       </td>
     </tr>`;
@@ -885,7 +885,7 @@ function renderDrawerContent(){
         <div class="drawer-id">🎫 ${esc(t.id||t._recordId||'—')}</div>
         <div class="drawer-title">${esc(t.type||'—')}</div>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="status-pill s-${esc(t.status||'')}">${esc(t.status||'-')}</span>
+          <span class="status-pill s-${(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()}">${esc(t.status||'-')}</span>
           ${t.brand?`<span style="font-size:12px;color:var(--fg2)">${esc(t.brand)}</span>`:''}
           ${t.branchCode?`<span style="font-family:var(--font-m);font-size:11.5px;color:var(--fg3)">${esc(t.branchCode)}</span>`:''}
         </div>
@@ -899,9 +899,10 @@ function renderDrawerContent(){
       <div class="d-section">
         <div class="d-section-title">จัดการ Ticket</div>
         <div class="d-actions">
-          <button class="btn-action btn-assign btn-sm" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
-          ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket btn-sm" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
-          <button class="btn-action btn-note btn-sm" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-action btn-assign" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
+            ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
+            <button class="btn-action btn-note" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
           ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
         </div>
       </div>
@@ -947,8 +948,11 @@ function renderDrawerContent(){
       <div class="d-section">
         <div class="d-section-title">หมายเหตุ Admin</div>
         <div class="d-admin-box">
-          ${t.adminNote?`<div style="margin-bottom:4px">${esc(t.adminNote)}</div>`:''}
-          ${t.closedBy?`<div style="font-size:11.5px;color:var(--fg3)">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
+          ${(t.adminNote && typeof t.adminNote==='string' && t.adminNote.trim())?
+            `<div style="margin-bottom:4px">${esc(t.adminNote)}</div>`
+            :`<div style="color:var(--fg3);font-style:italic;font-size:12px">Admin ยังไม่มี Remark</div>`
+          }
+          ${t.closedBy?`<div style="font-size:11.5px;color:var(--fg3);margin-top:4px">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
         </div>
       </div>`:''}
 
