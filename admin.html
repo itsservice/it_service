@@ -415,7 +415,7 @@ window.hideSplash = function(){
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
 // บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 8000);
+setTimeout(window.hideSplash, 3000);
 </script>
 
 <!-- ══ LOGIN ══════════════════════════════════════════════════ -->
@@ -651,7 +651,7 @@ function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
   const ctrl = new AbortController();
-  const tid  = setTimeout(()=>ctrl.abort(), 10000);
+  const tid  = setTimeout(()=>ctrl.abort(), 12000);
   return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
     .then(r=>{ clearTimeout(tid); return r.json(); })
     .catch(e=>{ clearTimeout(tid); throw e; });
@@ -1415,8 +1415,14 @@ function showToast(msg,type='success'){
 // BOOT
 // ════════════════════════════════════════════════════════════════
 (async()=>{
-  if(await tryAutoLogin()) bootApp();
-  else window.hideSplash?.(); // show login screen
+  // hideSplash ทันที ไม่รอ API — user เห็น login screen เร็ว
+  // tryAutoLogin จะ redirect ไป bootApp ถ้า token valid
+  const autoOk = await Promise.race([
+    tryAutoLogin(),
+    new Promise(r => setTimeout(()=>r(false), 5000)) // max 5s รอ auto-login
+  ]);
+  window.hideSplash?.();
+  if(autoOk) bootApp();
 })();
 // ═══════════════════════════════════════════════════════════════
 // FAB NAVIGATION PANEL — Admin
