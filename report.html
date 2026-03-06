@@ -153,9 +153,9 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .hi-status{margin-left:auto}
 
 /* ── STATUS COLORS ── */
-.s-รอตรวจงาน{background:rgba(255,150,64,.15);color:#ff9640}
+.s-แก้ไข{background:rgba(255,150,64,.15);color:#ff9640}
 .s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.15);color:#0099ff}
-.s-รอชิ้นส่วน{background:rgba(155,89,182,.15);color:#b87be8}
+.s-รอดำเนินการ{background:rgba(155,89,182,.15);color:#b87be8}
 .s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
 .s-ยกเลิก{background:rgba(255,77,109,.15);color:#ff4d6d}
 
@@ -282,7 +282,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 
 <script>
 // ── State ──────────────────────────────────────────────────────
-const STATUSES = ['รอตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น'];
+const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
 let allTickets = [];
 let sseConn = null;
 
@@ -475,7 +475,7 @@ function renderHistory(){
       <span class="history-icon">🎫</span>
       <span class="hi-id">${esc(h.id||h._recordId||'—')}</span>
       <span class="hi-brand">${esc(h.brand||'-')}</span>
-      <span class="hi-status"><span class="status-pill s-${esc(h.status||'รอตรวจงาน')}" style="font-size:10px;padding:3px 8px">${esc(h.status||'รอตรวจงาน')}</span></span>
+      <span class="hi-status"><span class="status-pill s-${esc(h.status||'แก้ไข')}" style="font-size:10px;padding:3px 8px">${esc(h.status||'แก้ไข')}</span></span>
     </div>`).join('');
   res.innerHTML='';
 }
@@ -495,7 +495,7 @@ async function searchById(rid){
 }
 
 function ticketCard(t, expanded=false){
-  const si = STATUSES.indexOf(t.status||'รอตรวจงาน');
+  const si = STATUSES.indexOf(t.status||'แก้ไข');
   const steps = STATUSES.map((s,i)=>`
     <div class="tl-step ${i<si?'done':''} ${i===si?'active':''}">
       <div class="tl-dot">${i<si?'✓':i===si?'●':''}</div>
@@ -508,7 +508,7 @@ function ticketCard(t, expanded=false){
         <div class="tc-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}
         </div>
       </div>
-      <span class="status-pill s-${esc(t.status||'รอตรวจงาน')}">${esc(t.status||'รอตรวจงาน')}</span>
+      <span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
     </div>
     <div class="tc-type">${esc(t.type||'—')}</div>
     <div class="tc-detail">${esc(t.detail||'-')}</div>
