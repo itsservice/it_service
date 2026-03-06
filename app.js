@@ -4,7 +4,7 @@ const path    = require('path');
 
 const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs } = require('./auth');
 const { getAllUsers, getUserByUsername, createUser, updateUser, deleteUser } = require('./users');
-const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, clickButton, LARK_BUTTONS } = require('./larkService');
+const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, invalidateCache } = require('./larkService');
 const larkRouter = require('./larkWebhook');
 const lineRouter = require('./lineWebhook');
 
@@ -29,13 +29,13 @@ app.get('/api/events', (req, res) => {
 });
 
 // ── Static pages ─────────────────────────────────────────────
-app.get('/',          (_, res) => res.redirect('/report'));
-app.get('/report',    (_, res) => res.sendFile(path.join(__dirname,'report.html')));
-app.get('/admin',     (_, res) => res.sendFile(path.join(__dirname,'admin.html')));
-app.get('/engineer',  (_, res) => res.sendFile(path.join(__dirname,'engineer.html')));
+app.get('/',         (_, res) => res.redirect('/report'));
+app.get('/report',   (_, res) => res.sendFile(path.join(__dirname,'report.html')));
+app.get('/admin',    (_, res) => res.sendFile(path.join(__dirname,'admin.html')));
+app.get('/engineer', (_, res) => res.sendFile(path.join(__dirname,'engineer.html')));
 
 // ── Auth ──────────────────────────────────────────────────────
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body || {};
     if (!username || !password) return res.json({ ok:false, error:'กรุณากรอก username และ password' });
@@ -62,7 +62,6 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 app.get('/api/tickets', async (req, res) => {
   try {
     let tickets = await listTickets();
-    // filter by brand for engineer
     const s = getSession((req.headers.authorization||'').slice(7));
     if (s && s.user.role==='engineer' && s.user.brand !== 'ALL') {
       tickets = tickets.filter(t => t.brand === s.user.brand);
@@ -83,13 +82,7 @@ app.post('/api/tickets', async (req, res) => {
     const { reporter, phone, brand, branchCode, type, detail, location } = req.body || {};
     if (!reporter||!phone||!brand||!type||!detail)
       return res.json({ ok:false, error:'กรุณากรอกข้อมูลให้ครบ' });
-    const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const t = await createTicket({
-      reporter, phone, brand, branchCode:branchCode||'', type, detail,
-      location:location||'',
-      // ไม่ส่ง status ตอน create — ให้ Lark ใช้ default option แรก
-      // sentDate ส่งเป็น Unix ms ผ่าน toUnixMs() ใน larkService
-    });
+    const t = await createTicket({ reporter, phone, brand, branchCode:branchCode||'', type, detail, location:location||'' });
     const log = addLog({ action:'create_ticket', ticketId:t._recordId, ticketLabel:t.id, detail:`สร้างโดย ${reporter}` });
     broadcast('ticket_created', { ticket:t });
     res.json({ ok:true, ticket:t, log });
@@ -110,10 +103,12 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const { engineerName, assignedTo } = req.body || {};
-    // 1. บันทึกชื่อช่าง
-    const t = await updateTicket(req.params.rid, { engineerName:engineerName||'', assignedTo:assignedTo||engineerName||'' });
-    // 2. Trigger ปุ่ม Lark "ปุ่มเปลี่ยนช่าง" เพื่อให้ Automation ทำงาน
-    await clickButton(req.params.rid, LARK_BUTTONS.changeEngineer);
+    // Update ชื่อช่าง + สถานะ อยู่ระหว่างดำเนินการ
+    const t = await updateTicket(req.params.rid, {
+      engineerName: engineerName||'',
+      assignedTo:   assignedTo||engineerName||'',
+      status:       'อยู่ระหว่างดำเนินการ ⚙️'
+    });
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
     broadcast('ticket_updated', { recordId:req.params.rid, engineerName, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -125,13 +120,10 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
     const { workDetail, partsUsed, workHours } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    // 1. บันทึกข้อมูลงาน
     const t = await updateTicket(req.params.rid, {
       workDetail, partsUsed:partsUsed||'', workHours:workHours||'',
-      engineerName:req.user.name, completedAt:now
+      engineerName:req.user.name, completedAt:now, status:'ตรวจงาน'
     });
-    // 2. Trigger ปุ่ม Lark "ปุ่มส่งงานช่าง" เพื่อให้ Automation ทำงาน
-    await clickButton(req.params.rid, LARK_BUTTONS.sendToAdmin);
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -142,12 +134,9 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
   try {
     const { adminNote } = req.body || {};
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    // 1. บันทึก admin note + closedBy
-    await updateTicket(req.params.rid, { adminNote:adminNote||'', closedAt:now, closedBy:req.user.name });
-    // 2. Trigger ปุ่ม Lark "ปุ่มเสร็จงาน" เพื่อให้ Automation เปลี่ยนสถานะ
-    await clickButton(req.params.rid, LARK_BUTTONS.done);
-    // 3. update status ใน local ด้วย (เผื่อ automation ช้า)
-    const t = await updateTicket(req.params.rid, { status:'เสร็จสิ้น ✅' });
+    const t = await updateTicket(req.params.rid, {
+      status:'เสร็จสิ้น ✅', adminNote:adminNote||'', closedAt:now, closedBy:req.user.name
+    });
     const log = addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:'ปิดงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', closedBy:req.user.name, ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -165,9 +154,7 @@ app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), as
 
 // ── Logs ──────────────────────────────────────────────────────
 app.get('/api/logs', requireAuth(['superadmin','admin','manager']), (req, res) => {
-  const limit = parseInt(req.query.limit)||100;
-  const ticketId = req.query.ticketId||null;
-  res.json({ ok:true, logs:getLogs(limit, ticketId) });
+  res.json({ ok:true, logs:getLogs(parseInt(req.query.limit)||100, req.query.ticketId||null) });
 });
 
 // ── Users ─────────────────────────────────────────────────────
@@ -199,13 +186,13 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 // ── Debug ─────────────────────────────────────────────────────
 app.get('/debug/env', (_, res) => {
   res.json({
-    hasLarkAppId:     !!process.env.LARK_APP_ID,
-    hasLarkSecret:    !!process.env.LARK_APP_SECRET,
-    hasLarkAppToken:  !!process.env.LARK_APP_TOKEN,
-    hasLarkTableId:   !!process.env.LARK_TABLE_ID,
-    hasLineToken:     !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
-    hasLineSecret:    !!process.env.LINE_CHANNEL_SECRET,
-    nodeEnv:          process.env.NODE_ENV||'development',
+    hasLarkAppId:    !!process.env.LARK_APP_ID,
+    hasLarkSecret:   !!process.env.LARK_APP_SECRET,
+    hasLarkAppToken: !!process.env.LARK_APP_TOKEN,
+    hasLarkTableId:  !!process.env.LARK_TABLE_ID,
+    hasLineToken:    !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+    hasLineSecret:   !!process.env.LINE_CHANNEL_SECRET,
+    nodeEnv:         process.env.NODE_ENV||'development',
   });
 });
 app.get('/debug/lark-fields', async (_, res) => {
@@ -221,6 +208,6 @@ app.use('/line', lineRouter);
 setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); }
   catch(e) { console.warn('[App] fieldMap preload failed:', e.message); }
-}, 5000);
+}, 3000);
 
 module.exports = app;
