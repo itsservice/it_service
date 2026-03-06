@@ -349,7 +349,12 @@ async function loadTickets(){
     if(d.ok) allTickets = d.tickets;
   }catch(_){}
 }
-loadTickets();
+// ── Initial load ─────────────────────────────────────────────
+(async () => {
+  await loadTickets();
+  renderHistory(); // แสดง dropdown ทันทีหลัง load
+})();
+
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
   // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
@@ -484,7 +489,12 @@ document.getElementById('track-input').oninput = function(){
 };
 
 async function doSearch(q){
+  await // ── Initial load ─────────────────────────────────────────────
+(async () => {
   await loadTickets();
+  renderHistory(); // แสดง dropdown ทันทีหลัง load
+})();
+
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
   // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
@@ -578,7 +588,12 @@ async function searchById(rid, silent=false){
     document.getElementById('track-input').value='';
     resultEl.innerHTML='<div class="loading"><div class="spinner"></div> กำลังโหลด...</div>';
   }
+  await // ── Initial load ─────────────────────────────────────────────
+(async () => {
   await loadTickets();
+  renderHistory(); // แสดง dropdown ทันทีหลัง load
+})();
+
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
   // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
