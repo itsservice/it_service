@@ -169,9 +169,75 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .stat-box{background:var(--bg3);border-radius:var(--r);padding:14px;text-align:center}
 .stat-num{font-family:var(--font-head);font-size:22px;font-weight:700}
 .stat-lbl{font-size:11px;color:var(--fg2);margin-top:2px}
+/* ═══════════════════════════════════════════════════
+   FAB NAVIGATION PANEL
+   - ปุ่มหลักมุมขวาล่าง fixed
+   - กางออก L-shape: แนวตั้ง (↑⌕↓) + แนวนอน (pagination)
+   - mobile: bottom ขยับเหนือ bottom-nav
+═══════════════════════════════════════════════════ */
+.fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
+.fab-wrap *{pointer-events:auto}
+.fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab-main:hover{background:#00c98a}
+.fab-wrap.fab-open .fab-main{transform:rotate(45deg)}
+/* Top branch — แนวตั้ง ↑⌕↓ */
+.fab-branch-top{position:absolute;right:2px;bottom:calc(50px + 12px);display:flex;flex-direction:column-reverse;align-items:center;gap:8px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
+.fab-wrap.fab-open .fab-branch-top{opacity:1;visibility:visible}
+/* Left branch — แนวนอน pagination */
+.fab-branch-left{position:absolute;right:calc(50px + 12px);bottom:2px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;max-width:calc(100vw - 90px);overflow-x:auto;padding:4px 2px;scrollbar-width:none}
+.fab-branch-left::-webkit-scrollbar{display:none}
+.fab-wrap.fab-open .fab-branch-left{opacity:1;visibility:visible}
+/* FAB buttons */
+.fab-btn{min-width:40px;height:40px;border:none;border-radius:20px;background:var(--bg3);color:var(--fg);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);padding:0 12px;font-size:13px;font-family:var(--font-th);white-space:nowrap;transition:transform .15s,background .15s,opacity .15s;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center}
+.fab-btn:hover{transform:translateY(-2px);background:var(--bg4,#1c1c24)}
+.fab-btn.fab-icon{width:40px;min-width:40px;padding:0;font-size:16px}
+.fab-btn.fab-active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+.fab-btn.fab-disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+/* Search popup */
+.fab-search-pop{position:absolute;right:calc(40px + 16px);bottom:calc(40px + 56px);width:min(260px,calc(100vw - 100px));background:var(--bg2);border:1px solid var(--b2);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .2s ease;z-index:10}
+.fab-search-pop.fab-search-open{opacity:1;visibility:visible;transform:translateY(0)}
+.fab-search-pop label{display:block;font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+.fab-search-input{width:100%;height:40px;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;padding:0 12px;outline:none;color:var(--fg);font-family:var(--font-th);font-size:14px;transition:border-color .2s}
+.fab-search-input:focus{border-color:var(--accent)}
+.fab-search-hint{margin-top:7px;font-size:11px;color:var(--fg3);line-height:1.5}
+/* per-page selector in fab */
+.fab-perpage{background:var(--bg3);border:1px solid var(--b2);border-radius:20px;color:var(--fg);font-family:var(--font-th);font-size:12px;padding:0 10px;height:40px;outline:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+/* Mobile: ขยับเหนือ bottom-nav */
+@media(max-width:768px){
+  .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
+  .fab-branch-left{max-width:calc(100vw - 80px)}
+}
+
+/* Engineer FAB — use engineer accent */
+.fab-main{background:#00e5a0;color:#000}
+
 </style>
 </head>
 <body>
+<style>
+#app-splash{position:fixed;inset:0;background:#07070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
+#app-splash.hide{opacity:0;pointer-events:none}
+.splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+.splash-text{font-size:13px;color:rgba(255,255,255,.35);font-family:'Noto Sans Thai',sans-serif}
+.splash-bar{width:160px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.splash-fill{height:100%;background:#00e5a0;border-radius:2px;animation:splashLoad 2s ease-out forwards}
+@keyframes splashLoad{from{width:0}to{width:85%}}
+</style>
+<div id="app-splash">
+  <div class="splash-logo">IT</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="splash-text">กำลังโหลด...</div>
+</div>
+<script>
+// ซ่อน splash เมื่อหน้าพร้อม
+window.hideSplash = function(){
+  const s = document.getElementById('app-splash');
+  if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
+};
+// บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
+setTimeout(window.hideSplash, 8000);
+</script>
 
 <!-- ══ LOGIN ══════════════════════════════════════════════ -->
 <div class="login-wrap" id="login-wrap">
@@ -646,5 +712,24 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
   if(await tryAutoLogin()) startApp();
 })();
 </script>
+<!-- ═══════════════════════════════════════════════════
+     FAB NAVIGATION PANEL (Engineer)
+     - search → กรอง tickets realtime
+     - pagination → แบ่งหน้า ticket-list
+═══════════════════════════════════════════════════ -->
+<div class="fab-wrap" id="eng-fab-wrap">
+  <div class="fab-search-pop" id="fab-search-pop">
+    <label>ค้นหางาน</label>
+    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="Ticket ID, ชื่อ, ประเภท…"/>
+    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+  </div>
+  <div class="fab-branch-top">
+    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
+    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
+    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
+  </div>
+  <div class="fab-branch-left" id="fab-pag-bar"></div>
+  <button class="fab-main" id="fab-main-btn">+</button>
+</div>
 </body>
 </html>
