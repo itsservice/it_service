@@ -41,7 +41,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .tab.active{background:var(--bg3);color:var(--fg);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 
 /* ── MAIN ── */
-.main{flex:1;padding:20px;padding-bottom:calc(20px + var(--safe-bottom))}
+.main{flex:1;padding:20px;padding-bottom:calc(90px + var(--safe-bottom))}
 .section{display:none}.section.active{display:block}
 
 /* ── FORM ── */
@@ -403,16 +403,23 @@ connectSSE();
 // ── Load tickets (cached) ────────────────────────────────────
 async function loadTickets(){
   try{
-    const r = await fetch('/api/tickets');
+    const ctrl = new AbortController();
+    const tid  = setTimeout(()=>ctrl.abort(), 8000); // timeout 8s
+    const r = await fetch('/api/tickets', { signal: ctrl.signal });
+    clearTimeout(tid);
     const d = await r.json();
     if(d.ok) allTickets = d.tickets;
-  }catch(_){}
+  }catch(e){
+    console.warn('[loadTickets]', e.message);
+  }
 }
 
 // ── Initial load ─────────────────────────────────────────────
 (async()=>{
+  // แสดง UI ก่อน แล้วค่อย load ข้อมูล
+  renderHistory(); // show empty/cached state immediately
   await loadTickets();
-  renderHistory();
+  renderHistory(); // update with real data
 })();
 
 // ── Auto-refresh ทุก 30 วิ ────────────────────────────────────
@@ -459,7 +466,6 @@ function triggerSearch(){
   document.getElementById('filter-hint').style.display = 'none';
   document.getElementById('filter-hint-default').style.display = 'none';
   document.getElementById('filter-hint-ok').style.display = 'block';
-  document.getElementById('track-result').innerHTML='<div class="loading"><div class="spinner"></div> กำลังค้นหา...</div>';
   trackTimer = setTimeout(()=>doSearch(q, brand, branch), 300);
 }
 document.getElementById('track-input').oninput = triggerSearch;
