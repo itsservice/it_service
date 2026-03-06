@@ -944,7 +944,7 @@ function renderDrawerContent(){
         </div>
       </div>`:''}
 
-      ${t.adminNote||t.closedBy?`
+ ${t.adminNote||t.closedBy?`
       <div class="d-section">
         <div class="d-section-title">หมายเหตุ Admin</div>
         <div class="d-admin-box">
@@ -952,7 +952,7 @@ function renderDrawerContent(){
             `<div style="margin-bottom:4px">${esc(t.adminNote)}</div>`
             :`<div style="color:var(--fg3);font-style:italic;font-size:12px">Admin ยังไม่มี Remark</div>`
           }
-          ${t.closedBy?`<div style="font-size:11.5px;color:var(--fg3);margin-top:4px">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
+          ${(t.closedBy && typeof t.closedBy==='string' && !t.closedBy.includes('[object'))?`<div style="font-size:11.5px;color:var(--fg3);margin-top:4px">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
         </div>
       </div>`:''}
 
