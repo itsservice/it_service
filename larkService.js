@@ -230,9 +230,34 @@ function toWriteFields(fields) {
       console.warn('[Lark] no column mapped for key "' + key + '" — skipping');
       continue;
     }
+    // Lark datetime field ต้องการ Unix timestamp (ms) ไม่ใช่ string
+    if (DATE_KEYS.has(key)) {
+      const ts = toUnixMs(val);
+      if (ts) { out[colName] = ts; continue; }
+      // ถ้าแปลงไม่ได้ ข้ามไปเลย — ไม่ส่ง field นี้
+      console.warn(`[Lark] skip date field "${key}" value:`, val);
+      continue;
+    }
     out[colName] = typeof val === 'number' ? String(val) : val;
   }
   return out;
+}
+
+// แปลงวันที่รูปแบบต่างๆ → Unix ms สำหรับ Lark
+function toUnixMs(val) {
+  if (!val) return null;
+  if (typeof val === 'number') return val > 1e10 ? val : val * 1000;
+  // Thai date string: "04/03/2569" → convert BE to CE
+  const thMatch = String(val).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (thMatch) {
+    let [, d, m, y] = thMatch;
+    if (parseInt(y) > 2300) y = String(parseInt(y) - 543); // พ.ศ. → ค.ศ.
+    const dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T00:00:00+07:00`);
+    return isNaN(dt) ? null : dt.getTime();
+  }
+  // ISO string
+  const dt = new Date(val);
+  return isNaN(dt) ? null : dt.getTime();
 }
 
 // ── ensureFieldMap ────────────────────────────────────────────
