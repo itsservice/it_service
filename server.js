@@ -1,7 +1,8 @@
 // server.js — Entry point
 const app  = require('./app');
 const http = require('http');
-const PORT = process.env.PORT || 3000;
+const https = require('https');
+const PORT    = process.env.PORT    || 3000;
 const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 
 app.listen(PORT, () => {
@@ -10,20 +11,25 @@ app.listen(PORT, () => {
   console.log(`   🔧 Engineer: ${APP_URL}/engineer`);
   console.log(`   ⚙️  Admin:    ${APP_URL}/admin\n`);
 
-  // ── Keep-alive ping ทุก 14 นาที (ป้องกัน Render free tier sleep) ──
+  // ── Keep-alive ping ทุก 14 นาที ──────────────────────────────
+  // ใช้งานเฉพาะ 05:00 - 22:00 (เวลาไทย UTC+7)
+  // กลางคืน 22:00 - 05:00 หยุด ping ประหยัด Render quota
   setInterval(() => {
+    const hourTH = (new Date().getUTCHours() + 7) % 24; // แปลงเป็น TH time
+    if (hourTH >= 22 || hourTH < 5) {
+      console.log(`[Keep-alive] หยุด ping กลางคืน (${hourTH}:xx น.)`);
+      return;
+    }
     const url = new URL(APP_URL);
-    const options = {
+    const client = url.protocol === 'https:' ? https : http;
+    const req = client.request({
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
-      path: '/api/events',
+      path: '/debug/env',
       method: 'GET',
-    };
-    const req = (url.protocol === 'https:' ? require('https') : http).request(options, r => {
-      r.destroy(); // ปิดทันที ไม่ต้องรอ
-    });
-    req.on('error', () => {}); // ไม่ต้อง log
+    }, r => { r.destroy(); });
+    req.on('error', () => {});
     req.end();
-    console.log('[Keep-alive] ping', new Date().toLocaleTimeString('th-TH'));
-  }, 14 * 60 * 1000); // 14 นาที
+    console.log(`[Keep-alive] ping ${hourTH}:xx น. — OK`);
+  }, 14 * 60 * 1000); // ทุก 14 นาที
 });
