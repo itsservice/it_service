@@ -247,17 +247,25 @@ function toWriteFields(fields) {
       console.warn(`[Lark] skip date field "${key}" — cannot convert:`, val);
       continue;
     }
-    // Lark SingleSelect field — ตรวจว่า option มีอยู่จริง
+    // Lark SingleSelect — ส่งเฉพาะค่าที่มีใน options เท่านั้น
     const fieldType = _fieldTypes[colName];
     if (fieldType === 'SingleSelect') {
       const validOpts = _fieldOptions[colName];
-      // รหัสสาขา และ ช่าง — อนุญาตให้ส่งแม้ไม่มีใน options (free text)
-      const ALLOW_FREE = new Set(['branchCode','engineerName','assignedTo']);
-      if (!ALLOW_FREE.has(key) && validOpts && validOpts.size > 0 && !validOpts.has(String(val))) {
-        console.warn(`[Lark] SingleSelect "${colName}" skip "${val}"`);
-        continue;
+      if (validOpts && validOpts.size > 0) {
+        // หาค่าที่ตรงกัน (case-insensitive)
+        const valStr = String(val).trim();
+        const matched = [...validOpts].find(o =>
+          o.toLowerCase() === valStr.toLowerCase() ||
+          o.replace(/[.\s]/g,'').toLowerCase() === valStr.replace(/[.\s]/g,'').toLowerCase()
+        );
+        if (!matched) {
+          console.warn(`[Lark] SingleSelect "${colName}" skip "${val}" (not in options)`);
+          continue; // skip — ไม่ส่ง field นี้ดีกว่า error
+        }
+        out[colName] = matched; // ใช้ค่าจริงจาก options
+      } else {
+        out[colName] = String(val);
       }
-      out[colName] = String(val);
       continue;
     }
     out[colName] = typeof val === 'number' ? String(val) : val;
@@ -402,16 +410,39 @@ async function updateTicket(recordId, fields) {
 
 // ── CREATE ticket ──────────────────────────────────────────────
 async function createTicket(fields) {
-  await ensureFieldMap(); // ต้องมี fieldMap ก่อน write เสมอ
+  await ensureFieldMap();
   const token = await getToken();
-  const larkFields = toWriteFields(fields);
-  if (!Object.keys(larkFields).length) throw new Error('No valid fields');
+
+  // กรอง field ที่รู้ว่าอาจมีปัญหา SingleSelect ออกก่อน
+  const SAFE_KEYS = ['reporter','phone','detail','location','workDetail','partsUsed','adminNote'];
+  const SELECT_KEYS = ['type','status','brand','engineerName','branchCode'];
+
+  // ลอง pass 1: ส่งทุก field
+  let larkFields = toWriteFields(fields);
+  if (!Object.keys(larkFields).length) throw new Error('No valid fields to send');
   console.log('[Lark] POST ticket:', JSON.stringify(larkFields));
-  const r = await axios.post(
+
+  let r = await axios.post(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
     { fields: larkFields },
     { headers: hdr(token), timeout: 15_000 }
   );
+
+  // ถ้า SingleSelectFieldConvFail ให้ retry โดยส่งเฉพาะ text fields
+  if (r.data.code !== 0 && r.data.msg && r.data.msg.includes('SelectFieldConvFail')) {
+    console.warn('[Lark] SingleSelect error — retrying with text-only fields');
+    const safeFields = {};
+    SAFE_KEYS.forEach(k => { if (fields[k]) safeFields[k] = fields[k]; });
+    larkFields = toWriteFields(safeFields);
+    if (!Object.keys(larkFields).length) throw new Error(`Lark create: ${r.data.msg}`);
+    console.log('[Lark] Retry POST:', JSON.stringify(larkFields));
+    r = await axios.post(
+      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
+      { fields: larkFields },
+      { headers: hdr(token), timeout: 15_000 }
+    );
+  }
+
   if (r.data.code !== 0) throw new Error(`Lark create: ${r.data.msg}`);
   // Parse record จาก response ก่อน
   const created = parseRecord(r.data.data?.record || {});
