@@ -264,9 +264,7 @@ let photos = []; // base64 photos for work form
 const AVATAR_COLORS = ['#00e5a0','#0099ff','#ff9640','#b87be8','#ff4d6d','#22d3ee','#f59e0b'];
 function avatarColor(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
 function avatarInitial(name){ return (name||'?').charAt(0).toUpperCase(); }
-function statusColor(s){return{'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';};
-  return m[s]||'#ffffff44';
-}
+function statusColor(s){return{'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';}
 
 // ── SSE ───────────────────────────────────────────────────────
 let sse = null;
