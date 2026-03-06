@@ -163,13 +163,25 @@ function parseRecord(rec) {
 function toWriteFields(fields) {
   const out = {};
   const fm = _fieldMap || {};
+  const hasFm = Object.keys(fm).length > 0;
   for (const [key, val] of Object.entries(fields)) {
     if (val === undefined || val === null || val === '') continue;
     if (!WRITABLE_KEYS.has(key)) continue;
-    const colName = fm[key] || key; // use detected name or fallback
+    const colName = fm[key];
+    if (!colName) {
+      console.warn('[Lark] no column mapped for key "' + key + '" — skipping');
+      continue;
+    }
     out[colName] = typeof val === 'number' ? String(val) : val;
   }
   return out;
+}
+
+// ── ensureFieldMap ────────────────────────────────────────────
+async function ensureFieldMap() {
+  if (_fieldMap && Object.keys(_fieldMap).length > 0) return;
+  console.log('[Lark] building fieldMap...');
+  await listTickets();
 }
 
 // ── LIST tickets ───────────────────────────────────────────────
@@ -218,6 +230,7 @@ async function getTicket(recordId) {
 
 // ── UPDATE ticket ──────────────────────────────────────────────
 async function updateTicket(recordId, fields) {
+  await ensureFieldMap(); // ต้องมี fieldMap ก่อน write เสมอ
   const token = await getToken();
   const larkFields = toWriteFields(fields);
   if (!Object.keys(larkFields).length) {
@@ -236,6 +249,7 @@ async function updateTicket(recordId, fields) {
 
 // ── CREATE ticket ──────────────────────────────────────────────
 async function createTicket(fields) {
+  await ensureFieldMap(); // ต้องมี fieldMap ก่อน write เสมอ
   const token = await getToken();
   const larkFields = toWriteFields(fields);
   if (!Object.keys(larkFields).length) throw new Error('No valid fields');
@@ -268,4 +282,4 @@ async function debugSchema() {
   return { schema, fieldMap: _fieldMap, sample };
 }
 
-module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken };
+module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap };
