@@ -924,13 +924,10 @@ function renderDrawerContent(){
       <!-- Status quick change -->
       <div class="d-section">
         <div class="d-section-title">เปลี่ยนสถานะ</div>
-        <div class="status-quick">
-          ${STATUSES.map(s=>{
-            const sc=statusColor(s); const active=t.status===s;
-            return `<button class="sqb${active?' active':''}" style="border-color:${sc};color:${active?'#000':sc};background:${active?sc:'transparent'}"
-              onclick="quickStatus('${esc(t._recordId)}','${esc(s)}');closeDrawer()">${esc(s)}</button>`;
-          }).join('')}
-        </div>
+        <select onchange="quickStatus('${esc(t._recordId)}',this.value);closeDrawer()"
+          style="width:100%;background:var(--bg3);border:1.5px solid var(--b2);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;appearance:none;cursor:pointer">
+          ${STATUSES.map(s=>`<option value="${esc(s)}"${t.status===s?' selected':''}>${esc(s)}</option>`).join('')}
+        </select>
       </div>
 
       <div class="d-divider"></div>
