@@ -242,7 +242,7 @@ window.hideSplash = function(){
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
 // บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 8000);
+setTimeout(window.hideSplash, 3000);
 </script>
 
 <!-- ══ LOGIN ══════════════════════════════════════════════ -->
@@ -389,7 +389,7 @@ async function tryAutoLogin(){
   try{
     const { token } = JSON.parse(saved);
     const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 8000);
+    const tid = setTimeout(()=>ctrl.abort(), 12000);
     const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token}, signal:ctrl.signal });
     clearTimeout(tid);
     const d = await r.json();
@@ -740,10 +740,12 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 // ── Boot ───────────────────────────────────────────────────────
 (async()=>{
-  try{
-    if(await tryAutoLogin()) startApp();
-    else window.hideSplash?.();
-  }catch(e){ console.error('boot error:',e); window.hideSplash?.(); }
+  const autoOk = await Promise.race([
+    tryAutoLogin(),
+    new Promise(r => setTimeout(()=>r(false), 5000))
+  ]);
+  window.hideSplash?.();
+  if(autoOk) startApp();
 })();
 
 // ═══════════════════════════════════════════════════════════════
