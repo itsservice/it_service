@@ -147,12 +147,29 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 
 /* ── HISTORY (recent from localStorage) ── */
 .history-title{font-size:12px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin:20px 0 12px}
+.history-toggle{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;background:var(--bg2);border-radius:var(--r);
+  border:1px solid var(--b1);cursor:pointer;font-size:13px;color:var(--fg2);
+  transition:border-color .15s;user-select:none;margin-top:8px
+}
+.history-toggle:hover{border-color:var(--b2)}
+.history-toggle .ht-arrow{margin-left:auto;transition:transform .2s;font-size:10px}
+.history-toggle.open .ht-arrow{transform:rotate(180deg)}
+.history-dropdown{
+  background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);
+  margin-top:4px;overflow:hidden;
+  max-height:0;opacity:0;
+  transition:max-height .25s ease, opacity .2s ease;
+}
+.history-dropdown.open{max-height:500px;opacity:1}
 .history-item{
   display:flex;align-items:center;gap:10px;padding:12px;
-  background:var(--bg2);border-radius:var(--r);margin-bottom:8px;cursor:pointer;
-  border:1px solid var(--b1);transition:border-color .15s
+  background:transparent;cursor:pointer;
+  border-bottom:1px solid var(--b1);transition:background .15s
 }
-.history-item:hover{border-color:var(--b2)}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--bg3,#1a1a22)}
 .hi-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);flex:1}
 .hi-brand{font-size:12px;color:var(--fg2)}
 .hi-status{margin-left:auto}
@@ -288,7 +305,9 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
       </div>
       <div class="search-hint">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
       <div id="track-result"></div>
-      <div id="track-history"></div>
+      <div id="track-history-wrap" style="position:relative">
+        <div id="track-history"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -511,6 +530,11 @@ function saveHistory(t){
   localStorage.setItem(key,JSON.stringify(hist));
 }
 
+function toggleHistory(el){
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
 async function renderHistory(){
   const key='it_history';
   let hist=[];
@@ -528,13 +552,21 @@ async function renderHistory(){
   });
   try{ localStorage.setItem(key, JSON.stringify(hist)); }catch(_){}
 
-  el.innerHTML = `<div class="history-title">📋 TICKET ล่าสุดของคุณ</div>` +
-    hist.map(h => `<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
-      <span class="history-icon">🎫</span>
-      <span class="hi-id">${esc(h.id||h._recordId||'—')}</span>
-      <span class="hi-brand">${esc(h.brand||'-')}</span>
-      <span class="hi-status"><span class="status-pill s-${(h.status||'แก้ไข').replace(/[✅⚙️⏱️❌]/g,'').trim()}" style="font-size:10px;padding:3px 8px">${esc(h.status||'แก้ไข')}</span></span>
-    </div>`).join('');
+  const count = hist.length;
+  const isOpen = el.querySelector('.history-dropdown.open') !== null;
+  el.innerHTML = `
+    <div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
+      <span>📋 Ticket ล่าสุดของคุณ</span>
+      <span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${count}</span>
+      <span class="ht-arrow">▼</span>
+    </div>
+    <div class="history-dropdown ${isOpen?'open':''}">
+      ${hist.map(h => `<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
+        <span class="hi-id">🎫 ${esc(h.id||h._recordId||'—')}</span>
+        <span class="hi-brand" style="margin-left:auto;font-size:12px;color:var(--fg3)">${esc(h.brand||'-')}</span>
+        <span class="hi-status" style="margin-left:8px"><span class="status-pill s-${(h.status||'').replace(/[✅⚙️⏱️❌✏️]/g,'').trim()}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'แก้ไข')}</span></span>
+      </div>`).join('')}
+    </div>`;
 }
 renderHistory();
 
