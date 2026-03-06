@@ -731,6 +731,7 @@ async function bootApp(){
   if(['superadmin','admin'].includes(u.role)) loadUsers();
   renderDashboard();
   window.hideSplash?.();
+  window.initAdminFab?.(); // Init FAB after app ready
   setInterval(loadTickets, 60_000);
 }
 
@@ -1413,8 +1414,9 @@ function showToast(msg,type='success'){
 })();
 // ═══════════════════════════════════════════════════════════════
 // FAB NAVIGATION PANEL — Admin
+// Init หลัง bootApp() เพื่อให้ elements พร้อม
 // ═══════════════════════════════════════════════════════════════
-(function(){
+window.initAdminFab = function(){
   let fabOpen = false, fabSearchOpen = false;
 
   const fabWrap    = document.getElementById('admin-fab-wrap');
@@ -1426,6 +1428,7 @@ function showToast(msg,type='success'){
   const searchInp  = document.getElementById('fab-search-input');
   const btnTop     = document.getElementById('fab-to-top');
   const btnBottom  = document.getElementById('fab-to-bottom');
+  if(!fabWrap || !fabMain) return; // guard: not ready yet
 
   // ── Open/Close FAB ──────────────────────────────────────────
   function openFab(){
@@ -1565,15 +1568,13 @@ function showToast(msg,type='success'){
   // ── ESC to close ─────────────────────────────────────────────
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeFab(); });
 
-  // ── Show/hide fab based on page ──────────────────────────────
-  // Patch navTo to show/hide fab-pag-bar
+  // ── Patch navTo to toggle fab-pag-bar ───────────────────────
   const _origNavTo = window.navTo;
   window.navTo = function(page){
     _origNavTo(page);
     if(fabPagBar) fabPagBar.style.display = (page==='tickets') ? 'flex' : 'none';
   };
-
-})();
+};
 
 </script>
 </body>
