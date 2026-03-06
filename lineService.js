@@ -1,17 +1,21 @@
+// lineService.js — LINE push message helper
 const axios = require('axios');
-const { LINE_CHANNEL_ACCESS_TOKEN } = require('./env');
-const { lineHeaders } = require('./line');
 
-const linePushFlex = (to, flexMessage) => {
-  if (!LINE_CHANNEL_ACCESS_TOKEN) {
-    throw new Error('Missing env: LINE_CHANNEL_ACCESS_TOKEN');
+async function pushMessage(to, messages){
+  const AT = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if(!AT){ console.warn('[LINE] No LINE_CHANNEL_ACCESS_TOKEN'); return; }
+  if(!to){ console.warn('[LINE] No recipient'); return; }
+  try{
+    const r = await axios.post(
+      'https://api.line.me/v2/bot/message/push',
+      {to, messages},
+      {headers:{Authorization:'Bearer '+AT,'Content-Type':'application/json'},timeout:10_000}
+    );
+    console.log('[LINE] Pushed to',to,'→',r.status);
+    return r.data;
+  }catch(err){
+    console.error('[LINE push error]', err.response?.data || err.message);
   }
+}
 
-  return axios.post(
-    'https://api.line.me/v2/bot/message/push',
-    { to, messages: [flexMessage] },
-    { headers: lineHeaders, timeout: 15000 }
-  );
-};
-
-module.exports = { linePushFlex };
+module.exports = { pushMessage };
