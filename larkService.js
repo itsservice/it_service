@@ -110,9 +110,19 @@ function fmtDate(v) {
 const DATE_KEYS = new Set(['sentDate','slaDate','completedAt','closedAt']);
 
 function parseVal(v, key) {
-  if (Array.isArray(v) && v[0]?.text !== undefined) return v.map(x => x.text || '').join('');
-  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v) return v.text;
-  if (v && typeof v === 'object' && !Array.isArray(v) && ('link' in v || 'url' in v)) return v.link || v.url || '';
+  if (v === null || v === undefined) return '';
+  // Lark option/select field: { id: 'xxx', text: 'ค่า' }
+  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v) return String(v.text || '');
+  // Lark multi-select: [{ id, text }, ...]
+  if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'text' in v[0])
+    return v.map(x => String(x.text || '')).join(', ');
+  // Lark rich text: [{ type, text }]
+  if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'type' in v[0])
+    return v.map(x => x.text || x.raw_value || '').join('');
+  // URL field
+  if (v && typeof v === 'object' && !Array.isArray(v) && ('link' in v || 'url' in v))
+    return v.link || v.url || '';
+  // Date fields
   if (DATE_KEYS.has(key)) return fmtDate(v);
   if (typeof v === 'number' && v > 1_000_000_000_000) return fmtDate(v);
   return v;
@@ -142,6 +152,29 @@ function makeId(recordId) {
   return id;
 }
 
+// ── Normalize status from Lark to our system ──────────────────
+// Lark อาจเก็บสถานะเป็นชื่อเดิม (ไม่มี emoji) หรือชื่อใหม่
+const STATUS_NORMALIZE = {
+  // Lark old → our new
+  'แก้ไข':                      'แก้ไข',
+  'รอตรวจงาน':                  'แก้ไข',
+  'รอดำเนินการ':                 'รอดำเนินการ ⏱️',
+  'รอดำเนินการ ⏱️':             'รอดำเนินการ ⏱️',
+  'ตรวจงาน':                    'ตรวจงาน',
+  'อยู่ระหว่างดำเนินการ':        'อยู่ระหว่างดำเนินการ ⚙️',
+  'อยู่ระหว่างดำเนินการ ⚙️':    'อยู่ระหว่างดำเนินการ ⚙️',
+  'รอชิ้นส่วน':                  'รอดำเนินการ ⏱️',
+  'เสร็จสิ้น':                   'เสร็จสิ้น ✅',
+  'เสร็จสิ้น ✅':               'เสร็จสิ้น ✅',
+  'ยกเลิก':                      'ยกเลิก ❌',
+  'ยกเลิก ❌':                  'ยกเลิก ❌',
+};
+function normalizeStatus(s) {
+  if (!s) return '';
+  const clean = String(s).trim();
+  return STATUS_NORMALIZE[clean] || clean;
+}
+
 // ── Parse a Lark record → internal object ─────────────────────
 function parseRecord(rec) {
   const out = { _recordId: rec.record_id };
@@ -149,12 +182,17 @@ function parseRecord(rec) {
     const key = detectKey(larkName) || larkName;
     out[key] = parseVal(val, key);
   }
-  if (!out.id || String(out.id).startsWith('rec')) {
+  // Normalize status
+  if (out.status) out.status = normalizeStatus(out.status);
+  // Use Number Ticket as ID if exists
+  if (out.id && !String(out.id).startsWith('rec')) {
+    // use as-is
+  } else {
     out.id = makeId(rec.record_id);
   }
-  // Default brand fallback (ถ้าไม่มี column Brand ใน Lark)
+  // Default brand fallback
   if (!out.brand) {
-    out.brand = process.env.DEFAULT_BRAND || 'Dunkin\'';
+    out.brand = process.env.DEFAULT_BRAND || "Dunkin'";
   }
   return out;
 }
@@ -303,4 +341,30 @@ async function debugSchema() {
   return { schema, fieldMap: _fieldMap, sample };
 }
 
-module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap };
+
+// ── Click Lark button field (trigger automation) ───────────────
+// Lark Base automation ปุ่มใช้ field type = button
+// การกดปุ่มทำได้โดย PATCH field ที่เป็น button type ด้วย value = true
+async function clickButton(recordId, buttonFieldName) {
+  const token = await getToken();
+  const url = `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`;
+  const body = { fields: { [buttonFieldName]: true } };
+  try {
+    const r = await axios.patch(url, body, { headers: hdr(token), timeout: 10_000 });
+    console.log(`[Lark] clickButton "${buttonFieldName}" on ${recordId}:`, r.data?.code === 0 ? 'OK' : r.data?.msg);
+    return r.data?.code === 0;
+  } catch(e) {
+    console.error('[Lark] clickButton error:', e.response?.data || e.message);
+    return false;
+  }
+}
+
+// ── Button field names ในระบบ Lark (ตรงกับชื่อ column จริง) ──
+// ดูชื่อจริงได้ที่ /debug/lark-fields
+const LARK_BUTTONS = {
+  sendToAdmin:    process.env.LARK_BTN_SEND_ADMIN    || 'ปุ่มส่งงานช่าง',
+  done:           process.env.LARK_BTN_DONE          || 'ปุ่มเสร็จงาน',
+  changeEngineer: process.env.LARK_BTN_CHANGE_ENG    || 'ปุ่มเปลี่ยนช่าง',
+};
+
+module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap, clickButton, LARK_BUTTONS };
