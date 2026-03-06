@@ -156,10 +156,11 @@ a{color:inherit;text-decoration:none}
 .cell-type{font-size:14px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell-detail{font-size:12px;color:var(--fg2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .status-pill{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.s-รอตรวจงาน{background:rgba(245,158,11,.15);color:#f59e0b}
+.s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
+.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
 .s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
-.s-รอชิ้นส่วน{background:rgba(168,85,247,.15);color:#c084fc}
-.s-รอตรวจงาน-เสร็จ{background:rgba(168,85,247,.15);color:#c084fc}
+.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
+.s-แก้ไข-เสร็จ{background:rgba(168,85,247,.15);color:#c084fc}
 .s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
 .s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
 .sq-btns{display:flex;gap:4px;flex-wrap:wrap}
@@ -435,11 +436,12 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="status-chips">
           <button class="chip chip-all active" data-s="">ทั้งหมด</button>
-          <button class="chip chip-wait" data-s="รอตรวจงาน">รอตรวจงาน</button>
-          <button class="chip chip-inprog" data-s="อยู่ระหว่างดำเนินการ">กำลังดำเนินการ</button>
-          <button class="chip chip-review" data-s="รอชิ้นส่วน">รอชิ้นส่วน</button>
-          <button class="chip chip-done" data-s="เสร็จสิ้น">เสร็จสิ้น</button>
-          <button class="chip chip-cancel" data-s="ยกเลิก">ยกเลิก</button>
+          <button class="chip chip-wait" data-s="แก้ไข">✏️ แก้ไข</button>
+          <button class="chip chip-review" data-s="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ</button>
+          <button class="chip chip-review" data-s="ตรวจงาน">🔍 ตรวจงาน</button>
+          <button class="chip chip-inprog" data-s="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ</button>
+          <button class="chip chip-done" data-s="เสร็จสิ้น ✅">✅ เสร็จสิ้น</button>
+          <button class="chip chip-cancel" data-s="ยกเลิก ❌">❌ ยกเลิก</button>
         </div>
         <div class="tbl-wrap">
           <table class="tbl">
@@ -540,7 +542,7 @@ const AVATAR_COLORS=['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee'
 function ac(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
 function ai(name){ return (name||'?').charAt(0).toUpperCase(); }
 function statusColor(s){
-  return {'รอตรวจงาน':'#f59e0b','อยู่ระหว่างดำเนินการ':'#3b82f6','รอชิ้นส่วน':'#a855f7','เสร็จสิ้น':'#00e5a0','ยกเลิก':'#ef4444'}[s]||'#444';
+  return {'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';
 }
 function actionColor(a){
   return {'login':'#3b82f6','logout':'#94a3b8','create_ticket':'#00e5a0','update_status':'#f59e0b','assign':'#a855f7','engineer_submit':'#22d3ee','close':'#00e5a0','create_user':'#f97316','update_user':'#3b82f6','delete_user':'#ef4444','update':'#f59e0b'}[a]||'#888';
@@ -658,7 +660,7 @@ async function loadUsers(){
 }
 
 function updateBadge(){
-  const n=tickets.filter(t=>t.status==='รอตรวจงาน').length;
+  const n=tickets.filter(t=>t.status==='แก้ไข').length;
   ['nb-pending','bnav-badge'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.textContent=n; el.style.display=n?'':'none'; }
@@ -697,15 +699,15 @@ document.getElementById('btn-menu').onclick=()=>{
 // ════════════════════════════════════════════════════════════════
 function renderDashboard(){
   const total    = tickets.length;
-  const waiting  = tickets.filter(t=>t.status==='รอตรวจงาน').length;
-  const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ').length;
-  const done     = tickets.filter(t=>t.status==='เสร็จสิ้น').length;
+  const waiting  = tickets.filter(t=>t.status==='แก้ไข').length;
+  const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
+  const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
   document.getElementById('stats-grid').innerHTML=`
     ${statCard('ทั้งหมด','🎫',total,'#ffffff44','')}
-    ${statCard('รอตรวจงาน','⏳',waiting,'#f59e0b','รอตรวจงาน')}
-    ${statCard('กำลังดำเนินการ','🔧',inprog,'#3b82f6','อยู่ระหว่างดำเนินการ')}
-    ${statCard('เสร็จสิ้น','✅',done,'#00e5a0','เสร็จสิ้น')}`;
+    ${statCard('แก้ไข','⏳',waiting,'#f59e0b','แก้ไข')}
+    ${statCard('กำลังดำเนินการ','🔧',inprog,'#3b82f6','อยู่ระหว่างดำเนินการ ⚙️')}
+    ${statCard('เสร็จสิ้น ✅','✅',done,'#00e5a0','เสร็จสิ้น ✅')}`;
   document.querySelectorAll('.stat-card').forEach(c=>{
     c.onclick=()=>{ filterStatus=c.dataset.s||''; navTo('tickets'); renderTicketsPage(); };
   });
@@ -801,9 +803,9 @@ function renderTicketsPage(){
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
       <td onclick="event.stopPropagation()">
         <div class="sq-btns">
-          ${sqBtn(t,'อยู่ระหว่างดำเนินการ','#3b82f6','อยู่')}
-          ${sqBtn(t,'เสร็จสิ้น','#00e5a0','เสร็จ')}
-          ${sqBtn(t,'ยกเลิก','#ef4444','ยกเลิก')}
+          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','อยู่')}
+          ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','เสร็จ')}
+          ${sqBtn(t,'ยกเลิก ❌','#ef4444','ยกเลิก ❌')}
         </div>
       </td>
     </tr>`;
@@ -873,7 +875,7 @@ function renderDrawerContent(){
   const t=tickets.find(x=>x._recordId===openTicketId);
   if(!t){ document.getElementById('drawer-inner').innerHTML='<div class="loading"><div class="spinner"></div></div>'; return; }
   const ticketLogs=logs.filter(l=>l.ticketId===t._recordId||l.ticketLabel===t.id).slice(0,10);
-  const STATUSES=['รอตรวจงาน','อยู่ระหว่างดำเนินการ','รอชิ้นส่วน','เสร็จสิ้น','ยกเลิก'];
+  const STATUSES=['แก้ไข','อยู่ระหว่างดำเนินการ ⚙️','รอดำเนินการ ⏱️','เสร็จสิ้น ✅','ยกเลิก ❌'];
 
   document.getElementById('drawer-inner').innerHTML=`
     <div class="drawer-head">
@@ -896,9 +898,9 @@ function renderDrawerContent(){
         <div class="d-section-title">จัดการ Ticket</div>
         <div class="d-actions">
           <button class="btn-action btn-assign btn-sm" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
-          ${!['เสร็จสิ้น','ยกเลิก'].includes(t.status)?`<button class="btn-action btn-close-ticket btn-sm" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
+          ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket btn-sm" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
           <button class="btn-action btn-note btn-sm" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
-          ${t.status!=='ยกเลิก'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก');closeDrawer()">✕ ยกเลิก</button>`:''}
+          ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
         </div>
       </div>
 
@@ -996,7 +998,7 @@ function openAssignModal(rid){
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-assign-btn" onclick="doAssign('${esc(rid)}')">มอบหมาย</button>
     </div>`);
   document.getElementById('m-eng').onchange=function(){
@@ -1012,7 +1014,7 @@ async function doAssign(rid){
   try{
     const d=await api(`/api/tickets/${rid}/assign`,{method:'PATCH',body:JSON.stringify({engineerName:name,assignedTo:name})});
     if(!d.ok) throw new Error(d.error);
-    tickets=tickets.map(t=>t._recordId===rid?{...t,engineerName:name,status:'อยู่ระหว่างดำเนินการ'}:t);
+    tickets=tickets.map(t=>t._recordId===rid?{...t,engineerName:name,status:'อยู่ระหว่างดำเนินการ ⚙️'}:t);
     closeModal(); renderDrawerContent(); renderTicketsPage();
     showToast('✅ มอบหมายให้ '+name);
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='มอบหมาย';}
@@ -1031,7 +1033,7 @@ function openCloseModal(rid){
       <textarea class="d-form-textarea" id="m-note" placeholder="เช่น ตรวจรับงานเรียบร้อย, ทดสอบแล้วปกติ" rows="3"></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-close-btn" onclick="doClose('${esc(rid)}')">✅ ยืนยันจบงาน</button>
     </div>`);
 }
@@ -1042,7 +1044,7 @@ async function doClose(rid){
   try{
     const d=await api(`/api/tickets/${rid}/close`,{method:'PATCH',body:JSON.stringify({adminNote:note})});
     if(!d.ok) throw new Error(d.error);
-    tickets=tickets.map(t=>t._recordId===rid?{...t,status:'เสร็จสิ้น',adminNote:note,closedBy:AUTH.user.name}:t);
+    tickets=tickets.map(t=>t._recordId===rid?{...t,status:'เสร็จสิ้น ✅',adminNote:note,closedBy:AUTH.user.name}:t);
     closeModal(); closeDrawer(); renderTicketsPage(); updateBadge();
     showToast('✅ ปิดงานเรียบร้อย');
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='✅ ยืนยันจบงาน';}
@@ -1057,7 +1059,7 @@ function openNoteModal(rid){
       <textarea class="d-form-textarea" id="m-anote" rows="4" placeholder="หมายเหตุภายใน…">${esc(t?.adminNote||'')}</textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-note-btn" onclick="doNote('${esc(rid)}')">บันทึก</button>
     </div>`);
 }
@@ -1153,7 +1155,7 @@ function userFormFields(u={}){
 function openAddUserModal(){
   openModal(`<div class="modal-title">👤 เพิ่มผู้ใช้งาน</div>${userFormFields()}
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-user-btn" onclick="doAddUser()">เพิ่ม</button>
     </div>`);
 }
@@ -1177,7 +1179,7 @@ function openEditUserModal(id){
   const u=users.find(x=>x.id===id); if(!u) return;
   openModal(`<div class="modal-title">✏️ แก้ไขผู้ใช้</div>${userFormFields(u)}
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-user-btn" onclick="doEditUser('${esc(id)}')">บันทึก</button>
     </div>`);
 }
@@ -1202,7 +1204,7 @@ function confirmDeleteUser(id,name){
   openModal(`<div class="modal-title" style="color:var(--danger)">🗑 ลบผู้ใช้</div>
     <div style="margin-bottom:20px;font-size:14px;color:var(--fg2)">แน่ใจว่าต้องการลบ <b style="color:var(--fg)">${esc(name)}</b>?<br>ไม่สามารถกู้คืนได้</div>
     <div class="modal-actions">
-      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-danger" onclick="doDeleteUser('${esc(id)}')">ลบ</button>
     </div>`);
 }
