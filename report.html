@@ -29,7 +29,11 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .logo{width:40px;height:40px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;font-weight:800;color:#000;flex-shrink:0}
 .header-text h1{font-family:var(--font-head);font-size:18px;font-weight:700;line-height:1.1}
 .header-text p{font-size:12px;color:var(--fg3);margin-top:2px}
-.online-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto;flex-shrink:0;box-shadow:0 0 8px var(--accent)}
+.online-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;transition:background .3s}
+.header-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.refresh-dot{width:8px;height:8px;border-radius:50%;background:transparent;flex-shrink:0}
+.refresh-dot.spinning{background:#3b82f6;animation:pulse-blue .7s ease-in-out infinite}
+@keyframes pulse-blue{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
 
 /* ── TABS ── */
 .tabs{display:flex;margin:20px 20px 0;background:var(--bg2);border-radius:var(--r2);padding:4px;border:1px solid var(--b1)}
@@ -193,7 +197,10 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
       <h1>IT Support</h1>
       <p>ระบบแจ้งปัญหาและติดตามงาน</p>
     </div>
+    <div class="header-right">
+    <div class="refresh-dot" id="refresh-dot"></div>
     <div class="online-dot" id="dot"></div>
+  </div>
   </div>
 
   <div class="tabs" style="margin-top:20px">
@@ -304,10 +311,10 @@ function connectSSE(){
       const d=JSON.parse(e.data);
       allTickets=allTickets.map(t=>(t._recordId===d.recordId)?{...t,status:d.status||t.status}:t);
       // Re-render history ทันทีเมื่อ ticket ที่เราสนใจมี update
-      renderHistory();
+      await renderHistory();
       // ถ้า search result เปิดอยู่ก็ refresh ด้วย
       const shown = document.getElementById('track-result').dataset.rid;
-      if(shown && shown === d.recordId) searchById(d.recordId);
+      if(shown && shown === d.recordId) searchById(d.recordId, true); // silent
     }catch(_){}
   });
   sseConn.onopen = ()=>{ document.getElementById('dot').style.background='#00e5a0'; };
@@ -326,11 +333,18 @@ async function loadTickets(){
 loadTickets();
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
-  await loadTickets();
-  renderHistory();
-  // อัพเดท search result ที่เปิดอยู่
-  const shown = document.getElementById('track-result').dataset.rid;
-  if(shown) searchById(shown);
+  // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
+  const rdot = document.getElementById('refresh-dot');
+  if(rdot) rdot.classList.add('spinning');
+  try {
+    await loadTickets();
+    await renderHistory();
+    // อัพเดท search result ที่เปิดอยู่ — แต่ไม่แสดง loading spinner
+    const shown = document.getElementById('track-result').dataset.rid;
+    if(shown) await searchById(shown, true); // true = silent refresh
+  } finally {
+    if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
+  }
 }, 30_000);
 
 // ── Tabs ───────────────────────────────────────────────────────
@@ -454,11 +468,18 @@ async function doSearch(q){
   await loadTickets();
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
-  await loadTickets();
-  renderHistory();
-  // อัพเดท search result ที่เปิดอยู่
-  const shown = document.getElementById('track-result').dataset.rid;
-  if(shown) searchById(shown);
+  // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
+  const rdot = document.getElementById('refresh-dot');
+  if(rdot) rdot.classList.add('spinning');
+  try {
+    await loadTickets();
+    await renderHistory();
+    // อัพเดท search result ที่เปิดอยู่ — แต่ไม่แสดง loading spinner
+    const shown = document.getElementById('track-result').dataset.rid;
+    if(shown) await searchById(shown, true); // true = silent refresh
+  } finally {
+    if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
+  }
 }, 30_000);
   const lower = q.toLowerCase();
   const found = allTickets.filter(t =>
@@ -517,20 +538,29 @@ async function renderHistory(){
 }
 renderHistory();
 
-async function searchById(rid){
+async function searchById(rid, silent=false){
   if(!rid) return;
-  document.getElementById('track-input').value='';
   const resultEl = document.getElementById('track-result');
-  resultEl.dataset.rid = rid; // เก็บไว้ให้ SSE refresh ได้
-  resultEl.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  resultEl.dataset.rid = rid;
+  if(!silent) {
+    document.getElementById('track-input').value='';
+    resultEl.innerHTML='<div class="loading"><div class="spinner"></div> กำลังโหลด...</div>';
+  }
   await loadTickets();
 // ── Auto-refresh ทุก 30 วิ (fallback ถ้า SSE หลุด) ──────────
 setInterval(async () => {
-  await loadTickets();
-  renderHistory();
-  // อัพเดท search result ที่เปิดอยู่
-  const shown = document.getElementById('track-result').dataset.rid;
-  if(shown) searchById(shown);
+  // แสดง refresh dot โดยไม่ทำให้หน้าสะดุด
+  const rdot = document.getElementById('refresh-dot');
+  if(rdot) rdot.classList.add('spinning');
+  try {
+    await loadTickets();
+    await renderHistory();
+    // อัพเดท search result ที่เปิดอยู่ — แต่ไม่แสดง loading spinner
+    const shown = document.getElementById('track-result').dataset.rid;
+    if(shown) await searchById(shown, true); // true = silent refresh
+  } finally {
+    if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
+  }
 }, 30_000);
   const t = allTickets.find(x=>x._recordId===rid||x.id===rid);
   if(t){
