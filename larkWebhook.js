@@ -1,199 +1,112 @@
-// larkWebhook.js — แก้ไข: broadcast SSE + LINE notify ตาม flow
-// Flow: User → Lark → LINE(แจ้ง) → Engineer edit Lark → LINE(แจ้ง admin) → Admin จบงาน → LINE(แจ้ง user)
+// larkWebhook.js — Lark events → LINE notifications (v2)
 const express = require('express');
-const router  = express.Router();
+const { listTickets } = require('./larkService');
+const { addLog } = require('./auth');
+const router = express.Router();
 
-const { LARK_ENCRYPT_KEY } = require('./env');
-const { decryptLark }      = require('./larkCrypto');
-const { linePushFlex }     = require('./lineService');
-
-// ── FLEX builder helpers ──────────────────────────────────────
-function headerBox(color, icon, title) {
-  return {
-    type: 'box', layout: 'vertical',
-    paddingAll: '16px',
-    backgroundColor: color,
-    contents: [
-      { type: 'text', text: `${icon} ${title}`, color: '#ffffff', weight: 'bold', size: 'lg', wrap: true }
-    ]
-  };
+async function pushLine(to, messages){
+  if(!to || !process.env.LINE_CHANNEL_ACCESS_TOKEN) return;
+  const axios = require('axios');
+  try{
+    await axios.post('https://api.line.me/v2/bot/message/push',
+      {to, messages},
+      {headers:{Authorization:'Bearer '+process.env.LINE_CHANNEL_ACCESS_TOKEN,'Content-Type':'application/json'},timeout:8000}
+    );
+  }catch(e){console.error('[LINE push]',e.response?.data||e.message);}
 }
 
-function kv(label, value, color = '#555555') {
-  return {
-    type: 'box', layout: 'horizontal', spacing: 'md',
-    contents: [
-      { type: 'text', text: label, size: 'sm', color: '#888888', flex: 2 },
-      { type: 'text', text: String(value || '-'), size: 'sm', color, flex: 3, wrap: true, align: 'end' }
-    ]
-  };
-}
+function sc(s){return{'รอตรวจงาน':'#f59e0b','อยู่ระหว่างดำเนินการ':'#3b82f6','รอชิ้นส่วน':'#a855f7','เสร็จสิ้น':'#00e5a0','ยกเลิก':'#ef4444'}[s]||'#888888';}
+const URL=()=>process.env.APP_URL||'https://it-service-56im.onrender.com';
 
-function sep() { return { type: 'separator', margin: 'md' }; }
-
-function actionBtn(label, uri) {
-  if (!uri) return null;
-  return {
-    type: 'button', style: 'primary', margin: 'md',
-    action: { type: 'uri', label, uri }
-  };
-}
-
-// ── FLEX: New ticket (User → Lark → LINE) ────────────────────
-function buildNewTicketFlex(d) {
-  const btn = actionBtn('📋 เปิดรายการ', d.recordUrl);
-  return {
-    type: 'flex', altText: `🎫 Ticket ใหม่: ${d.ticket_id || ''}`,
-    contents: {
-      type: 'bubble',
-      header: headerBox('#1a73e8', '🎫', 'Ticket ใหม่เข้ามาแล้ว!'),
-      body: {
-        type: 'box', layout: 'vertical', spacing: 'sm',
-        contents: [
-          kv('Ticket ID', d.ticket_id, '#1a73e8'),
-          sep(),
-          kv('แบรนด์', d.branch),
-          kv('รหัสสาขา', d.branch_code),
-          kv('SLA', d.sla),
-          sep(),
-          kv('ประเภท', d.type || d.title),
-          kv('อาการ', d.symptom || d.detail),
-          sep(),
-          kv('ผู้แจ้ง', d.reporter),
-          kv('เบอร์', d.phone),
-          sep(),
-          kv('สถานะ', d.status || 'ตรวจงาน', '#f59e0b'),
-          kv('วันที่', d.ticketDate || d.sentDate),
-        ]
-      },
-      footer: btn ? { type: 'box', layout: 'vertical', contents: [btn] } : undefined
+function newTicketFlex(t){
+  return {type:'flex',altText:`🎫 Ticket ใหม่ ${t.id||''} — ${t.brand||''}`,contents:{type:'bubble',size:'kilo',
+    header:{type:'box',layout:'vertical',backgroundColor:'#0d0d12',paddingAll:'16px',contents:[
+      {type:'text',text:'🎫 Ticket ใหม่',size:'xs',color:'#00e5a0',weight:'bold'},
+      {type:'text',text:t.type||'แจ้งปัญหา',size:'lg',weight:'bold',color:'#ffffff',margin:'sm'},
+      {type:'text',text:`${t.brand||'-'} · ${t.branchCode||'-'}`,size:'xs',color:'#888888',margin:'xs'},
+    ]},
+    body:{type:'box',layout:'vertical',backgroundColor:'#141419',paddingAll:'16px',spacing:'sm',contents:[
+      {type:'text',text:t.detail||'-',size:'sm',color:'#aaaaaa',wrap:true,maxLines:3},
+      {type:'separator',color:'#222222',margin:'md'},
+      {type:'box',layout:'horizontal',margin:'md',contents:[
+        {type:'box',layout:'vertical',flex:1,contents:[{type:'text',text:'ผู้แจ้ง',size:'xxs',color:'#666666'},{type:'text',text:t.reporter||'-',size:'sm',color:'#dddddd',weight:'bold'}]},
+        {type:'box',layout:'vertical',flex:1,contents:[{type:'text',text:'วันที่',size:'xxs',color:'#666666'},{type:'text',text:t.sentDate||'-',size:'sm',color:'#dddddd'}]},
+      ]},
+    ]},
+    footer:{type:'box',layout:'vertical',backgroundColor:'#0d0d12',paddingAll:'12px',
+      contents:[{type:'button',action:{type:'uri',label:'เปิด Dashboard',uri:URL()+'/admin'},style:'primary',color:'#00e5a0',height:'sm'}]
     }
-  };
+  }};
 }
 
-// ── FLEX: Engineer submit work ────────────────────────────────
-function buildEngineerFlex(d) {
-  const btn = actionBtn('✅ ตรวจรับงาน', d.recordUrl);
-  return {
-    type: 'flex', altText: `🔧 ช่างส่งงาน: ${d.ticket_id || ''}`,
-    contents: {
-      type: 'bubble',
-      header: headerBox('#16a34a', '🔧', 'ช่างส่งรายงานงาน'),
-      body: {
-        type: 'box', layout: 'vertical', spacing: 'sm',
-        contents: [
-          kv('Ticket ID', d.ticket_id, '#16a34a'),
-          kv('ช่าง', d.engineerName || d.engineer_name),
-          sep(),
-          kv('รายละเอียดงาน', d.workDetail || d.work_detail),
-          kv('อะไหล่ที่ใช้', d.partsUsed || d.parts_used),
-          kv('ชั่วโมงทำงาน', d.workHours || d.work_hours),
-          sep(),
-          kv('สถานะ', d.status, '#16a34a'),
-          kv('เวลาเสร็จ', d.completedAt || d.completed_at),
-        ]
-      },
-      footer: btn ? { type: 'box', layout: 'vertical', contents: [btn] } : undefined
+function engineerFlex(t){
+  return {type:'flex',altText:`🔧 ช่างส่งงาน ${t.id||''}`,contents:{type:'bubble',size:'kilo',
+    header:{type:'box',layout:'vertical',backgroundColor:'#071a10',paddingAll:'16px',contents:[
+      {type:'text',text:'🔧 ช่างส่งงานแล้ว — รอตรวจรับ',size:'xs',color:'#00e5a0',weight:'bold'},
+      {type:'text',text:t.id||'',size:'sm',color:'#888888',margin:'xs'},
+    ]},
+    body:{type:'box',layout:'vertical',backgroundColor:'#0d1a12',paddingAll:'16px',spacing:'sm',contents:[
+      {type:'text',text:t.workDetail||'-',size:'sm',color:'#bbbbbb',wrap:true,maxLines:4},
+      {type:'separator',color:'#1a3020',margin:'md'},
+      {type:'box',layout:'horizontal',margin:'sm',contents:[
+        {type:'text',text:'ช่าง: '+(t.engineerName||'-'),size:'xs',color:'#888888',flex:1},
+        {type:'text',text:'อะไหล่: '+(t.partsUsed||'-'),size:'xs',color:'#888888',flex:1,align:'end'},
+      ]},
+    ]},
+    footer:{type:'box',layout:'vertical',backgroundColor:'#071a10',paddingAll:'12px',
+      contents:[{type:'button',action:{type:'uri',label:'✅ ตรวจรับงาน',uri:URL()+'/admin'},style:'primary',color:'#00e5a0',height:'sm'}]
     }
-  };
+  }};
 }
 
-// ── FLEX: Admin closed ticket → notify user ───────────────────
-function buildClosedFlex(d) {
-  return {
-    type: 'flex', altText: `✅ งานเสร็จสิ้น: ${d.ticket_id || ''}`,
-    contents: {
-      type: 'bubble',
-      header: headerBox('#7c3aed', '✅', 'งานของคุณเสร็จสิ้นแล้ว!'),
-      body: {
-        type: 'box', layout: 'vertical', spacing: 'sm',
-        contents: [
-          kv('Ticket ID', d.ticket_id, '#7c3aed'),
-          kv('แบรนด์', d.branch),
-          sep(),
-          kv('สถานะ', 'เสร็จสิ้น', '#16a34a'),
-          kv('หมายเหตุ Admin', d.adminNote || d.admin_note),
-          kv('ปิดโดย', d.closedBy || d.closed_by),
-          kv('เวลาปิด', d.closedAt || d.closed_at),
-        ]
-      }
-    }
-  };
+function closedFlex(t){
+  return {type:'flex',altText:`✅ งานเสร็จสิ้น ${t.id||''}`,contents:{type:'bubble',size:'kilo',
+    header:{type:'box',layout:'vertical',backgroundColor:'#070d17',paddingAll:'16px',contents:[
+      {type:'text',text:'✅ งานเสร็จสิ้น',size:'xs',color:'#3b82f6',weight:'bold'},
+      {type:'text',text:t.type||'-',size:'lg',weight:'bold',color:'#ffffff',margin:'sm'},
+    ]},
+    body:{type:'box',layout:'vertical',backgroundColor:'#0d1221',paddingAll:'16px',spacing:'sm',contents:[
+      {type:'box',layout:'horizontal',contents:[{type:'text',text:'Ticket',size:'xs',color:'#666666',flex:1},{type:'text',text:t.id||'-',size:'xs',color:'#3b82f6',align:'end',flex:1}]},
+      {type:'box',layout:'horizontal',contents:[{type:'text',text:'ปิดโดย',size:'xs',color:'#666666',flex:1},{type:'text',text:t.closedBy||'-',size:'xs',color:'#bbbbbb',align:'end',flex:1}]},
+      {type:'box',layout:'horizontal',contents:[{type:'text',text:'วันที่ปิด',size:'xs',color:'#666666',flex:1},{type:'text',text:t.closedAt||'-',size:'xs',color:'#bbbbbb',align:'end',flex:1}]},
+      ...(t.adminNote?[{type:'separator',color:'#1a203a',margin:'md'},{type:'text',text:t.adminNote,size:'xs',color:'#888888',wrap:true,margin:'sm'}]:[]),
+    ]}
+  }};
 }
 
-// ── WEBHOOK HANDLER ───────────────────────────────────────────
 router.post('/webhook', async (req, res) => {
-  try {
-    let body = req.body;
+  const body = req.body || {};
+  if(body.challenge){ res.json({challenge:body.challenge}); return; }
+  res.sendStatus(200);
 
-    console.log('\n📥 LARK RAW\n', JSON.stringify(body, null, 2));
+  try{
+    const evtType = body.event_type||body.type||'';
+    const data = body.data||body.event||body;
+    const rid = data.record_id||data._recordId;
+    if(!rid) return;
 
-    if (body?.encrypt && LARK_ENCRYPT_KEY) {
-      body = decryptLark(LARK_ENCRYPT_KEY, body.encrypt);
-      console.log('🔓 LARK DECRYPTED\n', JSON.stringify(body, null, 2));
+    const tickets = await listTickets();
+    const t = tickets.find(x=>x._recordId===rid);
+    if(!t) return;
+
+    const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
+    const broadcast  = req.app.locals?.broadcast;
+
+    if(t.status==='เสร็จสิ้น' && t.closedBy){
+      if(t.line_user_id) await pushLine(t.line_user_id,[closedFlex(t)]);
+      if(t.line_group_id) await pushLine(t.line_group_id,[closedFlex(t)]);
+      addLog({action:'line_notify',detail:`แจ้งผู้ใช้: งานเสร็จสิ้น ${t.id}`});
     }
-
-    if (body?.type === 'url_verification') {
-      return res.json({ challenge: body.challenge });
+    else if(t.workDetail && t.status==='รอตรวจงาน'){
+      if(adminGroup) await pushLine(adminGroup,[engineerFlex(t)]);
+      addLog({action:'line_notify',detail:`แจ้ง Admin: ช่างส่งงาน ${t.id}`});
     }
-
-    res.json({ ok: true });
-
-    const data = body?.event || body || {};
-    const broadcast = req.app.locals.broadcast;
-
-    // ─── Broadcast SSE ─────────────────────────────────────
-    if (broadcast) {
-      broadcast('ticket_updated', {
-        recordId:   data.record_id  || data.ticket_id,
-        ticketId:   data.ticket_id,
-        status:     data.status     || null,
-        brand:      data.branch     || null,
-        updatedAt:  new Date().toISOString(),
-        source:     'lark_webhook',
-      });
+    else{
+      if(adminGroup) await pushLine(adminGroup,[newTicketFlex(t)]);
+      addLog({action:'line_notify',detail:`แจ้ง Admin: Ticket ใหม่ ${t.id}`});
     }
-
-    const recordUrl = typeof data.recordUrl === 'string' && data.recordUrl.trim()
-      ? data.recordUrl.trim() : null;
-
-    // ─── Route ตาม event type ───────────────────────────────
-    const eventType = data.event_type || data.type || 'new_ticket';
-
-    if (eventType === 'engineer_submit' || data.workDetail || data.work_detail) {
-      // ── Engineer ส่งงาน → แจ้ง Admin ──
-      const adminTarget = data.admin_line_id || data.admin_group_id || data.line_group_id;
-      if (adminTarget) {
-        await linePushFlex(adminTarget, buildEngineerFlex({ ...data, recordUrl }));
-        console.log('✅ PUSH engineer → admin');
-      }
-      return;
-    }
-
-    if (eventType === 'ticket_closed' || data.status === 'เสร็จสิ้น' && data.closedBy) {
-      // ── Admin จบงาน → แจ้ง User ──
-      const userTarget = data.line_user_id || data.line_group_id;
-      if (userTarget) {
-        await linePushFlex(userTarget, buildClosedFlex({ ...data, recordUrl }));
-        console.log('✅ PUSH closed → user');
-      }
-      return;
-    }
-
-    // ─── Default: New ticket → แจ้ง Engineer/Admin ────────
-    const target = data.line_user_id || data.line_group_id;
-    if (!target) {
-      console.log('ℹ️  No LINE target — skip push');
-      return;
-    }
-
-    await linePushFlex(target, buildNewTicketFlex({ ...data, recordUrl }));
-    console.log('✅ PUSH new ticket');
-
-  } catch (err) {
-    console.error('❌ LARK WEBHOOK ERROR:', err?.message || err);
-    if (!res.headersSent) res.status(500).json({ error: 'server error' });
-  }
+    if(broadcast) broadcast('ticket_updated',{recordId:rid,status:t.status,ts:new Date().toISOString()});
+  }catch(err){console.error('[LarkWebhook]',err.message);}
 });
 
 module.exports = router;
