@@ -388,7 +388,10 @@ async function tryAutoLogin(){
   if(!saved) return false;
   try{
     const { token } = JSON.parse(saved);
-    const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token} });
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 8000);
+    const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token}, signal:ctrl.signal });
+    clearTimeout(tid);
     const d = await r.json();
     if(d.ok && ['engineer','admin','superadmin','manager'].includes(d.user.role)){
       AUTH = { token, user: d.user };
@@ -737,7 +740,10 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 // ── Boot ───────────────────────────────────────────────────────
 (async()=>{
-  if(await tryAutoLogin()) startApp();
+  try{
+    if(await tryAutoLogin()) startApp();
+    else window.hideSplash?.();
+  }catch(e){ console.error('boot error:',e); window.hideSplash?.(); }
 })();
 
 // ═══════════════════════════════════════════════════════════════
