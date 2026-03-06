@@ -40,7 +40,9 @@ const noCacheHtml = (file) => (_, res) => {
   });
   res.sendFile(path.join(__dirname, file));
 };
-app.get('/report',   noCacheHtml('report.html'));
+app.get('/report',         noCacheHtml('report.html'));
+// Brand-specific report URLs
+app.get('/report/:brand',  noCacheHtml('report.html'));
 app.get('/admin',    noCacheHtml('admin.html'));
 app.get('/engineer', noCacheHtml('engineer.html'));
 
