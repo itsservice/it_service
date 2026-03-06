@@ -318,6 +318,27 @@ setTimeout(window.hideSplash, 8000);
 <div class="toast" id="toast" style="display:none"></div>
 <input type="file" id="photo-input" accept="image/*" multiple style="display:none"/>
 
+
+<!-- ═══════════════════════════════════════════════════
+     FAB NAVIGATION PANEL (Engineer)
+     - search → กรอง tickets realtime
+     - pagination → แบ่งหน้า ticket-list
+═══════════════════════════════════════════════════ -->
+<div class="fab-wrap" id="eng-fab-wrap">
+  <div class="fab-search-pop" id="fab-search-pop">
+    <label>ค้นหางาน</label>
+    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="Ticket ID, ชื่อ, ประเภท…"/>
+    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+  </div>
+  <div class="fab-branch-top">
+    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
+    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
+    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
+  </div>
+  <div class="fab-branch-left" id="fab-pag-bar"></div>
+  <button class="fab-main" id="fab-main-btn">+</button>
+</div>
+
 <script>
 // ── State ─────────────────────────────────────────────────────
 let AUTH = null; // { token, user }
@@ -438,7 +459,7 @@ async function loadTickets(){
   try{
     const r = await fetch('/api/tickets', { headers:{'Authorization':'Bearer '+AUTH.token} });
     const d = await r.json();
-    if(d.ok){ tickets=d.tickets; renderList(); }
+    if(d.ok){ tickets=d.tickets||[]; renderList(); }
   }catch(_){}
 }
 
@@ -711,25 +732,99 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 (async()=>{
   if(await tryAutoLogin()) startApp();
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// FAB NAVIGATION PANEL — Engineer
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", (function(){
+  let engPage=1, engPerPage=10, fabOpen=false, fabSearchOpen=false, fabSearchQ='';
+
+  const fabWrap   = document.getElementById('eng-fab-wrap');
+  const fabMain   = document.getElementById('fab-main-btn');
+  const fabPagBar = document.getElementById('fab-pag-bar');
+  const searchPop = document.getElementById('fab-search-pop');
+  const searchInp = document.getElementById('fab-search-input');
+  const fabSBtn   = document.getElementById('fab-search-btn');
+
+  if(!fabWrap||!fabMain) return;
+
+  // ── Patch renderList with pagination + search ────────────────
+  const _orig = window.renderList;
+  window.renderList = function(){
+    let data = tickets;
+    if(filterStatus!=='all') data=data.filter(t=>t.status===filterStatus);
+    const ORDER={'แก้ไข':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'รอดำเนินการ ⏱️':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':4};
+    data.sort((a,b)=>(ORDER[a.status]??9)-(ORDER[b.status]??9));
+    if(fabSearchQ.trim()){
+      const q=fabSearchQ.toLowerCase();
+      data=data.filter(t=>String(t.id||'').toLowerCase().includes(q)||String(t.type||'').toLowerCase().includes(q)||String(t.detail||'').toLowerCase().includes(q)||String(t.reporter||'').toLowerCase().includes(q));
+    }
+    const pending=tickets.filter(t=>!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
+    document.getElementById('ticket-count').textContent=`${data.length} รายการ${pending?` (${pending} รอดำเนินการ)`:''}`;
+    if(!data.length){
+      document.getElementById('ticket-list').innerHTML='<div class="empty"><div class="empty-icon">✅</div><div>ไม่พบงาน</div></div>';
+      renderEngPag(0,1); return;
+    }
+    const tot=Math.max(1,Math.ceil(data.length/engPerPage));
+    engPage=Math.min(Math.max(engPage,1),tot);
+    const paged=data.slice((engPage-1)*engPerPage,engPage*engPerPage);
+    document.getElementById('ticket-list').innerHTML=paged.map(t=>{
+      const sc=statusColor(t.status);
+      return `<div class="eng-card" style="--status-color:${sc}" onclick="openDetail('${esc(t._recordId)}')"><div class="card-head"><div><div class="card-id">🎫 ${esc(t.id||t._recordId||'—')}</div><div class="card-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}</div></div><span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span></div><div class="card-type">${esc(t.type||'—')}</div><div class="card-detail">${esc(t.detail||'-')}</div><div class="card-meta"><span>👤 ${esc(t.reporter||'-')}</span><span>📅 ${esc(t.sentDate||'-')}</span><span>📍 ${esc(t.location||'-')}</span></div></div>`;
+    }).join('');
+    renderEngPag(data.length,tot);
+  };
+
+  // ── Render pagination in FAB ─────────────────────────────────
+  function renderEngPag(total,totalPages){
+    if(!fabPagBar) return;
+    const isFirst=engPage===1, isLast=engPage===totalPages;
+    function pageRange(cur,tot){
+      if(tot<=7) return Array.from({length:tot},(_,i)=>i+1);
+      const pages=[1]; let l=Math.max(2,cur-1),r=Math.min(tot-1,cur+1);
+      if(l>2) pages.push('…'); for(let i=l;i<=r;i++) pages.push(i);
+      if(r<tot-1) pages.push('…'); pages.push(tot); return pages;
+    }
+    let html=`<select class="fab-perpage" id="fab-perpage-sel"><option value="10"${engPerPage===10?' selected':''}>10/หน้า</option><option value="20"${engPerPage===20?' selected':''}>20/หน้า</option><option value="50"${engPerPage===50?' selected':''}>50/หน้า</option><option value="999"${engPerPage===999?' selected':''}>ทั้งหมด</option></select>`;
+    if(totalPages>1){
+      html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
+      html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
+      pageRange(engPage,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===engPage?' fab-active':''}" data-page="${p}">${p}</button>`; });
+      html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
+      html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
+    } else { html+=`<span style="font-size:12px;color:var(--fg2);padding:0 8px">${total} รายการ</span>`; }
+    fabPagBar.innerHTML=html;
+    const pp=document.getElementById('fab-perpage-sel');
+    if(pp) pp.onchange=function(){ engPerPage=Number(this.value)||10; engPage=1; renderList(); };
+  }
+
+  fabPagBar.addEventListener('click',e=>{
+    const btn=e.target.closest('button');
+    if(!btn||btn.classList.contains('fab-disabled')) return;
+    const page=btn.dataset.page, pag=btn.dataset.pag;
+    let data=tickets; if(filterStatus!=='all') data=data.filter(t=>t.status===filterStatus);
+    if(fabSearchQ.trim()){ const q=fabSearchQ.toLowerCase(); data=data.filter(t=>String(t.id||'').toLowerCase().includes(q)||String(t.type||'').toLowerCase().includes(q)); }
+    const tot=Math.max(1,Math.ceil(data.length/engPerPage));
+    if(page){ engPage=Number(page); } else { switch(pag){ case 'first':engPage=1;break; case 'prev':engPage=Math.max(1,engPage-1);break; case 'next':engPage=Math.min(tot,engPage+1);break; case 'last':engPage=tot;break; } }
+    renderList();
+    document.querySelector('.content')?.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  function openFab(){ fabOpen=true; fabWrap.classList.add('fab-open'); }
+  function closeFab(){ fabOpen=false; fabWrap.classList.remove('fab-open'); closeSearch(); }
+  function openSearch(){ openFab(); fabSearchOpen=true; searchPop.classList.add('fab-search-open'); setTimeout(()=>searchInp.focus(),60); }
+  function closeSearch(){ fabSearchOpen=false; searchPop.classList.remove('fab-search-open'); }
+
+  fabMain.addEventListener('click',e=>{ e.stopPropagation(); fabOpen?closeFab():openFab(); });
+  fabSBtn.addEventListener('click',e=>{ e.stopPropagation(); fabSearchOpen?closeSearch():openSearch(); });
+  document.getElementById('fab-to-top')?.addEventListener('click',()=>document.querySelector('.content')?.scrollTo({top:0,behavior:'smooth'}));
+  document.getElementById('fab-to-bottom')?.addEventListener('click',()=>{ const c=document.querySelector('.content'); if(c) c.scrollTo({top:c.scrollHeight,behavior:'smooth'}); });
+  searchInp.addEventListener('input',e=>{ fabSearchQ=e.target.value; engPage=1; renderList(); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#eng-fab-wrap')) closeFab(); });
+  document.querySelector('.content')?.addEventListener('scroll',()=>{ if(fabSearchOpen) closeSearch(); },{passive:true});
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFab(); });
+})());
 </script>
-<!-- ═══════════════════════════════════════════════════
-     FAB NAVIGATION PANEL (Engineer)
-     - search → กรอง tickets realtime
-     - pagination → แบ่งหน้า ticket-list
-═══════════════════════════════════════════════════ -->
-<div class="fab-wrap" id="eng-fab-wrap">
-  <div class="fab-search-pop" id="fab-search-pop">
-    <label>ค้นหางาน</label>
-    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="Ticket ID, ชื่อ, ประเภท…"/>
-    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
-  </div>
-  <div class="fab-branch-top">
-    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
-    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
-    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
-  </div>
-  <div class="fab-branch-left" id="fab-pag-bar"></div>
-  <button class="fab-main" id="fab-main-btn">+</button>
-</div>
+
 </body>
 </html>
