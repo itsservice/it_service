@@ -243,8 +243,10 @@ function toWriteFields(fields) {
     const fieldType = _fieldTypes[colName];
     if (fieldType === 'SingleSelect') {
       const validOpts = _fieldOptions[colName];
-      if (validOpts && validOpts.size > 0 && !validOpts.has(String(val))) {
-        console.warn(`[Lark] SingleSelect "${colName}" — value "${val}" not in options [${[...validOpts].join(',')}] — skipping`);
+      // รหัสสาขา และ ช่าง — อนุญาตให้ส่งแม้ไม่มีใน options (free text)
+      const ALLOW_FREE = new Set(['branchCode','engineerName','assignedTo']);
+      if (!ALLOW_FREE.has(key) && validOpts && validOpts.size > 0 && !validOpts.has(String(val))) {
+        console.warn(`[Lark] SingleSelect "${colName}" skip "${val}"`);
         continue;
       }
       out[colName] = String(val);
@@ -440,29 +442,12 @@ async function debugSchema() {
 }
 
 
-// ── Click Lark button field (trigger automation) ───────────────
-// Lark Base automation ปุ่มใช้ field type = button
-// การกดปุ่มทำได้โดย PATCH field ที่เป็น button type ด้วย value = true
+// ── clickButton: Lark ไม่รองรับกดปุ่มผ่าน API โดยตรง ──────────
+// ใช้ updateTicket แทน (status จะ trigger Lark automation เอง)
 async function clickButton(recordId, buttonFieldName) {
-  const token = await getToken();
-  const url = `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`;
-  const body = { fields: { [buttonFieldName]: true } };
-  try {
-    const r = await axios.patch(url, body, { headers: hdr(token), timeout: 10_000 });
-    console.log(`[Lark] clickButton "${buttonFieldName}" on ${recordId}:`, r.data?.code === 0 ? 'OK' : r.data?.msg);
-    return r.data?.code === 0;
-  } catch(e) {
-    console.error('[Lark] clickButton error:', e.response?.data || e.message);
-    return false;
-  }
+  console.log(`[Lark] clickButton skipped (not supported via API): "${buttonFieldName}"`);
+  return false;
 }
-
-// ── Button field names ในระบบ Lark (ตรงกับชื่อ column จริง) ──
-// ดูชื่อจริงได้ที่ /debug/lark-fields
-const LARK_BUTTONS = {
-  sendToAdmin:    process.env.LARK_BTN_SEND_ADMIN    || 'ปุ่มส่งงานช่าง',
-  done:           process.env.LARK_BTN_DONE          || 'ปุ่มเสร็จงาน',
-  changeEngineer: process.env.LARK_BTN_CHANGE_ENG    || 'ปุ่มเปลี่ยนช่าง',
-};
+const LARK_BUTTONS = { sendToAdmin:'', done:'', changeEngineer:'' };
 
 module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap, clickButton, LARK_BUTTONS, invalidateCache };
