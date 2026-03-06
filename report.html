@@ -501,16 +501,21 @@ async function searchById(rid){
 }
 
 function ticketCard(t, expanded=false){
-  // Timeline แสดงเฉพาะ 4 ขั้นตอนหลัก ลำดับที่ถูกต้อง
-  const TL = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
+  // Timeline 4 ขั้นตอน: รอ → กำลังทำ → ตรวจสอบ → เสร็จ
+  const TL        = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
   const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
   const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
-  // หา index ปัจจุบันใน timeline
-  let si = TL.indexOf(t.status||'');
-  if(si < 0 && ['แก้ไข'].includes(t.status)) si = -1; // ยังไม่เริ่ม
-  if(t.status === 'เสร็จสิ้น ✅') si = 3;
-  if(t.status === 'ยกเลิก ❌') si = -2; // cancelled
   const isCancelled = t.status === 'ยกเลิก ❌';
+  // Map สถานะ → index ใน TL
+  const STATUS_IDX = {
+    'แก้ไข': 0,
+    'รอดำเนินการ ⏱️': 0,
+    'อยู่ระหว่างดำเนินการ ⚙️': 1,
+    'ตรวจงาน': 2,
+    'เสร็จสิ้น ✅': 3,
+    'ยกเลิก ❌': -1,
+  };
+  const si = STATUS_IDX[t.status] ?? 0;
   const steps = TL.map((s,i)=>`
     <div class="tl-step ${isCancelled?'cancelled':(i<si?'done':i===si?'active':'')}">
       <div class="tl-dot">${isCancelled?'✕':i<si?'✓':i===si?TL_ICONS[i]:''}</div>
@@ -531,7 +536,7 @@ function ticketCard(t, expanded=false){
       <span>👤 ${esc(t.reporter||'-')}</span>
       <span>📅 ${esc(t.sentDate||'-')}</span>
       ${t.engineerName?`<span>🔧 ${esc(t.engineerName)}</span>`:''}
-      ${t.location && !t.location.startsWith('http')?`<span>📍 ${esc(t.location)}</span>`:''}
+      ${t.location && t.location.length < 100 && !t.location.startsWith('http')?`<span>📍 ${esc(t.location)}</span>`:''}
     </div>
     <div class="timeline">
       <div class="tl-title">สถานะงาน</div>
