@@ -115,3 +115,26 @@ app.use('/lark', larkWebhookRouter);
 app.use('/line', lineWebhookRouter);
 
 module.exports = app;
+
+// ─── DEBUG: ดูชื่อ field จริงจาก Lark (Super Admin only) ───
+const axios = require('axios');
+const { getTenantToken } = require('./larkService');
+
+app.get('/api/debug/lark-fields', async (_,res) => {
+  try {
+    const token = await getTenantToken();
+    // 1) List fields/columns
+    const fieldsR = await axios.get(
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/fields`,
+      { headers:{ Authorization:`Bearer ${token}` }, timeout:10_000 }
+    );
+    // 2) Get 3 sample records to see raw data
+    const recordsR = await axios.get(
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_APP_TOKEN}/tables/${process.env.LARK_TABLE_ID}/records`,
+      { headers:{ Authorization:`Bearer ${token}` }, params:{ page_size:3 }, timeout:10_000 }
+    );
+    const fieldList = fieldsR.data?.data?.items?.map(f => ({ name:f.field_name, type:f.type, id:f.field_id })) || [];
+    const sampleRaw = recordsR.data?.data?.items?.[0]?.fields || {};
+    res.json({ ok:true, columns: fieldList, sampleRecord: sampleRaw, totalRecords: recordsR.data?.data?.total });
+  } catch(err) { res.status(502).json({ ok:false, error:err.message }); }
+});
