@@ -25,7 +25,7 @@ const KEYWORDS = [
   // Ticket ID
   { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','number ticket','หมายเลข ticket','เลข ticket','ticket number','no.'] },
   // Status
-  { key: 'status',       words: ['status','สถานะ','state','สถานะงาน','สถานะ.'] },
+  { key: 'status',       words: ['status','สถานะ','state','สถานะงาน','สถานะ.','สถานะ '] },
   // Brand
   { key: 'brand',        words: ['brand','แบรนด์','แบรนด','brand name','บริษัท','ร้าน'] },
   // Branch
@@ -180,8 +180,29 @@ function toWriteFields(fields) {
 // ── ensureFieldMap ────────────────────────────────────────────
 async function ensureFieldMap() {
   if (_fieldMap && Object.keys(_fieldMap).length > 0) return;
-  console.log('[Lark] building fieldMap...');
-  await listTickets();
+  console.log('[Lark] fieldMap not ready — building from schema...');
+  try {
+    // ดึง schema โดยตรง ไม่ต้องรอ listTickets
+    const token = await getToken();
+    const axios = require('axios');
+    const r = await axios.get(
+      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`,
+      { headers: hdr(token), timeout: 10_000 }
+    );
+    const items = r.data.data?.items || [];
+    if (items.length) {
+      const fakeRecord = { record_id: 'fake', fields: {} };
+      items.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
+      _fieldMap = buildFieldMap(fakeRecord);
+      console.log('[Lark] fieldMap built from schema:', Object.keys(_fieldMap).length, 'fields');
+    } else {
+      // fallback: list tickets
+      await listTickets();
+    }
+  } catch(e) {
+    console.error('[Lark] ensureFieldMap error:', e.message);
+    await listTickets(); // fallback
+  }
 }
 
 // ── LIST tickets ───────────────────────────────────────────────
