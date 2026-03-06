@@ -3,7 +3,7 @@ const express  = require('express');
 const path     = require('path');
 const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs } = require('./auth');
 const { getAllUsers, getUserByUsername, createUser, updateUser, deleteUser } = require('./users');
-const { listTickets, getTicket, updateTicket, createTicket, debugSchema } = require('./larkService');
+const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap } = require('./larkService');
 const larkWebhookRouter = require('./larkWebhook');
 const lineWebhookRouter = require('./lineWebhook');
 
@@ -245,6 +245,17 @@ app.get('/debug/lark-fields', async (_, r) => {
 });
 
 // ── Webhooks ──────────────────────────────────────────────────
+// ── Pre-load fieldMap เมื่อ server start ──────────────────────
+// ทำให้ createTicket ทำงานได้ทันทีโดยไม่ต้องรอ
+setTimeout(async () => {
+  try {
+    await ensureFieldMap();
+    console.log('[App] fieldMap pre-loaded OK');
+  } catch(e) {
+    console.warn('[App] fieldMap pre-load failed:', e.message);
+  }
+}, 3000); // รอ 3 วิหลัง server start
+
 app.use('/lark', larkWebhookRouter);
 app.use('/line', lineWebhookRouter);
 
