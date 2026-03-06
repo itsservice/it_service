@@ -373,6 +373,15 @@ setTimeout(window.hideSplash, 8000);
           <span id="submit-text">📤 ส่งแจ้งปัญหา</span>
         </button>
       </div>
+      <div id="success-section" style="display:none;text-align:center;padding:32px 16px">
+        <div style="font-size:44px;margin-bottom:12px">✅</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">ส่งแจ้งปัญหาสำเร็จ!</div>
+        <div style="font-size:13px;color:var(--fg2);margin-bottom:16px">หมายเลขอ้างอิง: <span id="success-id" style="font-family:var(--font-mono);color:var(--accent)">—</span></div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-copy" id="btn-copy">คัดลอก</button>
+          <button class="btn-new" id="btn-new">แจ้งปัญหาใหม่</button>
+        </div>
+      </div>
       <div id="success-area" style="display:none"></div>
     </div>
 
@@ -402,6 +411,27 @@ setTimeout(window.hideSplash, 8000);
       </div>
     </div>
   </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     FAB NAVIGATION PANEL (Report)
+     - search popup → เชื่อม #f-search input เดิม
+     - pagination → แบ่งหน้าผลใน #track-result
+═══════════════════════════════════════════════════ -->
+<div class="fab-wrap" id="rpt-fab-wrap">
+  <div class="fab-search-pop" id="fab-search-pop">
+    <label>ค้นหา Ticket</label>
+    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, ประเภท…"/>
+    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+  </div>
+  <div class="fab-branch-top">
+    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
+    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
+    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
+  </div>
+  <div class="fab-branch-left" id="fab-pag-bar"></div>
+  <button class="fab-main" id="fab-main-btn">+</button>
 </div>
 
 <script>
@@ -684,15 +714,15 @@ function ticketCard(t, expanded=false){
 // ── Form ──────────────────────────────────────────────────────
 function showErr(msg){ const e=document.getElementById('form-error'); e.textContent='⚠️ '+msg; e.style.display='flex'; }
 function showSuccess(ticket){
-  document.getElementById('form-section').style.display='none';
+  document.getElementById('form-area').style.display='none';
   document.getElementById('success-section').style.display='block';
   document.getElementById('success-id').textContent = ticket.id || ticket._recordId || '—';
   saveHistory(ticket);
 }
 function resetForm(){
-  document.getElementById('form-section').style.display='block';
+  document.getElementById('form-area').style.display='block';
   document.getElementById('success-section').style.display='none';
-  document.getElementById('report-form').reset();
+  ['f-name','f-phone','f-branch','f-location','f-detail'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const fs=document.getElementById('f-type');if(fs)fs.selectedIndex=0;
   document.getElementById('char-num').textContent='0';
   document.getElementById('form-error').style.display='none';
 }
@@ -745,25 +775,85 @@ document.getElementById('btn-copy') && (document.getElementById('btn-copy').oncl
 document.getElementById('btn-new') && (document.getElementById('btn-new').onclick = resetForm);
 
 });
+
+// ═══════════════════════════════════════════════════════════════
+// FAB NAVIGATION PANEL — Report
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", (function(){
+  let rptPage=1, rptPerPage=20, fabOpen=false, fabSearchOpen=false;
+  let _lastRptTickets=[];
+
+  const fabWrap   = document.getElementById('rpt-fab-wrap');
+  const fabMain   = document.getElementById('fab-main-btn');
+  const fabPagBar = document.getElementById('fab-pag-bar');
+  const searchPop = document.getElementById('fab-search-pop');
+  const searchInp = document.getElementById('fab-search-input');
+  const fabSBtn   = document.getElementById('fab-search-btn');
+
+  if(!fabWrap||!fabMain) return;
+
+  // ── Patch renderGrouped to paginate ─────────────────────────
+  const _orig = window.renderGrouped;
+  window.renderGrouped = function(tickets){
+    _lastRptTickets = tickets;
+    const tot=Math.max(1,Math.ceil(tickets.length/rptPerPage));
+    rptPage=Math.min(Math.max(rptPage,1),tot);
+    const paged=tickets.slice((rptPage-1)*rptPerPage,rptPage*rptPerPage);
+    _orig(paged);
+    renderRptPag(tickets.length,tot);
+  };
+
+  function renderRptPag(total,totalPages){
+    if(!fabPagBar) return;
+    const isFirst=rptPage===1, isLast=rptPage===totalPages;
+    function pageRange(cur,tot){
+      if(tot<=7) return Array.from({length:tot},(_,i)=>i+1);
+      const pages=[1]; let l=Math.max(2,cur-1),r=Math.min(tot-1,cur+1);
+      if(l>2) pages.push('…'); for(let i=l;i<=r;i++) pages.push(i);
+      if(r<tot-1) pages.push('…'); pages.push(tot); return pages;
+    }
+    let html=`<select class="fab-perpage" id="fab-perpage-sel"><option value="10"${rptPerPage===10?' selected':''}>10/หน้า</option><option value="20"${rptPerPage===20?' selected':''}>20/หน้า</option><option value="50"${rptPerPage===50?' selected':''}>50/หน้า</option><option value="999"${rptPerPage===999?' selected':''}>ทั้งหมด</option></select>`;
+    if(totalPages>1){
+      html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
+      html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
+      pageRange(rptPage,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===rptPage?' fab-active':''}" data-page="${p}">${p}</button>`; });
+      html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
+      html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
+    } else { html+=`<span style="font-size:12px;color:var(--fg2);padding:0 8px">${total} รายการ</span>`; }
+    fabPagBar.innerHTML=html;
+    const pp=document.getElementById('fab-perpage-sel');
+    if(pp) pp.onchange=function(){ rptPerPage=Number(this.value)||20; rptPage=1; renderGrouped(_lastRptTickets); };
+  }
+
+  fabPagBar.addEventListener('click',e=>{
+    const btn=e.target.closest('button');
+    if(!btn||btn.classList.contains('fab-disabled')) return;
+    const page=btn.dataset.page, pag=btn.dataset.pag;
+    const tot=Math.max(1,Math.ceil(_lastRptTickets.length/rptPerPage));
+    if(page){ rptPage=Number(page); } else { switch(pag){ case 'first':rptPage=1;break; case 'prev':rptPage=Math.max(1,rptPage-1);break; case 'next':rptPage=Math.min(tot,rptPage+1);break; case 'last':rptPage=tot;break; } }
+    renderGrouped(_lastRptTickets);
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  function openFab(){ fabOpen=true; fabWrap.classList.add('fab-open'); }
+  function closeFab(){ fabOpen=false; fabWrap.classList.remove('fab-open'); closeSearch(); }
+  function openSearch(){ openFab(); fabSearchOpen=true; searchPop.classList.add('fab-search-open'); setTimeout(()=>searchInp.focus(),60); }
+  function closeSearch(){ fabSearchOpen=false; searchPop.classList.remove('fab-search-open'); }
+
+  fabMain.addEventListener('click',e=>{ e.stopPropagation(); fabOpen?closeFab():openFab(); });
+  fabSBtn.addEventListener('click',e=>{ e.stopPropagation(); fabSearchOpen?closeSearch():openSearch(); });
+  document.getElementById('fab-to-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  document.getElementById('fab-to-bottom')?.addEventListener('click',()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}));
+  searchInp.addEventListener('input',e=>{
+    const fs=document.getElementById('f-search');
+    if(fs){ fs.value=e.target.value; fs.dispatchEvent(new Event('input')); }
+    rptPage=1;
+  });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#rpt-fab-wrap')) closeFab(); });
+  window.addEventListener('scroll',()=>{ if(fabSearchOpen) closeSearch(); },{passive:true});
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFab(); });
+})());
 </script>
-<!-- ═══════════════════════════════════════════════════
-     FAB NAVIGATION PANEL (Report)
-     - search popup → เชื่อม #f-search input เดิม
-     - pagination → แบ่งหน้าผลใน #track-result
-═══════════════════════════════════════════════════ -->
-<div class="fab-wrap" id="rpt-fab-wrap">
-  <div class="fab-search-pop" id="fab-search-pop">
-    <label>ค้นหา Ticket</label>
-    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, ประเภท…"/>
-    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
-  </div>
-  <div class="fab-branch-top">
-    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
-    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
-    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
-  </div>
-  <div class="fab-branch-left" id="fab-pag-bar"></div>
-  <button class="fab-main" id="fab-main-btn">+</button>
-</div>
+
 </body>
 </html>
