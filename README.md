@@ -12,6 +12,16 @@
 - ***Au Bon Pain*** : *https://it-service-56im.onrender.com/report/Au%20Bon%20Pain*
 - ***Funky Fries*** : *https://it-service-56im.onrender.com/report/Funky%20Fries*
 ---
+|Page     | Brand                  | Web                                                                 |
+|         |------------------------|---------------------------------------------------------------------|
+|Admin    | `All Brand`            | *https://it-service-56im.onrender.com/admin*                        |
+|Engineer | `All Brand`            | *https://it-service-56im.onrender.com/engineer*                     |
+|Report   | `All Brand`            | *https://it-service-56im.onrender.com/report*                       |
+|├──      | `Dunkin'`              | *https://it-service-56im.onrender.com/report/Dunkin*                |
+|├──      | `Greyhound Cafe`       | *https://it-service-56im.onrender.com/report/Dunkin*                |
+|├──      | `Greyhound Original`   | *https://it-service-56im.onrender.com/report/Dunkin*                |
+|├──      | `Au Bon Pain`          | *https://it-service-56im.onrender.com/report/Dunkin*                |
+|└──      | `Funky Fries`          | *https://it-service-56im.onrender.com/report/Dunkin*                |
 
 # IT Ticket System v2
 
