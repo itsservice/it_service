@@ -14,7 +14,7 @@
 
 | Page     | Brand                  | Web                                                                   |
 |----------|------------------------|-----------------------------------------------------------------------|
-| Admin    | `All Brand`            | `*https://it-service-56im.onrender.com/admin*`                        |
+| Admin    | `All Brand`            | `https://it-service-56im.onrender.com/admin`                        |
 | Engineer | `All Brand`            | `*https://it-service-56im.onrender.com/engineer*`                     |
 | Report   | `All Brand`            | `*https://it-service-56im.onrender.com/report*`                       |
 | ├──      | `Dunkin'`              | `*https://it-service-56im.onrender.com/report/Dunkin*`                |
