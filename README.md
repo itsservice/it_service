@@ -1,28 +1,16 @@
 # Website 
-Page Report All Brand
+#### Page Report All Brand
 **https://it-service-56im.onrender.com/report**
 ---
-```bash
-***Dunkin'***
-  - *https://it-service-56im.onrender.com/report/Dunkin*
---- 
-***Greyhound Cafe***
-  - *https://it-service-56im.onrender.com/report/Greyhound%20Cafe*
+- ***Dunkin'*** : *https://it-service-56im.onrender.com/report/Dunkin*
+- ***Greyhound Cafe***  :*https://it-service-56im.onrender.com/report/Greyhound%20Cafe*
+- ***Greyhound Original*** : *https://it-service-56im.onrender.com/report/Greyhound%20Original*
+- ***Au Bon Pain*** : *https://it-service-56im.onrender.com/report/Au%20Bon%20Pain*
+- ***Funky Fries*** : *https://it-service-56im.onrender.com/report/Funky%20Fries*
 ---
-***Greyhound Original***
-  - *https://it-service-56im.onrender.com/report/Greyhound%20Original*
----
-***Au Bon Pain***
-  - *https://it-service-56im.onrender.com/report/Au%20Bon%20Pain*
----
-***Funky Fries***
-  - *https://it-service-56im.onrender.com/report/Funky%20Fries*
-```
-
-**Page Admin All Brand**
+#### Page Admin All Brand
 *https://it-service-56im.onrender.com/admin*
-
-**Page Engineer All Brand**
+#### Page Engineer All Brand 
 *https://it-service-56im.onrender.com/engineer*
 
 
