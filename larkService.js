@@ -2,6 +2,50 @@
 const axios = require('axios');
 const BASE = 'https://open.larksuite.com/open-apis';
 
+// ── Axios instance with aggressive timeouts ────────────────────
+// กัน Lark API ค้างทำให้ทุก request หยุดรอ
+const larkAxios = axios.create({
+  timeout: 12_000,          // 12s max per request
+  httpAgent:  new (require('http').Agent)({
+    keepAlive: true,
+    maxSockets: 10,          // จำกัด concurrent connections
+    timeout: 12_000,
+  }),
+  httpsAgent: new (require('https').Agent)({
+    keepAlive: true,
+    maxSockets: 10,
+    timeout: 12_000,
+  }),
+});
+
+// ── Circuit breaker กัน Lark ล่มทำให้ทุก request ค้าง ─────────
+let _circuitOpen = false;
+let _circuitFailCount = 0;
+let _circuitLastFail = 0;
+const CIRCUIT_THRESHOLD = 5;      // เปิด circuit หลังล้มเหลว 5 ครั้ง
+const CIRCUIT_RESET_MS  = 60_000; // ลอง reset หลัง 1 นาที
+
+function circuitCheck() {
+  if (!_circuitOpen) return;
+  if (Date.now() - _circuitLastFail > CIRCUIT_RESET_MS) {
+    console.log('[Lark] Circuit breaker RESET — retrying Lark API');
+    _circuitOpen = false;
+    _circuitFailCount = 0;
+  } else {
+    throw new Error('Lark API circuit open — service temporarily unavailable, retry in 1 min');
+  }
+}
+function circuitSuccess() { _circuitFailCount = 0; _circuitOpen = false; }
+function circuitFail(msg) {
+  _circuitFailCount++;
+  _circuitLastFail = Date.now();
+  if (_circuitFailCount >= CIRCUIT_THRESHOLD) {
+    if (!_circuitOpen) console.error(`[Lark] Circuit breaker OPEN after ${_circuitFailCount} failures`);
+    _circuitOpen = true;
+  }
+  throw new Error(msg);
+}
+
 let _token = null, _tokenExp = 0;
 let _fieldMap = null;    // internalKey → larkColumnName
 let _fieldTypes = {};    // larkColumnName → field ui_type
@@ -12,14 +56,21 @@ const CACHE_TTL = 30_000;
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
-  const r = await axios.post(`${BASE}/auth/v3/tenant_access_token/internal`, {
-    app_id: process.env.LARK_APP_ID,
-    app_secret: process.env.LARK_APP_SECRET,
-  }, { timeout: 10_000 });
-  if (r.data.code !== 0) throw new Error(`Lark auth: ${r.data.msg}`);
-  _token = r.data.tenant_access_token;
-  _tokenExp = Date.now() + r.data.expire * 1000;
-  return _token;
+  circuitCheck();
+  try {
+    const r = await larkAxios.post(`${BASE}/auth/v3/tenant_access_token/internal`, {
+      app_id: process.env.LARK_APP_ID,
+      app_secret: process.env.LARK_APP_SECRET,
+    });
+    if (r.data.code !== 0) circuitFail(`Lark auth: ${r.data.msg}`);
+    circuitSuccess();
+    _token = r.data.tenant_access_token;
+    _tokenExp = Date.now() + r.data.expire * 1000;
+    return _token;
+  } catch(e) {
+    if (!e.message.includes('circuit')) circuitFail(`Lark auth failed: ${e.message}`);
+    throw e;
+  }
 }
 const hdr = t => ({ Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' });
 const APP = () => process.env.LARK_APP_TOKEN;
@@ -278,9 +329,9 @@ async function ensureFieldMap(forceRebuild = false) {
 
     await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
       try {
-        const r = await axios.get(
+        const r = await larkAxios.get(
           `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`,
-          { headers: hdr(token), timeout: 10_000 }
+          { headers: hdr(token) }
         );
         const items = r.data.data?.items || [];
         if (!items.length) {
@@ -344,9 +395,9 @@ async function listTickets({ brand, status, noCache } = {}) {
     do {
       const params = { page_size: 100 };
       if (pt) params.page_token = pt;
-      const r = await axios.get(
+      const r = await larkAxios.get(
         `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`,
-        { headers: hdr(token), params, timeout: TABLE_TIMEOUT }
+        { headers: hdr(token), params, }
       );
       const items = r.data.data?.items || [];
       // Build fieldMap from first record if not yet built
@@ -389,9 +440,9 @@ async function listTickets({ brand, status, noCache } = {}) {
 async function getTicket(recordId, tableId) {
   const token = await getToken();
   const tbl = tableId || TBL();
-  const r = await axios.get(
+  const r = await larkAxios.get(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${tbl}/records/${recordId}`,
-    { headers: hdr(token), timeout: 10_000 }
+    { headers: hdr(token) }
   );
   if (r.data.code !== 0) throw new Error(`Lark get: ${r.data.msg}`);
   return parseRecord(r.data.data?.record || {});
@@ -414,10 +465,10 @@ async function updateTicket(recordId, fields) {
     return {};
   }
   console.log('[Lark] PUT', recordId, JSON.stringify(larkFields));
-  const r = await axios.put(
+  const r = await larkAxios.put(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`,
     { fields: larkFields },
-    { headers: hdr(token), timeout: 15_000 }
+    { headers: hdr(token) }
   );
   if (r.data.code !== 0) throw new Error(`Lark update: ${r.data.msg}`);
   invalidateCache();
@@ -477,10 +528,10 @@ async function createTicket(fields) {
 
   console.log('[Lark] POST ticket fields:', JSON.stringify(larkFields));
 
-  let r = await axios.post(
+  let r = await larkAxios.post(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
     { fields: larkFields },
-    { headers: hdr(token), timeout: 15_000 }
+    { headers: hdr(token) }
   );
 
   // Retry ถ้า SingleSelect error — ส่งเฉพาะ text fields
@@ -492,10 +543,10 @@ async function createTicket(fields) {
     larkFields = toWriteFields(safeFields);
     if (!Object.keys(larkFields).length) throw new Error(`Lark create: ${r.data.msg}`);
     console.log('[Lark] Retry POST (text-only):', JSON.stringify(larkFields));
-    r = await axios.post(
+    r = await larkAxios.post(
       `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
       { fields: larkFields },
-      { headers: hdr(token), timeout: 15_000 }
+      { headers: hdr(token) }
     );
   }
 
@@ -526,18 +577,18 @@ async function createTicket(fields) {
 
 async function debugSchema() {
   const token = await getToken();
-  const rf = await axios.get(
+  const rf = await larkAxios.get(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`,
-    { headers: hdr(token), timeout: 10_000 }
+    { headers: hdr(token) }
   );
   const schema = (rf.data.data?.items || []).map(f => ({
     name: f.field_name, type: f.type, ui_type: f.ui_type,
     mapped_to: detectKey(f.field_name) || '(unmapped)',
     options: f.property?.options?.map(o => o.name) || [],
   }));
-  const rr = await axios.get(
+  const rr = await larkAxios.get(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
-    { headers: hdr(token), params: { page_size: 1 }, timeout: 10_000 }
+    { headers: hdr(token), params: { page_size: 1 } }
   );
   const sample = rr.data.data?.items?.[0] ? parseRecord(rr.data.data.items[0]) : null;
   return { schema, fieldMap: _fieldMap, fieldTypes: _fieldTypes, sample };
