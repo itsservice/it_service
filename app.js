@@ -76,7 +76,14 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 // ── Tickets ───────────────────────────────────────────────────
 app.get('/api/tickets', async (req, res) => {
   try {
-    let tickets = await listTickets();
+    // timeout รวม 20s — ถ้า Lark ช้าเกินให้ return ของที่มีก่อน
+    let tickets = await Promise.race([
+      listTickets(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20_000))
+    ]).catch(async (e) => {
+      console.warn('[API] listTickets timeout/error:', e.message, '— returning cache or []');
+      return require('./larkService').listTickets({ noCache: false }).catch(() => []);
+    });
     const s = getSession((req.headers.authorization||'').slice(7));
     if (s && s.user.role==='engineer' && s.user.brand !== 'ALL') {
       tickets = tickets.filter(t => t.brand === s.user.brand);
