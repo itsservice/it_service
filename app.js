@@ -217,6 +217,40 @@ app.get('/debug/env', (_, res) => {
     nodeEnv:         process.env.NODE_ENV||'development',
   });
 });
+// ── DEBUG: ทดสอบดึงข้อมูลจากทุก table ──────────────────────────
+app.get('/debug/tables', async (_, res) => {
+  const { getToken } = require('./larkService');
+  const axios = require('axios');
+  const BASE = 'https://open.larksuite.com/open-apis';
+  const APP = process.env.LARK_APP_TOKEN;
+  const tables = [
+    { brand: "Dunkin'",            tableId: process.env.LARK_TABLE_DUNKIN || process.env.LARK_TABLE_ID },
+    { brand: "Greyhound Cafe",     tableId: process.env.LARK_TABLE_GREYHOUND_CAFE },
+    { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORI },
+    { brand: "Au Bon Pain",        tableId: process.env.LARK_TABLE_AU_BON_PAIN },
+    { brand: "Funky Fries",        tableId: process.env.LARK_TABLE_FUNKY_FRIES },
+  ];
+  try {
+    const token = await getToken();
+    const results = await Promise.allSettled(tables.map(async ({ brand, tableId }) => {
+      if (!tableId) return { brand, tableId: null, status: 'NO_ENV_VAR', count: 0 };
+      const r = await axios.get(
+        `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
+        { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 10 }, timeout: 10000 }
+      );
+      const count = r.data.data?.total || r.data.data?.items?.length || 0;
+      return { brand, tableId, status: 'OK', larkCode: r.data.code, count };
+    }));
+    res.json({
+      ok: true,
+      appToken: APP,
+      tables: results.map((r, i) => r.status === 'fulfilled' ? r.value : { brand: tables[i].brand, error: r.reason?.message })
+    });
+  } catch(e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 app.get('/debug/lark-fields', async (_, res) => {
   try { const d = await debugSchema(); res.json({ ok:true, ...d }); }
   catch(e) { res.json({ ok:false, error:e.message }); }
