@@ -222,7 +222,7 @@ app.get('/debug/env', (_, res) => {
 app.get('/debug/branches', async (_, res) => {
   try {
     const { listTickets } = require('./larkService');
-    const tickets = await listTickets({ noCache: true });
+    const tickets = await listTickets(); // ใช้ cache — ไม่ดึงใหม่
     const byBrand = {};
     tickets.forEach(t => {
       const b = t.brand || 'unknown';
