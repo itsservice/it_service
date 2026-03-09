@@ -100,28 +100,62 @@ app.get('/api/branches', async (req, res) => {
     const token = await getToken();
 
     const result = {};
+
+    // ── helper: fetch all pages from a table ────────────────────
+    async function fetchAllRecords(tableId) {
+      let all = [], pt;
+      do {
+        const r = await axios.get(
+          `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
+          { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 100, ...(pt?{page_token:pt}:{}) }, timeout: 12000 }
+        );
+        all = all.concat(r.data.data?.items || []);
+        pt = r.data.data?.has_more ? r.data.data.page_token : null;
+      } while (pt);
+      return all;
+    }
+
+    function parseBranchRecord(fields) {
+      const code   = fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
+      const nameTh = fields['ชื่อสาขา (Thai)'] || fields['Shop Name (Thai)'] || fields['ชื่อสาขา'] || '';
+      const nameEn = fields['ชื่อสาขา (English)'] || fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
+      return { code: String(code).trim(), nameTh: String(nameTh).replace(/^'+|'+$/g,'').trim(), nameEn: String(nameEn).replace(/^'+|'+$/g,'').trim() };
+    }
+
+    // ── Helper: extract text from Lark field (handles SingleSelect object) ─
+    function larkText(v) {
+      if (!v) return '';
+      if (typeof v === 'string') return v;
+      if (typeof v === 'object' && 'text' in v) return String(v.text || '');
+      if (Array.isArray(v) && v[0] && typeof v[0] === 'object' && 'text' in v[0]) return String(v[0].text || '');
+      return String(v);
+    }
+
+    // ── Master branch table (single table for all brands) ───────
+    const masterTableId = process.env.LARK_BRANCH_TABLE;
+    if (masterTableId) {
+      const items = await fetchAllRecords(masterTableId);
+      items.forEach(rec => {
+        const fields = rec.fields || {};
+        const rawBrand = fields['แบรนด์'] || fields['Brand'] || fields['brand'] || fields['บริษัท'] || '';
+        const brandVal = larkText(rawBrand).replace(/^'+|'+$/g,'').trim();
+        const b = parseBranchRecord(fields);
+        if (!b.code || !brandVal) return;
+        if (!result[brandVal]) result[brandVal] = [];
+        result[brandVal].push(b);
+      });
+      Object.keys(result).forEach(brand => console.log(`[Branches/master] ${brand}: ${result[brand].length} branches`));
+    }
+
+    // ── Per-brand tables (fill gaps not covered by master table) ─
     await Promise.allSettled(
-      BRANCH_TABLES.filter(b => b.tableId).map(async ({ brand, tableId }) => {
-        let all = [], pt;
-        do {
-          const r = await axios.get(
-            `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
-            { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 100, ...(pt?{page_token:pt}:{}) }, timeout: 12000 }
-          );
-          const items = r.data.data?.items || [];
-          items.forEach(rec => {
-            const fields = rec.fields || {};
-            // ใช้ "รหัสสาขา" เป็นหลัก — ไม่ใช้ "สาขา" (เป็น tag/option)
-            const code   = fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
-            const nameTh = fields['ชื่อสาขา (Thai)'] || fields['Shop Name (Thai)'] || fields['ชื่อสาขา'] || '';
-            const nameEn = fields['ชื่อสาขา (English)'] || fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
-            const codeStr = String(code).trim();
-            // กรองออก: ว่าง, มีช่องว่าง, หรือขึ้นต้นด้วย ' (single quote จาก Lark)
-            const isClean = codeStr.length > 0;
-            if (isClean) all.push({ code: codeStr, nameTh: String(nameTh).replace(/^'+|'+$/g,'').trim(), nameEn: String(nameEn).replace(/^'+|'+$/g,'').trim() });
-          });
-          pt = r.data.data?.has_more ? r.data.data.page_token : null;
-        } while (pt);
+      BRANCH_TABLES.filter(b => b.tableId && !result[b.brand]?.length).map(async ({ brand, tableId }) => {
+        const items = await fetchAllRecords(tableId);
+        const all = [];
+        items.forEach(rec => {
+          const b = parseBranchRecord(rec.fields || {});
+          if (b.code) all.push(b);
+        });
         result[brand] = all;
         console.log(`[Branches] ${brand}: ${all.length} branches`);
       })
