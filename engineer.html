@@ -383,21 +383,31 @@ function connectSSE(){
 }
 
 // ── Auth ───────────────────────────────────────────────────────
-async function tryAutoLogin(){
+async async function tryAutoLogin(){
   const saved = localStorage.getItem('eng_auth');
   if(!saved) return false;
   try{
     const { token } = JSON.parse(saved);
+    if(!token) { localStorage.removeItem('eng_auth'); return false; }
+    // ✅ timeout 8s — ถ้า server ยังไม่ตื่นให้ login ใหม่ทันที
     const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 12000);
-    const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token}, signal:ctrl.signal });
-    clearTimeout(tid);
-    const d = await r.json();
+    const tid = setTimeout(()=>ctrl.abort(), 8000);
+    let d;
+    try {
+      const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token}, signal:ctrl.signal });
+      clearTimeout(tid);
+      d = await r.json();
+    } catch(fetchErr) {
+      clearTimeout(tid);
+      console.warn('[AutoLogin] Server unreachable:', fetchErr.message);
+      localStorage.removeItem('eng_auth');
+      return false;
+    }
     if(d.ok && ['engineer','admin','superadmin','manager'].includes(d.user.role)){
       AUTH = { token, user: d.user };
       return true;
     }
-  }catch(_){}
+  }catch(e){ console.warn('[AutoLogin] Error:', e.message); }
   localStorage.removeItem('eng_auth');
   return false;
 }
