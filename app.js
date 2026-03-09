@@ -74,6 +74,65 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 });
 
 // ── Tickets ───────────────────────────────────────────────────
+// ── Branch list API ─────────────────────────────────────────
+// ดึงรายการสาขาจาก Lark Branch tables
+const BRANCH_TABLES = [
+  { brand: "Dunkin'",          tableId: process.env.LARK_BRANCH_DUNKIN },
+  { brand: "Greyhound Cafe",   tableId: process.env.LARK_BRANCH_GREYHOUND_CAFE },
+  { brand: "Greyhound Original",tableId: null },
+  { brand: "Au Bon Pain",      tableId: process.env.LARK_BRANCH_AU_BON_PAIN },
+  { brand: "Funky Fries",      tableId: process.env.LARK_BRANCH_FUNKY_FRIES },
+];
+
+let _branchCache = null, _branchCacheExp = 0;
+
+app.get('/api/branches', async (req, res) => {
+  try {
+    // cache 10 นาที
+    if (_branchCache && Date.now() < _branchCacheExp) {
+      return res.json({ ok:true, branches: _branchCache });
+    }
+    const { getToken } = require('./larkService');
+    const axios = require('axios');
+    const BASE  = 'https://open.larksuite.com/open-apis';
+    const APP   = process.env.LARK_APP_TOKEN;
+    const token = await getToken();
+
+    const result = {};
+    await Promise.allSettled(
+      BRANCH_TABLES.filter(b => b.tableId).map(async ({ brand, tableId }) => {
+        let all = [], pt;
+        do {
+          const r = await axios.get(
+            `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
+            { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 100, ...(pt?{page_token:pt}:{}) }, timeout: 12000 }
+          );
+          const items = r.data.data?.items || [];
+          items.forEach(rec => {
+            const fields = rec.fields || {};
+            // หา field ชื่อ "สาขา" หรือ "รหัสสาขา" หรือ "Shop Code"
+            const code = fields['สาขา'] || fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
+            const nameTh = fields['ชื่อสาขา (Thai)'] || fields['Shop Name (Thai)'] || fields['ชื่อสาขา'] || '';
+            const nameEn = fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
+            const codeStr = String(code).trim();
+            if (codeStr) all.push({ code: codeStr, nameTh: String(nameTh).trim(), nameEn: String(nameEn).trim() });
+          });
+          pt = r.data.data?.has_more ? r.data.data.page_token : null;
+        } while (pt);
+        result[brand] = all;
+        console.log(`[Branches] ${brand}: ${all.length} branches`);
+      })
+    );
+
+    _branchCache = result;
+    _branchCacheExp = Date.now() + 10 * 60 * 1000;
+    res.json({ ok:true, branches: result });
+  } catch(e) {
+    console.error('[Branches] error:', e.message);
+    res.json({ ok:false, error: e.message });
+  }
+});
+
 app.get('/api/tickets', async (req, res) => {
   try {
     // timeout รวม 20s — ถ้า Lark ช้าเกินให้ return ของที่มีก่อน
