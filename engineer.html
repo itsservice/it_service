@@ -18,6 +18,22 @@
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
   --font-th:'Noto Sans Thai',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
+/* ── Light mode ─────────────────────────────── */
+body.theme-light{
+  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
+  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
+  --accent:#00b87a;--accent2:#1d6ff0;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;
+}
+body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18)}
+/* ── Theme toggle button ────────────────────── */
+.btn-theme-eng{
+  background:transparent;border:1px solid var(--b2);
+  border-radius:8px;color:var(--fg2);font-size:18px;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.btn-theme-eng:hover{background:var(--b1);color:var(--fg)}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:15px;-webkit-font-smoothing:antialiased}
 
 /* LOGIN */
@@ -277,6 +293,7 @@ setTimeout(window.hideSplash, 3000);
     </div>
     <span class="topbar-badge" id="tb-brand">—</span>
     <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
+    <button class="btn-theme-eng" id="btn-theme-eng" onclick="toggleTheme()" title="เปลี่ยนธีม"><span id="theme-icon-eng">☀️</span></button>
     <button class="btn-logout" id="btn-logout">Log out</button>
   </div>
 
@@ -465,6 +482,25 @@ async function startApp(){
 }
 
 // Logout
+// ════════════════════════════════════════════════════════════════
+// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
+// ════════════════════════════════════════════════════════════════
+function applyTheme(mode) {
+  const isLight = mode === 'light';
+  document.body.classList.toggle('theme-light', isLight);
+  const icon = document.getElementById('theme-icon-eng');
+  if (icon) icon.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('eng_theme', mode);
+}
+function toggleTheme() {
+  const current = localStorage.getItem('eng_theme') || 'light';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+(function initTheme() {
+  const saved = localStorage.getItem('eng_theme') || 'light';
+  applyTheme(saved);
+})();
+
 [document.getElementById('btn-logout'), document.getElementById('btn-logout2')].forEach(btn => {
   btn.onclick = async () => {
     try{ await fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+AUTH.token}}); }catch(_){}
