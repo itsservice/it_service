@@ -320,7 +320,7 @@ async function ensureFieldMap() {
       try {
         const r = await axios.get(
           `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`,
-          { headers: hdr(token), timeout: 10_000 }
+          { headers: hdr(token), timeout: 8_000 }
         );
         const items = r.data.data?.items || [];
         if (!items.length) return;
@@ -371,41 +371,38 @@ async function listTickets({ brand, status, noCache } = {}) {
   const tables = BRAND_TABLES();
   let allTickets = [];
 
-  // ดึงจากทุก table (ทุกแบรนด์) พร้อมกัน
-  await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
+  // ดึงจากทุก table พร้อมกัน — ใช้ allSettled ไม่บล็อกถ้า table ใดล้มเหลว
+  const TABLE_TIMEOUT = 12_000; // 12 วิ ต่อ table
+  const fetchTable = async ({ brand: brandName, tableId }) => {
     let all = [], pt;
-    try {
-      do {
-        const params = { page_size: 100 };
-        if (pt) params.page_token = pt;
-        const r = await axios.get(
-          `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`,
-          { headers: hdr(token), params, timeout: 15_000 }
-        );
-        const items = r.data.data?.items || [];
-        if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
-        // build optionMap from any SingleSelect fields found in records
-        items.forEach(rec => {
-          Object.values(rec.fields || {}).forEach(v => {
-            if (v && typeof v === 'string' && v.startsWith('opt') && !_optionMap[v]) {
-              // unknown option — will show raw until ensureFieldMap resolves
-            }
-          });
-        });
-        const parsed = items.map(rec => {
-          const t = parseRecord(rec);
-          // ถ้า brand field ว่าง → ใส่ชื่อแบรนด์จาก table map
-          if (!t.brand) t.brand = brandName;
-          return t;
-        });
-        all = all.concat(parsed);
-        pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
-      } while (pt);
-      allTickets = allTickets.concat(all);
-    } catch(e) {
-      console.error(`[Lark] failed to fetch table ${brandName} (${tableId}):`, e.message);
-    }
-  }));
+    do {
+      const params = { page_size: 100 };
+      if (pt) params.page_token = pt;
+      const r = await axios.get(
+        `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`,
+        { headers: hdr(token), params, timeout: TABLE_TIMEOUT }
+      );
+      const items = r.data.data?.items || [];
+      if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
+      const parsed = items.map(rec => {
+        const t = parseRecord(rec);
+        if (!t.brand) t.brand = brandName;
+        return t;
+      });
+      all = all.concat(parsed);
+      pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
+    } while (pt);
+    console.log(`[Lark] fetched ${all.length} tickets from ${brandName}`);
+    return all;
+  };
+
+  const results = await Promise.allSettled(
+    tables.map(t => fetchTable(t))
+  );
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') allTickets = allTickets.concat(r.value);
+    else console.error(`[Lark] ${tables[i].brand} failed:`, r.reason?.message);
+  });
 
   // sort by id desc
   allTickets.sort((a, b) => {
