@@ -12,6 +12,22 @@ const app = express();
 app.use(express.json({ limit:'10mb', verify:(req,_,buf)=>{ req.rawBody=buf; } }));
 app.use(express.urlencoded({ extended:true }));
 
+// ── Request timeout middleware — กัน request ค้างนาน ─────────────
+// ทุก API ถ้าไม่ตอบใน 25s จะ return error อัตโนมัติ
+app.use((req, res, next) => {
+  // ยกเว้น SSE (event stream ต้อง long-lived)
+  if (req.path === '/api/events') return next();
+  const timer = setTimeout(() => {
+    if (!res.headersSent) {
+      console.warn(`[Timeout] ${req.method} ${req.path} — no response in 25s`);
+      res.status(503).json({ ok: false, error: 'Request timeout — please retry' });
+    }
+  }, 25_000);
+  res.on('finish', () => clearTimeout(timer));
+  res.on('close',  () => clearTimeout(timer));
+  next();
+});
+
 // ── SSE ──────────────────────────────────────────────────────
 const clients = new Set();
 function broadcast(evt, data) {
@@ -29,7 +45,16 @@ app.get('/api/events', (req, res) => {
 });
 
 // ── Static pages ─────────────────────────────────────────────
-app.get('/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
+// Health check — lightweight, used by keep-alive and monitoring
+app.get('/health', (_, res) => {
+  const mb = process.memoryUsage().heapUsed / 1024 / 1024;
+  res.json({
+    ok:     true,
+    ts:     Date.now(),
+    uptime: Math.floor(process.uptime()),
+    memory: `${mb.toFixed(0)}MB`,
+  });
+});
 app.get('/', (_, res) => res.redirect('/report'));
 
 const noCacheHtml = (file) => (_, res) => {
@@ -165,12 +190,17 @@ app.get('/api/branches', async (req, res) => {
 // ── Tickets ───────────────────────────────────────────────────
 app.get('/api/tickets', async (req, res) => {
   try {
+    // ✅ ลด timeout เป็น 15s (เดิม 20s) — ถ้าค้างให้ return cache ทันที
     let tickets = await Promise.race([
       listTickets(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20_000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Lark timeout')), 15_000))
     ]).catch(async (e) => {
-      console.warn('[API] listTickets timeout/error:', e.message, '— returning cache or []');
-      return require('./larkService').listTickets({ noCache: false }).catch(() => []);
+      console.warn('[API] listTickets error:', e.message, '— using stale cache');
+      // ✅ ถ้า Lark ช้าหรือล่ม ส่ง cache เก่าคืนทันที ไม่รอ
+      try {
+        const { listTickets: lt } = require('./larkService');
+        return await lt({ noCache: false }) || [];
+      } catch(_) { return []; }
     });
     const s = getSession((req.headers.authorization||'').slice(7));
     if (s && s.user.role==='engineer' && s.user.brand !== 'ALL') {
