@@ -348,8 +348,16 @@ setTimeout(window.hideSplash, 3000);
         <div class="form-row">
           <div class="form-group" style="position:relative">
             <label>รหัสสาขา</label>
-            <input type="text" id="f-branch" placeholder="พิมพ์หรือเลือกสาขา" autocomplete="off"/>
-            <div id="branch-suggest-form" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;margin-top:2px"></div>
+            <div style="position:relative">
+              <input type="text" id="f-branch" placeholder="พิมพ์หรือกดเลือกสาขา" autocomplete="off"
+                style="width:100%;padding-right:40px"
+                oninput="showBranchDropdown('f-branch','branch-dd-form','f-brand')"
+                onfocus="showBranchDropdown('f-branch','branch-dd-form','f-brand')"
+                onblur="setTimeout(()=>hideBranchDropdown('branch-dd-form'),200)"/>
+              <span onclick="toggleBranchDropdown('f-branch','branch-dd-form','f-brand')"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fg3);font-size:14px;user-select:none">▼</span>
+              <div id="branch-dd-form" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1,#333);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>ประเภทปัญหา <span class="req">*</span></label>
@@ -375,7 +383,7 @@ setTimeout(window.hideSplash, 3000);
           <label>สถานที่/โซน</label>
           <div style="display:flex;gap:6px;align-items:center">
             <input type="text" id="f-location" placeholder="เช่น ชั้น 2 / ครัว / เคาน์เตอร์" style="flex:1"/>
-            <button type="button" id="btn-geo" onclick="getGeoLocation()" title="ระบุตำแหน่งปัจจุบัน" style="padding:0 12px;height:40px;background:var(--bg3,#1a1a22);border:1px solid var(--b1);border-radius:8px;color:var(--fg1);cursor:pointer;font-size:16px;white-space:nowrap">📍</button>
+            <button type="button" id="btn-geo" onclick="openLocationPicker()" title="เลือกตำแหน่งจากแผนที่" style="padding:0 14px;height:40px;background:var(--accent,#00e5a0);border:none;border-radius:8px;color:#000;cursor:pointer;font-size:14px;font-weight:700;white-space:nowrap">📍 เลือก</button>
           </div>
           <div id="geo-status" style="font-size:11px;color:var(--fg3);margin-top:4px;display:none"></div>
         </div>
@@ -420,8 +428,13 @@ setTimeout(window.hideSplash, 3000);
           <option value="Funky Fries">Funky Fries</option>
         </select>
         <div style="position:relative;flex:1">
-          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required autocomplete="off" style="width:100%"/>
-          <div id="branch-suggest-track" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto"></div>
+          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา" autocomplete="off" style="width:100%;padding-right:36px"
+            oninput="showBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
+            onfocus="showBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
+            onblur="setTimeout(()=>hideBranchDropdown('branch-dd-track'),200)"/>
+          <span onclick="toggleBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fg3);font-size:13px;user-select:none">▼</span>
+          <div id="branch-dd-track" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1,#333);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
         </div>
       </div>
       <div class="search-hint" id="filter-hint" style="color:#ff8099;display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
@@ -540,8 +553,7 @@ async function loadTickets(){
   renderHistory();
   window.hideSplash?.();
   // init branch suggest dropdowns
-  buildBranchSuggest('f-branch',        'branch-suggest-form',  'f-brand');
-  buildBranchSuggest('f-filter-branch', 'branch-suggest-track', 'f-filter-brand'); // แสดง UI ก่อนเลย
+  // branch dropdowns are event-driven (onfocus/oninput/onclick) // แสดง UI ก่อนเลย
   try{
     await loadTickets();
     renderHistory();
@@ -804,64 +816,95 @@ function saveHistory(ticket){
   try{ localStorage.setItem(key, JSON.stringify(h)); }catch(_){}
 }
 
-// ── Branch suggestions ────────────────────────────────────────
-// ดึงรายการสาขาจาก allTickets แล้วแสดงเป็น dropdown
-function buildBranchSuggest(inputId, suggestId, brandSelectId){
-  const inp = document.getElementById(inputId);
-  const sug = document.getElementById(suggestId);
-  if(!inp || !sug) return;
-
-  inp.addEventListener('input', ()=>{
-    const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
-    const q = inp.value.toLowerCase().trim();
-    // เก็บสาขาไม่ซ้ำจาก allTickets + localStorage
-    const localH = (() => { try{ return JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){ return []; } })();
-    const allSrc = [...allTickets, ...localH];
-    let branches = [...new Set(
-      allSrc
-        .filter(t => !brand || (t.brand||'').toLowerCase()===brand.toLowerCase())
-        .map(t => t.branchCode||'')
-        .filter(Boolean)
-    )].sort();
-    if(q) branches = branches.filter(b => b.toLowerCase().includes(q));
-    if(!branches.length){ sug.style.display='none'; return; }
-    sug.innerHTML = branches.slice(0,20).map(b =>
-      `<div onclick="pickBranch('${inputId}','${suggestId}','${b.replace(/'/g,"\'")}');return false"
-        style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--b1,#333)"
-        onmouseover="this.style.background='var(--bg3,#222)'" onmouseout="this.style.background=''">${b}</div>`
-    ).join('');
-    sug.style.display='block';
-  });
-
-  inp.addEventListener('blur', ()=>{ setTimeout(()=>{ sug.style.display='none'; }, 200); });
-  inp.addEventListener('focus', ()=>{ if(inp.value) inp.dispatchEvent(new Event('input')); });
+// ── Branch Dropdown ───────────────────────────────────────────
+function getBranchList(brand){
+  const localH = (() => { try{ return JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){ return []; } })();
+  const allSrc = [...allTickets, ...localH];
+  return [...new Set(
+    allSrc
+      .filter(t => !brand || (t.brand||'').toLowerCase()===brand.toLowerCase())
+      .map(t => (t.branchCode||'').trim())
+      .filter(Boolean)
+  )].sort();
 }
-function pickBranch(inputId, suggestId, val){
+
+function renderBranchDD(ddId, inputId, brand, q=''){
+  const dd = document.getElementById(ddId);
+  if(!dd) return;
+  let branches = getBranchList(brand);
+  if(q) branches = branches.filter(b => b.toLowerCase().includes(q.toLowerCase()));
+  if(!branches.length){
+    dd.innerHTML='<div style="padding:12px 14px;color:var(--fg3);font-size:13px">ไม่พบสาขา</div>';
+    dd.style.display='block';
+    return;
+  }
+  dd.innerHTML = branches.slice(0,30).map(b =>
+    `<div onmousedown="pickBranchDD('${inputId}','${ddId}','${b.replace(/'/g,"\'")}')"
+      style="padding:11px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--b1,#2a2a35);transition:background .12s"
+      onmouseover="this.style.background='var(--bg3,#23232f)'"
+      onmouseout="this.style.background=''">
+      <span style="font-family:var(--font-m,monospace);color:var(--accent)">${b}</span>
+    </div>`
+  ).join('');
+  dd.style.display='block';
+}
+
+function showBranchDropdown(inputId, ddId, brandSelectId){
+  const inp   = document.getElementById(inputId);
+  const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
+  renderBranchDD(ddId, inputId, brand, inp?.value||'');
+}
+
+function hideBranchDropdown(ddId){
+  const dd = document.getElementById(ddId);
+  if(dd) dd.style.display='none';
+}
+
+function toggleBranchDropdown(inputId, ddId, brandSelectId){
+  const dd = document.getElementById(ddId);
+  if(dd && dd.style.display !== 'none'){
+    dd.style.display='none';
+  } else {
+    showBranchDropdown(inputId, ddId, brandSelectId);
+    document.getElementById(inputId)?.focus();
+  }
+}
+
+function pickBranchDD(inputId, ddId, val){
   document.getElementById(inputId).value = val;
-  document.getElementById(suggestId).style.display='none';
-  // trigger search if in track tab
-  if(inputId === 'f-filter-branch') triggerSearch();
+  document.getElementById(ddId).style.display='none';
+  if(inputId==='f-filter-branch') triggerSearch();
 }
 
-// ── Geolocation ───────────────────────────────────────────────
-function getGeoLocation(){
+// ── Location Picker ───────────────────────────────────────────
+function openLocationPicker(){
   const btn = document.getElementById('btn-geo');
   const st  = document.getElementById('geo-status');
-  if(!navigator.geolocation){ if(st){ st.textContent='เบราว์เซอร์ไม่รองรับ GPS'; st.style.display='block'; } return; }
-  if(btn) btn.textContent='⏳';
-  if(st){ st.textContent='กำลังระบุตำแหน่ง...'; st.style.display='block'; }
+  if(!navigator.geolocation){
+    // fallback: เปิด Google Maps ให้เลือกเอง
+    window.open('https://maps.google.com','_blank');
+    if(st){ st.textContent='กรุณาคัดลอก URL จาก Google Maps มาวาง'; st.style.display='block'; }
+    return;
+  }
+  if(btn){ btn.disabled=true; btn.textContent='⏳ รอ...'; }
+  if(st){ st.textContent='กำลังระบุตำแหน่ง GPS...'; st.style.display='block'; st.style.color='var(--fg3)'; }
   navigator.geolocation.getCurrentPosition(
     pos => {
       const lat = pos.coords.latitude.toFixed(6);
       const lng = pos.coords.longitude.toFixed(6);
-      const url = `https://maps.google.com/?q=${lat},${lng}`;
-      document.getElementById('f-location').value = url;
-      if(btn) btn.textContent='📍';
-      if(st){ st.textContent=`✅ ตำแหน่ง: ${lat}, ${lng}`; st.style.display='block'; }
+      const mapsUrl = `https://maps.google.com/maps?q=${lat},${lng}`;
+      document.getElementById('f-location').value = mapsUrl;
+      if(btn){ btn.disabled=false; btn.textContent='📍 เลือก'; }
+      if(st){
+        st.innerHTML = `✅ <a href="${mapsUrl}" target="_blank" style="color:var(--accent)">เปิดดูแผนที่</a> · ${lat}, ${lng}`;
+        st.style.display='block'; st.style.color='var(--accent)';
+      }
     },
     err => {
-      if(btn) btn.textContent='📍';
-      if(st){ st.textContent='❌ ไม่สามารถระบุตำแหน่งได้ กรุณากรอกเอง'; st.style.display='block'; }
+      // ถ้า GPS ไม่ได้ → เปิด maps.google.com ให้ค้นหาและ copy URL
+      if(btn){ btn.disabled=false; btn.textContent='📍 เลือก'; }
+      if(st){ st.textContent='⚠️ GPS ไม่ได้ — กรอกสถานที่เองหรือวาง Google Maps URL'; st.style.display='block'; st.style.color='#ff8099'; }
+      window.open('https://maps.google.com','_blank');
     },
     { timeout:10000, enableHighAccuracy:true }
   );
