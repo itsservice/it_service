@@ -170,6 +170,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 }
 .history-item:last-child{border-bottom:none}
 .history-item:hover{background:var(--bg3,#1a1a22)}
+.branch-sug-item:hover{background:var(--bg3,#222)}
 .hi-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);flex:1}
 .hi-brand{font-size:12px;color:var(--fg2)}
 .hi-status{margin-left:auto}
@@ -345,9 +346,10 @@ setTimeout(window.hideSplash, 3000);
           </select>
         </div>
         <div class="form-row">
-          <div class="form-group">
+          <div class="form-group" style="position:relative">
             <label>รหัสสาขา</label>
-            <input type="text" id="f-branch" placeholder="เช่น 3333"/>
+            <input type="text" id="f-branch" placeholder="พิมพ์หรือเลือกสาขา" autocomplete="off"/>
+            <div id="branch-suggest-form" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;margin-top:2px"></div>
           </div>
           <div class="form-group">
             <label>ประเภทปัญหา <span class="req">*</span></label>
@@ -371,7 +373,11 @@ setTimeout(window.hideSplash, 3000);
         </div>
         <div class="form-group">
           <label>สถานที่/โซน</label>
-          <input type="text" id="f-location" placeholder="เช่น ชั้น 2 / ครัว / เคาน์เตอร์"/>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="f-location" placeholder="เช่น ชั้น 2 / ครัว / เคาน์เตอร์" style="flex:1"/>
+            <button type="button" id="btn-geo" onclick="getGeoLocation()" title="ระบุตำแหน่งปัจจุบัน" style="padding:0 12px;height:40px;background:var(--bg3,#1a1a22);border:1px solid var(--b1);border-radius:8px;color:var(--fg1);cursor:pointer;font-size:16px;white-space:nowrap">📍</button>
+          </div>
+          <div id="geo-status" style="font-size:11px;color:var(--fg3);margin-top:4px;display:none"></div>
         </div>
         <div class="form-group">
           <label>รายละเอียดปัญหา <span class="req">*</span></label>
@@ -396,12 +402,16 @@ setTimeout(window.hideSplash, 3000);
 
     <!-- TRACK TAB -->
     <div class="section" id="tab-track">
-      <div class="filter-row">
+      <!-- บรรทัด 1: ค้นหาด้วย Ticket ID -->
+      <div class="filter-row" style="margin-bottom:8px">
         <div class="search-wrap" style="flex:1">
           <span class="search-icon">🔍</span>
-          <input class="search-input" id="track-input" type="text" placeholder="Ticket ID / เบอร์ / ชื่อ (ไม่บังคับ)"/>
+          <input class="search-input" id="track-input" type="text" placeholder="ค้นหาด้วย Ticket ID / เบอร์โทร (ไม่บังคับ)"/>
         </div>
-        <select class="filter-select" id="f-filter-brand" required>
+      </div>
+      <!-- บรรทัด 2: แบรนด์ + สาขา -->
+      <div class="filter-row">
+        <select class="filter-select" id="f-filter-brand" required style="flex:1">
           <option value="">— แบรนด์ —</option>
           <option value="Dunkin'">Dunkin'</option>
           <option value="Greyhound Cafe">Greyhound Cafe</option>
@@ -409,7 +419,10 @@ setTimeout(window.hideSplash, 3000);
           <option value="Au Bon Pain">Au Bon Pain</option>
           <option value="Funky Fries">Funky Fries</option>
         </select>
-        <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required/>
+        <div style="position:relative;flex:1">
+          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required autocomplete="off" style="width:100%"/>
+          <div id="branch-suggest-track" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto"></div>
+        </div>
       </div>
       <div class="search-hint" id="filter-hint" style="color:#ff8099;display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
       <div class="search-hint" id="filter-hint-ok" style="display:none">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
@@ -525,7 +538,10 @@ async function loadTickets(){
 (async()=>{
   // แสดงหน้าทันที แล้วโหลด data ใน background
   renderHistory();
-  window.hideSplash?.(); // แสดง UI ก่อนเลย
+  window.hideSplash?.();
+  // init branch suggest dropdowns
+  buildBranchSuggest('f-branch',        'branch-suggest-form',  'f-brand');
+  buildBranchSuggest('f-filter-branch', 'branch-suggest-track', 'f-filter-brand'); // แสดง UI ก่อนเลย
   try{
     await loadTickets();
     renderHistory();
@@ -579,7 +595,12 @@ function triggerSearch(){
   trackTimer = setTimeout(()=>doSearch(q, brand, branch), 300);
 }
 document.getElementById('track-input').oninput = triggerSearch;
-document.getElementById('f-filter-brand').onchange = triggerSearch;
+document.getElementById('f-filter-brand').onchange = function(){
+  triggerSearch();
+  // rebuild branch suggest for new brand
+  const inp = document.getElementById('f-filter-branch');
+  if(inp) inp.dispatchEvent(new Event('input'));
+};
 document.getElementById('f-filter-branch').oninput = triggerSearch;
 
 async function doSearch(q, brand, branch){
@@ -685,7 +706,7 @@ async function renderHistory(){
     return live ? { ...h, status: live.status, type: live.type } : h;
   });
 
-  const rows = enriched.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
+  const rows = enriched.map(h=>`<div class="history-item" onclick="searchByIdAndSwitch('${esc(h._recordId||h.id)}')" style="cursor:pointer">
     <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden">
       <div style="display:flex;align-items:center;gap:6px">
         <span class="hi-id">🎫 ${esc(h.id||'—')}</span>
@@ -694,7 +715,10 @@ async function renderHistory(){
       </div>
       <span style="font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span>
     </div>
-    <span class="hi-status"><span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'รอดำเนินการ ⏱️')}</span></span>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'รอดำเนินการ ⏱️')}</span>
+      <span style="color:var(--fg3);font-size:14px">›</span>
+    </div>
   </div>`).join('');
 
   el.innerHTML=`<div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
@@ -779,6 +803,83 @@ function saveHistory(ticket){
   h = h.slice(0,30); // เก็บสูงสุด 30 รายการ
   try{ localStorage.setItem(key, JSON.stringify(h)); }catch(_){}
 }
+
+// ── Branch suggestions ────────────────────────────────────────
+// ดึงรายการสาขาจาก allTickets แล้วแสดงเป็น dropdown
+function buildBranchSuggest(inputId, suggestId, brandSelectId){
+  const inp = document.getElementById(inputId);
+  const sug = document.getElementById(suggestId);
+  if(!inp || !sug) return;
+
+  inp.addEventListener('input', ()=>{
+    const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
+    const q = inp.value.toLowerCase().trim();
+    // เก็บสาขาไม่ซ้ำจาก allTickets + localStorage
+    const localH = (() => { try{ return JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){ return []; } })();
+    const allSrc = [...allTickets, ...localH];
+    let branches = [...new Set(
+      allSrc
+        .filter(t => !brand || (t.brand||'').toLowerCase()===brand.toLowerCase())
+        .map(t => t.branchCode||'')
+        .filter(Boolean)
+    )].sort();
+    if(q) branches = branches.filter(b => b.toLowerCase().includes(q));
+    if(!branches.length){ sug.style.display='none'; return; }
+    sug.innerHTML = branches.slice(0,20).map(b =>
+      `<div onclick="pickBranch('${inputId}','${suggestId}','${b.replace(/'/g,"\'")}');return false"
+        style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--b1,#333)"
+        onmouseover="this.style.background='var(--bg3,#222)'" onmouseout="this.style.background=''">${b}</div>`
+    ).join('');
+    sug.style.display='block';
+  });
+
+  inp.addEventListener('blur', ()=>{ setTimeout(()=>{ sug.style.display='none'; }, 200); });
+  inp.addEventListener('focus', ()=>{ if(inp.value) inp.dispatchEvent(new Event('input')); });
+}
+function pickBranch(inputId, suggestId, val){
+  document.getElementById(inputId).value = val;
+  document.getElementById(suggestId).style.display='none';
+  // trigger search if in track tab
+  if(inputId === 'f-filter-branch') triggerSearch();
+}
+
+// ── Geolocation ───────────────────────────────────────────────
+function getGeoLocation(){
+  const btn = document.getElementById('btn-geo');
+  const st  = document.getElementById('geo-status');
+  if(!navigator.geolocation){ if(st){ st.textContent='เบราว์เซอร์ไม่รองรับ GPS'; st.style.display='block'; } return; }
+  if(btn) btn.textContent='⏳';
+  if(st){ st.textContent='กำลังระบุตำแหน่ง...'; st.style.display='block'; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      const url = `https://maps.google.com/?q=${lat},${lng}`;
+      document.getElementById('f-location').value = url;
+      if(btn) btn.textContent='📍';
+      if(st){ st.textContent=`✅ ตำแหน่ง: ${lat}, ${lng}`; st.style.display='block'; }
+    },
+    err => {
+      if(btn) btn.textContent='📍';
+      if(st){ st.textContent='❌ ไม่สามารถระบุตำแหน่งได้ กรุณากรอกเอง'; st.style.display='block'; }
+    },
+    { timeout:10000, enableHighAccuracy:true }
+  );
+}
+
+// ── Search + switch to track tab ─────────────────────────────
+function searchByIdAndSwitch(rid){
+  // สลับไป tab ติดตาม
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="track"]')?.classList.add('active');
+  document.getElementById('tab-track')?.classList.add('active');
+  // ค้นหา
+  searchById(rid);
+  // scroll ขึ้น
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 
 document.getElementById('char-num') && (document.getElementById('f-detail').oninput = ()=>{
   document.getElementById('char-num').textContent = document.getElementById('f-detail').value.length;
