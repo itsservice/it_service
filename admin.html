@@ -18,6 +18,32 @@
   --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
   --sidebar-w:240px;
 }
+/* ── Light mode ─────────────────────────────── */
+body.theme-light{
+  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
+  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
+  --accent:#00b87a;--blue:#2563eb;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;
+}
+body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18)}
+body.theme-light .sync-dot{box-shadow:0 0 6px #00b87a}
+/* ── Theme toggle button ────────────────────── */
+.btn-theme{
+  width:100%;padding:10px;background:transparent;
+  border:1px solid var(--b2);border-radius:var(--r);
+  color:var(--fg2);font-family:var(--font-th);font-size:13px;
+  cursor:pointer;transition:all .2s;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:8px;
+}
+.btn-theme:hover{background:var(--b1);color:var(--fg)}
+.theme-toggle-mobile{
+  background:transparent;border:1px solid var(--b2);
+  border-radius:8px;color:var(--fg2);font-size:18px;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.theme-toggle-mobile:hover{background:var(--b1);color:var(--fg)}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -466,6 +492,9 @@ setTimeout(window.hideSplash, 3000);
       <button class="nav-item" data-page="debug" id="nav-debug"><span class="nav-icon">🔍</span>ตรวจสอบระบบ</button>
     </nav>
     <div class="sb-footer">
+      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span><span id="theme-label">โหมดสว่าง</span>
+      </button>
       <button class="btn-logout" id="btn-logout">ออกจากระบบ</button>
     </div>
   </aside>
@@ -478,6 +507,7 @@ setTimeout(window.hideSplash, 3000);
       <div style="display:flex;align-items:center;gap:8px">
         <div class="topbar-sync"><div class="sync-dot" id="sync-dot"></div></div>
         <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
+        <button class="theme-toggle-mobile" id="btn-theme-mobile" onclick="toggleTheme()" title="เปลี่ยนธีม"><span id="theme-icon-mobile">☀️</span></button>
         <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">Log out</button>
       </div>
     </div>
@@ -728,6 +758,32 @@ document.getElementById('btn-login').onclick = async()=>{
   finally{btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
 };
 ['l-user','l-pass'].forEach(id=>{ document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}; });
+
+// ════════════════════════════════════════════════════════════════
+// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
+// ════════════════════════════════════════════════════════════════
+function applyTheme(mode) {
+  // mode: 'light' | 'dark'
+  const isLight = mode === 'light';
+  document.body.classList.toggle('theme-light', isLight);
+  // update ปุ่มใน sidebar
+  const icon  = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  const iconM = document.getElementById('theme-icon-mobile');
+  if (icon)  icon.textContent  = isLight ? '🌙' : '☀️';
+  if (label) label.textContent = isLight ? 'โหมดมืด' : 'โหมดสว่าง';
+  if (iconM) iconM.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('admin_theme', mode);
+}
+function toggleTheme() {
+  const current = localStorage.getItem('admin_theme') || 'light';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+// โหลด theme ที่บันทึกไว้ (default = light)
+(function initTheme() {
+  const saved = localStorage.getItem('admin_theme') || 'light';
+  applyTheme(saved);
+})();
 
 document.getElementById('btn-logout').onclick = logout;
 document.getElementById('btn-logout-mobile')?.addEventListener('click', logout);
