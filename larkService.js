@@ -174,11 +174,19 @@ function buildFieldMap(record) {
 }
 
 // ── Ticket ID counter ──────────────────────────────────────────
+const BRAND_ID_PREFIX = {
+  "Dunkin'":           'DK',
+  "Greyhound Cafe":    'GH',
+  "Greyhound Original":'GO',
+  "Au Bon Pain":       'ABP',
+  "Funky Fries":       'FF',
+};
 let _seq = 0;
 const _idCache = new Map();
-function makeId(recordId) {
+function makeId(recordId, brand) {
   if (_idCache.has(recordId)) return _idCache.get(recordId);
-  const id = 'TK-' + String(++_seq).padStart(4, '0');
+  const prefix = (brand && BRAND_ID_PREFIX[brand]) || 'TK';
+  const id = prefix + '-' + String(++_seq).padStart(4, '0');
   _idCache.set(recordId, id);
   return id;
 }
@@ -234,7 +242,7 @@ function parseRecord(rec) {
   if (out.id && !String(out.id).startsWith('rec')) {
     // use as-is
   } else {
-    out.id = makeId(rec.record_id);
+    out.id = makeId(rec.record_id, out.brand);
   }
   // Default brand fallback
   if (!out.brand) {
@@ -420,10 +428,11 @@ async function listTickets({ brand, status, noCache } = {}) {
   return result;
 }
 
-async function getTicket(recordId) {
+async function getTicket(recordId, tableId) {
   const token = await getToken();
+  const tbl = tableId || TBL();
   const r = await axios.get(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`,
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${tbl}/records/${recordId}`,
     { headers: hdr(token), timeout: 10_000 }
   );
   if (r.data.code !== 0) throw new Error(`Lark get: ${r.data.msg}`);
@@ -500,10 +509,8 @@ async function createTicket(fields) {
   // (Lark auto-number field จะถูก populate หลัง create)
   try {
     await new Promise(resolve => setTimeout(resolve, 800)); // รอ Lark generate
-    const fresh = await getTicket(created._recordId);
-    if (fresh && fresh.id && !String(fresh.id).startsWith('TK-')) {
-      return fresh; // ได้ GD-XXXXX จาก Lark
-    }
+    const fresh = await getTicket(created._recordId, targetTable);
+    if (fresh && fresh._recordId) return fresh; // ได้ auto-number จาก Lark
   } catch(e) {
     console.warn('[Lark] re-fetch after create failed:', e.message);
   }
