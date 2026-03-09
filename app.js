@@ -88,6 +88,7 @@ app.get('/api/tickets', async (req, res) => {
     if (s && s.user.role==='engineer' && s.user.brand !== 'ALL') {
       tickets = tickets.filter(t => t.brand === s.user.brand);
     }
+    global._debugTickets = tickets;
     res.json({ ok:true, tickets });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -218,11 +219,13 @@ app.get('/debug/env', (_, res) => {
   });
 });
 // ── DEBUG: ทดสอบดึงข้อมูลจากทุก table ──────────────────────────
-// DEBUG: ดู branchCode จริงจาก Lark
-app.get('/debug/branches', async (_, res) => {
+// DEBUG: ดู branchCode จาก cache เท่านั้น — ไม่ fetch Lark
+app.get('/debug/branches', (_, res) => {
   try {
-    const { listTickets } = require('./larkService');
-    const tickets = await listTickets(); // ใช้ cache — ไม่ดึงใหม่
+    // อ่าน _ticketCache โดยตรง ไม่รอ API
+    const svc = require('./larkService');
+    // ใช้ tickets ที่ cache ไว้แล้วใน memory
+    const tickets = global._debugTickets || [];
     const byBrand = {};
     tickets.forEach(t => {
       const b = t.brand || 'unknown';
@@ -233,7 +236,7 @@ app.get('/debug/branches', async (_, res) => {
     Object.entries(byBrand).forEach(([brand, set]) => {
       result[brand] = [...set].sort();
     });
-    res.json({ ok:true, total: tickets.length, branchCodes: result });
+    res.json({ ok:true, total: tickets.length, cached: !!global._debugTickets, branchCodes: result });
   } catch(e) {
     res.json({ ok:false, error: e.message });
   }
