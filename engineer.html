@@ -237,7 +237,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 </head>
 <body>
 <style>
-#app-splash{position:fixed;inset:0;background:#07070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
+#app-splash{position:fixed;inset:0;background:var(--bg,#f0f2f7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
 #app-splash.hide{opacity:0;pointer-events:none}
 .splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
 @keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
@@ -258,7 +258,7 @@ window.hideSplash = function(){
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
 // บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 3000);
+setTimeout(window.hideSplash, 1500);
 </script>
 
 <!-- ══ LOGIN ══════════════════════════════════════════════ -->
@@ -400,7 +400,7 @@ function connectSSE(){
 }
 
 // ── Auth ───────────────────────────────────────────────────────
-async async function tryAutoLogin(){
+async function tryAutoLogin(){
   const saved = localStorage.getItem('eng_auth');
   if(!saved) return false;
   try{
@@ -486,20 +486,18 @@ async function startApp(){
 // THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
 // ════════════════════════════════════════════════════════════════
 function applyTheme(mode) {
-  const isLight = mode === 'light';
+  const isLight = mode !== 'dark';
   document.body.classList.toggle('theme-light', isLight);
   const icon = document.getElementById('theme-icon-eng');
   if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-  localStorage.setItem('eng_theme', mode);
+  try { localStorage.setItem('eng_theme', mode); } catch(_) {}
 }
 function toggleTheme() {
-  const current = localStorage.getItem('eng_theme') || 'light';
-  applyTheme(current === 'light' ? 'dark' : 'light');
+  try {
+    const current = localStorage.getItem('eng_theme') || 'light';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  } catch(e) { console.warn('toggleTheme error:', e.message); }
 }
-(function initTheme() {
-  const saved = localStorage.getItem('eng_theme') || 'light';
-  applyTheme(saved);
-})();
 
 [document.getElementById('btn-logout'), document.getElementById('btn-logout2')].forEach(btn => {
   btn.onclick = async () => {
@@ -786,11 +784,22 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 // ── Boot ───────────────────────────────────────────────────────
 (async()=>{
+  // ✅ 1. init theme ทันที
+  try {
+    const saved = localStorage.getItem('eng_theme') || 'light';
+    applyTheme(saved);
+  } catch(_) {
+    document.body.classList.add('theme-light');
+  }
+
+  // ✅ 2. ซ่อน splash ทันที — ไม่รอ API
+  window.hideSplash?.();
+
+  // ✅ 3. tryAutoLogin ในพื้นหลัง
   const autoOk = await Promise.race([
     tryAutoLogin(),
     new Promise(r => setTimeout(()=>r(false), 5000))
   ]);
-  window.hideSplash?.();
   if(autoOk) startApp();
 })();
 
