@@ -817,24 +817,42 @@ function saveHistory(ticket){
 }
 
 // ── Branch Dropdown ───────────────────────────────────────────
+// รายการสาขาสำรอง — อัปเดตจาก /debug/branches
+const BRANCH_FALLBACK = {
+  "Dunkin'"         : ["K.0001","K.0002","K.0003","K.0004","K.0006"],
+  "Greyhound Cafe"  : ["0003","0005"],
+  "Greyhound Original": [],
+  "Au Bon Pain"     : ["0002"],
+  "Funky Fries"     : ["F1004"],
+};
+
 function getBranchList(brand){
+  // ดึงจาก allTickets + localStorage ก่อน
   const localH = (() => { try{ return JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){ return []; } })();
   const allSrc = [...allTickets, ...localH];
-  return [...new Set(
+  const live = [...new Set(
     allSrc
       .filter(t => !brand || (t.brand||'').toLowerCase()===brand.toLowerCase())
       .map(t => (t.branchCode||'').trim())
       .filter(Boolean)
-  )].sort();
+  )];
+  // merge กับ fallback ถ้า live ว่าง
+  const fallback = brand ? (BRANCH_FALLBACK[brand]||[]) : Object.values(BRANCH_FALLBACK).flat();
+  const merged = [...new Set([...live, ...fallback])].sort();
+  return merged;
 }
 
 function renderBranchDD(ddId, inputId, brand, q=''){
   const dd = document.getElementById(ddId);
   if(!dd) return;
   let branches = getBranchList(brand);
+  console.log('[BranchDD] brand='+brand+' allTickets='+allTickets.length+' branches='+JSON.stringify(branches));
   if(q) branches = branches.filter(b => b.toLowerCase().includes(q.toLowerCase()));
   if(!branches.length){
-    dd.innerHTML='<div style="padding:12px 14px;color:var(--fg3);font-size:13px">ไม่พบสาขา</div>';
+    // ถ้าไม่มีข้อมูล — แสดงข้อความแต่ยัง show dropdown
+    dd.innerHTML=`<div style="padding:12px 14px;color:var(--fg3);font-size:13px;text-align:center">
+      ${allTickets.length===0 ? '⏳ กำลังโหลดข้อมูล...' : '🔍 ไม่พบสาขา — พิมพ์รหัสสาขาเองได้'}
+    </div>`;
     dd.style.display='block';
     return;
   }
@@ -859,12 +877,26 @@ function hideBranchDropdown(ddId){
   const dd = document.getElementById(ddId);
   if(dd) dd.style.display='none';
 }
+// ปิด dropdown เมื่อคลิกนอก
+document.addEventListener('click', e => {
+  ['branch-dd-form','branch-dd-track'].forEach(id => {
+    const dd = document.getElementById(id);
+    if(dd && dd.style.display!=='none'){
+      const inp = dd.previousElementSibling;
+      if(!dd.contains(e.target) && e.target !== inp) dd.style.display='none';
+    }
+  });
+});
 
 function toggleBranchDropdown(inputId, ddId, brandSelectId){
   const dd = document.getElementById(ddId);
   if(dd && dd.style.display !== 'none'){
     dd.style.display='none';
   } else {
+    // โหลด tickets ก่อนถ้ายังไม่มี แล้วแสดง dropdown
+    if(allTickets.length === 0){
+      loadTickets().then(()=> showBranchDropdown(inputId, ddId, brandSelectId));
+    }
     showBranchDropdown(inputId, ddId, brandSelectId);
     document.getElementById(inputId)?.focus();
   }
