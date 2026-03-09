@@ -4,11 +4,11 @@ const BASE = 'https://open.larksuite.com/open-apis';
 
 let _token = null, _tokenExp = 0;
 let _fieldMap = null;    // internalKey → larkColumnName
-let _fieldTypes = {};    // larkColumnName → field ui_type (Text, SingleSelect, DateTime, etc.)
+let _fieldTypes = {};    // larkColumnName → field ui_type
 let _fieldOptions = {};  // larkColumnName → Set of valid option names
-let _optionMap = {};     // "optXXXX" → "text value" (for select fields)
+let _optionMap = {};     // "optXXXX" → "text value"
 let _ticketCache = null, _ticketCacheExp = 0;
-const CACHE_TTL = 30_000; // cache tickets 30 วินาที
+const CACHE_TTL = 30_000;
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -23,67 +23,45 @@ async function getToken() {
 }
 const hdr = t => ({ Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' });
 const APP = () => process.env.LARK_APP_TOKEN;
+
 // ── Multi-brand table map ─────────────────────────────────────
-// แต่ละแบรนด์มี Lark Table ID แยกกัน
 const BRAND_TABLES = () => [
-  { brand: "Dunkin'",           tableId: process.env.LARK_TABLE_DUNKIN           || process.env.LARK_TABLE_ID },
-  { brand: "Greyhound Cafe",    tableId: process.env.LARK_TABLE_GREYHOUND_CAFE   },
-  { brand: "Greyhound Original",tableId: process.env.LARK_TABLE_GREYHOUND_ORI   },
-  { brand: "Au Bon Pain",       tableId: process.env.LARK_TABLE_AU_BON_PAIN      },
-  { brand: "Funky Fries",       tableId: process.env.LARK_TABLE_FUNKY_FRIES      },
-].filter(b => b.tableId); // เอาเฉพาะที่มี tableId
-const TBL = () => process.env.LARK_TABLE_ID; // backward compat
+  { brand: "Dunkin'",            tableId: process.env.LARK_TABLE_DUNKIN            || process.env.LARK_TABLE_ID },
+  { brand: "Greyhound Cafe",     tableId: process.env.LARK_TABLE_GREYHOUND_CAFE    },
+  // ✅ แก้: รองรับทั้ง GREYHOUND_ORI และ GREYHOUND_ORIGINAL
+  { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI },
+  { brand: "Au Bon Pain",        tableId: process.env.LARK_TABLE_AU_BON_PAIN       },
+  { brand: "Funky Fries",        tableId: process.env.LARK_TABLE_FUNKY_FRIES       },
+].filter(b => b.tableId);
+
+const TBL = () => process.env.LARK_TABLE_ID;
 
 // ── Keyword → internal key mapping ────────────────────────────
 const KEYWORDS = [
-  // Ticket ID
   { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','number ticket','หมายเลข ticket','เลข ticket','ticket number','no.'] },
-  // Status
   { key: 'status',       words: ['status','สถานะ','state','สถานะงาน','สถานะ.','สถานะ '] },
-  // Brand
   { key: 'brand',        words: ['brand','แบรนด์','แบรนด','brand name','บริษัท','ร้าน'] },
-  // Branch
   { key: 'branchCode',   words: ['branch code','branchcode','รหัสสาขา','รหัส สาขา','สาขา','branch no','code'] },
-  // SLA / Priority
   { key: 'sla',          words: ['sla','sla level','priority','ความสำคัญงาน','ความสำคัญ','ลำดับความสำคัญ'] },
-  // Reporter
-  { key: 'reporter',     words: ['reporter','ผู้แจ้ง','ผู้แจ้งซ่อม','ผู้แจ้งปัญหา','ชื่อผู้แจ้ง','ผู้แจ้งซ่อม','name','ชื่อ'] },
-  // Phone
-  { key: 'phone',        words: ['phone','เบอร์','เบอร์ติดต่อ','เบอร์ติดต่อ','เบอร์โทรติดต่อ','mobile','tel','โทร'] },
-  // Type
+  { key: 'reporter',     words: ['reporter','ผู้แจ้ง','ผู้แจ้งซ่อม','ผู้แจ้งปัญหา','ชื่อผู้แจ้ง','name','ชื่อ'] },
+  { key: 'phone',        words: ['phone','เบอร์','เบอร์ติดต่อ','เบอร์โทรติดต่อ','mobile','tel','โทร'] },
   { key: 'type',         words: ['type','ประเภท','ประเภทงาน','ประเภทปัญหา','ประเภท/อุปกรณ์','job type','หมวดหมู่'] },
-  // Detail / Problem
   { key: 'detail',       words: ['detail','รายละเอียด','รายละเอียด/อาการ','รายละเอียดปัญหา','คำอธิบายเพิ่มเติม','อาการ','problem','issue'] },
-  // Location
   { key: 'location',     words: ['location','สถานที่','สถานที่/โซน','zone','area'] },
-  // Sent Date
   { key: 'sentDate',     words: ['sent date','sentdate','ส่งเมื่อ','วันที่ส่ง','วันที่แจ้ง','วันที่','date','submission date'] },
-  // SLA Date
   { key: 'slaDate',      words: ['sla date','sladate','วันนัดงาน','due date','นัดวันซ่อม'] },
-  // LINE
   { key: 'line_user_id', words: ['line user id','line user','line uid','line_user_id'] },
   { key: 'line_group_id',words: ['line group id','line group','line_group_id'] },
-  // Assign
   { key: 'assignedTo',   words: ['assigned to','assigned','มอบหมาย','ช่างที่รับงาน','engineer assigned','id ช่าง'] },
-  // Work detail
-  { key: 'workDetail',   words: ['work detail','รายละเอียดงาน','ผลการซ่อม','รายงานช่าง','คำอธิบายเพิ่มเติม'] },
-  // Parts
-  { key: 'partsUsed',    words: ['parts used','อะไหล่','อะไหล่ที่ใช้','แนบรูป'] },
-  // Hours
+  { key: 'workDetail',   words: ['work detail','รายละเอียดงาน','ผลการซ่อม','รายงานช่าง'] },
+  { key: 'partsUsed',    words: ['parts used','อะไหล่','อะไหล่ที่ใช้'] },
   { key: 'workHours',    words: ['work hours','ชั่วโมงทำงาน','man hour'] },
-  // Completed
-  { key: 'completedAt',  words: ['completed at','วันที่เสร็จ','เสร็จเมื่อ','ปุ่มเสร็จงาน'] },
-  // Engineer name
-  { key: 'engineerName', words: ['engineer name','ชื่อช่าง','ช่าง','engineer','ลิงก์งานช่าง','ปุ่มส่งงานช่าง','id ช่าง'] },
-  // Admin note
-  { key: 'adminNote',    words: ['admin note','หมายเหตุ admin','หมายเหตุ','remark','แก้ไข'] },
-  // Closed
+  { key: 'completedAt',  words: ['completed at','วันที่เสร็จ','เสร็จเมื่อ'] },
+  { key: 'engineerName', words: ['engineer name','ชื่อช่าง','ช่าง','engineer'] },
+  { key: 'adminNote',    words: ['admin note','หมายเหตุ admin','หมายเหตุ','remark'] },
   { key: 'closedAt',     words: ['closed at','วันที่ปิด','ปิดเมื่อ'] },
-  { key: 'closedBy',     words: ['closed by','ปิดโดย','จบโดย','แก้ไขโดย'] },
-  // Photo
-  { key: 'photo',        words: ['photo','รูปงาน','รูป','แนบรูป','รูปภาพ','image'] },
-  // Done button
-  { key: 'doneBtn',      words: ['ปุ่มเสร็จงาน','ปุ่มส่งงานช่าง','ปุ่มจบงาน'] },
+  { key: 'closedBy',     words: ['closed by','ปิดโดย','จบโดย'] },
+  { key: 'photo',        words: ['photo','รูปงาน','รูป','รูปภาพ','image'] },
 ];
 
 const FAST = {};
@@ -100,7 +78,6 @@ function detectKey(larkName) {
   return null;
 }
 
-// Fields we can write back
 const WRITABLE_KEYS = new Set([
   'status','brand','branchCode','sla','reporter','phone','type','detail',
   'location','sentDate','line_user_id','line_group_id','assignedTo',
@@ -108,7 +85,6 @@ const WRITABLE_KEYS = new Set([
   'adminNote','closedAt','closedBy'
 ]);
 
-// ── Date formatter ─────────────────────────────────────────────
 function fmtDate(v) {
   if (v === null || v === undefined || v === '') return null;
   if (typeof v === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v)) return v;
@@ -125,43 +101,27 @@ const DATE_KEYS = new Set(['sentDate','slaDate','completedAt','closedAt']);
 
 function parseVal(v, key) {
   if (v === null || v === undefined) return '';
-
-  // ── String: อาจเป็น option ID เช่น "optBaPvMxB" ──
   if (typeof v === 'string') {
     if (v.startsWith('opt') && _optionMap[v]) return _optionMap[v];
     return v;
   }
-
-  // ── Lark option object: { id: 'optXXX', text: 'ค่า' } ──
   if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v)
     return String(v.text || '');
-
-  // ── Lark multi-select: [{ id, text }, ...] ──
   if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'text' in v[0])
     return v.map(x => String(x.text || '')).join(', ');
-
-  // ── Array of option IDs: ["optXXX", "optYYY"] ──
   if (Array.isArray(v) && v.length && typeof v[0] === 'string' && v[0].startsWith('opt'))
     return v.map(id => _optionMap[id] || id).join(', ');
-
-  // ── Lark rich text: [{ type, text }] ──
   if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'type' in v[0])
     return v.map(x => x.text || x.raw_value || '').join('');
-
-  // ── URL field ──
   if (v && typeof v === 'object' && !Array.isArray(v) && ('link' in v || 'url' in v))
     return v.link || v.url || '';
-
-  // ── Date fields ──
   if (DATE_KEYS.has(key)) return fmtDate(v);
   if (typeof v === 'number' && v > 1_000_000_000_000) return fmtDate(v);
-
   return v;
 }
 
-// ── Auto-detect field map ──────────────────────────────────────
 function buildFieldMap(record) {
-  const map = {}; // internalKey → larkColName (for write-back)
+  const map = {};
   for (const larkName of Object.keys(record.fields || {})) {
     const key = detectKey(larkName);
     if (key && !map[key]) map[key] = larkName;
@@ -169,11 +129,10 @@ function buildFieldMap(record) {
   console.log('\n[Lark] Field map detected:');
   Object.entries(map).forEach(([k, v]) => console.log(`  ${k.padEnd(14)} ← "${v}"`));
   const unmapped = Object.keys(record.fields || {}).filter(n => !detectKey(n));
-  if (unmapped.length) console.log('[Lark] Unmapped:', unmapped.join(', '));
+  if (unmapped.length) console.log('[Lark] Unmapped fields:', unmapped.join(', '));
   return map;
 }
 
-// ── Ticket ID counter ──────────────────────────────────────────
 const BRAND_ID_PREFIX = {
   "Dunkin'":           'DK',
   "Greyhound Cafe":    'GH',
@@ -191,10 +150,7 @@ function makeId(recordId, brand) {
   return id;
 }
 
-// ── Normalize status from Lark to our system ──────────────────
-// Lark อาจเก็บสถานะเป็นชื่อเดิม (ไม่มี emoji) หรือชื่อใหม่
 const STATUS_NORMALIZE = {
-  // Lark old → our new
   'แก้ไข':                      'แก้ไข',
   'รอตรวจงาน':                  'แก้ไข',
   'รอดำเนินการ':                 'รอดำเนินการ ⏱️',
@@ -214,79 +170,71 @@ function normalizeStatus(s) {
   return STATUS_NORMALIZE[clean] || clean;
 }
 
-// ── Parse a Lark record → internal object ─────────────────────
 function parseRecord(rec) {
   const out = { _recordId: rec.record_id };
   for (const [larkName, val] of Object.entries(rec.fields || {})) {
     const key = detectKey(larkName) || larkName;
     out[key] = parseVal(val, key);
   }
-  // Normalize status
   if (out.status) out.status = normalizeStatus(out.status);
-  // ลบค่าที่เป็น URL ออกจาก field ที่ไม่ควรเป็น URL
-  // (Lark อาจมี column ลิงก์หรือ wiki URL ที่ดึงมาผิด)
   const URL_FIELDS = new Set(['location','detail','type','branchCode','reporter','phone','engineerName','sla','sentDate']);
   for (const k of Object.keys(out)) {
     if (typeof out[k] === 'string' && out[k].startsWith('http')) {
-      if (URL_FIELDS.has(k)) {
-        out[k] = '';
-      } else {
-        // เก็บไว้ใน link field พิเศษ
+      if (URL_FIELDS.has(k)) { out[k] = ''; }
+      else {
         if (!out._links) out._links = {};
         out._links[k] = out[k];
-        out[k] = ''; // ซ่อนจาก UI
+        out[k] = '';
       }
     }
   }
-  // Use Number Ticket as ID if exists
   if (out.id && !String(out.id).startsWith('rec')) {
     // use as-is
   } else {
     out.id = makeId(rec.record_id, out.brand);
   }
-  // Default brand fallback
-  if (!out.brand) {
-    out.brand = process.env.DEFAULT_BRAND || "Dunkin'";
-  }
+  if (!out.brand) out.brand = process.env.DEFAULT_BRAND || "Dunkin'";
   return out;
 }
 
-// ── toWriteFields ──────────────────────────────────────────────
+// ✅ แก้: ตรวจสอบ fieldMap ก่อน write และ log ชัดเจน
 function toWriteFields(fields) {
   const out = {};
   const fm = _fieldMap || {};
   const hasFm = Object.keys(fm).length > 0;
+
+  if (!hasFm) {
+    console.error('[Lark] ⚠️  toWriteFields called but _fieldMap is empty! Fields will be skipped.');
+  }
+
   for (const [key, val] of Object.entries(fields)) {
     if (val === undefined || val === null || val === '') continue;
     if (!WRITABLE_KEYS.has(key)) continue;
     const colName = fm[key];
     if (!colName) {
-      console.warn('[Lark] no column mapped for key "' + key + '" — skipping');
+      console.warn(`[Lark] no column mapped for key "${key}" — skipping (fieldMap keys: ${Object.keys(fm).join(', ')})`);
       continue;
     }
-    // Lark datetime field ต้องการ Unix timestamp (ms)
     if (DATE_KEYS.has(key)) {
       const ts = toUnixMs(val);
       if (ts) { out[colName] = ts; continue; }
       console.warn(`[Lark] skip date field "${key}" — cannot convert:`, val);
       continue;
     }
-    // Lark SingleSelect — ส่งเฉพาะค่าที่มีใน options เท่านั้น
     const fieldType = _fieldTypes[colName];
     if (fieldType === 'SingleSelect') {
       const validOpts = _fieldOptions[colName];
       if (validOpts && validOpts.size > 0) {
-        // หาค่าที่ตรงกัน (case-insensitive)
         const valStr = String(val).trim();
         const matched = [...validOpts].find(o =>
           o.toLowerCase() === valStr.toLowerCase() ||
           o.replace(/[.\s]/g,'').toLowerCase() === valStr.replace(/[.\s]/g,'').toLowerCase()
         );
         if (!matched) {
-          console.warn(`[Lark] SingleSelect "${colName}" skip "${val}" (not in options)`);
-          continue; // skip — ไม่ส่ง field นี้ดีกว่า error
+          console.warn(`[Lark] SingleSelect "${colName}" skip "${val}" (not in options: ${[...validOpts].join(', ')})`);
+          continue;
         }
-        out[colName] = matched; // ใช้ค่าจริงจาก options
+        out[colName] = matched;
       } else {
         out[colName] = String(val);
       }
@@ -297,44 +245,49 @@ function toWriteFields(fields) {
   return out;
 }
 
-// แปลงวันที่รูปแบบต่างๆ → Unix ms สำหรับ Lark
 function toUnixMs(val) {
   if (!val) return null;
   if (typeof val === 'number') return val > 1e10 ? val : val * 1000;
-  // Thai date string: "04/03/2569" → convert BE to CE
   const thMatch = String(val).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (thMatch) {
     let [, d, m, y] = thMatch;
-    if (parseInt(y) > 2300) y = String(parseInt(y) - 543); // พ.ศ. → ค.ศ.
+    if (parseInt(y) > 2300) y = String(parseInt(y) - 543);
     const dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T00:00:00+07:00`);
     return isNaN(dt) ? null : dt.getTime();
   }
-  // ISO string
   const dt = new Date(val);
   return isNaN(dt) ? null : dt.getTime();
 }
 
-// ── ensureFieldMap ────────────────────────────────────────────
-async function ensureFieldMap() {
-  if (_fieldMap && Object.keys(_fieldMap).length > 0) return;
-  console.log('[Lark] fieldMap not ready — building from ALL brand tables...');
+// ✅ แก้: ensureFieldMap รอจริงๆ และ retry ถ้า fieldMap ว่าง
+async function ensureFieldMap(forceRebuild = false) {
+  if (!forceRebuild && _fieldMap && Object.keys(_fieldMap).length > 0) return;
+  console.log('[Lark] Building fieldMap from ALL brand tables...');
   try {
     const token = await getToken();
     const tables = BRAND_TABLES();
-    let firstItems = null;
 
-    // ดึง schema จากทุก table พร้อมกัน → merge optionMap ให้ครบ
+    if (tables.length === 0) {
+      throw new Error('No brand tables configured. Check LARK_TABLE_* env vars.');
+    }
+
+    let firstItems = null;
+    _fieldTypes = {};
+    _fieldOptions = {};
+    _optionMap = {};
+
     await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
       try {
         const r = await axios.get(
           `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`,
-          { headers: hdr(token), timeout: 8_000 }
+          { headers: hdr(token), timeout: 10_000 }
         );
         const items = r.data.data?.items || [];
-        if (!items.length) return;
-        // เก็บ items แรกไว้ build fieldMap
+        if (!items.length) {
+          console.warn(`[Lark] No fields returned for ${brandName} (tableId: ${tableId})`);
+          return;
+        }
         if (!firstItems) firstItems = items;
-        // merge fieldTypes และ optionMap จากทุก table
         items.forEach(f => {
           _fieldTypes[f.field_name] = f.ui_type;
           if (f.ui_type === 'SingleSelect' || f.ui_type === 'MultiSelect') {
@@ -344,31 +297,37 @@ async function ensureFieldMap() {
             opts.forEach(o => _fieldOptions[f.field_name].add(o.name));
           }
         });
-        console.log(`[Lark] schema loaded: ${brandName} (${items.length} fields, tableId: ${tableId})`);
+        console.log(`[Lark] Schema loaded: ${brandName} — ${items.length} fields`);
       } catch(e) {
-        console.error(`[Lark] schema failed for ${brandName}:`, e.message);
+        console.error(`[Lark] Schema failed for ${brandName} (${tableId}):`, e.message);
       }
     }));
 
-    if (firstItems) {
-      console.log('[Lark] optionMap built:', Object.keys(_optionMap).length, 'options');
-      console.log('[Lark] fieldTypes:', Object.entries(_fieldTypes).map(([k,v])=>`${k}:${v}`).join(', '));
+    if (firstItems && firstItems.length > 0) {
       const fakeRecord = { record_id: 'fake', fields: {} };
       firstItems.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
       _fieldMap = buildFieldMap(fakeRecord);
-      console.log('[Lark] fieldMap built from schema:', Object.keys(_fieldMap).length, 'fields');
+      console.log(`[Lark] ✅ fieldMap ready: ${Object.keys(_fieldMap).length} keys mapped`);
+      if (Object.keys(_fieldMap).length === 0) {
+        console.error('[Lark] ⚠️  fieldMap built but 0 keys mapped! Field names may not match KEYWORDS.');
+        console.log('[Lark] Available field names:', firstItems.map(f => f.field_name).join(', '));
+      }
     } else {
-      await listTickets();
+      console.warn('[Lark] No fields found via schema API — falling back to listTickets()');
+      await listTickets({ noCache: true });
     }
   } catch(e) {
     console.error('[Lark] ensureFieldMap error:', e.message);
-    await listTickets();
+    // Fallback: try to build from existing records
+    try {
+      await listTickets({ noCache: true });
+    } catch(e2) {
+      console.error('[Lark] Fallback listTickets also failed:', e2.message);
+    }
   }
 }
 
-// ── LIST tickets ───────────────────────────────────────────────
 async function listTickets({ brand, status, noCache } = {}) {
-  // Return cache ถ้ายังสด
   if (!noCache && _ticketCache && Date.now() < _ticketCacheExp) {
     let cached = _ticketCache;
     if (brand) cached = cached.filter(t => t.brand === brand);
@@ -379,8 +338,7 @@ async function listTickets({ brand, status, noCache } = {}) {
   const tables = BRAND_TABLES();
   let allTickets = [];
 
-  // ดึงจากทุก table พร้อมกัน — ใช้ allSettled ไม่บล็อกถ้า table ใดล้มเหลว
-  const TABLE_TIMEOUT = 12_000; // 12 วิ ต่อ table
+  const TABLE_TIMEOUT = 12_000;
   const fetchTable = async ({ brand: brandName, tableId }) => {
     let all = [], pt;
     do {
@@ -391,28 +349,28 @@ async function listTickets({ brand, status, noCache } = {}) {
         { headers: hdr(token), params, timeout: TABLE_TIMEOUT }
       );
       const items = r.data.data?.items || [];
-      if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
+      // Build fieldMap from first record if not yet built
+      if ((!_fieldMap || Object.keys(_fieldMap).length === 0) && items.length) {
+        _fieldMap = buildFieldMap(items[0]);
+      }
       const parsed = items.map(rec => {
         const t = parseRecord(rec);
-        t.brand = brandName; // ใช้ชื่อจาก table map เสมอ
+        t.brand = brandName;
         return t;
       });
       all = all.concat(parsed);
       pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
     } while (pt);
-    console.log(`[Lark] fetched ${all.length} tickets from ${brandName}`);
+    console.log(`[Lark] Fetched ${all.length} tickets from ${brandName}`);
     return all;
   };
 
-  const results = await Promise.allSettled(
-    tables.map(t => fetchTable(t))
-  );
+  const results = await Promise.allSettled(tables.map(t => fetchTable(t)));
   results.forEach((r, i) => {
     if (r.status === 'fulfilled') allTickets = allTickets.concat(r.value);
     else console.error(`[Lark] ${tables[i].brand} failed:`, r.reason?.message);
   });
 
-  // sort by id desc
   allTickets.sort((a, b) => {
     const ai = parseInt(String(a.id||'0').replace(/\D/g,''))||0;
     const bi = parseInt(String(b.id||'0').replace(/\D/g,''))||0;
@@ -439,16 +397,20 @@ async function getTicket(recordId, tableId) {
   return parseRecord(r.data.data?.record || {});
 }
 
-// ── Invalidate cache on write ─────────────────────────────────
 function invalidateCache() { _ticketCache = null; _ticketCacheExp = 0; }
 
-// ── UPDATE ticket ──────────────────────────────────────────────
 async function updateTicket(recordId, fields) {
-  await ensureFieldMap(); // ต้องมี fieldMap ก่อน write เสมอ
+  await ensureFieldMap();
   const token = await getToken();
+
+  // ✅ แก้: ตรวจสอบ fieldMap ก่อน update
+  if (!_fieldMap || Object.keys(_fieldMap).length === 0) {
+    throw new Error('fieldMap not ready — cannot update ticket. Please retry in a moment.');
+  }
+
   const larkFields = toWriteFields(fields);
   if (!Object.keys(larkFields).length) {
-    console.warn('[Lark] update: no writable fields', Object.keys(fields));
+    console.warn('[Lark] update: no writable fields after mapping. Input:', Object.keys(fields));
     return {};
   }
   console.log('[Lark] PUT', recordId, JSON.stringify(larkFields));
@@ -462,24 +424,58 @@ async function updateTicket(recordId, fields) {
   return parseRecord(r.data.data?.record || {});
 }
 
-// ── CREATE ticket ──────────────────────────────────────────────
+// ✅ แก้หลัก: createTicket — ตรวจสอบ fieldMap, เพิ่ม sentDate/status อัตโนมัติ, log ชัดเจน
 async function createTicket(fields) {
-  await ensureFieldMap();
+  // Retry ensureFieldMap สูงสุด 3 ครั้งถ้ายังไม่มี fieldMap
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    if (_fieldMap && Object.keys(_fieldMap).length > 0) break;
+    console.log(`[Lark] ensureFieldMap attempt ${attempt}/3...`);
+    await ensureFieldMap(attempt > 1); // force rebuild ตั้งแต่ attempt 2
+    if (_fieldMap && Object.keys(_fieldMap).length > 0) break;
+    if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+  }
+
+  if (!_fieldMap || Object.keys(_fieldMap).length === 0) {
+    throw new Error('ระบบยังโหลด field map ไม่สำเร็จ กรุณาลองใหม่ในอีก 10 วินาที (fieldMap empty)');
+  }
+
   const token = await getToken();
 
-  // เลือก table ตาม brand ของ ticket
+  // เลือก table ตาม brand
   const brandTable = BRAND_TABLES().find(b => b.brand === fields.brand);
   const targetTable = brandTable?.tableId || TBL();
-  console.log(`[Lark] createTicket → brand="${fields.brand}" tableId="${targetTable}"`);
 
-  // กรอง field ที่รู้ว่าอาจมีปัญหา SingleSelect ออกก่อน
-  const SAFE_KEYS = ['reporter','phone','detail','location','workDetail','partsUsed','adminNote'];
-  const SELECT_KEYS = ['type','status','brand','engineerName','branchCode'];
+  if (!targetTable) {
+    throw new Error(`ไม่พบ Table ID สำหรับแบรนด์ "${fields.brand}" — กรุณาตั้งค่า env LARK_TABLE_* ให้ครบ`);
+  }
+
+  // ✅ เพิ่ม sentDate และ status อัตโนมัติถ้าไม่มี
+  const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const enrichedFields = {
+    sentDate: now,
+    status: 'รอดำเนินการ ⏱️',
+    ...fields, // fields จาก user จะ override ค่า default ถ้ามี
+  };
+
+  console.log(`[Lark] createTicket → brand="${fields.brand}" tableId="${targetTable}"`);
+  console.log('[Lark] fieldMap state:', JSON.stringify(_fieldMap));
+  console.log('[Lark] input fields:', JSON.stringify(enrichedFields));
 
   // ลอง pass 1: ส่งทุก field
-  let larkFields = toWriteFields(fields);
-  if (!Object.keys(larkFields).length) throw new Error('No valid fields to send');
-  console.log('[Lark] POST ticket:', JSON.stringify(larkFields));
+  let larkFields = toWriteFields(enrichedFields);
+
+  if (!Object.keys(larkFields).length) {
+    // ✅ แก้: ถ้า toWriteFields คืน {} แสดงว่า field names ใน Lark ไม่ match KEYWORDS
+    // ลอง fallback: ส่ง raw field names โดยตรง (ใช้ชื่อ column จาก firstItems ถ้ามี)
+    throw new Error(
+      `ไม่สามารถแมป fields ได้ (toWriteFields คืนค่าว่าง)\n` +
+      `fieldMap keys: ${Object.keys(_fieldMap).join(', ')}\n` +
+      `input keys: ${Object.keys(enrichedFields).join(', ')}\n` +
+      `กรุณาเปิด /debug/lark-fields เพื่อดู field names จริงใน Lark`
+    );
+  }
+
+  console.log('[Lark] POST ticket fields:', JSON.stringify(larkFields));
 
   let r = await axios.post(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
@@ -487,14 +483,15 @@ async function createTicket(fields) {
     { headers: hdr(token), timeout: 15_000 }
   );
 
-  // ถ้า SingleSelectFieldConvFail ให้ retry โดยส่งเฉพาะ text fields
+  // Retry ถ้า SingleSelect error — ส่งเฉพาะ text fields
   if (r.data.code !== 0 && r.data.msg && r.data.msg.includes('SelectFieldConvFail')) {
     console.warn('[Lark] SingleSelect error — retrying with text-only fields');
+    const SAFE_KEYS = ['reporter','phone','detail','location','workDetail','partsUsed','adminNote'];
     const safeFields = {};
-    SAFE_KEYS.forEach(k => { if (fields[k]) safeFields[k] = fields[k]; });
+    SAFE_KEYS.forEach(k => { if (enrichedFields[k]) safeFields[k] = enrichedFields[k]; });
     larkFields = toWriteFields(safeFields);
     if (!Object.keys(larkFields).length) throw new Error(`Lark create: ${r.data.msg}`);
-    console.log('[Lark] Retry POST:', JSON.stringify(larkFields));
+    console.log('[Lark] Retry POST (text-only):', JSON.stringify(larkFields));
     r = await axios.post(
       `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
       { fields: larkFields },
@@ -502,23 +499,31 @@ async function createTicket(fields) {
     );
   }
 
-  if (r.data.code !== 0) throw new Error(`Lark create: ${r.data.msg}`);
-  // Parse record จาก response ก่อน
+  // ✅ แก้: log error body ชัดเจน
+  if (r.data.code !== 0) {
+    console.error('[Lark] create failed:', r.data.code, r.data.msg);
+    console.error('[Lark] fields sent:', JSON.stringify(larkFields));
+    throw new Error(`Lark create: ${r.data.msg} (code: ${r.data.code})`);
+  }
+
   const created = parseRecord(r.data.data?.record || {});
-  // Fetch กลับมาเพื่อดึง "Number Ticket" ที่ Lark generate ให้
-  // (Lark auto-number field จะถูก populate หลัง create)
+
+  // Fetch กลับมาเพื่อดึง auto-number จาก Lark
   try {
-    await new Promise(resolve => setTimeout(resolve, 800)); // รอ Lark generate
+    await new Promise(resolve => setTimeout(resolve, 800));
     const fresh = await getTicket(created._recordId, targetTable);
-    if (fresh && fresh._recordId) return fresh; // ได้ auto-number จาก Lark
+    if (fresh && fresh._recordId) {
+      invalidateCache();
+      return fresh;
+    }
   } catch(e) {
     console.warn('[Lark] re-fetch after create failed:', e.message);
   }
+
   invalidateCache();
   return created;
 }
 
-// ── DEBUG: get raw field schema ────────────────────────────────
 async function debugSchema() {
   const token = await getToken();
   const rf = await axios.get(
@@ -526,24 +531,26 @@ async function debugSchema() {
     { headers: hdr(token), timeout: 10_000 }
   );
   const schema = (rf.data.data?.items || []).map(f => ({
-    name: f.field_name, type: f.type,
-    mapped_to: detectKey(f.field_name) || '(unmapped)'
+    name: f.field_name, type: f.type, ui_type: f.ui_type,
+    mapped_to: detectKey(f.field_name) || '(unmapped)',
+    options: f.property?.options?.map(o => o.name) || [],
   }));
   const rr = await axios.get(
     `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
     { headers: hdr(token), params: { page_size: 1 }, timeout: 10_000 }
   );
   const sample = rr.data.data?.items?.[0] ? parseRecord(rr.data.data.items[0]) : null;
-  return { schema, fieldMap: _fieldMap, sample };
+  return { schema, fieldMap: _fieldMap, fieldTypes: _fieldTypes, sample };
 }
 
-
-// ── clickButton: Lark ไม่รองรับกดปุ่มผ่าน API โดยตรง ──────────
-// ใช้ updateTicket แทน (status จะ trigger Lark automation เอง)
 async function clickButton(recordId, buttonFieldName) {
   console.log(`[Lark] clickButton skipped (not supported via API): "${buttonFieldName}"`);
   return false;
 }
 const LARK_BUTTONS = { sendToAdmin:'', done:'', changeEngineer:'' };
 
-module.exports = { listTickets, getTicket, updateTicket, createTicket, debugSchema, getToken, ensureFieldMap, clickButton, LARK_BUTTONS, invalidateCache };
+module.exports = {
+  listTickets, getTicket, updateTicket, createTicket,
+  debugSchema, getToken, ensureFieldMap, clickButton,
+  LARK_BUTTONS, invalidateCache,
+};
