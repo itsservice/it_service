@@ -458,6 +458,11 @@ async function createTicket(fields) {
   await ensureFieldMap();
   const token = await getToken();
 
+  // เลือก table ตาม brand ของ ticket
+  const brandTable = BRAND_TABLES().find(b => b.brand === fields.brand);
+  const targetTable = brandTable?.tableId || TBL();
+  console.log(`[Lark] createTicket → brand="${fields.brand}" tableId="${targetTable}"`);
+
   // กรอง field ที่รู้ว่าอาจมีปัญหา SingleSelect ออกก่อน
   const SAFE_KEYS = ['reporter','phone','detail','location','workDetail','partsUsed','adminNote'];
   const SELECT_KEYS = ['type','status','brand','engineerName','branchCode'];
@@ -468,7 +473,7 @@ async function createTicket(fields) {
   console.log('[Lark] POST ticket:', JSON.stringify(larkFields));
 
   let r = await axios.post(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
     { fields: larkFields },
     { headers: hdr(token), timeout: 15_000 }
   );
@@ -482,7 +487,7 @@ async function createTicket(fields) {
     if (!Object.keys(larkFields).length) throw new Error(`Lark create: ${r.data.msg}`);
     console.log('[Lark] Retry POST:', JSON.stringify(larkFields));
     r = await axios.post(
-      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
+      `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
       { fields: larkFields },
       { headers: hdr(token), timeout: 15_000 }
     );
