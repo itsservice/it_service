@@ -337,11 +337,11 @@ setTimeout(window.hideSplash, 3000);
           <label>แบรนด์ <span class="req">*</span></label>
           <select id="f-brand">
             <option value="">— เลือกแบรนด์ —</option>
-            <option>Dunkin'</option>
-            <option>Greyhound Cafe</option>
-            <option>Greyhound Original</option>
-            <option>Au Bon Pain</option>
-            <option>Funky Fries</option>
+            <option value="Dunkin'">Dunkin'</option>
+            <option value="Greyhound Cafe">Greyhound Cafe</option>
+            <option value="Greyhound Original">Greyhound Original</option>
+            <option value="Au Bon Pain">Au Bon Pain</option>
+            <option value="Funky Fries">Funky Fries</option>
           </select>
         </div>
         <div class="form-row">
@@ -403,11 +403,11 @@ setTimeout(window.hideSplash, 3000);
         </div>
         <select class="filter-select" id="f-filter-brand" required>
           <option value="">— แบรนด์ —</option>
-          <option>Dunkin'</option>
-          <option>Greyhound Cafe</option>
-          <option>Greyhound Original</option>
-          <option>Au Bon Pain</option>
-          <option>Funky Fries</option>
+          <option value="Dunkin'">Dunkin'</option>
+          <option value="Greyhound Cafe">Greyhound Cafe</option>
+          <option value="Greyhound Original">Greyhound Original</option>
+          <option value="Au Bon Pain">Au Bon Pain</option>
+          <option value="Funky Fries">Funky Fries</option>
         </select>
         <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา *" required/>
       </div>
@@ -661,28 +661,50 @@ function toggleHistory(el){
 async function renderHistory(){
   const el = document.getElementById('track-history');
   if(!el) return;
-  if(!allTickets.length) await loadTickets();
-  const latest = allTickets.slice(0, 10);
-  const count  = allTickets.length;
+
+  // ดึงจาก localStorage — เฉพาะ ticket ที่เครื่องนี้เคยแจ้ง
+  let localHistory = [];
+  try{ localHistory = JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){}
+
   const isOpen = !!(el.querySelector && el.querySelector('.history-dropdown.open'));
-  if(!latest.length){
-    el.innerHTML='<div class="history-toggle"><span>📋 Ticket ล่าสุด</span><span class="ht-arrow" style="margin-left:auto">▼</span></div><div class="history-dropdown"><div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">ยังไม่มี Ticket</div></div>';
+
+  if(!localHistory.length){
+    el.innerHTML=`<div class="history-toggle" onclick="toggleHistory(this)">
+      <span>📋 TICKET ล่าสุดของคุณ</span>
+      <span class="ht-arrow">▼</span>
+    </div>
+    <div class="history-dropdown">
+      <div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">ยังไม่มีประวัติการแจ้งจากเครื่องนี้</div>
+    </div>`;
     return;
   }
-  const rows = latest.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
-    <span class="hi-id">🎫 ${esc(h.id||'—')}</span>
-    <span style="font-size:11px;color:var(--fg3);margin:0 6px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span>
-    <span class="hi-status"><span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'แก้ไข')}</span></span>
+
+  // อัปเดต status จาก allTickets ล่าสุด
+  const enriched = localHistory.map(h => {
+    const live = allTickets.find(t => t._recordId===h._recordId || t.id===h.id);
+    return live ? { ...h, status: live.status, type: live.type } : h;
+  });
+
+  const rows = enriched.map(h=>`<div class="history-item" onclick="searchById('${esc(h._recordId||h.id)}')">
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="hi-id">🎫 ${esc(h.id||'—')}</span>
+        <span style="font-size:11px;color:var(--accent);font-weight:600">${esc(h.brand||'-')}</span>
+        ${h.branchCode?`<span style="font-size:11px;color:var(--fg3)">· ${esc(h.branchCode)}</span>`:''}
+      </div>
+      <span style="font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span>
+    </div>
+    <span class="hi-status"><span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'รอดำเนินการ ⏱️')}</span></span>
   </div>`).join('');
+
   el.innerHTML=`<div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
-    <span>📋 Ticket ล่าสุด</span>
-    <span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${count}</span>
+    <span>📋 TICKET ล่าสุดของคุณ</span>
+    <span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${enriched.length}</span>
     <span class="ht-arrow">▼</span>
   </div>
   <div class="history-dropdown ${isOpen?'open':''}">${rows}</div>`;
 }
 
-// ── Ticket card ───────────────────────────────────────────────
 function ticketCard(t, expanded=false){
   const TL        = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
   const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
@@ -742,8 +764,19 @@ function saveHistory(ticket){
   const key='it_history';
   let h=[];
   try{ h=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-  h.unshift({ _recordId:ticket._recordId, id:ticket.id, brand:ticket.brand, status:ticket.status, ticketId:ticket.id });
-  h = h.slice(0,20);
+  // ไม่เก็บซ้ำ
+  h = h.filter(x => x._recordId !== ticket._recordId && x.id !== ticket.id);
+  h.unshift({
+    _recordId: ticket._recordId,
+    id:        ticket.id,
+    brand:     ticket.brand,
+    branchCode:ticket.branchCode,
+    type:      ticket.type,
+    detail:    ticket.detail,
+    status:    ticket.status || 'รอดำเนินการ ⏱️',
+    savedAt:   Date.now()
+  });
+  h = h.slice(0,30); // เก็บสูงสุด 30 รายการ
   try{ localStorage.setItem(key, JSON.stringify(h)); }catch(_){}
 }
 
