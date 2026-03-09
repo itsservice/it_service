@@ -651,7 +651,7 @@ function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
   const ctrl = new AbortController();
-  const tid  = setTimeout(()=>ctrl.abort(), 12000);
+  const tid  = setTimeout(()=>ctrl.abort(), 25000); // 25s — ให้เวลา backend ดึง 4 tables
   return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
     .then(r=>{ clearTimeout(tid); return r.json(); })
     .catch(e=>{ clearTimeout(tid); throw e; });
@@ -734,7 +734,8 @@ async function bootApp(){
     document.getElementById('nav-debug').style.display='none';
   }
   connectSSE();
-  await Promise.all([loadTickets(), loadLogs()]);
+  // โหลด data ใน background — ไม่ block การแสดง UI
+  Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
   if(['superadmin','admin'].includes(u.role)) loadUsers();
   renderDashboard();
   window.hideSplash?.();
@@ -768,8 +769,13 @@ function connectSSE(){
 // DATA
 // ════════════════════════════════════════════════════════════════
 async function loadTickets(){
-  const d=await api('/api/tickets');
-  if(d.ok){ tickets=d.tickets||[]; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
+  try{
+    const d=await api('/api/tickets');
+    if(d.ok){ tickets=d.tickets||[]; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
+  }catch(e){
+    console.warn('[loadTickets] error:', e.message);
+    // ไม่ throw — ให้ UI ยังแสดงได้ แค่ไม่มีข้อมูล
+  }
 }
 async function loadLogs(){
   const d=await api('/api/logs?limit=200');
