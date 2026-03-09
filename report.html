@@ -348,16 +348,9 @@ setTimeout(window.hideSplash, 3000);
         <div class="form-row">
           <div class="form-group" style="position:relative">
             <label>รหัสสาขา</label>
-            <div style="position:relative">
-              <input type="text" id="f-branch" placeholder="พิมพ์หรือกดเลือกสาขา" autocomplete="off"
-                style="width:100%;padding-right:40px"
-                oninput="showBranchDropdown('f-branch','branch-dd-form','f-brand')"
-                onfocus="showBranchDropdown('f-branch','branch-dd-form','f-brand')"
-                onblur="setTimeout(()=>hideBranchDropdown('branch-dd-form'),200)"/>
-              <span onclick="toggleBranchDropdown('f-branch','branch-dd-form','f-brand')"
-                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fg3);font-size:14px;user-select:none">▼</span>
-              <div id="branch-dd-form" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1,#333);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
-            </div>
+            <input type="text" id="f-branch" placeholder="พิมพ์หรือเลือกสาขา"
+                list="branch-list-form" autocomplete="new-password"/>
+            <datalist id="branch-list-form"></datalist>
           </div>
           <div class="form-group">
             <label>ประเภทปัญหา <span class="req">*</span></label>
@@ -428,13 +421,11 @@ setTimeout(window.hideSplash, 3000);
           <option value="Funky Fries">Funky Fries</option>
         </select>
         <div style="position:relative;flex:1">
-          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา" autocomplete="off" style="width:100%;padding-right:36px"
-            oninput="showBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
-            onfocus="showBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
-            onblur="setTimeout(()=>hideBranchDropdown('branch-dd-track'),200)"/>
-          <span onclick="toggleBranchDropdown('f-filter-branch','branch-dd-track','f-filter-brand')"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fg3);font-size:13px;user-select:none">▼</span>
-          <div id="branch-dd-track" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg2,#1a1a22);border:1px solid var(--b1,#333);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา"
+            list="branch-list-track" autocomplete="new-password" style="width:100%"
+            oninput="triggerSearch()"
+            onchange="triggerSearch()"/>
+          <datalist id="branch-list-track"></datalist>
         </div>
       </div>
       <div class="search-hint" id="filter-hint" style="color:#ff8099;display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
@@ -551,6 +542,7 @@ async function loadTickets(){
 (async()=>{
   // แสดงหน้าทันที แล้วโหลด data ใน background
   renderHistory();
+  loadBranches();
   window.hideSplash?.();
   // init branch suggest dropdowns
   // branch dropdowns are event-driven (onfocus/oninput/onclick) // แสดง UI ก่อนเลย
@@ -817,29 +809,37 @@ function saveHistory(ticket){
 }
 
 // ── Branch Dropdown ───────────────────────────────────────────
+// ── Branch datalist ──────────────────────────────────────────
 // รายการสาขาสำรอง — อัปเดตจาก /debug/branches
-const BRANCH_FALLBACK = {
-  "Dunkin'"         : ["K.0001","K.0002","K.0003","K.0004","K.0006"],
-  "Greyhound Cafe"  : ["0003","0005"],
-  "Greyhound Original": [],
-  "Au Bon Pain"     : ["0002"],
-  "Funky Fries"     : ["F1004"],
-};
+
+let _branchData = {}; // { "Dunkin'": [{code, nameTh, nameEn}, ...] }
+
+async function loadBranches(){
+  try {
+    const r = await fetch('/api/branches');
+    const d = await r.json();
+    if(d.ok) _branchData = d.branches;
+  } catch(e) { console.warn('[Branches]', e.message); }
+  updateBranchList('branch-list-form',  'f-brand');
+  updateBranchList('branch-list-track', 'f-filter-brand');
+}
 
 function getBranchList(brand){
-  // ดึงจาก allTickets + localStorage ก่อน
-  const localH = (() => { try{ return JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){ return []; } })();
-  const allSrc = [...allTickets, ...localH];
-  const live = [...new Set(
-    allSrc
-      .filter(t => !brand || (t.brand||'').toLowerCase()===brand.toLowerCase())
-      .map(t => (t.branchCode||'').trim())
-      .filter(Boolean)
-  )];
-  // merge กับ fallback ถ้า live ว่าง
-  const fallback = brand ? (BRANCH_FALLBACK[brand]||[]) : Object.values(BRANCH_FALLBACK).flat();
-  const merged = [...new Set([...live, ...fallback])].sort();
-  return merged;
+  const list = brand ? (_branchData[brand]||[]) : Object.values(_branchData).flat();
+  const seen = new Set();
+  return list.filter(b=>{ if(seen.has(b.code)) return false; seen.add(b.code); return true; })
+             .sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+}
+
+function updateBranchList(datalistId, brandSelectId){
+  const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
+  const branches = getBranchList(brand);
+  const dl = document.getElementById(datalistId);
+  if(!dl) return;
+  dl.innerHTML = branches.map(b=>{
+    const label = b.nameTh ? b.code+' – '+b.nameTh : b.code;
+    return `<option value="${b.code}" label="${label}">`;
+  }).join('');
 }
 
 function renderBranchDD(ddId, inputId, brand, q=''){
