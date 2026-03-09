@@ -386,7 +386,7 @@ async function listTickets({ brand, status, noCache } = {}) {
       if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
       const parsed = items.map(rec => {
         const t = parseRecord(rec);
-        if (!t.brand) t.brand = brandName;
+        t.brand = brandName; // ใช้ชื่อจาก table map เสมอ
         return t;
       });
       all = all.concat(parsed);
