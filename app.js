@@ -218,6 +218,27 @@ app.get('/debug/env', (_, res) => {
   });
 });
 // ── DEBUG: ทดสอบดึงข้อมูลจากทุก table ──────────────────────────
+// DEBUG: ดู branchCode จริงจาก Lark
+app.get('/debug/branches', async (_, res) => {
+  try {
+    const { listTickets } = require('./larkService');
+    const tickets = await listTickets({ noCache: true });
+    const byBrand = {};
+    tickets.forEach(t => {
+      const b = t.brand || 'unknown';
+      if(!byBrand[b]) byBrand[b] = new Set();
+      if(t.branchCode) byBrand[b].add(t.branchCode);
+    });
+    const result = {};
+    Object.entries(byBrand).forEach(([brand, set]) => {
+      result[brand] = [...set].sort();
+    });
+    res.json({ ok:true, total: tickets.length, branchCodes: result });
+  } catch(e) {
+    res.json({ ok:false, error: e.message });
+  }
+});
+
 app.get('/debug/tables', async (_, res) => {
   const { getToken } = require('./larkService');
   const axios = require('axios');
