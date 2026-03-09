@@ -859,15 +859,33 @@ function renderDashboard(){
   if(badge) badge.textContent = `รวม ${total} Ticket · รอ ${waiting} · ดำเนินการ ${inprog} · เสร็จ ${done}`;
   // Brand chart + recent
   const brandMap={};
-  // normalize brand name — map ชื่อที่ Lark ส่งมาไม่ตรงกลับเป็น 5 แบรนด์ที่ถูก
+  // แสดงครบ 5 แบรนด์เสมอ — เริ่มต้นด้วย 0 ทุกแบรนด์
+  const FIXED_BRANDS = ["Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];
+  FIXED_BRANDS.forEach(b=>brandMap[b]=0);
+  // normalize ชื่อจาก Lark → map กลับมา 5 แบรนด์
   const BRAND_NORM = {
-    "dunkin":"Dunkin'","dunkin'":"Dunkin'",
+    "dunkin'":"Dunkin'","dunkin’":"Dunkin'","dunkin":"Dunkin'",
     "greyhound cafe":"Greyhound Cafe","greyhound original":"Greyhound Original","greyhound":"Greyhound Cafe",
-    "au bon pain":"Au Bon Pain","funky fries":"Funky Fries"
+    "au bon pain":"Au Bon Pain","aubonpain":"Au Bon Pain",
+    "funky fries":"Funky Fries","funkyfries":"Funky Fries"
   };
-  const normBrand = b => BRAND_NORM[(b||'').toLowerCase().trim()] || b || 'ไม่ระบุ';
-  tickets.forEach(t=>{ const b=normBrand(t.brand); brandMap[b]=(brandMap[b]||0)+1; });
-  const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const normBrand = b => {
+    const k = (b||'').toLowerCase().trim();
+    if(BRAND_NORM[k]) return BRAND_NORM[k];
+    // partial match — ถ้า Lark ส่งชื่อบางส่วน
+    for(const [key,val] of Object.entries(BRAND_NORM)){
+      if(k.includes(key) || key.includes(k)) return val;
+    }
+    return null; // ไม่ match → ไม่นับ
+  };
+  tickets.forEach(t=>{
+    const b = normBrand(t.brand);
+    if(b) brandMap[b]=(brandMap[b]||0)+1;
+  });
+  // DEBUG: แสดง brand values จริงใน console — เปิด DevTools F12 → Console
+  console.log('[Brand Debug] raw brands from Lark:', [...new Set(tickets.map(t=>t.brand))]);
+  console.log('[Brand Debug] normalized map:', brandMap);
+  const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]);
   const maxB=brands[0]?.[1]||1;
   const recent=tickets.slice(0,8);
   document.getElementById('dash-grid').innerHTML=`
