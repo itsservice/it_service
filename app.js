@@ -29,12 +29,9 @@ app.get('/api/events', (req, res) => {
 });
 
 // ── Static pages ─────────────────────────────────────────────
-// Health check - lightweight, used by keep-alive
 app.get('/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
-
 app.get('/', (_, res) => res.redirect('/report'));
 
-// No-cache headers สำหรับ HTML ทุกหน้า — บังคับ browser โหลดใหม่ทุกครั้ง
 const noCacheHtml = (file) => (_, res) => {
   res.set({
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -43,11 +40,10 @@ const noCacheHtml = (file) => (_, res) => {
   });
   res.sendFile(path.join(__dirname, file));
 };
-app.get('/report',         noCacheHtml('report.html'));
-// Brand-specific report URLs
-app.get('/report/:brand',  noCacheHtml('report.html'));
-app.get('/admin',    noCacheHtml('admin.html'));
-app.get('/engineer', noCacheHtml('engineer.html'));
+app.get('/report',        noCacheHtml('report.html'));
+app.get('/report/:brand', noCacheHtml('report.html'));
+app.get('/admin',         noCacheHtml('admin.html'));
+app.get('/engineer',      noCacheHtml('engineer.html'));
 
 // ── Auth ──────────────────────────────────────────────────────
 app.post('/api/auth/login', (req, res) => {
@@ -73,23 +69,19 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
   res.json({ ok:true, user:req.user });
 });
 
-// ── Tickets ───────────────────────────────────────────────────
-// ── Branch list API ─────────────────────────────────────────
-// ดึงรายการสาขาจาก Lark Branch tables
+// ── Branch list API ───────────────────────────────────────────
 const BRANCH_TABLES = [
-  { brand: "Dunkin'",          tableId: process.env.LARK_BRANCH_DUNKIN },
-  { brand: "Greyhound Cafe",   tableId: process.env.LARK_BRANCH_GREYHOUND_CAFE },
+  { brand: "Dunkin'",           tableId: process.env.LARK_BRANCH_DUNKIN },
+  { brand: "Greyhound Cafe",    tableId: process.env.LARK_BRANCH_GREYHOUND_CAFE },
   { brand: "Greyhound Original",tableId: null },
-  { brand: "Au Bon Pain",      tableId: process.env.LARK_BRANCH_AU_BON_PAIN },
-  { brand: "Funky Fries",      tableId: process.env.LARK_BRANCH_FUNKY_FRIES },
+  { brand: "Au Bon Pain",       tableId: process.env.LARK_BRANCH_AU_BON_PAIN },
+  { brand: "Funky Fries",       tableId: process.env.LARK_BRANCH_FUNKY_FRIES },
 ];
 
 let _branchCache = null, _branchCacheExp = 0;
-// cache cleared on restart
 
 app.get('/api/branches', async (req, res) => {
   try {
-    // cache 10 นาที
     if (_branchCache && Date.now() < _branchCacheExp) {
       return res.json({ ok:true, branches: _branchCache });
     }
@@ -98,10 +90,8 @@ app.get('/api/branches', async (req, res) => {
     const BASE  = 'https://open.larksuite.com/open-apis';
     const APP   = process.env.LARK_APP_TOKEN;
     const token = await getToken();
-
     const result = {};
 
-    // ── helper: fetch all pages from a table ────────────────────
     async function fetchAllRecords(tableId) {
       let all = [], pt;
       do {
@@ -119,10 +109,13 @@ app.get('/api/branches', async (req, res) => {
       const code   = fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
       const nameTh = fields['ชื่อสาขา (Thai)'] || fields['Shop Name (Thai)'] || fields['ชื่อสาขา'] || '';
       const nameEn = fields['ชื่อสาขา (English)'] || fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
-      return { code: String(code).trim(), nameTh: String(nameTh).replace(/^'+|'+$/g,'').trim(), nameEn: String(nameEn).replace(/^'+|'+$/g,'').trim() };
+      return {
+        code: String(code).trim(),
+        nameTh: String(nameTh).replace(/^'+|'+$/g,'').trim(),
+        nameEn: String(nameEn).replace(/^'+|'+$/g,'').trim()
+      };
     }
 
-    // ── Helper: extract text from Lark field (handles SingleSelect object) ─
     function larkText(v) {
       if (!v) return '';
       if (typeof v === 'string') return v;
@@ -131,7 +124,7 @@ app.get('/api/branches', async (req, res) => {
       return String(v);
     }
 
-    // ── Master branch table (single table for all brands) ───────
+    // Master branch table (single table for all brands)
     const masterTableId = process.env.LARK_BRANCH_TABLE;
     if (masterTableId) {
       const items = await fetchAllRecords(masterTableId);
@@ -144,10 +137,9 @@ app.get('/api/branches', async (req, res) => {
         if (!result[brandVal]) result[brandVal] = [];
         result[brandVal].push(b);
       });
-      Object.keys(result).forEach(brand => console.log(`[Branches/master] ${brand}: ${result[brand].length} branches`));
     }
 
-    // ── Per-brand tables (fill gaps not covered by master table) ─
+    // Per-brand tables (fill gaps)
     await Promise.allSettled(
       BRANCH_TABLES.filter(b => b.tableId && !result[b.brand]?.length).map(async ({ brand, tableId }) => {
         const items = await fetchAllRecords(tableId);
@@ -170,9 +162,9 @@ app.get('/api/branches', async (req, res) => {
   }
 });
 
+// ── Tickets ───────────────────────────────────────────────────
 app.get('/api/tickets', async (req, res) => {
   try {
-    // timeout รวม 20s — ถ้า Lark ช้าเกินให้ return ของที่มีก่อน
     let tickets = await Promise.race([
       listTickets(),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20_000))
@@ -196,16 +188,44 @@ app.get('/api/tickets/:rid', async (req, res) => {
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
+// ✅ แก้: POST /api/tickets — เพิ่ม sentDate + status อัตโนมัติ + error message ชัดเจน
 app.post('/api/tickets', async (req, res) => {
   try {
     const { reporter, phone, brand, branchCode, type, detail, location } = req.body || {};
-    if (!reporter||!phone||!brand||!type||!detail)
-      return res.json({ ok:false, error:'กรุณากรอกข้อมูลให้ครบ' });
-    const t = await createTicket({ reporter, phone, brand, branchCode:branchCode||'', type, detail, location:location||'' });
-    const log = addLog({ action:'create_ticket', ticketId:t._recordId, ticketLabel:t.id, detail:`สร้างโดย ${reporter}` });
+
+    // Validate required fields
+    if (!reporter || !phone || !brand || !type || !detail) {
+      return res.json({ ok:false, error:'กรุณากรอกข้อมูลให้ครบ (reporter, phone, brand, type, detail)' });
+    }
+
+    // ✅ เพิ่ม sentDate และ status เริ่มต้นเสมอ
+    const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+    const t = await createTicket({
+      reporter,
+      phone,
+      brand,
+      branchCode: branchCode || '',
+      type,
+      detail,
+      location:  location  || '',
+      status:    'รอดำเนินการ ⏱️',  // ✅ ค่าเริ่มต้น
+      sentDate:  now,                 // ✅ วันที่แจ้งอัตโนมัติ
+    });
+
+    const log = addLog({
+      action:'create_ticket',
+      ticketId: t._recordId,
+      ticketLabel: t.id,
+      detail: `สร้างโดย ${reporter} | ${brand} | ${type}`
+    });
+
     broadcast('ticket_created', { ticket:t });
     res.json({ ok:true, ticket:t, log });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) {
+    console.error('[POST /api/tickets] Error:', e.message);
+    res.json({ ok:false, error: e.message });
+  }
 });
 
 app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
@@ -222,7 +242,6 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const { engineerName, assignedTo } = req.body || {};
-    // Update ชื่อช่าง + สถานะ อยู่ระหว่างดำเนินการ
     const t = await updateTicket(req.params.rid, {
       engineerName: engineerName||'',
       assignedTo:   assignedTo||engineerName||'',
@@ -305,18 +324,37 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 // ── Debug ─────────────────────────────────────────────────────
 app.get('/debug/env', (_, res) => {
   res.json({
-    hasLarkAppId:    !!process.env.LARK_APP_ID,
-    hasLarkSecret:   !!process.env.LARK_APP_SECRET,
-    hasLarkAppToken: !!process.env.LARK_APP_TOKEN,
-    hasLarkTableId:  !!process.env.LARK_TABLE_ID,
-    hasLineToken:    !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
-    hasLineSecret:   !!process.env.LINE_CHANNEL_SECRET,
-    nodeEnv:         process.env.NODE_ENV||'development',
+    hasLarkAppId:              !!process.env.LARK_APP_ID,
+    hasLarkSecret:             !!process.env.LARK_APP_SECRET,
+    hasLarkAppToken:           !!process.env.LARK_APP_TOKEN,
+    hasLarkTableId:            !!process.env.LARK_TABLE_ID,
+    hasLarkTableDunkin:        !!process.env.LARK_TABLE_DUNKIN,
+    hasLarkTableGreyhoundCafe: !!process.env.LARK_TABLE_GREYHOUND_CAFE,
+    // ✅ แสดงทั้งสองชื่อ
+    hasLarkTableGreyhoundOri:  !!(process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI),
+    hasLarkTableAuBonPain:     !!process.env.LARK_TABLE_AU_BON_PAIN,
+    hasLarkTableFunkyFries:    !!process.env.LARK_TABLE_FUNKY_FRIES,
+    hasLineToken:              !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+    hasLineSecret:             !!process.env.LINE_CHANNEL_SECRET,
+    hasLineAdminGroup:         !!process.env.LINE_ADMIN_GROUP_ID,
+    nodeEnv:                   process.env.NODE_ENV || 'development',
+    appUrl:                    process.env.APP_URL || '(not set)',
   });
 });
-// ── DEBUG: ทดสอบดึงข้อมูลจากทุก table ──────────────────────────
-// DEBUG: ดู branchCode จาก cache เท่านั้น — ไม่ fetch Lark
-// DEBUG: ดู raw fields จาก branch table
+
+// ✅ ใหม่: Force rebuild fieldMap (ใช้เมื่อ field names ใน Lark เปลี่ยน)
+app.get('/debug/rebuild-fieldmap', async (_, res) => {
+  try {
+    const { ensureFieldMap } = require('./larkService');
+    await ensureFieldMap(true); // force rebuild
+    const { debugSchema } = require('./larkService');
+    const d = await debugSchema();
+    res.json({ ok:true, message:'fieldMap rebuilt', fieldMap: d.fieldMap, schema: d.schema });
+  } catch(e) {
+    res.json({ ok:false, error: e.message });
+  }
+});
+
 app.get('/debug/branch-raw', async (req, res) => {
   try {
     const { getToken } = require('./larkService');
@@ -324,37 +362,26 @@ app.get('/debug/branch-raw', async (req, res) => {
     const BASE  = 'https://open.larksuite.com/open-apis';
     const APP   = process.env.LARK_APP_TOKEN;
     const token = await getToken();
-
-    // ลอง Dunkin branch table ก่อน
     const tableId = process.env.LARK_BRANCH_DUNKIN;
     if(!tableId) return res.json({ ok:false, error:'LARK_BRANCH_DUNKIN not set', env: Object.keys(process.env).filter(k=>k.startsWith('LARK')) });
-
     const r = await axios.get(
       `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
       { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 3 }, timeout: 12000 }
     );
     const items = r.data.data?.items || [];
-    // แสดง field names ของ record แรก
     const firstFields = items[0]?.fields || {};
     res.json({
-      ok: true,
-      larkCode: r.data.code,
-      tableId,
+      ok: true, larkCode: r.data.code, tableId,
       totalReturned: items.length,
       fieldNames: Object.keys(firstFields),
       firstRecord: firstFields,
       envKeys: Object.keys(process.env).filter(k=>k.startsWith('LARK'))
     });
-  } catch(e) {
-    res.json({ ok:false, error: e.message });
-  }
+  } catch(e) { res.json({ ok:false, error: e.message }); }
 });
 
 app.get('/debug/branches', (_, res) => {
   try {
-    // อ่าน _ticketCache โดยตรง ไม่รอ API
-    const svc = require('./larkService');
-    // ใช้ tickets ที่ cache ไว้แล้วใน memory
     const tickets = global._debugTickets || [];
     const byBrand = {};
     tickets.forEach(t => {
@@ -363,13 +390,9 @@ app.get('/debug/branches', (_, res) => {
       if(t.branchCode) byBrand[b].add(t.branchCode);
     });
     const result = {};
-    Object.entries(byBrand).forEach(([brand, set]) => {
-      result[brand] = [...set].sort();
-    });
+    Object.entries(byBrand).forEach(([brand, set]) => { result[brand] = [...set].sort(); });
     res.json({ ok:true, total: tickets.length, cached: !!global._debugTickets, branchCodes: result });
-  } catch(e) {
-    res.json({ ok:false, error: e.message });
-  }
+  } catch(e) { res.json({ ok:false, error: e.message }); }
 });
 
 app.get('/debug/tables', async (_, res) => {
@@ -380,7 +403,8 @@ app.get('/debug/tables', async (_, res) => {
   const tables = [
     { brand: "Dunkin'",            tableId: process.env.LARK_TABLE_DUNKIN || process.env.LARK_TABLE_ID },
     { brand: "Greyhound Cafe",     tableId: process.env.LARK_TABLE_GREYHOUND_CAFE },
-    { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORI },
+    // ✅ แก้: รองรับทั้งสองชื่อ
+    { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI },
     { brand: "Au Bon Pain",        tableId: process.env.LARK_TABLE_AU_BON_PAIN },
     { brand: "Funky Fries",        tableId: process.env.LARK_TABLE_FUNKY_FRIES },
   ];
@@ -393,16 +417,13 @@ app.get('/debug/tables', async (_, res) => {
         { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 10 }, timeout: 10000 }
       );
       const count = r.data.data?.total || r.data.data?.items?.length || 0;
-      return { brand, tableId, status: 'OK', larkCode: r.data.code, count };
+      return { brand, tableId, status: r.data.code === 0 ? 'OK' : 'ERROR', larkCode: r.data.code, count };
     }));
     res.json({
-      ok: true,
-      appToken: APP,
+      ok: true, appToken: APP ? APP.slice(0,8)+'...' : null,
       tables: results.map((r, i) => r.status === 'fulfilled' ? r.value : { brand: tables[i].brand, error: r.reason?.message })
     });
-  } catch(e) {
-    res.json({ ok: false, error: e.message });
-  }
+  } catch(e) { res.json({ ok: false, error: e.message }); }
 });
 
 app.get('/debug/lark-fields', async (_, res) => {
@@ -410,7 +431,6 @@ app.get('/debug/lark-fields', async (_, res) => {
   catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-// ── Test LINE push ───────────────────────────────────────────
 app.get('/debug/test-line', async (_, res) => {
   const axios = require('axios');
   const AT = process.env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -423,12 +443,9 @@ app.get('/debug/test-line', async (_, res) => {
       { headers:{ Authorization:'Bearer '+AT }, timeout:8000 }
     );
     res.json({ ok:true, msg:'LINE sent to group: '+group.slice(0,8)+'...' });
-  } catch(e) {
-    res.json({ ok:false, error: e.response?.data || e.message });
-  }
+  } catch(e) { res.json({ ok:false, error: e.response?.data || e.message }); }
 });
 
-// ── Test webhook manually ────────────────────────────────────
 app.post('/debug/test-webhook', async (req, res) => {
   const { record_id } = req.body || {};
   if (!record_id) return res.json({ ok:false, error:'send { "record_id": "recXXX" }' });
@@ -450,8 +467,12 @@ app.use('/line', lineRouter);
 
 // ── Pre-load fieldMap on startup ──────────────────────────────
 setTimeout(async () => {
-  try { await ensureFieldMap(); console.log('[App] fieldMap ready'); }
-  catch(e) { console.warn('[App] fieldMap preload failed:', e.message); }
+  try {
+    await ensureFieldMap();
+    console.log('[App] ✅ fieldMap ready on startup');
+  } catch(e) {
+    console.warn('[App] fieldMap preload failed:', e.message);
+  }
 }, 3000);
 
 module.exports = app;
