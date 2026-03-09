@@ -676,12 +676,35 @@ async function tryAutoLogin(){
   const saved = localStorage.getItem('admin_auth');
   if(!saved) return false;
   try{
-    const {token}=JSON.parse(saved);
-    const d = await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});
+    const {token, user: savedUser} = JSON.parse(saved);
+    if(!token) { localStorage.removeItem('admin_auth'); return false; }
+
+    // ✅ แก้: ตั้ง timeout สั้นลง 8s — ถ้า server ยังไม่ตื่น ให้ login ใหม่เลย
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 8000);
+    let d;
+    try {
+      d = await fetch('/api/auth/me', {
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        signal: ctrl.signal
+      }).then(r => r.json());
+    } catch(fetchErr) {
+      // ✅ ถ้า network error / server หลับ → แสดง login form ทันที ไม่ loop
+      clearTimeout(tid);
+      console.warn('[AutoLogin] Server unreachable:', fetchErr.message);
+      localStorage.removeItem('admin_auth');
+      return false;
+    }
+    clearTimeout(tid);
+
     if(d.ok && ['superadmin','admin','manager'].includes(d.user.role)){
       AUTH={token,user:d.user}; return true;
     }
-  }catch(_){}
+    // ✅ Token หมดอายุ (server restart) — ล้างแล้วให้ login ใหม่
+    console.log('[AutoLogin] Token expired or invalid — please login again');
+  }catch(e){
+    console.warn('[AutoLogin] Error:', e.message);
+  }
   localStorage.removeItem('admin_auth');
   return false;
 }
