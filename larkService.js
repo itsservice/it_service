@@ -309,39 +309,52 @@ function toUnixMs(val) {
 // ── ensureFieldMap ────────────────────────────────────────────
 async function ensureFieldMap() {
   if (_fieldMap && Object.keys(_fieldMap).length > 0) return;
-  console.log('[Lark] fieldMap not ready — building from schema...');
+  console.log('[Lark] fieldMap not ready — building from ALL brand tables...');
   try {
-    // ดึง schema โดยตรง ไม่ต้องรอ listTickets
     const token = await getToken();
-    const axios = require('axios');
-    const r = await axios.get(
-      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`,
-      { headers: hdr(token), timeout: 10_000 }
-    );
-    const items = r.data.data?.items || [];
-    if (items.length) {
-      // Build option maps and field type registry
-      items.forEach(f => {
-        _fieldTypes[f.field_name] = f.ui_type;
-        if (f.ui_type === 'SingleSelect' || f.ui_type === 'MultiSelect') {
-          const opts = f.property?.options || [];
-          opts.forEach(o => { if (o.id && o.name) _optionMap[o.id] = o.name; });
-          _fieldOptions[f.field_name] = new Set(opts.map(o => o.name));
-        }
-      });
+    const tables = BRAND_TABLES();
+    let firstItems = null;
+
+    // ดึง schema จากทุก table พร้อมกัน → merge optionMap ให้ครบ
+    await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
+      try {
+        const r = await axios.get(
+          `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`,
+          { headers: hdr(token), timeout: 10_000 }
+        );
+        const items = r.data.data?.items || [];
+        if (!items.length) return;
+        // เก็บ items แรกไว้ build fieldMap
+        if (!firstItems) firstItems = items;
+        // merge fieldTypes และ optionMap จากทุก table
+        items.forEach(f => {
+          _fieldTypes[f.field_name] = f.ui_type;
+          if (f.ui_type === 'SingleSelect' || f.ui_type === 'MultiSelect') {
+            const opts = f.property?.options || [];
+            opts.forEach(o => { if (o.id && o.name) _optionMap[o.id] = o.name; });
+            if (!_fieldOptions[f.field_name]) _fieldOptions[f.field_name] = new Set();
+            opts.forEach(o => _fieldOptions[f.field_name].add(o.name));
+          }
+        });
+        console.log(`[Lark] schema loaded: ${brandName} (${items.length} fields, tableId: ${tableId})`);
+      } catch(e) {
+        console.error(`[Lark] schema failed for ${brandName}:`, e.message);
+      }
+    }));
+
+    if (firstItems) {
       console.log('[Lark] optionMap built:', Object.keys(_optionMap).length, 'options');
       console.log('[Lark] fieldTypes:', Object.entries(_fieldTypes).map(([k,v])=>`${k}:${v}`).join(', '));
       const fakeRecord = { record_id: 'fake', fields: {} };
-      items.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
+      firstItems.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
       _fieldMap = buildFieldMap(fakeRecord);
       console.log('[Lark] fieldMap built from schema:', Object.keys(_fieldMap).length, 'fields');
     } else {
-      // fallback: list tickets
       await listTickets();
     }
   } catch(e) {
     console.error('[Lark] ensureFieldMap error:', e.message);
-    await listTickets(); // fallback
+    await listTickets();
   }
 }
 
@@ -371,6 +384,14 @@ async function listTickets({ brand, status, noCache } = {}) {
         );
         const items = r.data.data?.items || [];
         if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
+        // build optionMap from any SingleSelect fields found in records
+        items.forEach(rec => {
+          Object.values(rec.fields || {}).forEach(v => {
+            if (v && typeof v === 'string' && v.startsWith('opt') && !_optionMap[v]) {
+              // unknown option — will show raw until ensureFieldMap resolves
+            }
+          });
+        });
         const parsed = items.map(rec => {
           const t = parseRecord(rec);
           // ถ้า brand field ว่าง → ใส่ชื่อแบรนด์จาก table map
