@@ -23,7 +23,16 @@ async function getToken() {
 }
 const hdr = t => ({ Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' });
 const APP = () => process.env.LARK_APP_TOKEN;
-const TBL = () => process.env.LARK_TABLE_ID;
+// ── Multi-brand table map ─────────────────────────────────────
+// แต่ละแบรนด์มี Lark Table ID แยกกัน
+const BRAND_TABLES = () => [
+  { brand: "Dunkin'",           tableId: process.env.LARK_TABLE_DUNKIN           || process.env.LARK_TABLE_ID },
+  { brand: "Greyhound Cafe",    tableId: process.env.LARK_TABLE_GREYHOUND_CAFE   },
+  { brand: "Greyhound Original",tableId: process.env.LARK_TABLE_GREYHOUND_ORI   },
+  { brand: "Au Bon Pain",       tableId: process.env.LARK_TABLE_AU_BON_PAIN      },
+  { brand: "Funky Fries",       tableId: process.env.LARK_TABLE_FUNKY_FRIES      },
+].filter(b => b.tableId); // เอาเฉพาะที่มี tableId
+const TBL = () => process.env.LARK_TABLE_ID; // backward compat
 
 // ── Keyword → internal key mapping ────────────────────────────
 const KEYWORDS = [
@@ -338,7 +347,7 @@ async function ensureFieldMap() {
 
 // ── LIST tickets ───────────────────────────────────────────────
 async function listTickets({ brand, status, noCache } = {}) {
-  // Return cache ถ้ายังสด (ลด Lark API calls)
+  // Return cache ถ้ายังสด
   if (!noCache && _ticketCache && Date.now() < _ticketCacheExp) {
     let cached = _ticketCache;
     if (brand) cached = cached.filter(t => t.brand === brand);
@@ -346,42 +355,53 @@ async function listTickets({ brand, status, noCache } = {}) {
     return cached;
   }
   const token = await getToken();
-  let all = [], pt;
-  do {
-    const params = { page_size: 100 };
-    if (pt) params.page_token = pt;
-    const r = await axios.get(
-      `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
-      { headers: hdr(token), params, timeout: 15_000 }
-    );
-    if (r.data.code !== 0) throw new Error(`Lark list: ${r.data.msg}`);
-    const items = r.data.data?.items || [];
-    if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
-    all = all.concat(items.map(parseRecord));
-    pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
-  } while (pt);
+  const tables = BRAND_TABLES();
+  let allTickets = [];
 
-  // Filter server-side
-  if (brand && brand !== 'ALL') all = all.filter(t => t.brand === brand);
-  // Save to cache (ก่อน filter)
-  _ticketCache = [...all];
-  _ticketCacheExp = Date.now() + CACHE_TTL;
+  // ดึงจากทุก table (ทุกแบรนด์) พร้อมกัน
+  await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
+    let all = [], pt;
+    try {
+      do {
+        const params = { page_size: 100 };
+        if (pt) params.page_token = pt;
+        const r = await axios.get(
+          `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`,
+          { headers: hdr(token), params, timeout: 15_000 }
+        );
+        const items = r.data.data?.items || [];
+        if (!_fieldMap && items.length) _fieldMap = buildFieldMap(items[0]);
+        const parsed = items.map(rec => {
+          const t = parseRecord(rec);
+          // ถ้า brand field ว่าง → ใส่ชื่อแบรนด์จาก table map
+          if (!t.brand) t.brand = brandName;
+          return t;
+        });
+        all = all.concat(parsed);
+        pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
+      } while (pt);
+      allTickets = allTickets.concat(all);
+    } catch(e) {
+      console.error(`[Lark] failed to fetch table ${brandName} (${tableId}):`, e.message);
+    }
+  }));
 
-  if (brand) all = all.filter(t => t.brand === brand);
-  if (status) all = all.filter(t => t.status === status);
-
-  // Sort: newest first (by id descending)
-  all.sort((a, b) => {
-    const na = String(a.id || '').replace(/\D/g, '');
-    const nb = String(b.id || '').replace(/\D/g, '');
-    return Number(nb) - Number(na);
+  // sort by id desc
+  allTickets.sort((a, b) => {
+    const ai = parseInt(String(a.id||'0').replace(/\D/g,''))||0;
+    const bi = parseInt(String(b.id||'0').replace(/\D/g,''))||0;
+    return bi - ai;
   });
 
-  console.log(`[Lark] Loaded ${all.length} tickets`);
-  return all;
+  _ticketCache = allTickets;
+  _ticketCacheExp = Date.now() + CACHE_TTL;
+
+  let result = allTickets;
+  if (brand) result = result.filter(t => t.brand === brand);
+  if (status) result = result.filter(t => t.status === status);
+  return result;
 }
 
-// ── GET single ticket ──────────────────────────────────────────
 async function getTicket(recordId) {
   const token = await getToken();
   const r = await axios.get(
