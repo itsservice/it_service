@@ -85,6 +85,7 @@ const BRANCH_TABLES = [
 ];
 
 let _branchCache = null, _branchCacheExp = 0;
+// cache cleared on restart
 
 app.get('/api/branches', async (req, res) => {
   try {
@@ -110,12 +111,14 @@ app.get('/api/branches', async (req, res) => {
           const items = r.data.data?.items || [];
           items.forEach(rec => {
             const fields = rec.fields || {};
-            // หา field ชื่อ "สาขา" หรือ "รหัสสาขา" หรือ "Shop Code"
-            const code = fields['สาขา'] || fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
+            // ใช้ "รหัสสาขา" เป็นหลัก — ไม่ใช้ "สาขา" (เป็น tag/option)
+            const code   = fields['รหัสสาขา'] || fields['Shop Code'] || fields['shop_code'] || '';
             const nameTh = fields['ชื่อสาขา (Thai)'] || fields['Shop Name (Thai)'] || fields['ชื่อสาขา'] || '';
-            const nameEn = fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
+            const nameEn = fields['ชื่อสาขา (English)'] || fields['Shop Name (English)'] || fields['Shop Name (Eng)'] || '';
             const codeStr = String(code).trim();
-            if (codeStr) all.push({ code: codeStr, nameTh: String(nameTh).trim(), nameEn: String(nameEn).trim() });
+            // กรองออก: ว่าง, มีช่องว่าง, หรือขึ้นต้นด้วย ' (single quote จาก Lark)
+            const isClean = codeStr.length > 0;
+            if (isClean) all.push({ code: codeStr, nameTh: String(nameTh).replace(/^'+|'+$/g,'').trim(), nameEn: String(nameEn).replace(/^'+|'+$/g,'').trim() });
           });
           pt = r.data.data?.has_more ? r.data.data.page_token : null;
         } while (pt);
