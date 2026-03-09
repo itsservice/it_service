@@ -74,14 +74,32 @@ app.get('/engineer',      noCacheHtml('engineer.html'));
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body || {};
-    if (!username || !password) return res.json({ ok:false, error:'กรุณากรอก username และ password' });
+    if (!username || !password)
+      return res.json({ ok:false, error:'กรุณากรอก username และ password' });
+
     const user = getUserByUsername(username);
-    if (!user) return res.json({ ok:false, error:'ไม่พบผู้ใช้งาน' });
-    if (user.password !== hashPwd(password)) return res.json({ ok:false, error:'รหัสผ่านไม่ถูกต้อง' });
+
+    // ✅ แก้: แยก error ให้ชัดว่าปัญหาอยู่ที่ไหน
+    if (!user)
+      return res.json({ ok:false, error:`ไม่พบ username "${username}"` });
+    if (!user.active)
+      return res.json({ ok:false, error:'บัญชีนี้ถูกระงับการใช้งาน' });
+    if (user.password !== hashPwd(password))
+      return res.json({ ok:false, error:'รหัสผ่านไม่ถูกต้อง' });
+
     const token = createSession(user);
-    addLog({ user, action:'login', detail:`เข้าสู่ระบบ (${user.role})` });
-    res.json({ ok:true, token, user:{ id:user.id, name:user.name, username:user.username, role:user.role, brand:user.brand } });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+    addLog({ user, action:'login', detail:`เข้าสู่ระบบ (${user.role}) จาก ${req.ip || 'unknown'}` });
+
+    console.log(`[Auth] Login: ${username} (${user.role})`);
+    res.json({
+      ok:    true,
+      token,
+      user:  { id:user.id, name:user.name, username:user.username, role:user.role, brand:user.brand },
+    });
+  } catch(e) {
+    console.error('[Auth] Login error:', e.message);
+    res.json({ ok:false, error:'เกิดข้อผิดพลาด กรุณาลองใหม่' });
+  }
 });
 
 app.post('/api/auth/logout', requireAuth(), (req, res) => {
