@@ -859,7 +859,14 @@ function renderDashboard(){
   if(badge) badge.textContent = `รวม ${total} Ticket · รอ ${waiting} · ดำเนินการ ${inprog} · เสร็จ ${done}`;
   // Brand chart + recent
   const brandMap={};
-  tickets.forEach(t=>{ const b=t.brand||'ไม่ระบุ'; brandMap[b]=(brandMap[b]||0)+1; });
+  // normalize brand name — map ชื่อที่ Lark ส่งมาไม่ตรงกลับเป็น 5 แบรนด์ที่ถูก
+  const BRAND_NORM = {
+    "dunkin":"Dunkin'","dunkin'":"Dunkin'",
+    "greyhound cafe":"Greyhound Cafe","greyhound original":"Greyhound Original","greyhound":"Greyhound Cafe",
+    "au bon pain":"Au Bon Pain","funky fries":"Funky Fries"
+  };
+  const normBrand = b => BRAND_NORM[(b||'').toLowerCase().trim()] || b || 'ไม่ระบุ';
+  tickets.forEach(t=>{ const b=normBrand(t.brand); brandMap[b]=(brandMap[b]||0)+1; });
   const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const maxB=brands[0]?.[1]||1;
   const recent=tickets.slice(0,8);
@@ -1268,7 +1275,7 @@ function renderUsersPage(){
 document.getElementById('btn-add-user').onclick=()=>openAddUserModal();
 
 function userFormFields(u={}){
-  const BRANDS=['ALL','Greyhound Cafe','Au Bon Pain','Smileyhound',"Dunkin'",'Greyhound Original','After You','Café Amazon','Starbucks','KFC'];
+  const BRANDS=['ALL',"Dunkin'",'Greyhound Cafe','Greyhound Original','Au Bon Pain','Funky Fries'];
   return `
     <div class="d-form-group"><label class="d-form-label">ชื่อ-นามสกุล *</label><input class="d-form-input" id="uf-name" value="${esc(u.name||'')}"/></div>
     <div class="d-form-group"><label class="d-form-label">Username *</label><input class="d-form-input" id="uf-user" value="${esc(u.username||'')}" ${u.id?'disabled':''}/></div>
