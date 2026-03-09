@@ -279,6 +279,40 @@ app.get('/debug/env', (_, res) => {
 });
 // ── DEBUG: ทดสอบดึงข้อมูลจากทุก table ──────────────────────────
 // DEBUG: ดู branchCode จาก cache เท่านั้น — ไม่ fetch Lark
+// DEBUG: ดู raw fields จาก branch table
+app.get('/debug/branch-raw', async (req, res) => {
+  try {
+    const { getToken } = require('./larkService');
+    const axios = require('axios');
+    const BASE  = 'https://open.larksuite.com/open-apis';
+    const APP   = process.env.LARK_APP_TOKEN;
+    const token = await getToken();
+
+    // ลอง Dunkin branch table ก่อน
+    const tableId = process.env.LARK_BRANCH_DUNKIN;
+    if(!tableId) return res.json({ ok:false, error:'LARK_BRANCH_DUNKIN not set', env: Object.keys(process.env).filter(k=>k.startsWith('LARK')) });
+
+    const r = await axios.get(
+      `${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
+      { headers: { Authorization: `Bearer ${token}` }, params: { page_size: 3 }, timeout: 12000 }
+    );
+    const items = r.data.data?.items || [];
+    // แสดง field names ของ record แรก
+    const firstFields = items[0]?.fields || {};
+    res.json({
+      ok: true,
+      larkCode: r.data.code,
+      tableId,
+      totalReturned: items.length,
+      fieldNames: Object.keys(firstFields),
+      firstRecord: firstFields,
+      envKeys: Object.keys(process.env).filter(k=>k.startsWith('LARK'))
+    });
+  } catch(e) {
+    res.json({ ok:false, error: e.message });
+  }
+});
+
 app.get('/debug/branches', (_, res) => {
   try {
     // อ่าน _ticketCache โดยตรง ไม่รอ API
