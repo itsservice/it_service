@@ -397,7 +397,8 @@ window.hideSplash = function(){
   const s = document.getElementById('app-splash');
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
-setTimeout(window.hideSplash, 1500);
+// ✅ ซ่อน splash เร็วที่สุด — แสดง login form ทันที ไม่รอ API
+setTimeout(window.hideSplash, 800);
 </script>
 
 <!-- LOGIN -->
@@ -674,7 +675,7 @@ function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
   const ctrl = new AbortController();
-  const tid  = setTimeout(()=>ctrl.abort(), 25000);
+  const tid  = setTimeout(()=>ctrl.abort(), 10000); // ✅ ลดจาก 25s → 10s
   return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
     .then(r=>{ clearTimeout(tid); return r.json(); })
     .catch(e=>{ clearTimeout(tid); throw e; });
@@ -988,28 +989,26 @@ const _origToggleTheme = window.toggleTheme;
 async function tryAutoLogin(){
   const saved = localStorage.getItem('admin_auth');
   if(!saved) return false;
-  try{
-    const {token} = JSON.parse(saved);
-    if(!token) { localStorage.removeItem('admin_auth'); return false; }
+  let token, parsedOk;
+  try { ({ token } = JSON.parse(saved)); parsedOk = true; } catch(_) {}
+  if(!parsedOk || !token) { localStorage.removeItem('admin_auth'); return false; }
+
+  // ✅ Hard timeout 3s — ถ้า server ไม่ตอบ แสดง login form ทันที
+  try {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 8000);
-    let d;
-    try {
-      d = await fetch('/api/auth/me', {
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        signal: ctrl.signal
-      }).then(r => r.json());
-    } catch(fetchErr) {
-      clearTimeout(tid);
-      console.warn('[AutoLogin] Server unreachable:', fetchErr.message);
-      localStorage.removeItem('admin_auth');
-      return false;
-    }
-    clearTimeout(tid);
+    const tid = setTimeout(() => ctrl.abort(), 3000);
+    const d = await fetch('/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      signal: ctrl.signal
+    }).then(r => r.json()).finally(() => clearTimeout(tid));
+
     if(d.ok && ['superadmin','admin','manager'].includes(d.user.role)){
-      AUTH={token,user:d.user}; return true;
+      AUTH = { token, user: d.user }; return true;
     }
-  }catch(e){ console.warn('[AutoLogin] Error:', e.message); }
+  } catch(e) {
+    console.warn('[AutoLogin] failed:', e.message);
+  }
+  // ✅ ล้าง token ที่ไม่ valid ออกเสมอ
   localStorage.removeItem('admin_auth');
   return false;
 }
@@ -1022,14 +1021,24 @@ document.getElementById('btn-login').onclick = async()=>{
   if(!u||!p){err.textContent='กรุณากรอก username และ password';return;}
   const btn=document.getElementById('btn-login');
   btn.disabled=true; btn.textContent='⏳ กำลังเข้าสู่ระบบ...';
+  // ✅ timeout 8s กันค้าง
+  const ctrl = new AbortController();
+  const tid = setTimeout(()=>{ ctrl.abort(); }, 8000);
   try{
-    const d=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(r=>r.json());
-    if(!d.ok) throw new Error(d.error);
+    const d=await fetch('/api/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p}),
+      signal: ctrl.signal
+    }).then(r=>r.json()).finally(()=>clearTimeout(tid));
+    if(!d.ok) throw new Error(d.error||'Login ไม่สำเร็จ');
     if(!['superadmin','admin','manager'].includes(d.user.role)) throw new Error('บัญชีนี้ไม่มีสิทธิ์เข้า Admin กรุณาใช้หน้าช่าง');
     AUTH={token:d.token,user:d.user};
     localStorage.setItem('admin_auth',JSON.stringify(AUTH));
     bootApp();
-  }catch(e){err.textContent=e.message;}
+  }catch(e){
+    err.textContent = e.name==='AbortError' ? '⏱️ Server ไม่ตอบสนอง กรุณาลองใหม่' : (e.message||'เกิดข้อผิดพลาด');
+  }
   finally{btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
 };
 ['l-user','l-pass'].forEach(id=>{ document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}; });
@@ -1724,13 +1733,27 @@ function showToast(msg,type='success'){
 // BOOT
 // ════════════════════════════════════════════════════════════════
 (async()=>{
-  try { const saved = localStorage.getItem('admin_theme') || 'light'; applyTheme(saved); } catch(_) { document.body.classList.add('theme-light'); }
+  // 1. Apply theme ทันที
+  try { applyTheme(localStorage.getItem('admin_theme') || 'light'); } catch(_) { document.body.classList.add('theme-light'); }
+
+  // 2. ✅ แสดง login-screen ทันที — ไม่รอใคร
+  document.getElementById('login-screen').style.display = 'flex';
+
+  // 3. ซ่อน splash
   window.hideSplash?.();
-  const autoOk = await Promise.race([
-    tryAutoLogin(),
-    new Promise(r => setTimeout(()=>r(false), 5000))
-  ]);
-  if(autoOk) bootApp();
+
+  // 4. ลอง auto-login แบบ race — ถ้าไม่ได้ใน 3s ให้ user login เอง
+  try {
+    const autoOk = await Promise.race([
+      tryAutoLogin(),
+      new Promise(r => setTimeout(() => r(false), 3000))
+    ]);
+    if(autoOk) bootApp();
+    // ถ้าไม่ autoOk → login-screen แสดงอยู่แล้ว ไม่ต้องทำอะไร
+  } catch(e) {
+    console.warn('[boot] autoLogin error:', e.message);
+    // login-screen แสดงอยู่แล้ว — safe
+  }
 })();
 
 // ════════════════════════════════════════════════════════════════
