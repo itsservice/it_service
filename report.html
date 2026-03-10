@@ -28,7 +28,84 @@ body.theme-light{
   --accent:#00b87a;--accent2:#1d6ff0;--warn:#d97706;--danger:#dc2626;
 }
 body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15)}
-body.theme-light #app-splash{background:var(--bg)}
+/* inputs / selects / textarea ต้องชัดใน light mode */
+body.theme-light input,
+body.theme-light select,
+body.theme-light textarea{
+  background:var(--bg3);color:var(--fg);border-color:var(--b2);
+}
+body.theme-light input::placeholder,
+body.theme-light textarea::placeholder{color:var(--fg3)}
+body.theme-light input:focus,
+body.theme-light select:focus,
+body.theme-light textarea:focus{border-color:var(--accent)}
+/* ticket-card ใน light mode */
+body.theme-light .ticket-card{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+body.theme-light .ticket-row:hover{background:var(--bg3)}
+/* modal ใน light mode */
+body.theme-light .td-modal{box-shadow:0 -4px 24px rgba(0,0,0,.15)}
+body.theme-light .history-toggle{background:var(--bg2)}
+body.theme-light .history-dropdown{background:var(--bg2)}
+/* tabs */
+body.theme-light .tab{color:var(--fg2)}
+body.theme-light .tab.active{color:var(--fg);border-bottom-color:var(--accent)}
+/* ── Light mode: ทุก element ที่มีตัวอักษรต้องเห็นชัด ── */
+/* form labels */
+body.theme-light label{color:var(--fg)}
+body.theme-light .req{color:var(--danger)}
+/* char counter */
+body.theme-light #char-num{color:var(--fg2)}
+/* hint text */
+body.theme-light .search-hint{color:var(--fg3)}
+body.theme-light #filter-hint-ok{color:var(--fg2)}
+body.theme-light #filter-hint-default{color:var(--fg3)}
+/* ticket card */
+body.theme-light .tc-id{color:var(--accent)}
+body.theme-light .tc-brand{color:var(--fg3)}
+body.theme-light .tc-type{color:var(--fg)}
+body.theme-light .tc-detail{color:var(--fg2)}
+body.theme-light .tc-meta{color:var(--fg3)}
+/* timeline */
+body.theme-light .tl-title{color:var(--fg3)}
+body.theme-light .tl-label{color:var(--fg3)}
+body.theme-light .tl-step.done .tl-label,
+body.theme-light .tl-step.active .tl-label{color:var(--fg)}
+body.theme-light .tl-dot{background:var(--bg2);border-color:var(--b2)}
+/* history */
+body.theme-light .history-toggle{color:var(--fg2)}
+body.theme-light .history-item{color:var(--fg)}
+/* modal */
+body.theme-light .td-modal-id{color:var(--accent)}
+body.theme-light .td-modal-brand{color:var(--fg3)}
+body.theme-light .td-modal-type{color:var(--fg)}
+body.theme-light .td-modal-detail{color:var(--fg2)}
+body.theme-light .td-modal-meta{color:var(--fg3)}
+body.theme-light .td-modal-work-title{color:var(--accent)}
+body.theme-light .td-modal-work-text{color:var(--fg2)}
+body.theme-light .td-modal-parts{color:var(--fg3)}
+body.theme-light .td-modal-close{color:var(--fg2)}
+/* success card */
+body.theme-light .success-card{background:var(--bg2);color:var(--fg)}
+body.theme-light .ticket-badge{color:var(--fg2)}
+/* group labels */
+body.theme-light .group-toggle{color:var(--fg)}
+body.theme-light .g-count{color:var(--fg3)}
+body.theme-light .ticket-row-type{color:var(--fg2)}
+body.theme-light .ticket-row-branch{color:var(--fg3)}
+body.theme-light .hi-id{color:var(--accent)}
+/* header */
+body.theme-light .header-text h1{color:var(--fg)}
+body.theme-light .header-text p{color:var(--fg3)}
+body.theme-light #btn-theme{color:var(--fg2)}
+/* loading */
+body.theme-light .loading{color:var(--fg2)}
+/* section headings */
+body.theme-light .ph-title{color:var(--fg)}
+body.theme-light .ph-sub{color:var(--fg2)}
+/* select options และ branch dropdown */
+body.theme-light select option{background:var(--bg2);color:var(--fg)}
+body.theme-light .fab-search-pop{background:var(--bg2)}
+body.theme-light .fab-search-input{background:var(--bg3);color:var(--fg)}
 /* ── Theme toggle button ──────────────────────────────────── */
 #btn-theme{
   background:var(--bg2);border:1px solid var(--b2);border-radius:50%;
@@ -72,7 +149,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 }
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
 .form-group input::placeholder,.form-group textarea::placeholder{color:var(--fg3)}
-.form-group select option{background:#111115;color:var(--fg)}
+.form-group select option{background:var(--bg2);color:var(--fg)}
 .form-group textarea{resize:none;min-height:100px;line-height:1.6}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .char-count{font-size:11px;color:var(--fg3);text-align:right;margin-top:4px}
@@ -245,16 +322,23 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 .hi-status{margin-left:auto}
 
 /* ── STATUS COLORS ── */
-.s-แก้ไข{background:rgba(255,150,64,.15);color:#ff9640}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.15);color:#0099ff}
-.s-รอดำเนินการ{background:rgba(155,89,182,.15);color:#b87be8}
-.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
-.s-ยกเลิก{background:rgba(255,77,109,.15);color:#ff4d6d}
+.s-แก้ไข{background:rgba(255,150,64,.18);color:#c06a00}
+.s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.18);color:#0066cc}
+.s-รอดำเนินการ{background:rgba(130,60,180,.18);color:#7b2fbe}
+.s-เสร็จสิ้น{background:rgba(0,185,120,.18);color:#007a50}
+.s-ยกเลิก{background:rgba(255,77,109,.18);color:#c0003c}
+body:not(.theme-light) .s-แก้ไข{color:#ff9640}
+body:not(.theme-light) .s-อยู่ระหว่างดำเนินการ{color:#4db8ff}
+body:not(.theme-light) .s-รอดำเนินการ{color:#c084fc}
+body:not(.theme-light) .s-เสร็จสิ้น{color:#00e5a0}
+body:not(.theme-light) .s-ยกเลิก{color:#ff6b8a}
 
 /* ── ERROR / INFO ── */
 .alert{padding:12px 16px;border-radius:var(--r);font-size:13.5px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
-.alert-err{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);color:#ff8099}
-.alert-info{background:rgba(0,153,255,.08);border:1px solid rgba(0,153,255,.2);color:#66b3ff}
+.alert-err{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);color:#cc0033}
+.alert-info{background:rgba(0,153,255,.08);border:1px solid rgba(0,153,255,.2);color:#0055cc}
+body:not(.theme-light) .alert-err{color:#ff8099}
+body:not(.theme-light) .alert-info{color:#66b3ff}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:50px 20px;color:var(--fg3)}
@@ -338,19 +422,19 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 
 
 /* CLOCK + TEMP widget — report header */
-.clock-widget{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0;margin-top:6px}
-#clock-time{font-family:monospace;font-size:12px;color:rgba(255,255,255,.9);font-weight:500}
-#clock-temp{color:#00e5a0;font-weight:600}
+.clock-widget{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--fg2);background:var(--b1);border:1px solid var(--b2);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0;margin-top:6px}
+#clock-time{font-family:monospace;font-size:12px;color:var(--fg);font-weight:500}
+#clock-temp{color:var(--accent);font-weight:600}
 
 </style>
 </head>
 <body>
 <style>
-#app-splash{position:fixed;inset:0;background:#07070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
+#app-splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
 #app-splash.hide{opacity:0;pointer-events:none}
 .splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
 @keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
-.splash-text{font-size:13px;color:rgba(255,255,255,.35);font-family:'Noto Sans Thai',sans-serif}
+.splash-text{font-size:13px;color:var(--fg3);font-family:'Noto Sans Thai',sans-serif}
 .splash-bar{width:160px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
 .splash-fill{height:100%;background:#00e5a0;border-radius:2px;animation:splashLoad 2s ease-out forwards}
 @keyframes splashLoad{from{width:0}to{width:85%}}
@@ -530,7 +614,7 @@ setTimeout(window.hideSplash, 3000);
           <datalist id="branch-list-track"></datalist>
         </div>
       </div>
-      <div class="search-hint" id="filter-hint" style="color:#ff8099;display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
+      <div class="search-hint" id="filter-hint" style="color:var(--danger);display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
       <div class="search-hint" id="filter-hint-ok" style="display:none">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
       <div class="search-hint" id="filter-hint-default">กรอกแบรนด์และรหัสสาขาเพื่อค้นหา</div>
       <div id="track-result"></div>
@@ -563,6 +647,103 @@ setTimeout(window.hideSplash, 3000);
 </div>
 
 <script>
+// ══════════════════════════════════════════════════════════════
+// GLOBAL FUNCTIONS — ต้องเป็น global เพราะ HTML onclick เรียกโดยตรง
+// ══════════════════════════════════════════════════════════════
+
+// ── Theme Toggle ──────────────────────────────────────────────
+function applyTheme(mode) {
+  const isLight = mode !== 'dark';
+  document.body.classList.toggle('theme-light', isLight);
+  const btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+  try { localStorage.setItem('report_theme', mode); } catch(_) {}
+}
+function toggleTheme() {
+  try {
+    const cur = localStorage.getItem('report_theme') || 'light';
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  } catch(e) { console.warn('toggleTheme:', e.message); }
+}
+// init theme ทันที ก่อน DOMContentLoaded เพื่อไม่ให้กระพริบ
+(function(){
+  try {
+    const saved = localStorage.getItem('report_theme') || 'light';
+    applyTheme(saved);
+  } catch(_) {
+    document.body.classList.add('theme-light');
+  }
+})();
+
+// ── Ticket Detail Modal ───────────────────────────────────────
+function openTicketModal(rid) {
+  // allTickets อยู่ใน scope ของ DOMContentLoaded
+  // ใช้ window._allTickets แทน
+  const tickets = window._allTickets || [];
+  const t = tickets.find(x => x._recordId === rid || x.id === rid);
+  if (!t) { console.warn('openTicketModal: ticket not found', rid); return; }
+
+  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
+  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
+  const STATUS_IDX = {'แก้ไข':0,'รอดำเนินการ ⏱️':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'ตรวจงาน':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':-1};
+  const si = STATUS_IDX[t.status] ?? 0;
+  const isCancelled = t.status === 'ยกเลิก ❌';
+
+  function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function _safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
+  function _cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
+
+  document.getElementById('tdm-id').textContent    = '🎫 ' + (t.id || t._recordId || '—');
+  document.getElementById('tdm-brand').textContent = (t.brand||'-') + (t.branchCode ? ' · ' + t.branchCode : '');
+
+  const pill = document.getElementById('tdm-status-pill');
+  pill.textContent = t.status || 'แก้ไข';
+  pill.className   = 'status-pill s-' + _cssStatus(t.status);
+
+  document.getElementById('tdm-type').textContent   = t.type || '—';
+  document.getElementById('tdm-detail').textContent = _safe(t.detail) || '-';
+
+  const metaItems = [
+    t.reporter     ? '👤 ' + t.reporter   : '',
+    t.sentDate     ? '📅 ' + t.sentDate   : '',
+    t.engineerName ? '🔧 ' + t.engineerName : '',
+    t.phone        ? '📞 ' + t.phone      : '',
+    (t.location && t.location.length < 100 && !t.location.startsWith('http')) ? '📍 ' + t.location : '',
+  ].filter(Boolean);
+  document.getElementById('tdm-meta').innerHTML = metaItems.map(m => `<span>${_esc(m)}</span>`).join('');
+
+  const steps = TL_LABELS.map((label, i) => `
+    <div class="tl-step ${isCancelled ? 'cancelled' : (i < si ? 'done' : i === si ? 'active' : '')}">
+      <div class="tl-dot">${isCancelled ? '✕' : i < si ? '✓' : i === si ? TL_ICONS[i] : ''}</div>
+      <div class="tl-label">${label}</div>
+    </div>`).join('');
+  document.getElementById('tdm-timeline').innerHTML = steps;
+
+  const workEl = document.getElementById('tdm-work');
+  if (t.workDetail) {
+    workEl.style.display = 'block';
+    document.getElementById('tdm-work-text').textContent = t.workDetail;
+    const partsEl = document.getElementById('tdm-parts');
+    if (t.partsUsed) { partsEl.style.display='block'; partsEl.textContent='อะไหล่: '+t.partsUsed; }
+    else              { partsEl.style.display='none'; }
+  } else {
+    workEl.style.display = 'none';
+  }
+
+  document.getElementById('td-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTicketModal(e) {
+  if (e && e.target !== document.getElementById('td-modal-overlay')) return;
+  document.getElementById('td-modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeTicketModal();
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
 
 // ── Brand from URL path ───────────────────────────────────────
@@ -601,7 +782,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── State ────────────────────────────────────────────────────
 const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
+// ✅ expose allTickets ให้ global functions เข้าถึงได้
 let allTickets = [];
+window._allTickets = allTickets;
+function _setAllTickets(arr) { allTickets = arr; window._allTickets = arr; }
 let sseConn = null;
 let trackTimer = null;
 
@@ -609,30 +793,13 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
 function safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
 
-// ══════════════════════════════════════════════════════════════
-// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
-// ══════════════════════════════════════════════════════════════
-function applyTheme(mode) {
-  const isLight = mode !== 'dark';
-  document.body.classList.toggle('theme-light', isLight);
-  const btn = document.getElementById('btn-theme');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
-  try { localStorage.setItem('report_theme', mode); } catch(_) {}
-}
-function toggleTheme() {
-  try {
-    const cur = localStorage.getItem('report_theme') || 'light';
-    applyTheme(cur === 'light' ? 'dark' : 'light');
-  } catch(e) { console.warn('toggleTheme:', e.message); }
-}
-
 // ── SSE ──────────────────────────────────────────────────────
 function connectSSE(){
   sseConn = new EventSource('/api/events');
   sseConn.addEventListener('ticket_updated', async e => {
     try{
       const d = JSON.parse(e.data);
-      allTickets = allTickets.map(t => t._recordId===d.recordId ? {...t, status:d.status||t.status} : t);
+      _setAllTickets(allTickets.map(t => t._recordId===d.recordId ? {...t, status:d.status||t.status} : t));
       renderHistory();
       // อัปเดต modal ถ้ากำลังเปิดอยู่
       const overlay = document.getElementById('td-modal-overlay');
@@ -660,7 +827,7 @@ async function loadTickets(){
     const r = await fetch('/api/tickets', { signal: ctrl.signal });
     clearTimeout(tid);
     const d = await r.json();
-    if(d.ok) allTickets = d.tickets;
+    if(d.ok) _setAllTickets(d.tickets);
   }catch(e){
     console.warn('[loadTickets]', e.message);
   }
@@ -668,13 +835,6 @@ async function loadTickets(){
 
 // ── Initial load ─────────────────────────────────────────────
 (async()=>{
-  // ✅ init theme ทันที (default = light)
-  try {
-    const saved = localStorage.getItem('report_theme') || 'light';
-    applyTheme(saved);
-  } catch(_) {
-    document.body.classList.add('theme-light');
-  }
   // แสดงหน้าทันที แล้วโหลด data ใน background
   renderHistory();
   loadBranches();
@@ -862,7 +1022,7 @@ async function renderHistory(){
 
   el.innerHTML=`<div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
     <span>📋 TICKET ล่าสุดของคุณ</span>
-    <span style="background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${enriched.length}</span>
+    <span style="background:var(--accent);color:#000000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${enriched.length}</span>
     <span class="ht-arrow">▼</span>
   </div>
   <div class="history-dropdown ${isOpen?'open':''}">${rows}</div>`;
@@ -900,7 +1060,7 @@ function ticketCard(t, expanded=false){
       <div class="tl-title">สถานะงาน</div>
       <div class="tl-steps">${steps}</div>
     </div>
-    ${t.workDetail?`<div style="margin-top:14px;padding:12px;background:rgba(0,229,160,.06);border-radius:8px;border:1px solid rgba(0,229,160,.15)">
+    ${t.workDetail?`<div style="margin-top:14px;padding:12px;background:rgba(0,185,120,.08);border-radius:8px;border:1px solid rgba(0,185,120,.2)">
       <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">📋 รายงานช่าง</div>
       <div style="font-size:13px;color:var(--fg2)">${esc(t.workDetail)}</div>
       ${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:4px">อะไหล่: ${esc(t.partsUsed)}</div>`:''}
@@ -909,78 +1069,7 @@ function ticketCard(t, expanded=false){
 }
 
 
-// ══════════════════════════════════════════════════════════════
-// TICKET DETAIL MODAL
-// ══════════════════════════════════════════════════════════════
-function openTicketModal(rid) {
-  const t = allTickets.find(x => x._recordId === rid || x.id === rid);
-  if (!t) return;
 
-  const TL        = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
-  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
-  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
-  const STATUS_IDX = {'แก้ไข':0,'รอดำเนินการ ⏱️':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'ตรวจงาน':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':-1};
-  const si = STATUS_IDX[t.status] ?? 0;
-  const isCancelled = t.status === 'ยกเลิก ❌';
-
-  // Header
-  document.getElementById('tdm-id').textContent      = '🎫 ' + (t.id || t._recordId || '—');
-  document.getElementById('tdm-brand').textContent   = (t.brand||'-') + (t.branchCode ? ' · ' + t.branchCode : '');
-  const pill = document.getElementById('tdm-status-pill');
-  pill.textContent  = t.status || 'แก้ไข';
-  pill.className    = 'status-pill s-' + cssStatus(t.status);
-
-  // Body
-  document.getElementById('tdm-type').textContent   = t.type || '—';
-  document.getElementById('tdm-detail').textContent = safe(t.detail) || '-';
-
-  // Meta
-  const metaItems = [
-    t.reporter  ? '👤 ' + t.reporter  : '',
-    t.sentDate  ? '📅 ' + t.sentDate  : '',
-    t.engineerName ? '🔧 ' + t.engineerName : '',
-    t.phone     ? '📞 ' + t.phone     : '',
-    (t.location && t.location.length < 100 && !t.location.startsWith('http')) ? '📍 ' + t.location : '',
-  ].filter(Boolean);
-  document.getElementById('tdm-meta').innerHTML =
-    metaItems.map(m => `<span>${esc(m)}</span>`).join('');
-
-  // Timeline
-  const steps = TL.map((s, i) => `
-    <div class="tl-step ${isCancelled ? 'cancelled' : (i < si ? 'done' : i === si ? 'active' : '')}">
-      <div class="tl-dot">${isCancelled ? '✕' : i < si ? '✓' : i === si ? TL_ICONS[i] : ''}</div>
-      <div class="tl-label">${TL_LABELS[i]}</div>
-    </div>`).join('');
-  document.getElementById('tdm-timeline').innerHTML = steps;
-
-  // Work report
-  const workEl  = document.getElementById('tdm-work');
-  const workTxt = document.getElementById('tdm-work-text');
-  const partsTxt = document.getElementById('tdm-parts');
-  if (t.workDetail) {
-    workEl.style.display  = 'block';
-    workTxt.textContent   = t.workDetail;
-    if (t.partsUsed) { partsTxt.style.display='block'; partsTxt.textContent='อะไหล่: '+t.partsUsed; }
-    else              { partsTxt.style.display='none'; }
-  } else {
-    workEl.style.display = 'none';
-  }
-
-  // Open
-  document.getElementById('td-modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeTicketModal(e) {
-  if (e && e.target !== document.getElementById('td-modal-overlay')) return;
-  document.getElementById('td-modal-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ปิดด้วย Escape
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeTicketModal();
-});
 
 // ── Form ──────────────────────────────────────────────────────
 function showErr(msg){ const e=document.getElementById('form-error'); e.textContent='⚠️ '+msg; e.style.display='flex'; }
@@ -1067,7 +1156,7 @@ function renderBranchDD(ddId, inputId, brand, q=''){
   }
   dd.innerHTML = branches.slice(0,30).map(b =>
     `<div onmousedown="pickBranchDD('${inputId}','${ddId}','${b.replace(/'/g,"\'")}')"
-      style="padding:11px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--b1,#2a2a35);transition:background .12s"
+      style="padding:11px 16px;cursor:pointer;font-size:14px;color:var(--fg);background:var(--bg2);border-bottom:1px solid var(--b1);transition:background .12s"
       onmouseover="this.style.background='var(--bg3,#23232f)'"
       onmouseout="this.style.background=''">
       <span style="font-family:var(--font-m,monospace);color:var(--accent)">${b}</span>
