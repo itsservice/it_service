@@ -1227,26 +1227,39 @@ async function logout(){
 // BOOT APP
 // ════════════════════════════════════════════════════════════════
 async function bootApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('ready');
+  // แสดงหน้า Loading ก่อน
+  document.getElementById('login-screen').innerHTML=`
+    <div style="text-align:center">
+      <div style="width:48px;height:48px;border:3px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px"></div>
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;margin-bottom:8px">กำลังโหลดข้อมูล...</div>
+      <div style="font-size:13px;color:var(--fg2)">กรุณารอสักครู่</div>
+    </div>`;
+
   const u=AUTH.user;
+  // Sidebar user (เตรียมไว้ก่อน ยังไม่แสดง app)
   const av=document.getElementById('sb-avatar');
   av.textContent=ai(u.name); av.style.background=ac(u.name); av.style.color='#000';
   document.getElementById('sb-name').textContent=u.name;
   document.getElementById('sb-role').textContent=({'superadmin':'Super Admin','admin':'Admin','manager':'Manager'})[u.role]||u.role;
   if(!['superadmin','admin'].includes(u.role)){
     document.getElementById('nav-users').style.display='none';
+  }
+  if(!['superadmin','admin'].includes(u.role)){
     document.getElementById('nav-debug').style.display='none';
   }
-connectSSE();
-window.hideSplash?.();
-window.initAdminFab?.();
-// โหลด data ก่อน แล้วค่อย render Dashboard
-Promise.all([loadTickets(), loadLogs()])
-  .catch(e => console.warn('[boot] data load error:', e.message))
-  .finally(() => renderDashboard());
-if(['superadmin','admin'].includes(u.role)) loadUsers();
-setInterval(loadTickets, 60_000);
+  connectSSE();
+  if(['superadmin','admin'].includes(u.role)) loadUsers();
+  setInterval(loadTickets, 60_000);
+
+  // รอโหลดข้อมูลก่อน แล้วค่อยเข้า Dashboard
+  await Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
+
+  // ซ่อน loading → แสดง app พร้อมข้อมูล
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('ready');
+  renderDashboard();
+  window.hideSplash?.();
+  window.initAdminFab?.();
 }
 
 // ════════════════════════════════════════════════════════════════
