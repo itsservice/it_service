@@ -144,7 +144,7 @@ a{color:inherit;text-decoration:none}
 .s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
 .s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
 .s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
-.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
+.s-รอดำเนินการ ⏱️{background:rgba(168,85,247,.15);color:#c084fc}
 .s-แก้ไข-เสร็จ{background:rgba(168,85,247,.15);color:#c084fc}
 .s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
 .s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
@@ -504,7 +504,7 @@ setTimeout(window.hideSplash, 800);
           <!-- Mini stats row -->
           <div class="analytics-stat-row" id="analytics-mini-stats">
             <div class="mini-stat"><div class="mini-stat-label">ทั้งหมด</div><div class="mini-stat-val" id="ms-total" style="color:var(--fg)">—</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ ⏱️</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
             <div class="mini-stat"><div class="mini-stat-label">กำลังดำเนินการ</div><div class="mini-stat-val" id="ms-inprog" style="color:var(--blue)">—</div></div>
             <div class="mini-stat"><div class="mini-stat-label">เสร็จสิ้น</div><div class="mini-stat-val" id="ms-done" style="color:var(--accent)">—</div></div>
           </div>
@@ -560,7 +560,7 @@ setTimeout(window.hideSplash, 800);
         <div style="padding:0 24px 16px">
           <select class="filter-select" id="filter-status" style="width:100%;max-width:260px;border-radius:var(--r2);padding:10px 14px">
             <option value="">📋 ทุกสถานะ</option>
-            <option value="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ</option>
+            <option value="รอดำเนินการ ⏱️">รอดำเนินการ ⏱️</option>
             <option value="ตรวจงาน">🔍 ตรวจงาน</option>
             <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ</option>
             <option value="เสร็จสิ้น ✅">✅ เสร็จสิ้น</option>
@@ -925,7 +925,7 @@ function renderAdvancedAnalytics(){
 
   // ── 3. Status Doughnut ─────────────────────────────────
   const STATUS_DEFS = [
-    { key: 'รอดำเนินการ ⏱️', label: 'รอดำเนินการ',   color: '#a855f7' },
+    { key: 'รอดำเนินการ ⏱️', label: 'รอดำเนินการ ⏱️',   color: '#a855f7' },
     { key: 'ตรวจงาน',        label: 'ตรวจงาน',        color: '#22d3ee' },
     { key: 'อยู่ระหว่างดำเนินการ ⚙️', label: 'กำลังดำเนินการ', color: '#3b82f6' },
     { key: 'เสร็จสิ้น ✅',   label: 'เสร็จสิ้น',      color: '#00e5a0' },
@@ -1215,7 +1215,7 @@ function renderDashboard(){
     const cur = sel.value;
     sel.innerHTML = `
       <option value="">📋 ทุกสถานะ (${total})</option>
-      <option value="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ (${tickets.filter(t=>t.status==='รอดำเนินการ ⏱️').length})</option>
+      <option value="รอดำเนินการ ⏱️">รอดำเนินการ ⏱️ (${tickets.filter(t=>t.status==='รอดำเนินการ ⏱️').length})</option>
       <option value="ตรวจงาน">🔍 ตรวจงาน (${review})</option>
       <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ (${inprog})</option>
       <option value="เสร็จสิ้น ✅">✅ เสร็จสิ้น (${done})</option>
