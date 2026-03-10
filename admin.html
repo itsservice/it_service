@@ -19,7 +19,6 @@
   --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
   --sidebar-w:240px;
 }
-/* ── Light mode ─────────────────────────────── */
 body.theme-light{
   --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
   --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
@@ -37,8 +36,6 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
 a{color:inherit;text-decoration:none}
-
-/* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
 .login-card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--b2);border-radius:24px;padding:40px 32px;animation:fadeUp .4s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -55,8 +52,6 @@ a{color:inherit;text-decoration:none}
 .l-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
 .l-links{text-align:center;margin-top:18px;font-size:13px;color:var(--fg3)}
 .l-links a{color:var(--fg2)}
-
-/* APP SHELL */
 #app{display:none;height:100vh;overflow:hidden}
 #app.ready{display:flex}
 .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:calc(var(--safe-top)+0px)}
@@ -91,8 +86,6 @@ a{color:inherit;text-decoration:none}
 .ph-sub{font-size:13px;color:var(--fg2);margin-top:3px}
 .ph-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .page{display:none}.page.active{display:block}
-
-/* STAT CARDS */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:20px 24px}
 .stat-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .stat-card:hover{border-color:var(--b2)}
@@ -100,8 +93,6 @@ a{color:inherit;text-decoration:none}
 .stat-label{font-size:11.5px;color:var(--fg2);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .stat-num{font-family:var(--font-h);font-size:28px;font-weight:700;line-height:1;color:var(--stat-color,var(--fg))}
 .stat-delta{font-size:11px;color:var(--fg3);margin-top:4px}
-
-/* SEARCH + FILTER */
 .filter-bar{padding:0 24px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .search-box{position:relative;flex:1;min-width:200px}
 .search-box input{width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);padding:10px 14px 10px 38px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s}
@@ -113,8 +104,6 @@ a{color:inherit;text-decoration:none}
 .btn-refresh:hover{border-color:var(--b2);color:var(--fg)}
 .btn-refresh.spinning{animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* STATUS CHIPS */
 .status-chips{padding:0 24px 16px;display:flex;gap:6px;overflow-x:auto}
 .status-chips::-webkit-scrollbar{height:0}
 .chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--b1);background:transparent;color:var(--fg2);font-size:12.5px;font-weight:500;font-family:var(--font-th);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
@@ -125,8 +114,6 @@ a{color:inherit;text-decoration:none}
 .chip-review.active{background:rgba(168,85,247,.12);border-color:var(--purple);color:var(--purple)}
 .chip-done.active{background:rgba(0,229,160,.12);border-color:var(--accent);color:var(--accent)}
 .chip-cancel.active{background:rgba(239,68,68,.12);border-color:var(--danger);color:var(--danger)}
-
-/* TICKET TABLE */
 .tbl-wrap{padding:0 24px;padding-bottom:160px}
 .tbl{width:100%;border-collapse:separate;border-spacing:0 4px}
 .tbl thead th{font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;text-align:left;white-space:nowrap}
@@ -140,19 +127,25 @@ a{color:inherit;text-decoration:none}
 .cell-sub{font-size:11px;color:var(--fg3);margin-top:2px}
 .cell-type{font-size:14px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell-detail{font-size:12px;color:var(--fg2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── STATUS PILLS — ใช้ data-status แทน class เพื่อรองรับ emoji ทุกรูปแบบ ── */
 .status-pill{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.status-pill[data-s="รอ"]{background:rgba(168,85,247,.15);color:#c084fc}
+.status-pill[data-s="ตรวจงาน"]{background:rgba(34,211,238,.15);color:#22d3ee}
+.status-pill[data-s="ดำเนินการ"]{background:rgba(59,130,246,.15);color:#60a5fa}
+.status-pill[data-s="แก้ไข"]{background:rgba(245,158,11,.15);color:#f59e0b}
+.status-pill[data-s="เสร็จ"]{background:rgba(0,229,160,.15);color:#00e5a0}
+.status-pill[data-s="ยกเลิก"]{background:rgba(239,68,68,.15);color:#f87171}
+/* fallback ── old class-based (backwards compat) */
 .s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
 .s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
-.s-รอดำเนินการ ⏱️{background:rgba(168,85,247,.15);color:#c084fc}
+.s-อยู่ระหว่างดําเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
+.s-รอดําเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
 .s-แก้ไข-เสร็จ{background:rgba(168,85,247,.15);color:#c084fc}
 .s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
 .s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
 .sq-btns{display:flex;gap:4px;flex-wrap:wrap}
 .sq-btn{padding:4px 9px;border-radius:8px;border:1px solid;background:transparent;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-th);white-space:nowrap;transition:all .12s}
 .sq-btn:hover{opacity:.75}
-
-/* DRAWER */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;cursor:pointer;backdrop-filter:blur(2px)}
 .drawer-overlay.open{display:block}
 .drawer{position:fixed;right:0;top:0;bottom:0;width:460px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:201;overflow-y:auto;padding-bottom:calc(var(--safe-bottom)+20px);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:var(--safe-top)}
@@ -175,8 +168,6 @@ a{color:inherit;text-decoration:none}
 .d-log-body{flex:1}
 .d-log-action{font-weight:600}
 .d-log-meta{color:var(--fg3);font-size:11.5px;margin-top:2px}
-
-/* FORMS */
 .d-form-group{margin-bottom:12px}
 .d-form-label{font-size:11.5px;font-weight:600;color:var(--fg2);margin-bottom:6px;display:block;letter-spacing:.03em}
 .d-form-input,.d-form-select,.d-form-textarea{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none}
@@ -191,13 +182,6 @@ a{color:inherit;text-decoration:none}
 .btn-note{background:var(--bg3);color:var(--fg);border:1px solid var(--b2)}
 .btn-cancel{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
 .btn-sm{padding:7px 12px;font-size:12.5px}
-.status-quick{display:flex;flex-wrap:wrap;gap:6px}
-.sqb{padding:6px 13px;border-radius:20px;border:1.5px solid;background:transparent;font-family:var(--font-th);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex-shrink:0}
-.sqb.active{opacity:1}
-.sqb:not(.active){opacity:.45}
-.sqb:hover{opacity:.75}
-
-/* DASHBOARD CHARTS */
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 24px}
 .dash-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px}
 .dash-card-title{font-size:12px;font-weight:700;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
@@ -212,8 +196,6 @@ a{color:inherit;text-decoration:none}
 .ri-id{font-family:var(--font-m);font-size:11px;color:var(--accent);flex-shrink:0}
 .ri-type{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ri-ts{font-size:11px;color:var(--fg3);flex-shrink:0}
-
-/* ═══════════ ADVANCED ANALYTICS ═══════════ */
 .analytics-section{padding:0 24px 24px}
 .analytics-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .analytics-title{font-family:var(--font-h);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
@@ -235,14 +217,10 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .analytics-filter-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:20px;padding:4px 10px;font-size:11.5px;color:var(--accent);font-weight:600;margin-bottom:12px}
 .analytics-filter-badge .badge-close{cursor:pointer;opacity:.6;font-size:14px;line-height:1}
 .analytics-filter-badge .badge-close:hover{opacity:1}
-.analytics-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:8px;color:var(--fg3)}
-.analytics-empty-icon{font-size:36px;opacity:.4}
 .analytics-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .mini-stat{background:var(--bg3);border-radius:var(--r);padding:12px 14px;border:1px solid var(--b1)}
 .mini-stat-label{font-size:10.5px;color:var(--fg3);margin-bottom:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .mini-stat-val{font-family:var(--font-h);font-size:22px;font-weight:700}
-
-/* USERS PAGE */
 .user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:0 24px 24px}
 .user-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px;transition:border-color .15s}
 .user-card:hover{border-color:var(--b2)}
@@ -260,8 +238,6 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .uc-actions{display:flex;gap:6px;margin-top:12px}
 .btn-uc{padding:7px 12px;border-radius:8px;border:1px solid var(--b2);background:transparent;color:var(--fg2);font-family:var(--font-th);font-size:12.5px;cursor:pointer;transition:all .12px}
 .btn-uc:hover{background:var(--b1);color:var(--fg)}
-
-/* LOG PAGE */
 .log-list{padding:0 24px}
 .log-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--b1)}
 .log-item:last-child{border-bottom:none}
@@ -273,8 +249,6 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .log-meta{font-size:12px;color:var(--fg3);display:flex;gap:10px;flex-wrap:wrap}
 .log-detail{font-size:12.5px;color:var(--fg2);margin-top:4px;line-height:1.6}
 .log-tid{font-family:var(--font-m);font-size:11px;color:var(--accent);background:rgba(0,229,160,.08);padding:2px 7px;border-radius:5px}
-
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r3);padding:28px;width:100%;max-width:440px;animation:fadeUp .25s ease;max-height:90vh;overflow-y:auto}
@@ -285,30 +259,22 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .btn-modal-primary{background:var(--accent);color:#000}
 .btn-modal-danger{background:var(--danger);color:#fff}
 .btn-modal-cancel{background:var(--bg3);color:var(--fg);border:1px solid var(--b2)}
-
-/* LOADING / EMPTY */
 .loading{display:flex;align-items:center;gap:10px;padding:60px;justify-content:center;color:var(--fg2)}
 .spinner{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
 .empty{text-align:center;padding:80px 20px;color:var(--fg3)}
 .empty-icon{font-size:48px;opacity:.4;margin-bottom:12px}
 .empty-text{font-size:16px;color:var(--fg2);margin-bottom:6px}
 .empty-sub{font-size:13px}
-
-/* TOAST */
 .toast{position:fixed;top:20px;right:20px;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 18px;font-size:14px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideIn .25s ease;pointer-events:none;max-width:320px;line-height:1.5}
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 .toast-success{border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.05)}
 .toast-error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
-
-/* BOTTOM NAV */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--b1);padding:8px 0;padding-bottom:calc(var(--safe-bottom)+8px);z-index:50;flex-shrink:0;min-height:60px}
 .bnav-items{display:flex;justify-content:space-around}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0;border:none;background:transparent;color:var(--fg3);font-family:var(--font-th);font-size:10px;font-weight:500;transition:color .12s;position:relative}
 .bnav-btn.active{color:var(--accent)}
 .bnav-icon{font-size:20px}
 .bnav-bdg{position:absolute;top:0;right:calc(50% - 18px);background:var(--danger);color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:1px 5px;line-height:1.4}
-
-/* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%)}
   .sidebar.mobile-open{transform:translateX(0)}
@@ -341,8 +307,6 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .analytics-grid{grid-template-columns:1fr}
 }
-
-/* FAB */
 .fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
 .fab-wrap *{pointer-events:auto}
 .fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
@@ -369,8 +333,6 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
   .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
   .fab-branch-left{max-width:calc(100vw - 80px)}
 }
-
-/* CLOCK */
 .clock-widget{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2);background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0}
 #clock-time{font-family:var(--font-mono);font-size:12px;color:var(--fg);font-weight:500}
 #clock-temp{color:var(--accent);font-weight:600}
@@ -397,10 +359,8 @@ window.hideSplash = function(){
   const s = document.getElementById('app-splash');
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
-// ✅ ซ่อน splash เร็วที่สุด — แสดง login form ทันที ไม่รอ API
 setTimeout(window.hideSplash, 800);
 </script>
-
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
@@ -420,7 +380,6 @@ setTimeout(window.hideSplash, 800);
     <div class="l-links"><a href="/report">← แจ้งปัญหา IT</a> &nbsp;·&nbsp; <a href="/engineer">หน้าช่าง</a> &nbsp;·&nbsp; <a href="/">🏠 หน้าหลัก</a></div>
   </div>
 </div>
-
 <!-- APP -->
 <div id="app">
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -458,7 +417,6 @@ setTimeout(window.hideSplash, 800);
       <button class="btn-logout" id="btn-logout">ออกจากระบบ</button>
     </div>
   </aside>
-
   <div class="main-area">
     <div class="topbar-mobile" id="topbar-mobile">
       <button class="btn-menu" id="btn-menu">☰</button>
@@ -470,9 +428,7 @@ setTimeout(window.hideSplash, 800);
         <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">Log out</button>
       </div>
     </div>
-
     <div class="page-content" id="page-content">
-
       <!-- DASHBOARD -->
       <div class="page active" id="pg-dashboard">
         <div class="ph">
@@ -486,8 +442,7 @@ setTimeout(window.hideSplash, 800);
           <div id="dash-count-badge" style="font-size:13px;color:var(--fg2)"></div>
         </div>
         <div class="dash-grid" id="dash-grid"></div>
-
-        <!-- ══ ADVANCED ANALYTICS ══ -->
+        <!-- ADVANCED ANALYTICS -->
         <div class="analytics-section">
           <div class="analytics-header">
             <div class="analytics-title">📈 Advanced Analytics</div>
@@ -500,42 +455,28 @@ setTimeout(window.hideSplash, 800);
             </div>
           </div>
           <div id="analytics-filter-badge-wrap"></div>
-
-          <!-- Mini stats row -->
           <div class="analytics-stat-row" id="analytics-mini-stats">
             <div class="mini-stat"><div class="mini-stat-label">ทั้งหมด</div><div class="mini-stat-val" id="ms-total" style="color:var(--fg)">—</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ ⏱️</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
             <div class="mini-stat"><div class="mini-stat-label">กำลังดำเนินการ</div><div class="mini-stat-val" id="ms-inprog" style="color:var(--blue)">—</div></div>
             <div class="mini-stat"><div class="mini-stat-label">เสร็จสิ้น</div><div class="mini-stat-val" id="ms-done" style="color:var(--accent)">—</div></div>
           </div>
-
           <div class="analytics-grid">
-            <!-- Monthly Trend -->
             <div class="analytics-card analytics-card-full">
               <div class="analytics-card-title">📅 Monthly Trend — จำนวน Ticket รายเดือน</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="monthlyTrendChart"></canvas>
-              </div>
+              <div class="analytics-chart-wrap"><canvas id="monthlyTrendChart"></canvas></div>
             </div>
-            <!-- Branch Breakdown -->
             <div class="analytics-card">
               <div class="analytics-card-title">🏪 Branch Breakdown — Ticket ตาม Branch</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="branchBreakdownChart"></canvas>
-              </div>
+              <div class="analytics-chart-wrap"><canvas id="branchBreakdownChart"></canvas></div>
             </div>
-            <!-- Status Doughnut -->
             <div class="analytics-card">
               <div class="analytics-card-title">🔵 สัดส่วนสถานะ Ticket</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="statusDoughnutChart"></canvas>
-              </div>
+              <div class="analytics-chart-wrap"><canvas id="statusDoughnutChart"></canvas></div>
             </div>
           </div>
         </div>
-        <!-- END ADVANCED ANALYTICS -->
       </div>
-
       <!-- TICKETS -->
       <div class="page" id="pg-tickets">
         <div class="ph" style="margin-bottom:14px">
@@ -547,7 +488,7 @@ setTimeout(window.hideSplash, 800);
         <div class="filter-bar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" placeholder="ค้นหา Ticket ID, ชื่อ, เบอร์, รายละเอียด…"/>
+            <input type="text" id="search-input" placeholder="ค้นหา Ticket ID, ชื่อ, เบอร์, รายละเอียด..."/>
           </div>
           <select class="filter-select" id="filter-brand">
             <option value="">ทุกแบรนด์</option>
@@ -560,11 +501,11 @@ setTimeout(window.hideSplash, 800);
         <div style="padding:0 24px 16px">
           <select class="filter-select" id="filter-status" style="width:100%;max-width:260px;border-radius:var(--r2);padding:10px 14px">
             <option value="">📋 ทุกสถานะ</option>
-            <option value="รอดำเนินการ ⏱️">รอดำเนินการ ⏱️</option>
+            <option value="รอ">รอดำเนินการ ⏱️</option>
             <option value="ตรวจงาน">🔍 ตรวจงาน</option>
-            <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ</option>
-            <option value="เสร็จสิ้น ✅">✅ เสร็จสิ้น</option>
-            <option value="ยกเลิก ❌">❌ ยกเลิก</option>
+            <option value="ดำเนินการ">⚙️ กำลังดำเนินการ</option>
+            <option value="เสร็จ">✅ เสร็จสิ้น</option>
+            <option value="ยกเลิก">❌ ยกเลิก</option>
           </select>
         </div>
         <div class="tbl-wrap">
@@ -577,11 +518,10 @@ setTimeout(window.hideSplash, 800);
               <th class="td-hide-mobile">วันที่</th>
               <th>จัดการ</th>
             </tr></thead>
-            <tbody id="ticket-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div> กำลังโหลด…</div></td></tr></tbody>
+            <tbody id="ticket-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div> กำลังโหลด...</div></td></tr></tbody>
           </table>
         </div>
       </div>
-
       <!-- LOG -->
       <div class="page" id="pg-log">
         <div class="ph" style="margin-bottom:16px">
@@ -590,7 +530,6 @@ setTimeout(window.hideSplash, 800);
         </div>
         <div class="log-list" id="log-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
-
       <!-- USERS -->
       <div class="page" id="pg-users">
         <div class="ph" style="margin-bottom:16px">
@@ -599,7 +538,6 @@ setTimeout(window.hideSplash, 800);
         </div>
         <div class="user-grid" id="user-grid"><div class="loading"><div class="spinner"></div></div></div>
       </div>
-
       <!-- DEBUG -->
       <div class="page" id="pg-debug">
         <div class="ph" style="margin-bottom:16px">
@@ -610,15 +548,13 @@ setTimeout(window.hideSplash, 800);
           <div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">กดปุ่มตรวจสอบ</div></div>
         </div>
       </div>
-
-    </div><!-- end page-content -->
-  </div><!-- end main-area -->
-
+    </div>
+  </div>
   <!-- FAB -->
   <div class="fab-wrap" id="admin-fab-wrap">
     <div class="fab-search-pop" id="fab-search-pop">
       <label>ค้นหา Ticket</label>
-      <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, เบอร์, รายละเอียด…"/>
+      <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, เบอร์, รายละเอียด..."/>
       <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
     </div>
     <div class="fab-branch-top" id="fab-branch-top">
@@ -629,7 +565,6 @@ setTimeout(window.hideSplash, 800);
     <div class="fab-branch-left" id="fab-pag-bar"></div>
     <button class="fab-main" id="fab-main-btn" aria-label="เปิดเมนูนำทาง">+</button>
   </div>
-
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <div class="bnav-items">
@@ -643,22 +578,101 @@ setTimeout(window.hideSplash, 800);
     </div>
   </nav>
 </div>
-
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay"></div>
 <div class="drawer" id="drawer">
   <div id="drawer-inner"></div>
 </div>
-
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-box"></div>
 </div>
-
 <!-- TOAST -->
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
+// ════════════════════════════════════════════════════════════════
+// ✅ STATUS NORMALIZATION — แก้ปัญหา Lark ส่งค่า status หลายรูปแบบ
+// ════════════════════════════════════════════════════════════════
+/**
+ * stripStatus(s) — ลบ emoji และ whitespace ออกจาก status string
+ * เพื่อให้เปรียบเทียบได้ไม่ว่า Lark จะส่งมาในรูปแบบใด
+ * เช่น "รอดำเนินการ ⏱️", "รอดำเนินการ", "รอดำเนินการ⏱️" → "รอดำเนินการ"
+ */
+function stripStatus(s){
+  if(!s) return '';
+  // ลบ emoji unicode ranges + variation selectors + ZWJ sequences
+  return String(s)
+    .replace(/[\u{1F300}-\u{1FFFF}]/gu, '')  // emoji block
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')     // misc symbols
+    .replace(/[\uFE00-\uFE0F]/g, '')          // variation selectors
+    .replace(/\u200D/g, '')                    // ZWJ
+    .replace(/[✅⚙️⏱️❌🔍✏️🆕🔄💾📝🔧]/g, '') // explicit common ones
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * statusKey(s) — normalize status เป็น key สั้นๆ สำหรับ matching
+ * รองรับทุก variant ที่ Lark อาจส่งมา
+ */
+function statusKey(s){
+  const clean = stripStatus(s).toLowerCase();
+  // รอดำเนินการ / รอ / waiting / pending
+  if(clean.includes('รอ') || clean === 'waiting' || clean === 'pending') return 'รอ';
+  // อยู่ระหว่างดำเนินการ / กำลังดำเนินการ / in progress
+  if(clean.includes('ดำเนินการ') || clean.includes('ดําเนินการ') || clean.includes('in progress') || clean.includes('inprog')) return 'ดำเนินการ';
+  // ตรวจงาน / review
+  if(clean.includes('ตรวจ') || clean === 'review') return 'ตรวจงาน';
+  // เสร็จสิ้น / done / completed / closed
+  if(clean.includes('เสร็จ') || clean === 'done' || clean === 'completed' || clean === 'closed') return 'เสร็จ';
+  // ยกเลิก / cancelled / canceled
+  if(clean.includes('ยกเลิก') || clean.includes('cancel')) return 'ยกเลิก';
+  // แก้ไข (pending fix / edit state)
+  if(clean.includes('แก้ไข') || clean === 'fix' || clean === 'edit') return 'แก้ไข';
+  return clean; // fallback
+}
+
+/**
+ * isWaiting(s) — true ถ้า status เป็น "รอดำเนินการ" หรือ "แก้ไข" (pending states)
+ */
+function isWaiting(s){ const k = statusKey(s); return k === 'รอ' || k === 'แก้ไข'; }
+function isInProgress(s){ return statusKey(s) === 'ดำเนินการ'; }
+function isDone(s){ return statusKey(s) === 'เสร็จ'; }
+function isCancelled(s){ return statusKey(s) === 'ยกเลิก'; }
+function isReview(s){ return statusKey(s) === 'ตรวจงาน'; }
+
+/**
+ * statusColor(s) — สีของ status (รองรับทุก variant)
+ */
+function statusColor(s){
+  const k = statusKey(s);
+  return {
+    'รอ':     '#a855f7',
+    'แก้ไข':  '#f59e0b',
+    'ตรวจงาน':'#22d3ee',
+    'ดำเนินการ':'#3b82f6',
+    'เสร็จ':  '#00e5a0',
+    'ยกเลิก': '#ef4444',
+  }[k] || '#666';
+}
+
+/**
+ * statusPillHtml(s) — สร้าง HTML ของ status pill ที่แสดงผลถูกต้องทุก variant
+ */
+function statusPillHtml(s){
+  const k = statusKey(s);
+  const color = statusColor(s);
+  const labelMap = {
+    'รอ':'รอดำเนินการ ⏱️','แก้ไข':'แก้ไข',
+    'ตรวจงาน':'ตรวจงาน','ดำเนินการ':'กำลังดำเนินการ ⚙️',
+    'เสร็จ':'เสร็จสิ้น ✅','ยกเลิก':'ยกเลิก ❌'
+  };
+  const label = labelMap[k] || esc(s);
+  const bg = color + '26'; // ~15% opacity hex
+  return `<span class="status-pill" data-s="${esc(k)}" style="background:${bg};color:${color}">${label}</span>`;
+}
+
 // ════════════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════════════
@@ -669,10 +683,8 @@ let filterStatus = '', filterBrand = '', filterSla = '', searchQ = '';
 let tbPage = 1; let PER_PAGE = 20;
 let openTicketId = null;
 let sse = null;
-
-// Analytics state
 let analyticsDateFrom = '', analyticsDateTo = '';
-let chartInstances = {}; // store chart instances for destroy/recreate
+let chartInstances = {};
 
 // ── Helpers ──────────────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -680,7 +692,7 @@ function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
   const ctrl = new AbortController();
-  const tid  = setTimeout(()=>ctrl.abort(), 10000); // ✅ ลดจาก 25s → 10s
+  const tid  = setTimeout(()=>ctrl.abort(), 10000);
   return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
     .then(r=>{ clearTimeout(tid); return r.json(); })
     .catch(e=>{ clearTimeout(tid); throw e; });
@@ -688,9 +700,6 @@ function api(path,opts={}){
 const AVATAR_COLORS=['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316'];
 function ac(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
 function ai(name){ return (name||'?').charAt(0).toUpperCase(); }
-function statusColor(s){
-  return {'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';
-}
 function actionColor(a){
   return {'login':'#3b82f6','logout':'#94a3b8','create_ticket':'#00e5a0','update_status':'#f59e0b','assign':'#a855f7','engineer_submit':'#22d3ee','close':'#00e5a0','create_user':'#f97316','update_user':'#3b82f6','delete_user':'#ef4444','update':'#f59e0b'}[a]||'#888';
 }
@@ -701,18 +710,13 @@ function actionLabel(a){
 // ════════════════════════════════════════════════════════════════
 // ADVANCED ANALYTICS
 // ════════════════════════════════════════════════════════════════
-
-// Helper: get CSS variable value
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
-// Helper: parse date from ticket (sentDate or createdAt field — "DD/MM/YYYY" or ISO)
 function parseTicketDate(t){
   const raw = t.sentDate || t.createdAt || '';
   if(!raw) return null;
-  // Try ISO
   let d = new Date(raw);
   if(!isNaN(d)) return d;
-  // Try DD/MM/YYYY
   const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
   if(m){
     const y = m[3].length===2 ? '20'+m[3] : m[3];
@@ -722,7 +726,6 @@ function parseTicketDate(t){
   return null;
 }
 
-// Get analytics-filtered ticket set
 function getAnalyticsTickets(){
   let data = [...tickets];
   if(analyticsDateFrom || analyticsDateTo){
@@ -739,7 +742,6 @@ function getAnalyticsTickets(){
   return data;
 }
 
-// Apply / clear filter buttons
 function applyAnalyticsFilter(){
   analyticsDateFrom = document.getElementById('analytics-date-from').value;
   analyticsDateTo   = document.getElementById('analytics-date-to').value;
@@ -752,7 +754,6 @@ function clearAnalyticsFilter(){
   renderAdvancedAnalytics();
 }
 
-// Chart.js theme-aware defaults
 function chartDefaults(){
   const isDark = !document.body.classList.contains('theme-light');
   return {
@@ -763,7 +764,6 @@ function chartDefaults(){
   };
 }
 
-// Destroy + recreate a chart safely
 function makeChart(id, config){
   if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
   const canvas = document.getElementById(id);
@@ -771,7 +771,9 @@ function makeChart(id, config){
   chartInstances[id] = new Chart(canvas, config);
 }
 
-// ── renderAdvancedAnalytics ─────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// ✅ renderAdvancedAnalytics — ใช้ statusKey() แทนการ hardcode string
+// ════════════════════════════════════════════════════════════════
 function renderAdvancedAnalytics(){
   const data = getAnalyticsTickets();
   const cd   = chartDefaults();
@@ -786,17 +788,17 @@ function renderAdvancedAnalytics(){
     badgeWrap.innerHTML = '';
   }
 
-  // Mini stats
-  const waiting = data.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
-  const inprog  = data.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  const done    = data.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+  // ✅ Mini stats — ใช้ helper functions แทน hardcode string เปรียบเทียบ
+  const waiting = data.filter(t => isWaiting(t.status)).length;
+  const inprog  = data.filter(t => isInProgress(t.status)).length;
+  const done    = data.filter(t => isDone(t.status)).length;
+
   document.getElementById('ms-total').textContent  = data.length;
   document.getElementById('ms-wait').textContent   = waiting;
   document.getElementById('ms-inprog').textContent = inprog;
   document.getElementById('ms-done').textContent   = done;
 
-  // ── 1. Monthly Trend Chart ──────────────────────────────
-  // Group by year-month
+  // ── Monthly Trend Chart ──────────────────────────────
   const monthMap = {};
   data.forEach(t=>{
     const d = parseTicketDate(t);
@@ -804,11 +806,9 @@ function renderAdvancedAnalytics(){
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     monthMap[key] = (monthMap[key]||0)+1;
   });
-  // Fill contiguous range (up to 12 months back from latest)
   const sortedKeys = Object.keys(monthMap).sort();
   let monthLabels = sortedKeys;
   let monthValues = sortedKeys.map(k=>monthMap[k]);
-  // If no data → show last 6 months as zero
   if(!monthLabels.length){
     const now = new Date();
     for(let i=5;i>=0;i--){
@@ -822,7 +822,6 @@ function renderAdvancedAnalytics(){
     const [y,m] = k.split('-');
     return THAI_MONTHS[parseInt(m,10)-1]+' '+(parseInt(y,10)+543-2500);
   });
-
   makeChart('monthlyTrendChart', {
     type: 'line',
     data: {
@@ -845,30 +844,16 @@ function renderAdvancedAnalytics(){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: cd.tooltipBg,
-          titleColor: cd.tooltipFg,
-          bodyColor: cd.tooltipFg,
-          borderColor: '#00e5a0',
-          borderWidth: 1,
-          padding: 10,
-        }
+        tooltip: { backgroundColor:cd.tooltipBg, titleColor:cd.tooltipFg, bodyColor:cd.tooltipFg, borderColor:'#00e5a0', borderWidth:1, padding:10 }
       },
       scales: {
-        x: {
-          ticks: { color: cd.tickColor, font:{size:11} },
-          grid:  { color: cd.gridColor }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
-          grid:  { color: cd.gridColor }
-        }
+        x: { ticks:{color:cd.tickColor,font:{size:11}}, grid:{color:cd.gridColor} },
+        y: { beginAtZero:true, ticks:{color:cd.tickColor,font:{size:11},precision:0}, grid:{color:cd.gridColor} }
       }
     }
   });
 
-  // ── 2. Branch Breakdown Chart ──────────────────────────
+  // ── Branch Breakdown Chart ──────────────────────────
   const branchMap = {};
   data.forEach(t=>{
     const b = (t.branchCode||t.branch||'ไม่ระบุ').trim();
@@ -877,11 +862,8 @@ function renderAdvancedAnalytics(){
   const branchEntries = Object.entries(branchMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
   const branchLabels  = branchEntries.map(e=>e[0]);
   const branchValues  = branchEntries.map(e=>e[1]);
-  const barColors = branchLabels.map((_,i)=>{
-    const palette = ['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316','#84cc16','#ec4899','#06b6d4'];
-    return palette[i % palette.length];
-  });
-
+  const palette = ['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316','#84cc16','#ec4899','#06b6d4'];
+  const barColors = branchLabels.map((_,i)=>palette[i%palette.length]);
   makeChart('branchBreakdownChart', {
     type: 'bar',
     data: {
@@ -900,43 +882,29 @@ function renderAdvancedAnalytics(){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: cd.tooltipBg,
-          titleColor: cd.tooltipFg,
-          bodyColor: cd.tooltipFg,
-          borderColor: 'rgba(255,255,255,.1)',
-          borderWidth: 1,
-          padding: 10,
-        }
+        tooltip: { backgroundColor:cd.tooltipBg, titleColor:cd.tooltipFg, bodyColor:cd.tooltipFg, borderColor:'rgba(255,255,255,.1)', borderWidth:1, padding:10 }
       },
       scales: {
-        x: {
-          ticks: { color: cd.tickColor, font:{size:10}, maxRotation:45 },
-          grid:  { color: 'transparent' }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
-          grid:  { color: cd.gridColor }
-        }
+        x: { ticks:{color:cd.tickColor,font:{size:10},maxRotation:45}, grid:{color:'transparent'} },
+        y: { beginAtZero:true, ticks:{color:cd.tickColor,font:{size:11},precision:0}, grid:{color:cd.gridColor} }
       }
     }
   });
 
-  // ── 3. Status Doughnut ─────────────────────────────────
+  // ── Status Doughnut ─────────────────────────────────
+  // ✅ ใช้ statusKey() แทน hardcode string เพื่อนับทุก variant ถูกต้อง
   const STATUS_DEFS = [
-    { key: 'รอดำเนินการ ⏱️', label: 'รอดำเนินการ ⏱️',   color: '#a855f7' },
-    { key: 'ตรวจงาน',        label: 'ตรวจงาน',        color: '#22d3ee' },
-    { key: 'อยู่ระหว่างดำเนินการ ⚙️', label: 'กำลังดำเนินการ', color: '#3b82f6' },
-    { key: 'เสร็จสิ้น ✅',   label: 'เสร็จสิ้น',      color: '#00e5a0' },
-    { key: 'ยกเลิก ❌',      label: 'ยกเลิก',         color: '#ef4444' },
-    { key: 'แก้ไข',          label: 'แก้ไข',           color: '#f59e0b' },
+    { key: 'รอ',         label: 'รอดำเนินการ',    color: '#a855f7' },
+    { key: 'แก้ไข',      label: 'แก้ไข',           color: '#f59e0b' },
+    { key: 'ตรวจงาน',   label: 'ตรวจงาน',         color: '#22d3ee' },
+    { key: 'ดำเนินการ', label: 'กำลังดำเนินการ',  color: '#3b82f6' },
+    { key: 'เสร็จ',      label: 'เสร็จสิ้น',       color: '#00e5a0' },
+    { key: 'ยกเลิก',     label: 'ยกเลิก',          color: '#ef4444' },
   ];
-  const doughnutCounts = STATUS_DEFS.map(s=>data.filter(t=>t.status===s.key).length);
-  const doughnutColors = STATUS_DEFS.map(s=>s.color);
-  const doughnutLabels = STATUS_DEFS.map(s=>s.label);
+  const doughnutCounts = STATUS_DEFS.map(s => data.filter(t => statusKey(t.status) === s.key).length);
+  const doughnutColors = STATUS_DEFS.map(s => s.color);
+  const doughnutLabels = STATUS_DEFS.map(s => s.label);
   const hasAny = doughnutCounts.some(v=>v>0);
-
   makeChart('statusDoughnutChart', {
     type: 'doughnut',
     data: {
@@ -956,37 +924,20 @@ function renderAdvancedAnalytics(){
       plugins: {
         legend: {
           position: 'right',
-          labels: {
-            color: cd.tickColor,
-            font: { size: 11, family: "'Noto Sans Thai', sans-serif" },
-            boxWidth: 12,
-            padding: 10,
-          }
+          labels: { color:cd.tickColor, font:{size:11,family:"'Noto Sans Thai', sans-serif"}, boxWidth:12, padding:10 }
         },
         tooltip: {
-          backgroundColor: cd.tooltipBg,
-          titleColor: cd.tooltipFg,
-          bodyColor: cd.tooltipFg,
-          borderColor: 'rgba(255,255,255,.1)',
-          borderWidth: 1,
-          padding: 10,
-          callbacks: {
-            label: ctx => hasAny
-              ? ` ${ctx.label}: ${ctx.parsed} ticket`
-              : ' ไม่มีข้อมูล',
-          }
+          backgroundColor:cd.tooltipBg, titleColor:cd.tooltipFg, bodyColor:cd.tooltipFg,
+          borderColor:'rgba(255,255,255,.1)', borderWidth:1, padding:10,
+          callbacks: { label: ctx => hasAny ? ` ${ctx.label}: ${ctx.parsed} ticket` : ' ไม่มีข้อมูล' }
         }
       }
     }
   });
 }
 
-// ── Filter controls: date range pickers ─────────────────────
 document.getElementById('analytics-date-from').addEventListener('change', function(){ analyticsDateFrom = this.value; });
 document.getElementById('analytics-date-to').addEventListener('change', function(){ analyticsDateTo = this.value; });
-
-// Re-render charts when theme changes (pick up new colors)
-const _origToggleTheme = window.toggleTheme;
 
 // ════════════════════════════════════════════════════════════════
 // AUTH
@@ -997,8 +948,6 @@ async function tryAutoLogin(){
   let token;
   try { ({ token } = JSON.parse(saved)); } catch(_) { localStorage.removeItem('admin_auth'); return false; }
   if(!token) { localStorage.removeItem('admin_auth'); return false; }
-
-  // ✅ timeout 15s — พอให้ Render/Railway wake up แต่ไม่นานเกินไป
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 15000);
@@ -1006,13 +955,10 @@ async function tryAutoLogin(){
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       signal: ctrl.signal
     }).then(r => r.json()).finally(() => clearTimeout(tid));
-
     if(d.ok && ['superadmin','admin','manager'].includes(d.user.role)){
       AUTH = { token, user: d.user }; return true;
     }
-  } catch(e) {
-    console.warn('[AutoLogin] failed:', e.message);
-  }
+  } catch(e) { console.warn('[AutoLogin] failed:', e.message); }
   localStorage.removeItem('admin_auth');
   return false;
 }
@@ -1025,16 +971,11 @@ document.getElementById('btn-login').onclick = async()=>{
   if(!u||!p){err.textContent='กรุณากรอก username และ password';return;}
   const btn=document.getElementById('btn-login');
   btn.disabled=true;
-
-  // ✅ แสดง progress — บอก user ว่ากำลังรอ server ตื่น (Render/Railway cold start)
-  let dots=0;
-  const loadingMsgs=['⏳ กำลังเชื่อมต่อ...','⏳ กำลังเชื่อมต่อ..  (server กำลังเริ่ม)','⏳ กำลังเชื่อมต่อ... (อาจใช้เวลา 30-60 วิ)'];
   let msgIdx=0;
+  const loadingMsgs=['⏳ กำลังเชื่อมต่อ...','⏳ กำลังเชื่อมต่อ.. (server กำลังเริ่ม)','⏳ กำลังเชื่อมต่อ... (อาจใช้เวลา 30-60 วิ)'];
   btn.textContent=loadingMsgs[0];
   const msgTimer=setInterval(()=>{ msgIdx=Math.min(msgIdx+1,loadingMsgs.length-1); btn.textContent=loadingMsgs[msgIdx]; },8000);
-
   try{
-    // ✅ timeout 90s รองรับ Render cold start (free tier ใช้เวลา ~50s)
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),90000);
     const d=await fetch('/api/auth/login',{
@@ -1043,21 +984,15 @@ document.getElementById('btn-login').onclick = async()=>{
       body:JSON.stringify({username:u,password:p}),
       signal:ctrl.signal
     }).then(r=>{ clearTimeout(tid); return r.json(); });
-
     if(!d.ok) throw new Error(d.error||'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     if(!['superadmin','admin','manager'].includes(d.user.role)) throw new Error('บัญชีนี้ไม่มีสิทธิ์เข้า Admin กรุณาใช้หน้าช่าง');
     AUTH={token:d.token,user:d.user};
     localStorage.setItem('admin_auth',JSON.stringify(AUTH));
     bootApp();
   }catch(e){
-    if(e.name==='AbortError'){
-      err.textContent='❌ Server ไม่ตอบสนองใน 90 วินาที — ลองรีเฟรชหน้าแล้ว login ใหม่';
-    } else if(e.name==='TypeError'){
-      err.textContent='❌ เชื่อมต่อ server ไม่ได้ — ตรวจสอบว่า server รันอยู่';
-    } else {
-      err.textContent=e.message||'เกิดข้อผิดพลาด';
-    }
-    console.error('[Login Error]',e.name,e.message);
+    if(e.name==='AbortError') err.textContent='❌ Server ไม่ตอบสนองใน 90 วินาที — ลองรีเฟรชหน้าแล้ว login ใหม่';
+    else if(e.name==='TypeError') err.textContent='❌ เชื่อมต่อ server ไม่ได้ — ตรวจสอบว่า server รันอยู่';
+    else err.textContent=e.message||'เกิดข้อผิดพลาด';
   }
   finally{
     clearInterval(msgTimer);
@@ -1080,7 +1015,6 @@ function applyTheme(mode) {
   if (label) label.textContent = isLight ? 'โหมดมืด' : 'โหมดสว่าง';
   if (iconM) iconM.textContent = isLight ? '🌙' : '☀️';
   try { localStorage.setItem('admin_theme', mode); } catch(_) {}
-  // Re-render charts on theme change
   if(tickets.length) setTimeout(renderAdvancedAnalytics, 50);
 }
 function toggleTheme() {
@@ -1150,7 +1084,15 @@ function connectSSE(){
 async function loadTickets(){
   try{
     const d=await api('/api/tickets');
-    if(d.ok){ tickets=d.tickets||[]; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
+    if(d.ok){
+      tickets=d.tickets||[];
+      // ✅ Debug: log unique status values ที่ได้จาก Lark (ช่วย diagnose)
+      const uniqueStatuses = [...new Set(tickets.map(t=>t.status||''))];
+      console.log('[Tickets] unique statuses from Lark:', uniqueStatuses);
+      updateBadge();
+      if(currentPage==='tickets') renderTicketsPage();
+      if(currentPage==='dashboard') renderDashboard();
+    }
   }catch(e){ console.warn('[loadTickets] error:', e.message); }
 }
 async function loadLogs(){
@@ -1161,8 +1103,10 @@ async function loadUsers(){
   const d=await api('/api/users');
   if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
 }
+
+// ✅ updateBadge — ใช้ isWaiting() แทน hardcode
 function updateBadge(){
-  const n=tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
+  const n=tickets.filter(t=>isWaiting(t.status)).length;
   ['nb-pending','bnav-badge'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.textContent=n; el.style.display=n?'':'none'; }
@@ -1174,9 +1118,7 @@ function updateBadge(){
 // ════════════════════════════════════════════════════════════════
 const PAGE_TITLES={'dashboard':'ภาพรวม','tickets':'Tickets','log':'Activity Log','users':'ผู้ใช้งาน','debug':'ตรวจสอบระบบ'};
 function navTo(page){
-  document.querySelectorAll('.nav-item,.bnav-btn').forEach(b=>{
-    b.classList.toggle('active',b.dataset.page===page);
-  });
+  document.querySelectorAll('.nav-item,.bnav-btn').forEach(b=>{ b.classList.toggle('active',b.dataset.page===page); });
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
@@ -1205,21 +1147,26 @@ document.getElementById('sidebar-overlay').onclick=()=>{
 // ════════════════════════════════════════════════════════════════
 function renderDashboard(){
   const total    = tickets.length;
-  const waiting  = tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
-  const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
-  const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+  // ✅ ใช้ helper functions
+  const waiting  = tickets.filter(t=>isWaiting(t.status)).length;
+  const review   = tickets.filter(t=>isReview(t.status)).length;
+  const inprog   = tickets.filter(t=>isInProgress(t.status)).length;
+  const done     = tickets.filter(t=>isDone(t.status)).length;
+  const cancelled= tickets.filter(t=>isCancelled(t.status)).length;
+
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
+
   const sel = document.getElementById('dash-status-select');
   if(sel){
     const cur = sel.value;
     sel.innerHTML = `
       <option value="">📋 ทุกสถานะ (${total})</option>
-      <option value="รอดำเนินการ ⏱️">รอดำเนินการ ⏱️ (${tickets.filter(t=>t.status==='รอดำเนินการ ⏱️').length})</option>
+      <option value="รอ">รอดำเนินการ ⏱️ (${tickets.filter(t=>statusKey(t.status)==='รอ').length})</option>
+      <option value="แก้ไข">แก้ไข (${tickets.filter(t=>statusKey(t.status)==='แก้ไข').length})</option>
       <option value="ตรวจงาน">🔍 ตรวจงาน (${review})</option>
-      <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังดำเนินการ (${inprog})</option>
-      <option value="เสร็จสิ้น ✅">✅ เสร็จสิ้น (${done})</option>
-      <option value="ยกเลิก ❌">❌ ยกเลิก (${tickets.filter(t=>t.status==='ยกเลิก ❌').length})</option>
+      <option value="ดำเนินการ">⚙️ กำลังดำเนินการ (${inprog})</option>
+      <option value="เสร็จ">✅ เสร็จสิ้น (${done})</option>
+      <option value="ยกเลิก">❌ ยกเลิก (${cancelled})</option>
     `;
     sel.value = cur;
     sel.onchange = ()=>{
@@ -1230,9 +1177,10 @@ function renderDashboard(){
       renderTicketsPage();
     };
   }
+
   const badge = document.getElementById('dash-count-badge');
   if(badge) badge.textContent = `รวม ${total} Ticket · รอ ${waiting} · ดำเนินการ ${inprog} · เสร็จ ${done}`;
-  // Brand chart + recent
+
   const brandMap={};
   const FIXED_BRANDS = ["Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];
   FIXED_BRANDS.forEach(b=>brandMap[b]=0);
@@ -1252,6 +1200,7 @@ function renderDashboard(){
   const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]);
   const maxB=brands[0]?.[1]||1;
   const recent=tickets.slice(0,8);
+
   document.getElementById('dash-grid').innerHTML=`
     <div class="dash-card">
       <div class="dash-card-title">📊 Ticket ตามแบรนด์</div>
@@ -1267,13 +1216,14 @@ function renderDashboard(){
         ${recent.map(t=>`<li class="recent-item" onclick="openDrawer('${esc(t._recordId)}')" style="cursor:pointer">
           <span class="ri-id">${esc(t.id||'—')}</span>
           <span class="ri-type">${esc(t.type||'-')}</span>
-          <span class="status-pill s-${esc(t.status||'')}" style="font-size:10.5px;padding:2px 7px">${esc(t.status||'-')}</span>
+          ${statusPillHtml(t.status)}
         </li>`).join('')}
       </ul>
     </div>`;
-  // Render advanced analytics charts after dash-grid is in DOM
+
   renderAdvancedAnalytics();
 }
+
 document.getElementById('btn-refresh-dash').onclick=async()=>{
   const btn=document.getElementById('btn-refresh-dash');
   btn.classList.add('spinning'); await loadTickets(); btn.classList.remove('spinning');
@@ -1282,9 +1232,12 @@ document.getElementById('btn-refresh-dash').onclick=async()=>{
 // ════════════════════════════════════════════════════════════════
 // TICKETS PAGE
 // ════════════════════════════════════════════════════════════════
+// ✅ getFiltered — ใช้ statusKey() เปรียบเทียบ แทน string ตรงๆ
 function getFiltered(){
   let data=[...tickets];
-  if(filterStatus) data=data.filter(t=>(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()===filterStatus.replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim());
+  if(filterStatus){
+    data=data.filter(t=> statusKey(t.status) === filterStatus);
+  }
   if(filterBrand)  data=data.filter(t=>t.brand===filterBrand);
   if(filterSla)    data=data.filter(t=>t.sla===filterSla);
   if(searchQ){
@@ -1298,6 +1251,7 @@ function getFiltered(){
   }
   return data;
 }
+
 function renderTicketsPage(){
   const brands=[...new Set(tickets.map(t=>t.brand).filter(Boolean))].sort();
   const fb=document.getElementById('filter-brand');
@@ -1320,23 +1274,36 @@ function renderTicketsPage(){
       </td>
       <td><div class="cell-type">${esc(t.type||'—')}</div><div class="cell-detail">${esc(t.detail||'-')}</div></td>
       <td class="td-hide-mobile" style="font-size:13px">${esc(t.branchCode||'-')}</td>
-      <td><span class="status-pill s-${(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()}">${esc(t.status||'-')}</span></td>
+      <td>${statusPillHtml(t.status)}</td>
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
       <td onclick="event.stopPropagation()">
         <div class="sq-btns">
-          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','⚙️ รับงาน')}
-          ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','✅ เสร็จ')}
-          ${sqBtn(t,'ยกเลิก ❌','#ef4444','❌ ยกเลิก')}
+          ${sqBtn(t,'ดำเนินการ','#3b82f6','⚙️ รับงาน')}
+          ${sqBtn(t,'เสร็จ','#00e5a0','✅ เสร็จ')}
+          ${sqBtn(t,'ยกเลิก','#ef4444','❌ ยกเลิก')}
         </div>
       </td>
     </tr>`;
   }).join('');
   if(window.renderFabPagination) renderFabPagination(Math.max(1, Math.ceil(data.length/PER_PAGE)), tbPage, PER_PAGE);
 }
-function sqBtn(t,status,color,label){
-  const active=t.status===status;
-  return `<button class="sq-btn" style="border-color:${color};color:${active?'#000':color};background:${active?color:'transparent'}" onclick="quickStatus('${esc(t._recordId)}','${esc(status)}')">${esc(label)}</button>`;
+
+// ✅ sqBtn — ใช้ statusKey เปรียบเทียบ active state
+function sqBtn(t, keyOrStatus, color, label){
+  const active = statusKey(t.status) === keyOrStatus;
+  // Map key back to actual status string เพื่อส่ง API
+  const statusMap = {
+    'ดำเนินการ':'อยู่ระหว่างดำเนินการ ⚙️',
+    'เสร็จ':'เสร็จสิ้น ✅',
+    'ยกเลิก':'ยกเลิก ❌',
+    'รอ':'รอดำเนินการ ⏱️',
+    'แก้ไข':'แก้ไข',
+    'ตรวจงาน':'ตรวจงาน',
+  };
+  const sendStatus = statusMap[keyOrStatus] || keyOrStatus;
+  return `<button class="sq-btn" style="border-color:${color};color:${active?'#000':color};background:${active?color:'transparent'}" onclick="quickStatus('${esc(t._recordId)}','${esc(sendStatus)}')">${esc(label)}</button>`;
 }
+
 document.getElementById('search-input').oninput=function(){searchQ=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-brand').onchange=function(){filterBrand=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-sla')&&(document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
@@ -1376,18 +1343,29 @@ function closeDrawer(){
   document.body.style.overflow='';
 }
 document.getElementById('drawer-overlay').onclick=closeDrawer;
+
 function renderDrawerContent(){
   const t=tickets.find(x=>x._recordId===openTicketId);
   if(!t){ document.getElementById('drawer-inner').innerHTML='<div class="loading"><div class="spinner"></div></div>'; return; }
   const ticketLogs=logs.filter(l=>l.ticketId===t._recordId||l.ticketLabel===t.id).slice(0,10);
-  const STATUSES=['แก้ไข','อยู่ระหว่างดำเนินการ ⚙️','รอดำเนินการ ⏱️','เสร็จสิ้น ✅','ยกเลิก ❌'];
+  // ✅ Status options ใช้ค่าจริงที่ส่ง API
+  const STATUSES=[
+    {val:'รอดำเนินการ ⏱️', label:'รอดำเนินการ ⏱️'},
+    {val:'อยู่ระหว่างดำเนินการ ⚙️', label:'กำลังดำเนินการ ⚙️'},
+    {val:'ตรวจงาน', label:'ตรวจงาน'},
+    {val:'เสร็จสิ้น ✅', label:'เสร็จสิ้น ✅'},
+    {val:'ยกเลิก ❌', label:'ยกเลิก ❌'},
+    {val:'แก้ไข', label:'แก้ไข'},
+  ];
+  const isDoneOrCancel = isDone(t.status) || isCancelled(t.status);
+
   document.getElementById('drawer-inner').innerHTML=`
     <div class="drawer-head">
       <div style="flex:1">
         <div class="drawer-id">🎫 ${esc(t.id||t._recordId||'—')}</div>
         <div class="drawer-title">${esc(t.type||'—')}</div>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="status-pill s-${(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()}">${esc(t.status||'-')}</span>
+          ${statusPillHtml(t.status)}
           ${t.brand?`<span style="font-size:12px;color:var(--fg2)">${esc(t.brand)}</span>`:''}
           ${t.branchCode?`<span style="font-family:var(--font-m);font-size:11.5px;color:var(--fg3)">${esc(t.branchCode)}</span>`:''}
         </div>
@@ -1400,9 +1378,9 @@ function renderDrawerContent(){
         <div class="d-actions">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn-action btn-assign" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
-            ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
+            ${!isDoneOrCancel?`<button class="btn-action btn-close-ticket" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
             <button class="btn-action btn-note" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
-            ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
+            ${!isCancelled(t.status)?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
           </div>
         </div>
       </div>
@@ -1410,7 +1388,7 @@ function renderDrawerContent(){
         <div class="d-section-title">เปลี่ยนสถานะ</div>
         <select onchange="quickStatus('${esc(t._recordId)}',this.value);closeDrawer()"
           style="width:100%;background:var(--bg3);border:1.5px solid var(--b2);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;appearance:none;cursor:pointer">
-          ${STATUSES.map(s=>`<option value="${esc(s)}"${t.status===s?' selected':''}>${esc(s)}</option>`).join('')}
+          ${STATUSES.map(s=>`<option value="${esc(s.val)}"${statusKey(t.status)===statusKey(s.val)?' selected':''}>${esc(s.label)}</option>`).join('')}
         </select>
       </div>
       <div class="d-divider"></div>
@@ -1504,13 +1482,14 @@ async function doAssign(rid){
     showToast('✅ มอบหมายให้ '+name);
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='มอบหมาย';}
 }
+
 function openCloseModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   openModal(`
     <div class="modal-title">✅ จบงาน — ยืนยัน</div>
     ${t?.workDetail?`<div class="d-work-box" style="margin-bottom:14px">
       <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px">รายงานช่าง</div>
-      ${esc(t.workDetail.slice(0,200))}${t.workDetail.length>200?'…':''}
+      ${esc(t.workDetail.slice(0,200))}${t.workDetail.length>200?'...':''}
     </div>`:'<div style="padding:10px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:13px;color:#93c5fd;margin-bottom:14px">⚠️ ยังไม่มีรายงานจากช่าง</div>'}
     <div class="d-form-group"><label class="d-form-label">หมายเหตุ / ผลการตรวจรับ</label>
       <textarea class="d-form-textarea" id="m-note" placeholder="เช่น ตรวจรับงานเรียบร้อย, ทดสอบแล้วปกติ" rows="3"></textarea>
@@ -1532,12 +1511,13 @@ async function doClose(rid){
     showToast('✅ ปิดงานเรียบร้อย');
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='✅ ยืนยันจบงาน';}
 }
+
 function openNoteModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   openModal(`
     <div class="modal-title">📝 เพิ่มหมายเหตุ</div>
     <div class="d-form-group"><label class="d-form-label">หมายเหตุ (Admin)</label>
-      <textarea class="d-form-textarea" id="m-anote" rows="4" placeholder="หมายเหตุภายใน…">${esc(t?.adminNote||'')}</textarea>
+      <textarea class="d-form-textarea" id="m-anote" rows="4" placeholder="หมายเหตุภายใน...">${esc(t?.adminNote||'')}</textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
@@ -1701,16 +1681,28 @@ async function doDeleteUser(id){
 // ════════════════════════════════════════════════════════════════
 document.getElementById('btn-run-debug').onclick=async()=>{
   const c=document.getElementById('debug-content');
-  c.innerHTML='<div class="loading"><div class="spinner"></div> กำลังตรวจสอบ…</div>';
+  c.innerHTML='<div class="loading"><div class="spinner"></div> กำลังตรวจสอบ...</div>';
   try{
     const [env,fields]=await Promise.all([
       api('/debug/env'),
       api('/debug/lark-fields').catch(()=>({ok:false,error:'ตรวจสอบไม่ได้'}))
     ]);
+    // ✅ เพิ่ม status debug section
+    const uniqueStatuses = [...new Set(tickets.map(t=>t.status||'(empty)'))];
     const schema=fields.schema||[];
     const mapped=schema.filter(f=>f.mapped_to!=='(unmapped)');
     const unmapped=schema.filter(f=>f.mapped_to==='(unmapped)');
     c.innerHTML=`
+      <!-- Status debug -->
+      <div style="background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);border-radius:var(--r2);padding:16px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">🔍 Status values จาก Lark (${uniqueStatuses.length} unique)</div>
+        ${uniqueStatuses.map(s=>`<div style="display:flex;gap:10px;margin-bottom:6px;font-family:var(--font-m);font-size:11.5px;align-items:center">
+          <span style="color:var(--fg2);min-width:200px">"${esc(s)}"</span>
+          <span style="color:var(--fg3)">→ key:</span>
+          <span style="color:var(--accent)">"${esc(statusKey(s))}"</span>
+          <span style="background:${statusColor(s)}22;color:${statusColor(s)};padding:2px 8px;border-radius:6px;font-size:10px">${esc(statusKey(s))}</span>
+        </div>`).join('')}
+      </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
         ${Object.entries(env).filter(([k])=>k.startsWith('has')).map(([k,v])=>`
           <div style="background:var(--bg2);border:1px solid ${v?'rgba(0,229,160,.2)':'rgba(239,68,68,.2)'};border-radius:var(--r);padding:12px">
@@ -1730,7 +1722,6 @@ document.getElementById('btn-run-debug').onclick=async()=>{
       ${unmapped.length?`<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--r2);padding:16px">
         <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:8px">⚠️ Unmapped Fields (${unmapped.length})</div>
         ${unmapped.map(f=>`<div style="font-family:var(--font-m);font-size:11.5px;color:var(--fg2);margin-bottom:3px">"${esc(f.name)}"</div>`).join('')}
-        <div style="margin-top:10px;font-size:12.5px;color:var(--fg2);line-height:1.7">แจ้ง Dev เพิ่ม keyword ใน <code style="background:var(--bg3);padding:1px 6px;border-radius:4px">larkService.js → KEYWORDS</code></div>
       </div>`:''}
       `:'<div style="color:var(--fg2);font-size:13px">ไม่สามารถดึงข้อมูล Lark fields ได้: '+esc(fields.error||'')+'</div>'}`;
   }catch(e){c.innerHTML=`<div style="color:var(--danger)">❌ ${esc(e.message)}</div>`;}
@@ -1757,25 +1748,16 @@ function showToast(msg,type='success'){
 // BOOT
 // ════════════════════════════════════════════════════════════════
 (async()=>{
-  // 1. Apply theme ทันที
   try { applyTheme(localStorage.getItem('admin_theme') || 'light'); } catch(_) { document.body.classList.add('theme-light'); }
-
-  // 2. ✅ แสดง login-screen ทันที — ไม่รอใคร
   document.getElementById('login-screen').style.display = 'flex';
-
-  // 3. ซ่อน splash
   window.hideSplash?.();
-
-  // 4. ลอง auto-login — รอ 15s (Render cold start)
   try {
     const autoOk = await Promise.race([
       tryAutoLogin(),
       new Promise(r => setTimeout(() => r(false), 15000))
     ]);
     if(autoOk) bootApp();
-  } catch(e) {
-    console.warn('[boot] autoLogin error:', e.message);
-  }
+  } catch(e) { console.warn('[boot] autoLogin error:', e.message); }
 })();
 
 // ════════════════════════════════════════════════════════════════
@@ -1796,7 +1778,7 @@ window.initAdminFab = function(){
   window.renderFabPagination = function(totalPages, currentPg, perPg){
     if(!fabPagBar) return;
     const isFirst=currentPg===1, isLast=currentPg===totalPages;
-    function pageRange(cur,tot){ if(tot<=7) return Array.from({length:tot},(_,i)=>i+1); const pages=[1]; let left=Math.max(2,cur-1),right=Math.min(tot-1,cur+1); if(left>2)pages.push('…'); for(let i=left;i<=right;i++)pages.push(i); if(right<tot-1)pages.push('…'); pages.push(tot); return pages; }
+    function pageRange(cur,tot){ if(tot<=7) return Array.from({length:tot},(_,i)=>i+1); const pages=[1]; let left=Math.max(2,cur-1),right=Math.min(tot-1,cur+1); if(left>2)pages.push('...'); for(let i=left;i<=right;i++)pages.push(i); if(right<tot-1)pages.push('...'); pages.push(tot); return pages; }
     let html=`<select class="fab-perpage" id="fab-perpage-sel">
       <option value="10"${perPg===10?' selected':''}>10/หน้า</option>
       <option value="20"${perPg===20?' selected':''}>20/หน้า</option>
@@ -1805,7 +1787,7 @@ window.initAdminFab = function(){
     </select>`;
     html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
     html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
-    pageRange(currentPg,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===currentPg?' fab-active':''}" data-page="${p}">${p}</button>`; });
+    pageRange(currentPg,totalPages).forEach(p=>{ if(p==='...') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">...</button>`; else html+=`<button class="fab-btn${p===currentPg?' fab-active':''}" data-page="${p}">${p}</button>`; });
     html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
     html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
     fabPagBar.innerHTML=html;
