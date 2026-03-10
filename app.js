@@ -289,11 +289,13 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const { engineerName, assignedTo } = req.body || {};
+    if (!engineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่าง' });
     const t = await updateTicket(req.params.rid, {
-      engineerName: engineerName||'',
-      assignedTo:   assignedTo||engineerName||'',
+      engineerName: engineerName,
+      assignedTo:   assignedTo||engineerName,
       status:       'อยู่ระหว่างดำเนินการ ⚙️'
     });
+    
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
     broadcast('ticket_updated', { recordId:req.params.rid, engineerName, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
