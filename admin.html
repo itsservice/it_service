@@ -1157,7 +1157,7 @@ async function loadUsers(){
   if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
 }
 function updateBadge(){
-  const n=tickets.filter(t=>t.status==='แก้ไข').length;
+  const n=tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
   ['nb-pending','bnav-badge'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.textContent=n; el.style.display=n?'':'none'; }
@@ -1200,7 +1200,7 @@ document.getElementById('sidebar-overlay').onclick=()=>{
 // ════════════════════════════════════════════════════════════════
 function renderDashboard(){
   const total    = tickets.length;
-  const waiting  = tickets.filter(t=>t.status==='แก้ไข').length;
+  const waiting  = tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
   const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
   const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
   const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
