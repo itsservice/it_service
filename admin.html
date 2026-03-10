@@ -417,7 +417,7 @@ setTimeout(window.hideSplash, 800);
     </div>
     <button class="l-btn" id="btn-login">เข้าสู่ระบบ</button>
     <div class="l-err" id="l-err"></div>
-    <div class="l-links"><a href="/report">← หน้าแจ้งปัญหา</a> &nbsp;·&nbsp; <a href="/engineer">หน้าช่าง</a></div>
+    <div class="l-links"><a href="/report">← แจ้งปัญหา IT</a> &nbsp;·&nbsp; <a href="/engineer">หน้าช่าง</a> &nbsp;·&nbsp; <a href="/">🏠 หน้าหลัก</a></div>
   </div>
 </div>
 
@@ -447,6 +447,11 @@ setTimeout(window.hideSplash, 800);
       <button class="nav-item" data-page="debug" id="nav-debug"><span class="nav-icon">🔍</span>ตรวจสอบระบบ</button>
     </nav>
     <div class="sb-footer">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <a href="/report" style="flex:1;padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">📋 แจ้งปัญหา</a>
+        <a href="/engineer" style="flex:1;padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">🔧 ช่าง</a>
+        <a href="/" style="padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">🏠</a>
+      </div>
       <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">
         <span id="theme-icon">☀️</span><span id="theme-label">โหมดสว่าง</span>
       </button>
