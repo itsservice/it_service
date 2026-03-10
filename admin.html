@@ -309,7 +309,9 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .bnav-bdg{position:absolute;top:0;right:calc(50% - 18px);background:var(--danger);color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:1px 5px;line-height:1.4}
 
 /* RESPONSIVE */
-@media(max-width:768px){
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  
+@media(max-width:649px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%)}
   .sidebar.mobile-open{transform:translateX(0)}
   .topbar-mobile{display:flex}
@@ -335,11 +337,22 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
   .analytics-grid{grid-template-columns:1fr}
   .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
   .analytics-section{padding:0 14px 80px}
+  .topbar-mobile{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+  .sidebar{padding-bottom:env(safe-area-inset-bottom)}
+  .page-content{padding-bottom:env(safe-area-inset-bottom)}
+  .bottom-nav{padding-bottom:env(safe-area-inset-bottom)}
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 }
-@media(min-width:769px) and (max-width:1100px){
+@media(min-width:650px) and (max-width:1200px){
   :root{--sidebar-w:200px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .analytics-grid{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:200px;transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .topbar-mobile{display:flex}
+  .bottom-nav{display:block}
+  .drawer{width:480px}
+  .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
 }
 
 /* FAB */
@@ -494,6 +507,17 @@ setTimeout(window.hideSplash, 800);
           <div class="analytics-header">
             <div class="analytics-title">📈 Advanced Analytics</div>
             <div class="analytics-controls">
+              <select id="analytics-brand" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:140px">
+                <option value="">🏪 ทุกแบรนด์</option>
+                <option>Dunkin'</option>
+                <option>Greyhound Cafe</option>
+                <option>Greyhound Original</option>
+                <option>Au Bon Pain</option>
+                <option>Funky Fries</option>
+              </select>
+              <select id="analytics-branch" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:130px">
+                <option value="">📍 ทุกสาขา</option>
+              </select>
               <input type="date" id="analytics-date-from" class="analytics-date-input" title="วันเริ่มต้น"/>
               <span style="font-size:12px;color:var(--fg3)">ถึง</span>
               <input type="date" id="analytics-date-to" class="analytics-date-input" title="วันสิ้นสุด"/>
@@ -674,6 +698,7 @@ let sse = null;
 
 // Analytics state
 let analyticsDateFrom = '', analyticsDateTo = '';
+let analyticsBrand = '', analyticsBranch = '';
 let chartInstances = {}; // store chart instances for destroy/recreate
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -767,10 +792,14 @@ window._debugDates = function(n=5){
 // Get analytics-filtered ticket set
 function getAnalyticsTickets(){
   let data = [...tickets];
+  // filter brand
+  if(analyticsBrand)  data = data.filter(t=>t.brand===analyticsBrand);
+  // filter branch
+  if(analyticsBranch) data = data.filter(t=>(t.branchCode||t.branch)===analyticsBranch);
+  // filter date
   if(analyticsDateFrom || analyticsDateTo){
-    // date input ส่งมาเป็น "YYYY-MM-DD" เสมอ (ค.ศ.)
-    const from = analyticsDateFrom ? new Date(analyticsDateFrom + 'T00:00:00') : null;
-    const to   = analyticsDateTo   ? new Date(analyticsDateTo   + 'T23:59:59') : null;
+    const from = analyticsDateFrom ? new Date(analyticsDateFrom+'T00:00:00') : null;
+    const to   = analyticsDateTo   ? new Date(analyticsDateTo+'T23:59:59')   : null;
     data = data.filter(t=>{
       const d = parseTicketDate(t);
       if(!d) return false;
@@ -786,13 +815,33 @@ function getAnalyticsTickets(){
 function applyAnalyticsFilter(){
   analyticsDateFrom = document.getElementById('analytics-date-from').value;
   analyticsDateTo   = document.getElementById('analytics-date-to').value;
+  analyticsBrand    = document.getElementById('analytics-brand').value;
+  analyticsBranch   = document.getElementById('analytics-branch').value;
+  // อัพเดต branch dropdown ตาม brand ที่เลือก
+  _updateBranchDropdown();
   renderAdvancedAnalytics();
 }
+  
 function clearAnalyticsFilter(){
   analyticsDateFrom = ''; analyticsDateTo = '';
-  document.getElementById('analytics-date-from').value = '';
-  document.getElementById('analytics-date-to').value = '';
+  analyticsBrand = ''; analyticsBranch = '';
+  document.getElementById('analytics-date-from').value  = '';
+  document.getElementById('analytics-date-to').value    = '';
+  document.getElementById('analytics-brand').value      = '';
+  document.getElementById('analytics-branch').value     = '';
+  _updateBranchDropdown();
   renderAdvancedAnalytics();
+}
+
+  // อัพเดต branch options ตาม brand ที่เลือก
+function _updateBranchDropdown(){
+  const brand = document.getElementById('analytics-brand')?.value || '';
+  const sel   = document.getElementById('analytics-branch');
+  if(!sel) return;
+  const pool  = brand ? tickets.filter(t=>t.brand===brand) : tickets;
+  const branches = [...new Set(pool.map(t=>t.branchCode||t.branch).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">📍 ทุกสาขา</option>' +
+    branches.map(b=>`<option value="${b}"${b===analyticsBranch?' selected':''}>${b}</option>`).join('');
 }
 
 // Chart.js theme-aware defaults
@@ -819,25 +868,25 @@ function renderAdvancedAnalytics(){
   const data = getAnalyticsTickets();
   const cd   = chartDefaults();
 
-  // Badge
-  const badgeWrap = document.getElementById('analytics-filter-badge-wrap');
-  if((analyticsDateFrom || analyticsDateTo) && badgeWrap){
-    const from = analyticsDateFrom ? new Date(analyticsDateFrom).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}) : '—';
-    const to   = analyticsDateTo   ? new Date(analyticsDateTo).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})   : '—';
-    // นับ ticket ที่ parse วันที่ได้จาก tickets ทั้งหมด (debug)
-    const parseable = tickets.filter(t=>parseTicketDate(t)!==null).length;
-    const total     = tickets.length;
-    badgeWrap.innerHTML = `
-      <div class="analytics-filter-badge">
-        📅 ${from} — ${to}
-        &nbsp;·&nbsp; พบ <b>${data.length}</b> ticket
-        <span class="badge-close" onclick="clearAnalyticsFilter()">✕</span>
-      </div>
-      ${parseable < total ? `<div style="font-size:11px;color:var(--warn);margin-top:4px">⚠ ${total-parseable} ticket ไม่มีวันที่ (parse ไม่ได้) — ลอง <a href="/debug/lark-fields" target="_blank" style="color:var(--warn);text-decoration:underline">ดู field names</a></div>` : ''}
-    `;
-  } else if(badgeWrap){
-    badgeWrap.innerHTML = '';
+// Badge
+const badgeWrap = document.getElementById('analytics-filter-badge-wrap');
+const hasFilter = analyticsDateFrom || analyticsDateTo || analyticsBrand || analyticsBranch;
+if(hasFilter && badgeWrap){
+  const parts = [];
+  if(analyticsBrand)  parts.push(`🏪 ${analyticsBrand}`);
+  if(analyticsBranch) parts.push(`📍 ${analyticsBranch}`);
+  if(analyticsDateFrom || analyticsDateTo){
+    const from = analyticsDateFrom ? new Date(analyticsDateFrom).toLocaleDateString('th-TH',{day:'numeric',month:'short'}) : '—';
+    const to   = analyticsDateTo   ? new Date(analyticsDateTo).toLocaleDateString('th-TH',{day:'numeric',month:'short'})   : '—';
+    parts.push(`📅 ${from} — ${to}`);
   }
+  badgeWrap.innerHTML = `<div class="analytics-filter-badge">
+    ${parts.join(' · ')} · <b>${data.length}</b> ticket
+    <span class="badge-close" onclick="clearAnalyticsFilter()">✕</span>
+  </div>`;
+} else if(badgeWrap){
+  badgeWrap.innerHTML = '';
+}
 
   // Mini stats
 const waiting = data.filter(t=>{const s=t.status||''; return s.includes('รอดำเนินการ')||s.includes('แก้ไข');}).length;
@@ -1000,15 +1049,15 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
   });
 
   // ── 3. Status Doughnut ─────────────────────────────────
-  const STATUS_DEFS = [
-    { key: 'รอดำเนินการ ⏱️', label: 'รอดำเนินการ',   color: '#a855f7' },
-    { key: 'ตรวจงาน',        label: 'ตรวจงาน',        color: '#22d3ee' },
-    { key: 'อยู่ระหว่างดำเนินการ ⚙️', label: 'กำลังดำเนินการ', color: '#3b82f6' },
-    { key: 'เสร็จสิ้น ✅',   label: 'เสร็จสิ้น',      color: '#00e5a0' },
-    { key: 'ยกเลิก ❌',      label: 'ยกเลิก',         color: '#ef4444' },
-    { key: 'แก้ไข',          label: 'แก้ไข',           color: '#f59e0b' },
-  ];
-  const doughnutCounts = STATUS_DEFS.map(s=>data.filter(t=>t.status===s.key).length);
+const STATUS_DEFS = [
+  { key: 'รอดำเนินการ', label: 'รอดำเนินการ', color: '#a855f7' },  // ✅ ตัด emoji ออก
+  { key: 'ตรวจงาน',     label: 'ตรวจงาน',     color: '#22d3ee' },
+  { key: 'อยู่ระหว่างดำเนินการ', label: 'กำลังดำเนินการ', color: '#3b82f6' },
+  { key: 'เสร็จสิ้น',   label: 'เสร็จสิ้น',   color: '#00e5a0' },
+  { key: 'ยกเลิก',      label: 'ยกเลิก',       color: '#ef4444' },
+  { key: 'แก้ไข',       label: 'แก้ไข',         color: '#f59e0b' },
+];
+  const doughnutCounts = STATUS_DEFS.map(s=>   data.filter(t=>(t.status||'').includes(s.key.replace(/[✅⚙️⏱️❌]/g,'').trim())).length );
   const doughnutColors = STATUS_DEFS.map(s=>s.color);
   const doughnutLabels = STATUS_DEFS.map(s=>s.label);
   const hasAny = doughnutCounts.some(v=>v>0);
@@ -1157,7 +1206,7 @@ function applyTheme(mode) {
   if (iconM) iconM.textContent = isLight ? '🌙' : '☀️';
   try { localStorage.setItem('admin_theme', mode); } catch(_) {}
   // Re-render charts on theme change
-  if(tickets.length) setTimeout(renderAdvancedAnalytics, 50);
+  setTimeout(renderAdvancedAnalytics, 100);
 }
 function toggleTheme() {
   try {
@@ -1553,7 +1602,7 @@ function renderTicketsPage(){
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
       <td onclick="event.stopPropagation()">
         <div class="sq-btns">
-          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','⚙️ ดำเนินการ')}
+          <button class="sq-btn" style="border-color:#3b82f6;color:#3b82f6;background:transparent" onclick="openAssignModal('${esc(t._recordId)}')">🔄 มอบหมาย</button>
           ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','✅ เสร็จ')}
           ${sqBtn(t,'ยกเลิก ❌','#ef4444','❌ ยกเลิก')}
         </div>
