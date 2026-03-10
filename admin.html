@@ -989,14 +989,14 @@ const _origToggleTheme = window.toggleTheme;
 async function tryAutoLogin(){
   const saved = localStorage.getItem('admin_auth');
   if(!saved) return false;
-  let token, parsedOk;
-  try { ({ token } = JSON.parse(saved)); parsedOk = true; } catch(_) {}
-  if(!parsedOk || !token) { localStorage.removeItem('admin_auth'); return false; }
+  let token;
+  try { ({ token } = JSON.parse(saved)); } catch(_) { localStorage.removeItem('admin_auth'); return false; }
+  if(!token) { localStorage.removeItem('admin_auth'); return false; }
 
-  // ✅ Hard timeout 3s — ถ้า server ไม่ตอบ แสดง login form ทันที
+  // ✅ timeout 15s — พอให้ Render/Railway wake up แต่ไม่นานเกินไป
   try {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 3000);
+    const tid = setTimeout(() => ctrl.abort(), 15000);
     const d = await fetch('/api/auth/me', {
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       signal: ctrl.signal
@@ -1008,7 +1008,6 @@ async function tryAutoLogin(){
   } catch(e) {
     console.warn('[AutoLogin] failed:', e.message);
   }
-  // ✅ ล้าง token ที่ไม่ valid ออกเสมอ
   localStorage.removeItem('admin_auth');
   return false;
 }
@@ -1020,26 +1019,46 @@ document.getElementById('btn-login').onclick = async()=>{
   err.textContent='';
   if(!u||!p){err.textContent='กรุณากรอก username และ password';return;}
   const btn=document.getElementById('btn-login');
-  btn.disabled=true; btn.textContent='⏳ กำลังเข้าสู่ระบบ...';
-  // ✅ timeout 8s กันค้าง
-  const ctrl = new AbortController();
-  const tid = setTimeout(()=>{ ctrl.abort(); }, 8000);
+  btn.disabled=true;
+
+  // ✅ แสดง progress — บอก user ว่ากำลังรอ server ตื่น (Render/Railway cold start)
+  let dots=0;
+  const loadingMsgs=['⏳ กำลังเชื่อมต่อ...','⏳ กำลังเชื่อมต่อ..  (server กำลังเริ่ม)','⏳ กำลังเชื่อมต่อ... (อาจใช้เวลา 30-60 วิ)'];
+  let msgIdx=0;
+  btn.textContent=loadingMsgs[0];
+  const msgTimer=setInterval(()=>{ msgIdx=Math.min(msgIdx+1,loadingMsgs.length-1); btn.textContent=loadingMsgs[msgIdx]; },8000);
+
   try{
+    // ✅ timeout 90s รองรับ Render cold start (free tier ใช้เวลา ~50s)
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),90000);
     const d=await fetch('/api/auth/login',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:u,password:p}),
-      signal: ctrl.signal
-    }).then(r=>r.json()).finally(()=>clearTimeout(tid));
-    if(!d.ok) throw new Error(d.error||'Login ไม่สำเร็จ');
+      signal:ctrl.signal
+    }).then(r=>{ clearTimeout(tid); return r.json(); });
+
+    if(!d.ok) throw new Error(d.error||'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     if(!['superadmin','admin','manager'].includes(d.user.role)) throw new Error('บัญชีนี้ไม่มีสิทธิ์เข้า Admin กรุณาใช้หน้าช่าง');
     AUTH={token:d.token,user:d.user};
     localStorage.setItem('admin_auth',JSON.stringify(AUTH));
     bootApp();
   }catch(e){
-    err.textContent = e.name==='AbortError' ? '⏱️ Server ไม่ตอบสนอง กรุณาลองใหม่' : (e.message||'เกิดข้อผิดพลาด');
+    if(e.name==='AbortError'){
+      err.textContent='❌ Server ไม่ตอบสนองใน 90 วินาที — ลองรีเฟรชหน้าแล้ว login ใหม่';
+    } else if(e.name==='TypeError'){
+      err.textContent='❌ เชื่อมต่อ server ไม่ได้ — ตรวจสอบว่า server รันอยู่';
+    } else {
+      err.textContent=e.message||'เกิดข้อผิดพลาด';
+    }
+    console.error('[Login Error]',e.name,e.message);
   }
-  finally{btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
+  finally{
+    clearInterval(msgTimer);
+    btn.disabled=false;
+    btn.textContent='เข้าสู่ระบบ';
+  }
 };
 ['l-user','l-pass'].forEach(id=>{ document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}; });
 
@@ -1742,17 +1761,15 @@ function showToast(msg,type='success'){
   // 3. ซ่อน splash
   window.hideSplash?.();
 
-  // 4. ลอง auto-login แบบ race — ถ้าไม่ได้ใน 3s ให้ user login เอง
+  // 4. ลอง auto-login — รอ 15s (Render cold start)
   try {
     const autoOk = await Promise.race([
       tryAutoLogin(),
-      new Promise(r => setTimeout(() => r(false), 3000))
+      new Promise(r => setTimeout(() => r(false), 15000))
     ]);
     if(autoOk) bootApp();
-    // ถ้าไม่ autoOk → login-screen แสดงอยู่แล้ว ไม่ต้องทำอะไร
   } catch(e) {
     console.warn('[boot] autoLogin error:', e.message);
-    // login-screen แสดงอยู่แล้ว — safe
   }
 })();
 
