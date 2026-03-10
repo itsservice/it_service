@@ -840,84 +840,107 @@ function renderAdvancedAnalytics(){
   }
 
   // Mini stats
-  const waiting = data.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
-  const inprog  = data.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  const done    = data.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+const waiting = data.filter(t=>{const s=t.status||''; return s.includes('รอดำเนินการ')||s.includes('แก้ไข');}).length;
+const inprog  = data.filter(t=>(t.status||'').includes('อยู่ระหว่างดำเนินการ')).length;
+const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้น')).length;
   document.getElementById('ms-total').textContent  = data.length;
   document.getElementById('ms-wait').textContent   = waiting;
   document.getElementById('ms-inprog').textContent = inprog;
   document.getElementById('ms-done').textContent   = done;
 
-  // ── 1. Monthly Trend Chart ──────────────────────────────
-  // Group by year-month
-  const monthMap = {};
+// ── 1. Daily Wave Trend Chart ────────────────────────────
+  const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  // หาช่วงวันที่แสดง
+  const _parsedAll = data.map(t=>parseTicketDate(t)).filter(Boolean);
+  let _rangeStart, _rangeEnd = new Date();
+  if(analyticsDateFrom && analyticsDateTo){
+    _rangeStart = new Date(analyticsDateFrom+'T00:00:00');
+    _rangeEnd   = new Date(analyticsDateTo+'T23:59:59');
+  } else if(_parsedAll.length){
+    _rangeStart = new Date(Math.min(..._parsedAll.map(d=>d.getTime())));
+    if((_rangeEnd - _rangeStart)/86400000 > 120)
+      _rangeStart = new Date(_rangeEnd.getTime() - 89*86400000);
+  } else {
+    _rangeStart = new Date(_rangeEnd.getTime() - 29*86400000);
+  }
+
+  // สร้าง map วัน → จำนวน
+  const dayMap = {};
   data.forEach(t=>{
     const d = parseTicketDate(t);
     if(!d) return;
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    monthMap[key] = (monthMap[key]||0)+1;
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    dayMap[k] = (dayMap[k]||0)+1;
   });
-  // Fill contiguous range (up to 12 months back from latest)
-  const sortedKeys = Object.keys(monthMap).sort();
-  let monthLabels = sortedKeys;
-  let monthValues = sortedKeys.map(k=>monthMap[k]);
-  // If no data → show last 6 months as zero
-  if(!monthLabels.length){
-    const now = new Date();
-    for(let i=5;i>=0;i--){
-      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      monthLabels.push(k); monthValues.push(0);
-    }
+
+  // fill ทุกวันในช่วง
+  const dayValues = [], dayDisplayLabels = [];
+  const _cur = new Date(_rangeStart); _cur.setHours(0,0,0,0);
+  const _end = new Date(_rangeEnd);   _end.setHours(23,59,59,0);
+  while(_cur <= _end){
+    const k = `${_cur.getFullYear()}-${String(_cur.getMonth()+1).padStart(2,'0')}-${String(_cur.getDate()).padStart(2,'0')}`;
+    dayValues.push(dayMap[k]||0);
+    dayDisplayLabels.push(`${_cur.getDate()} ${THAI_MONTHS[_cur.getMonth()]}`);
+    _cur.setDate(_cur.getDate()+1);
   }
-  const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const monthDisplayLabels = monthLabels.map(k=>{
-    const [y,m] = k.split('-');
-    return THAI_MONTHS[parseInt(m,10)-1]+' '+(parseInt(y,10)+543-2500);
+
+  // smooth moving average
+  const smoothed = dayValues.map((v,i)=>{
+    const s = dayValues.slice(Math.max(0,i-2), i+3);
+    return s.reduce((a,b)=>a+b,0)/s.length;
   });
+
+  // gradient fill
+  const _tCanvas = document.getElementById('monthlyTrendChart');
+  let _grad = 'rgba(0,229,160,.15)';
+  if(_tCanvas){ const g=_tCanvas.getContext('2d').createLinearGradient(0,0,0,220); g.addColorStop(0,'rgba(0,229,160,.4)'); g.addColorStop(1,'rgba(0,229,160,0)'); _grad=g; }
+
+  const _totalDays = dayValues.length;
 
   makeChart('monthlyTrendChart', {
     type: 'line',
     data: {
-      labels: monthDisplayLabels,
-      datasets: [{
-        label: 'Ticket',
-        data: monthValues,
-        borderColor: '#00e5a0',
-        backgroundColor: 'rgba(0,229,160,.1)',
-        borderWidth: 2,
-        pointBackgroundColor: '#00e5a0',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: true,
-        tension: 0.35,
-      }]
+      labels: dayDisplayLabels,
+      datasets: [
+        // จุดจริง (จางๆ)
+        { label:'จริง', data:dayValues, borderColor:'rgba(0,229,160,.25)', backgroundColor:'transparent',
+          borderWidth:1, pointRadius: ctx=>dayValues[ctx.dataIndex]>0?3:0,
+          pointBackgroundColor:'#00e5a0', fill:false, tension:0, order:2 },
+        // smooth wave หลัก
+        { label:'Trend', data:smoothed, borderColor:'#00e5a0', backgroundColor:_grad,
+          borderWidth:2.5, pointRadius:0, pointHoverRadius:6,
+          fill:true, tension:0.5, cubicInterpolationMode:'monotone', order:1 }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
       plugins: {
-        legend: { display: false },
+        legend: { display:false },
         tooltip: {
-          backgroundColor: cd.tooltipBg,
-          titleColor: cd.tooltipFg,
-          bodyColor: cd.tooltipFg,
-          borderColor: '#00e5a0',
-          borderWidth: 1,
-          padding: 10,
+          backgroundColor: cd.tooltipBg, titleColor: cd.tooltipFg,
+          bodyColor: cd.tooltipFg, borderColor:'#00e5a0', borderWidth:1, padding:10,
+          filter: item => item.datasetIndex === 0,
+          callbacks: { label: ctx => ` ${dayValues[ctx.dataIndex]} ticket` }
         }
       },
       scales: {
         x: {
-          ticks: { color: cd.tickColor, font:{size:11} },
-          grid:  { color: cd.gridColor }
+          ticks: {
+            color:cd.tickColor, font:{size:10}, maxRotation:0,
+            autoSkip:true, maxTicksLimit: _totalDays>60?12:_totalDays>30?15:20,
+          },
+          grid: { color:cd.gridColor }
         },
         y: {
-          beginAtZero: true,
-          ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
-          grid:  { color: cd.gridColor }
+          beginAtZero:true,
+          ticks: { color:cd.tickColor, font:{size:11}, precision:0, stepSize:1 },
+          grid:  { color:cd.gridColor }
         }
-      }
+      },
+      animation: { duration:600, easing:'easeInOutCubic' }
     }
   });
 
@@ -1258,10 +1281,9 @@ document.getElementById('sidebar-overlay').onclick=()=>{
 // ════════════════════════════════════════════════════════════════
 function renderDashboard(){
   const total    = tickets.length;
-  const waiting  = tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
-  const review   = tickets.filter(t=>t.status==='ตรวจงาน').length;
-  const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+  const waiting  = tickets.filter(t=>{const s=t.status||''; return s.includes('รอดำเนินการ')||s.includes('แก้ไข');}).length;
+const inprog   = tickets.filter(t=>(t.status||'').includes('อยู่ระหว่างดำเนินการ')).length;
+const done     = tickets.filter(t=>(t.status||'').includes('เสร็จสิ้น')).length;
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
   const sel = document.getElementById('dash-status-select');
   if(sel){
@@ -1308,9 +1330,11 @@ function renderDashboard(){
   document.getElementById('dash-grid').innerHTML=`
     <div class="dash-card">
       <div class="dash-card-title">📊 Ticket ตามแบรนด์</div>
-      ${brands.map(([b,n])=>`<div class="brand-row">
+      ${brands.map(([b,n])=>`<div class="brand-row" onclick="showBrandPopup('${esc(b)}')" style="cursor:pointer" title="ดู Ticket ของ ${esc(b)}">
         <div class="brand-name">${esc(b)}</div>
-        <div class="brand-bar-wrap"><div class="brand-bar" style="width:${Math.round(n/maxB*100)}%"></div></div>
+        <div class="brand-bar-wrap">
+          <div class="brand-bar" style="width:${Math.round(n/maxB*100)}%;transition:width .4s ease"></div>
+        </div>
         <div class="brand-count">${n}</div>
       </div>`).join('')}
     </div>
@@ -1324,6 +1348,158 @@ function renderDashboard(){
         </li>`).join('')}
       </ul>
     </div>`;
+
+  // ── Brand Popup ──────────────────────────────────────────
+  // inject modal ครั้งเดียว
+  if(!document.getElementById('brand-popup-overlay')){
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div id="brand-popup-overlay" onclick="closeBrandPopup()" style="
+        display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+        z-index:300;backdrop-filter:blur(3px);cursor:pointer">
+      </div>
+      <div id="brand-popup" style="
+        display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+        width:min(560px,94vw);max-height:80vh;overflow:hidden;
+        background:var(--bg2);border:1px solid var(--b2);border-radius:20px;
+        z-index:301;flex-direction:column;
+        box-shadow:0 24px 80px rgba(0,0,0,.5);
+        transition:transform .2s cubic-bezier(.22,.61,.36,1),opacity .2s">
+        <!-- header -->
+        <div style="padding:18px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px;flex-shrink:0">
+          <div id="bp-icon" style="font-size:24px"></div>
+          <div style="flex:1;min-width:0">
+            <div id="bp-title" style="font-family:var(--font-h);font-size:17px;font-weight:700"></div>
+            <div id="bp-sub" style="font-size:12px;color:var(--fg2);margin-top:2px"></div>
+          </div>
+          <button onclick="closeBrandPopup()" style="
+            background:transparent;border:1px solid var(--b2);border-radius:8px;
+            color:var(--fg2);font-size:18px;width:34px;height:34px;
+            display:flex;align-items:center;justify-content:center;cursor:pointer">✕</button>
+        </div>
+        <!-- status summary pills -->
+        <div id="bp-status-row" style="padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--b1);flex-shrink:0"></div>
+        <!-- filter bar -->
+        <div style="padding:10px 20px;border-bottom:1px solid var(--b1);flex-shrink:0;display:flex;gap:8px;align-items:center">
+          <input id="bp-search" oninput="filterBrandPopup()" placeholder="🔍 ค้นหา Ticket..." style="
+            flex:1;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;
+            padding:8px 12px;color:var(--fg);font-family:var(--font-th);font-size:13px;outline:none">
+          <select id="bp-filter-status" onchange="filterBrandPopup()" style="
+            background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;
+            padding:8px 12px;color:var(--fg);font-family:var(--font-th);font-size:12px;outline:none;appearance:none;cursor:pointer">
+            <option value="">ทุกสถานะ</option>
+            <option>รอดำเนินการ ⏱️</option>
+            <option>อยู่ระหว่างดำเนินการ ⚙️</option>
+            <option>ตรวจงาน</option>
+            <option>เสร็จสิ้น ✅</option>
+            <option>ยกเลิก ❌</option>
+          </select>
+        </div>
+        <!-- ticket list -->
+        <div id="bp-list" style="overflow-y:auto;padding:10px 12px 16px;flex:1"></div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+
+  window._brandPopupBrand = '';
+
+  window.showBrandPopup = function(brand){
+    window._brandPopupBrand = brand;
+    const brandTickets = tickets.filter(t => normBrand(t.brand) === brand);
+    const icons = {"Dunkin'":"🍩","Greyhound Cafe":"☕","Greyhound Original":"🐕","Au Bon Pain":"🥐","Funky Fries":"🍟"};
+
+    // header
+    document.getElementById('bp-icon').textContent  = icons[brand]||'🏪';
+    document.getElementById('bp-title').textContent = brand;
+    document.getElementById('bp-sub').textContent   = `${brandTickets.length} ticket ทั้งหมด`;
+
+    // status summary
+    const statusDefs = [
+      {key:'รอดำเนินการ ⏱️', label:'รอดำเนินการ', color:'#c084fc'},
+      {key:'อยู่ระหว่างดำเนินการ ⚙️', label:'กำลังทำ', color:'#60a5fa'},
+      {key:'ตรวจงาน', label:'ตรวจงาน', color:'#22d3ee'},
+      {key:'เสร็จสิ้น ✅', label:'เสร็จสิ้น', color:'#00e5a0'},
+      {key:'ยกเลิก ❌', label:'ยกเลิก', color:'#f87171'},
+    ];
+    document.getElementById('bp-status-row').innerHTML = statusDefs.map(s=>{
+      const cnt = brandTickets.filter(t=>t.status===s.key).length;
+      if(!cnt) return '';
+      return `<span onclick="document.getElementById('bp-filter-status').value='${s.key}';filterBrandPopup()" style="
+        display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+        background:${s.color}22;border:1px solid ${s.color}66;
+        color:${s.color};font-size:12px;font-weight:600;cursor:pointer">
+        ${s.label} <b>${cnt}</b>
+      </span>`;
+    }).join('');
+
+    // reset search/filter
+    document.getElementById('bp-search').value = '';
+    document.getElementById('bp-filter-status').value = '';
+
+    renderBrandPopupList(brandTickets);
+
+    // show
+    const overlay = document.getElementById('brand-popup-overlay');
+    const popup   = document.getElementById('brand-popup');
+    overlay.style.display = 'block';
+    popup.style.display   = 'flex';
+    setTimeout(()=>{ popup.style.transform='translate(-50%,-50%) scale(1)'; popup.style.opacity='1'; },10);
+  };
+
+  window.filterBrandPopup = function(){
+    const q      = (document.getElementById('bp-search').value||'').toLowerCase();
+    const status = document.getElementById('bp-filter-status').value;
+    let list = tickets.filter(t => normBrand(t.brand) === window._brandPopupBrand);
+    if(status) list = list.filter(t=>t.status===status);
+    if(q) list = list.filter(t=>
+      String(t.id||'').toLowerCase().includes(q)||
+      String(t.type||'').toLowerCase().includes(q)||
+      String(t.detail||'').toLowerCase().includes(q)||
+      String(t.branchCode||t.branch||'').toLowerCase().includes(q)||
+      String(t.reporter||'').toLowerCase().includes(q)
+    );
+    renderBrandPopupList(list);
+  };
+
+  window.renderBrandPopupList = function(list){
+    const el = document.getElementById('bp-list');
+    if(!list.length){
+      el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--fg3);font-size:14px">ไม่พบ Ticket</div>';
+      return;
+    }
+    el.innerHTML = list.map(t=>{
+      const sk = (t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();
+      return `<div onclick="closeBrandPopup();setTimeout(()=>openDrawer('${esc(t._recordId)}'),200)" style="
+        background:var(--bg3);border:1px solid var(--b1);border-radius:10px;
+        padding:12px 14px;margin-bottom:8px;cursor:pointer;
+        transition:background .12s,border-color .12s"
+        onmouseover="this.style.background='var(--bg4)';this.style.borderColor='var(--b2)'"
+        onmouseout="this.style.background='var(--bg3)';this.style.borderColor='var(--b1)'">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <span style="font-family:var(--font-m);font-size:11.5px;color:var(--accent)">${esc(t.id||t._recordId||'—')}</span>
+          <span class="status-pill s-${esc(sk)}" style="font-size:10.5px;padding:2px 8px;flex-shrink:0">${esc(t.status||'-')}</span>
+        </div>
+        <div style="font-size:13.5px;font-weight:600;margin-bottom:4px;line-height:1.3">${esc(t.type||'—')}</div>
+        <div style="font-size:12px;color:var(--fg2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(t.detail||'-')}</div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--fg3)">📍 ${esc(t.branchCode||t.branch||'-')}</span>
+          <span style="font-size:11px;color:var(--fg3)">📅 ${esc(t.sentDate||'-')}</span>
+          ${t.engineerName?`<span style="font-size:11px;color:var(--fg3)">🔧 ${esc(t.engineerName)}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  window.closeBrandPopup = function(){
+    const popup = document.getElementById('brand-popup');
+    popup.style.transform = 'translate(-50%,-50%) scale(.96)';
+    popup.style.opacity   = '0';
+    setTimeout(()=>{
+      popup.style.display = 'none';
+      document.getElementById('brand-popup-overlay').style.display = 'none';
+      popup.style.opacity = '1';
+    }, 180);
+  };
   // Render advanced analytics charts after dash-grid is in DOM
   renderAdvancedAnalytics();
 }
@@ -1377,7 +1553,7 @@ function renderTicketsPage(){
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
       <td onclick="event.stopPropagation()">
         <div class="sq-btns">
-          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','⚙️ รับงาน')}
+          ${sqBtn(t,'อยู่ระหว่างดำเนินการ ⚙️','#3b82f6','⚙️ ดำเนินการ')}
           ${sqBtn(t,'เสร็จสิ้น ✅','#00e5a0','✅ เสร็จ')}
           ${sqBtn(t,'ยกเลิก ❌','#ef4444','❌ ยกเลิก')}
         </div>
