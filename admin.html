@@ -6,6 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <title>Admin — IT Support</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -27,22 +28,9 @@ body.theme-light{
 }
 body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18)}
 body.theme-light .sync-dot{box-shadow:0 0 6px #00b87a}
-/* ── Theme toggle button ────────────────────── */
-.btn-theme{
-  width:100%;padding:10px;background:transparent;
-  border:1px solid var(--b2);border-radius:var(--r);
-  color:var(--fg2);font-family:var(--font-th);font-size:13px;
-  cursor:pointer;transition:all .2s;text-align:center;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-bottom:8px;
-}
+.btn-theme{width:100%;padding:10px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-family:var(--font-th);font-size:13px;cursor:pointer;transition:all .2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
 .btn-theme:hover{background:var(--b1);color:var(--fg)}
-.theme-toggle-mobile{
-  background:transparent;border:1px solid var(--b2);
-  border-radius:8px;color:var(--fg2);font-size:18px;
-  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .2s;flex-shrink:0;
-}
+.theme-toggle-mobile{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;}
 .theme-toggle-mobile:hover{background:var(--b1);color:var(--fg)}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -50,7 +38,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--fon
 ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
 a{color:inherit;text-decoration:none}
 
-/* ═══════════════════════════ LOGIN ═══════════════════════════ */
+/* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
 .login-card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--b2);border-radius:24px;padding:40px 32px;animation:fadeUp .4s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -68,17 +56,10 @@ a{color:inherit;text-decoration:none}
 .l-links{text-align:center;margin-top:18px;font-size:13px;color:var(--fg3)}
 .l-links a{color:var(--fg2)}
 
-/* ═══════════════════════════ APP SHELL ═══════════════════════ */
+/* APP SHELL */
 #app{display:none;height:100vh;overflow:hidden}
 #app.ready{display:flex}
-
-/* SIDEBAR (desktop) */
-.sidebar{
-  width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);
-  border-right:1px solid var(--b1);display:flex;flex-direction:column;
-  height:100vh;overflow:hidden;transition:transform .3s cubic-bezier(.22,.61,.36,1);
-  padding-top:calc(var(--safe-top)+0px)
-}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:calc(var(--safe-top)+0px)}
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:149;display:none;backdrop-filter:blur(1px)}
 .sidebar-overlay.open{display:block}
 .sb-head{padding:20px 18px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px}
@@ -90,13 +71,7 @@ a{color:inherit;text-decoration:none}
 .sb-uname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-urole{font-size:11px;color:var(--fg2)}
 .sb-nav{flex:1;overflow-y:auto;padding:10px 10px}
-.nav-item{
-  display:flex;align-items:center;gap:10px;padding:10px 12px;
-  border-radius:var(--r);margin-bottom:2px;cursor:pointer;
-  font-size:13.5px;font-weight:500;color:var(--fg2);
-  border:none;background:transparent;width:100%;text-align:left;
-  font-family:var(--font-th);transition:all .15s;white-space:nowrap
-}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);margin-bottom:2px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--fg2);border:none;background:transparent;width:100%;text-align:left;font-family:var(--font-th);transition:all .15s;white-space:nowrap}
 .nav-item:hover{background:var(--b1);color:var(--fg)}
 .nav-item.active{background:rgba(0,229,160,.1);color:var(--accent);font-weight:600}
 .nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center}
@@ -104,36 +79,20 @@ a{color:inherit;text-decoration:none}
 .sb-footer{padding:12px 18px;border-top:1px solid var(--b1)}
 .btn-logout{width:100%;padding:10px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-family:var(--font-th);font-size:13px;cursor:pointer;transition:all .15s;text-align:center}
 .btn-logout:hover{background:rgba(239,68,68,.1);border-color:var(--danger);color:var(--danger)}
-
-/* MAIN */
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-
-/* TOPBAR (mobile) */
-.topbar-mobile{
-  display:none;background:var(--bg2);border-bottom:1px solid var(--b1);
-  padding:12px 14px;padding-top:calc(var(--safe-top)+12px);
-  align-items:center;gap:10px;flex-shrink:0;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 12px rgba(0,0,0,.4)
-}
+.topbar-mobile{display:none;background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 14px;padding-top:calc(var(--safe-top)+12px);align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.4)}
 .btn-menu{background:transparent;border:none;color:var(--fg2);font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .topbar-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
 .topbar-sync{display:flex;align-items:center;gap:6px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
-
-/* PAGE CONTENT */
 .page-content{flex:1;overflow-y:auto;padding:0;padding-bottom:56px}
-
-/* PAGE HEADER */
 .ph{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .ph-title{font-family:var(--font-h);font-size:20px;font-weight:700}
 .ph-sub{font-size:13px;color:var(--fg2);margin-top:3px}
 .ph-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-
-/* PAGES */
 .page{display:none}.page.active{display:block}
 
-/* ═══════════ STAT CARDS ═══════════ */
+/* STAT CARDS */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:20px 24px}
 .stat-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .stat-card:hover{border-color:var(--b2)}
@@ -142,14 +101,10 @@ a{color:inherit;text-decoration:none}
 .stat-num{font-family:var(--font-h);font-size:28px;font-weight:700;line-height:1;color:var(--stat-color,var(--fg))}
 .stat-delta{font-size:11px;color:var(--fg3);margin-top:4px}
 
-/* ═══════════ SEARCH + FILTER BAR ═══════════ */
+/* SEARCH + FILTER */
 .filter-bar{padding:0 24px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .search-box{position:relative;flex:1;min-width:200px}
-.search-box input{
-  width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);
-  padding:10px 14px 10px 38px;color:var(--fg);font-family:var(--font-th);font-size:14px;
-  outline:none;transition:border-color .2s
-}
+.search-box input{width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);padding:10px 14px 10px 38px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s}
 .search-box input:focus{border-color:var(--accent)}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--fg3);font-size:14px}
 .filter-select{background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);padding:10px 14px;color:var(--fg);font-family:var(--font-th);font-size:13.5px;outline:none;cursor:pointer;appearance:none}
@@ -159,7 +114,7 @@ a{color:inherit;text-decoration:none}
 .btn-refresh.spinning{animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* STATUS FILTER CHIPS */
+/* STATUS CHIPS */
 .status-chips{padding:0 24px 16px;display:flex;gap:6px;overflow-x:auto}
 .status-chips::-webkit-scrollbar{height:0}
 .chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--b1);background:transparent;color:var(--fg2);font-size:12.5px;font-weight:500;font-family:var(--font-th);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
@@ -171,9 +126,8 @@ a{color:inherit;text-decoration:none}
 .chip-done.active{background:rgba(0,229,160,.12);border-color:var(--accent);color:var(--accent)}
 .chip-cancel.active{background:rgba(239,68,68,.12);border-color:var(--danger);color:var(--danger)}
 
-/* ═══════════ TICKET TABLE ═══════════ */
+/* TICKET TABLE */
 .tbl-wrap{padding:0 24px;padding-bottom:160px}
-/* FAB replaces float-bar */
 .tbl{width:100%;border-collapse:separate;border-spacing:0 4px}
 .tbl thead th{font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;text-align:left;white-space:nowrap}
 .tbl-row{background:var(--bg2);border-radius:var(--r);cursor:pointer;transition:background .12s}
@@ -198,16 +152,10 @@ a{color:inherit;text-decoration:none}
 .sq-btn{padding:4px 9px;border-radius:8px;border:1px solid;background:transparent;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-th);white-space:nowrap;transition:all .12s}
 .sq-btn:hover{opacity:.75}
 
-/* ═══════════ DRAWER / PANEL ═══════════ */
+/* DRAWER */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;cursor:pointer;backdrop-filter:blur(2px)}
 .drawer-overlay.open{display:block}
-.drawer{
-  position:fixed;right:0;top:0;bottom:0;width:460px;max-width:100vw;
-  background:var(--bg2);border-left:1px solid var(--b1);
-  z-index:201;overflow-y:auto;padding-bottom:calc(var(--safe-bottom)+20px);
-  transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);
-  padding-top:var(--safe-top)
-}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:460px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:201;overflow-y:auto;padding-bottom:calc(var(--safe-bottom)+20px);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:var(--safe-top)}
 .drawer.open{transform:none}
 .drawer-head{padding:18px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:flex-start;gap:12px;position:sticky;top:0;background:var(--bg2);z-index:10}
 .drawer-id{font-family:var(--font-m);font-size:12px;color:var(--accent);font-weight:500}
@@ -222,23 +170,16 @@ a{color:inherit;text-decoration:none}
 .d-work-box{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:var(--r);padding:13px;font-size:13px;line-height:1.8}
 .d-admin-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);padding:13px;font-size:13px;color:#93c5fd;line-height:1.6}
 .d-divider{height:1px;background:var(--b1);margin:0 0 20px}
-
-/* Log timeline in drawer */
 .d-log-item{display:flex;gap:10px;margin-bottom:10px;font-size:12.5px}
 .d-log-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px}
 .d-log-body{flex:1}
 .d-log-action{font-weight:600}
 .d-log-meta{color:var(--fg3);font-size:11.5px;margin-top:2px}
 
-/* ═══════════ FORMS (drawer) ═══════════ */
+/* FORMS */
 .d-form-group{margin-bottom:12px}
 .d-form-label{font-size:11.5px;font-weight:600;color:var(--fg2);margin-bottom:6px;display:block;letter-spacing:.03em}
-.d-form-input,.d-form-select,.d-form-textarea{
-  width:100%;background:var(--bg3);border:1.5px solid var(--b1);
-  border-radius:var(--r);padding:11px 13px;color:var(--fg);
-  font-family:var(--font-th);font-size:14px;outline:none;
-  transition:border-color .2s;appearance:none
-}
+.d-form-input,.d-form-select,.d-form-textarea{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none}
 .d-form-input:focus,.d-form-select:focus,.d-form-textarea:focus{border-color:var(--accent)}
 .d-form-textarea{resize:none;min-height:90px;line-height:1.7}
 .d-form-select option{background:#111}
@@ -250,15 +191,13 @@ a{color:inherit;text-decoration:none}
 .btn-note{background:var(--bg3);color:var(--fg);border:1px solid var(--b2)}
 .btn-cancel{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
 .btn-sm{padding:7px 12px;font-size:12.5px}
-
-/* STATUS QUICK BUTTONS */
 .status-quick{display:flex;flex-wrap:wrap;gap:6px}
 .sqb{padding:6px 13px;border-radius:20px;border:1.5px solid;background:transparent;font-family:var(--font-th);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex-shrink:0}
 .sqb.active{opacity:1}
 .sqb:not(.active){opacity:.45}
 .sqb:hover{opacity:.75}
 
-/* ═══════════ DASHBOARD CHARTS ═══════════ */
+/* DASHBOARD CHARTS */
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 24px}
 .dash-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px}
 .dash-card-title{font-size:12px;font-weight:700;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
@@ -274,7 +213,36 @@ a{color:inherit;text-decoration:none}
 .ri-type{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ri-ts{font-size:11px;color:var(--fg3);flex-shrink:0}
 
-/* ═══════════ USERS PAGE ═══════════ */
+/* ═══════════ ADVANCED ANALYTICS ═══════════ */
+.analytics-section{padding:0 24px 24px}
+.analytics-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.analytics-title{font-family:var(--font-h);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.analytics-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.analytics-date-input{background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r);padding:8px 12px;color:var(--fg);font-family:var(--font-th);font-size:13px;outline:none;transition:border-color .2s;appearance:none;cursor:pointer}
+.analytics-date-input:focus{border-color:var(--accent)}
+body.theme-light .analytics-date-input{color-scheme:light}
+body:not(.theme-light) .analytics-date-input{color-scheme:dark}
+.btn-apply-filter{padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-family:var(--font-th);font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-apply-filter:hover{opacity:.85}
+.btn-clear-filter{padding:8px 12px;background:transparent;color:var(--fg2);border:1px solid var(--b2);border-radius:var(--r);font-family:var(--font-th);font-size:12.5px;cursor:pointer;transition:all .15s}
+.btn-clear-filter:hover{background:var(--b1);color:var(--fg)}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.analytics-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px;position:relative;overflow:hidden}
+.analytics-card-full{grid-column:1/-1}
+.analytics-card-title{font-size:11.5px;font-weight:700;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:6px}
+.analytics-chart-wrap{position:relative;height:220px}
+.analytics-card-full .analytics-chart-wrap{height:240px}
+.analytics-filter-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:20px;padding:4px 10px;font-size:11.5px;color:var(--accent);font-weight:600;margin-bottom:12px}
+.analytics-filter-badge .badge-close{cursor:pointer;opacity:.6;font-size:14px;line-height:1}
+.analytics-filter-badge .badge-close:hover{opacity:1}
+.analytics-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:8px;color:var(--fg3)}
+.analytics-empty-icon{font-size:36px;opacity:.4}
+.analytics-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.mini-stat{background:var(--bg3);border-radius:var(--r);padding:12px 14px;border:1px solid var(--b1)}
+.mini-stat-label{font-size:10.5px;color:var(--fg3);margin-bottom:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.mini-stat-val{font-family:var(--font-h);font-size:22px;font-weight:700}
+
+/* USERS PAGE */
 .user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:0 24px 24px}
 .user-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px;transition:border-color .15s}
 .user-card:hover{border-color:var(--b2)}
@@ -290,10 +258,10 @@ a{color:inherit;text-decoration:none}
 .r-engineer{background:rgba(0,229,160,.15);color:#00e5a0}
 .r-staff{background:rgba(255,255,255,.08);color:var(--fg2)}
 .uc-actions{display:flex;gap:6px;margin-top:12px}
-.btn-uc{padding:7px 12px;border-radius:8px;border:1px solid var(--b2);background:transparent;color:var(--fg2);font-family:var(--font-th);font-size:12.5px;cursor:pointer;transition:all .12s}
+.btn-uc{padding:7px 12px;border-radius:8px;border:1px solid var(--b2);background:transparent;color:var(--fg2);font-family:var(--font-th);font-size:12.5px;cursor:pointer;transition:all .12px}
 .btn-uc:hover{background:var(--b1);color:var(--fg)}
 
-/* ═══════════ LOG PAGE ═══════════ */
+/* LOG PAGE */
 .log-list{padding:0 24px}
 .log-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--b1)}
 .log-item:last-child{border-bottom:none}
@@ -306,7 +274,7 @@ a{color:inherit;text-decoration:none}
 .log-detail{font-size:12.5px;color:var(--fg2);margin-top:4px;line-height:1.6}
 .log-tid{font-family:var(--font-m);font-size:11px;color:var(--accent);background:rgba(0,229,160,.08);padding:2px 7px;border-radius:5px}
 
-/* ═══════════ MODAL ═══════════ */
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r3);padding:28px;width:100%;max-width:440px;animation:fadeUp .25s ease;max-height:90vh;overflow-y:auto}
@@ -318,7 +286,7 @@ a{color:inherit;text-decoration:none}
 .btn-modal-danger{background:var(--danger);color:#fff}
 .btn-modal-cancel{background:var(--bg3);color:var(--fg);border:1px solid var(--b2)}
 
-/* ═══════════ LOADING / EMPTY ═══════════ */
+/* LOADING / EMPTY */
 .loading{display:flex;align-items:center;gap:10px;padding:60px;justify-content:center;color:var(--fg2)}
 .spinner{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
 .empty{text-align:center;padding:80px 20px;color:var(--fg3)}
@@ -332,7 +300,7 @@ a{color:inherit;text-decoration:none}
 .toast-success{border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.05)}
 .toast-error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
 
-/* ═══════════ MOBILE BOTTOM NAV ═══════════ */
+/* BOTTOM NAV */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--b1);padding:8px 0;padding-bottom:calc(var(--safe-bottom)+8px);z-index:50;flex-shrink:0;min-height:60px}
 .bnav-items{display:flex;justify-content:space-around}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0;border:none;background:transparent;color:var(--fg3);font-family:var(--font-th);font-size:10px;font-weight:500;transition:color .12s;position:relative}
@@ -340,17 +308,15 @@ a{color:inherit;text-decoration:none}
 .bnav-icon{font-size:20px}
 .bnav-bdg{position:absolute;top:0;right:calc(50% - 18px);background:var(--danger);color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:1px 5px;line-height:1.4}
 
-/* ═══════════ RESPONSIVE ═══════════ */
+/* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%)}
   .sidebar.mobile-open{transform:translateX(0)}
   .topbar-mobile{display:flex}
   .bottom-nav{display:block}
-  /* page-content: แค่เผื่อ bottom-nav (60px) — float-bar จะ fixed แยก */
   .page-content{padding-bottom:0}
   .stats-grid{grid-template-columns:repeat(2,1fr);padding:14px}
   .filter-bar,.status-chips{padding-left:14px;padding-right:14px}
-  /* tbl-wrap ต้องเผื่อ float-bar (52px) + bottom-nav (60px) */
   .tbl-wrap{padding:0 14px;padding-bottom:130px}
   .ph{padding:16px 14px 0}
   .dash-grid{grid-template-columns:1fr;padding:0 14px 80px}
@@ -366,56 +332,48 @@ a{color:inherit;text-decoration:none}
   .tbl-row td.td-hide-mobile{display:none}
   .sq-btns{margin-top:6px}
   .cell-type{max-width:none;white-space:normal}
+  .analytics-grid{grid-template-columns:1fr}
+  .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
+  .analytics-section{padding:0 14px 80px}
 }
 @media(min-width:769px) and (max-width:1100px){
   :root{--sidebar-w:200px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .analytics-grid{grid-template-columns:1fr}
 }
-/* ═══════════════════════════════════════════════════
-   FAB NAVIGATION PANEL
-   - ปุ่มหลักมุมขวาล่าง fixed
-   - กางออก L-shape: แนวตั้ง (↑⌕↓) + แนวนอน (pagination)
-   - mobile: bottom ขยับเหนือ bottom-nav
-═══════════════════════════════════════════════════ */
+
+/* FAB */
 .fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
 .fab-wrap *{pointer-events:auto}
 .fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
 .fab-main:hover{background:#00c98a}
 .fab-wrap.fab-open .fab-main{transform:rotate(45deg)}
-/* Top branch — แนวตั้ง ↑⌕↓ */
 .fab-branch-top{position:absolute;right:2px;bottom:calc(50px + 12px);display:flex;flex-direction:column-reverse;align-items:center;gap:8px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
 .fab-wrap.fab-open .fab-branch-top{opacity:1;visibility:visible}
-/* Left branch — แนวนอน pagination */
 .fab-branch-left{position:absolute;right:calc(50px + 12px);bottom:2px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;max-width:calc(100vw - 90px);overflow-x:auto;padding:4px 2px;scrollbar-width:none}
 .fab-branch-left::-webkit-scrollbar{display:none}
 .fab-wrap.fab-open .fab-branch-left{opacity:1;visibility:visible}
-/* FAB buttons */
 .fab-btn{min-width:40px;height:40px;border:none;border-radius:20px;background:var(--bg3);color:var(--fg);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);padding:0 12px;font-size:13px;font-family:var(--font-th);white-space:nowrap;transition:transform .15s,background .15s,opacity .15s;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center}
 .fab-btn:hover{transform:translateY(-2px);background:var(--bg4,#1c1c24)}
 .fab-btn.fab-icon{width:40px;min-width:40px;padding:0;font-size:16px}
 .fab-btn.fab-active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 .fab-btn.fab-disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-/* Search popup */
 .fab-search-pop{position:absolute;right:calc(40px + 16px);bottom:calc(40px + 56px);width:min(260px,calc(100vw - 100px));background:var(--bg2);border:1px solid var(--b2);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .2s ease;z-index:10}
 .fab-search-pop.fab-search-open{opacity:1;visibility:visible;transform:translateY(0)}
 .fab-search-pop label{display:block;font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
 .fab-search-input{width:100%;height:40px;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;padding:0 12px;outline:none;color:var(--fg);font-family:var(--font-th);font-size:14px;transition:border-color .2s}
 .fab-search-input:focus{border-color:var(--accent)}
 .fab-search-hint{margin-top:7px;font-size:11px;color:var(--fg3);line-height:1.5}
-/* per-page selector in fab */
 .fab-perpage{background:var(--bg3);border:1px solid var(--b2);border-radius:20px;color:var(--fg);font-family:var(--font-th);font-size:12px;padding:0 10px;height:40px;outline:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-/* Mobile: ขยับเหนือ bottom-nav */
 @media(max-width:768px){
   .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
   .fab-branch-left{max-width:calc(100vw - 80px)}
 }
 
-
-/* CLOCK + TEMP widget — admin topbar */
+/* CLOCK */
 .clock-widget{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2);background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0}
 #clock-time{font-family:var(--font-mono);font-size:12px;color:var(--fg);font-weight:500}
 #clock-temp{color:var(--accent);font-weight:600}
-
 </style>
 </head>
 <body>
@@ -435,16 +393,14 @@ a{color:inherit;text-decoration:none}
   <div class="splash-text">กำลังโหลด...</div>
 </div>
 <script>
-// ซ่อน splash เมื่อหน้าพร้อม
 window.hideSplash = function(){
   const s = document.getElementById('app-splash');
   if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
 };
-// บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
+setTimeout(window.hideSplash, 1500);
 </script>
 
-<!-- ══ LOGIN ══════════════════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="l-logo">
@@ -464,11 +420,9 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
   </div>
 </div>
 
-<!-- ══ APP ════════════════════════════════════════════════════ -->
+<!-- APP -->
 <div id="app">
-  <!-- SIDEBAR OVERLAY -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
       <div class="sb-logo">IT</div>
@@ -499,7 +453,6 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
     </div>
   </aside>
 
-  <!-- MOBILE TOPBAR -->
   <div class="main-area">
     <div class="topbar-mobile" id="topbar-mobile">
       <button class="btn-menu" id="btn-menu">☰</button>
@@ -514,9 +467,10 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
 
     <div class="page-content" id="page-content">
 
-      <!-- ═══ DASHBOARD ═══ -->
+      <!-- DASHBOARD -->
       <div class="page active" id="pg-dashboard">
-        <div class="ph"><div><div class="ph-title">ภาพรวมระบบ</div><div class="ph-sub" id="dash-sub">—</div></div>
+        <div class="ph">
+          <div><div class="ph-title">ภาพรวมระบบ</div><div class="ph-sub" id="dash-sub">—</div></div>
           <div class="ph-actions"><button class="btn-refresh" id="btn-refresh-dash">⟳</button></div>
         </div>
         <div style="padding:0 24px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="stats-grid">
@@ -526,9 +480,57 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
           <div id="dash-count-badge" style="font-size:13px;color:var(--fg2)"></div>
         </div>
         <div class="dash-grid" id="dash-grid"></div>
+
+        <!-- ══ ADVANCED ANALYTICS ══ -->
+        <div class="analytics-section">
+          <div class="analytics-header">
+            <div class="analytics-title">📈 Advanced Analytics</div>
+            <div class="analytics-controls">
+              <input type="date" id="analytics-date-from" class="analytics-date-input" title="วันเริ่มต้น"/>
+              <span style="font-size:12px;color:var(--fg3)">ถึง</span>
+              <input type="date" id="analytics-date-to" class="analytics-date-input" title="วันสิ้นสุด"/>
+              <button class="btn-apply-filter" onclick="applyAnalyticsFilter()">กรอง</button>
+              <button class="btn-clear-filter" onclick="clearAnalyticsFilter()">ล้าง</button>
+            </div>
+          </div>
+          <div id="analytics-filter-badge-wrap"></div>
+
+          <!-- Mini stats row -->
+          <div class="analytics-stat-row" id="analytics-mini-stats">
+            <div class="mini-stat"><div class="mini-stat-label">ทั้งหมด</div><div class="mini-stat-val" id="ms-total" style="color:var(--fg)">—</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">กำลังดำเนินการ</div><div class="mini-stat-val" id="ms-inprog" style="color:var(--blue)">—</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">เสร็จสิ้น</div><div class="mini-stat-val" id="ms-done" style="color:var(--accent)">—</div></div>
+          </div>
+
+          <div class="analytics-grid">
+            <!-- Monthly Trend -->
+            <div class="analytics-card analytics-card-full">
+              <div class="analytics-card-title">📅 Monthly Trend — จำนวน Ticket รายเดือน</div>
+              <div class="analytics-chart-wrap">
+                <canvas id="monthlyTrendChart"></canvas>
+              </div>
+            </div>
+            <!-- Branch Breakdown -->
+            <div class="analytics-card">
+              <div class="analytics-card-title">🏪 Branch Breakdown — Ticket ตาม Branch</div>
+              <div class="analytics-chart-wrap">
+                <canvas id="branchBreakdownChart"></canvas>
+              </div>
+            </div>
+            <!-- Status Doughnut -->
+            <div class="analytics-card">
+              <div class="analytics-card-title">🔵 สัดส่วนสถานะ Ticket</div>
+              <div class="analytics-chart-wrap">
+                <canvas id="statusDoughnutChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END ADVANCED ANALYTICS -->
       </div>
 
-      <!-- ═══ TICKETS ═══ -->
+      <!-- TICKETS -->
       <div class="page" id="pg-tickets">
         <div class="ph" style="margin-bottom:14px">
           <div><div class="ph-title">Tickets</div></div>
@@ -571,11 +573,10 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
             </tr></thead>
             <tbody id="ticket-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div> กำลังโหลด…</div></td></tr></tbody>
           </table>
-
         </div>
       </div>
 
-      <!-- ═══ LOG ═══ -->
+      <!-- LOG -->
       <div class="page" id="pg-log">
         <div class="ph" style="margin-bottom:16px">
           <div><div class="ph-title">Activity Log</div><div class="ph-sub">ประวัติการแก้ไขทั้งหมด</div></div>
@@ -584,7 +585,7 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
         <div class="log-list" id="log-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
 
-      <!-- ═══ USERS ═══ -->
+      <!-- USERS -->
       <div class="page" id="pg-users">
         <div class="ph" style="margin-bottom:16px">
           <div><div class="ph-title">ผู้ใช้งาน</div><div class="ph-sub">จัดการบัญชีและสิทธิ์</div></div>
@@ -593,7 +594,7 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
         <div class="user-grid" id="user-grid"><div class="loading"><div class="spinner"></div></div></div>
       </div>
 
-      <!-- ═══ DEBUG ═══ -->
+      <!-- DEBUG -->
       <div class="page" id="pg-debug">
         <div class="ph" style="margin-bottom:16px">
           <div><div class="ph-title">ตรวจสอบระบบ</div><div class="ph-sub">Lark field mapping + environment</div></div>
@@ -607,35 +608,23 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
     </div><!-- end page-content -->
   </div><!-- end main-area -->
 
-<!-- ═══════════════════════════════════════════════════
-     FAB NAVIGATION PANEL (Admin)
-     - search → เชื่อมกับ searchQ + renderTicketsPage
-     - pagination → tbl-pagination อยู่ใน left-branch
-     - per-page → ย้ายมาจาก float-bar เดิม
-═══════════════════════════════════════════════════ -->
-<div class="fab-wrap" id="admin-fab-wrap">
-  <!-- Search popup -->
-  <div class="fab-search-pop" id="fab-search-pop">
-    <label>ค้นหา Ticket</label>
-    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, เบอร์, รายละเอียด…"/>
-    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+  <!-- FAB -->
+  <div class="fab-wrap" id="admin-fab-wrap">
+    <div class="fab-search-pop" id="fab-search-pop">
+      <label>ค้นหา Ticket</label>
+      <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, เบอร์, รายละเอียด…"/>
+      <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+    </div>
+    <div class="fab-branch-top" id="fab-branch-top">
+      <button class="fab-btn fab-icon" id="fab-to-top" title="ขึ้นด้านบน">↑</button>
+      <button class="fab-btn fab-icon" id="fab-search-btn" title="ค้นหา">⌕</button>
+      <button class="fab-btn fab-icon" id="fab-to-bottom" title="ลงด้านล่าง">↓</button>
+    </div>
+    <div class="fab-branch-left" id="fab-pag-bar"></div>
+    <button class="fab-main" id="fab-main-btn" aria-label="เปิดเมนูนำทาง">+</button>
   </div>
-  <!-- Top branch: ↑ ⌕ ↓ -->
-  <div class="fab-branch-top" id="fab-branch-top">
-    <button class="fab-btn fab-icon" id="fab-to-top" title="ขึ้นด้านบน">↑</button>
-    <button class="fab-btn fab-icon" id="fab-search-btn" title="ค้นหา">⌕</button>
-    <button class="fab-btn fab-icon" id="fab-to-bottom" title="ลงด้านล่าง">↓</button>
-  </div>
-  <!-- Left branch: pagination + per-page -->
-  <div class="fab-branch-left" id="fab-pag-bar">
-    <!-- rendered by JS -->
-  </div>
-  <!-- Main button -->
-  <button class="fab-main" id="fab-main-btn" aria-label="เปิดเมนูนำทาง">+</button>
-</div>
 
-
-  <!-- BOTTOM NAV (mobile) -->
+  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <div class="bnav-items">
       <button class="bnav-btn active" data-page="dashboard"><span class="bnav-icon">📊</span>ภาพรวม</button>
@@ -649,18 +638,18 @@ setTimeout(window.hideSplash, 1500); // ✅ ลดเหลือ 1.5s
   </nav>
 </div>
 
-<!-- ══ DRAWER ════════════════════════════════════════════════ -->
+<!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay"></div>
 <div class="drawer" id="drawer">
   <div id="drawer-inner"></div>
 </div>
 
-<!-- ══ MODAL ════════════════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-box"></div>
 </div>
 
-<!-- ══ TOAST ════════════════════════════════════════════════ -->
+<!-- TOAST -->
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
@@ -675,13 +664,17 @@ let tbPage = 1; let PER_PAGE = 20;
 let openTicketId = null;
 let sse = null;
 
-// ── Helpers ───────────────────────────────────────────────────
+// Analytics state
+let analyticsDateFrom = '', analyticsDateTo = '';
+let chartInstances = {}; // store chart instances for destroy/recreate
+
+// ── Helpers ──────────────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function api(path,opts={}){
   const hdrs = {'Content-Type':'application/json',...(opts.headers||{})};
   if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
   const ctrl = new AbortController();
-  const tid  = setTimeout(()=>ctrl.abort(), 25000); // 25s — ให้เวลา backend ดึง 4 tables
+  const tid  = setTimeout(()=>ctrl.abort(), 25000);
   return fetch(path,{...opts,headers:hdrs,signal:ctrl.signal})
     .then(r=>{ clearTimeout(tid); return r.json(); })
     .catch(e=>{ clearTimeout(tid); throw e; });
@@ -700,16 +693,304 @@ function actionLabel(a){
 }
 
 // ════════════════════════════════════════════════════════════════
+// ADVANCED ANALYTICS
+// ════════════════════════════════════════════════════════════════
+
+// Helper: get CSS variable value
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+// Helper: parse date from ticket (sentDate or createdAt field — "DD/MM/YYYY" or ISO)
+function parseTicketDate(t){
+  const raw = t.sentDate || t.createdAt || '';
+  if(!raw) return null;
+  // Try ISO
+  let d = new Date(raw);
+  if(!isNaN(d)) return d;
+  // Try DD/MM/YYYY
+  const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(m){
+    const y = m[3].length===2 ? '20'+m[3] : m[3];
+    d = new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);
+    if(!isNaN(d)) return d;
+  }
+  return null;
+}
+
+// Get analytics-filtered ticket set
+function getAnalyticsTickets(){
+  let data = [...tickets];
+  if(analyticsDateFrom || analyticsDateTo){
+    const from = analyticsDateFrom ? new Date(analyticsDateFrom) : null;
+    const to   = analyticsDateTo   ? new Date(analyticsDateTo+'T23:59:59') : null;
+    data = data.filter(t=>{
+      const d = parseTicketDate(t);
+      if(!d) return false;
+      if(from && d < from) return false;
+      if(to   && d > to)   return false;
+      return true;
+    });
+  }
+  return data;
+}
+
+// Apply / clear filter buttons
+function applyAnalyticsFilter(){
+  analyticsDateFrom = document.getElementById('analytics-date-from').value;
+  analyticsDateTo   = document.getElementById('analytics-date-to').value;
+  renderAdvancedAnalytics();
+}
+function clearAnalyticsFilter(){
+  analyticsDateFrom = ''; analyticsDateTo = '';
+  document.getElementById('analytics-date-from').value = '';
+  document.getElementById('analytics-date-to').value = '';
+  renderAdvancedAnalytics();
+}
+
+// Chart.js theme-aware defaults
+function chartDefaults(){
+  const isDark = !document.body.classList.contains('theme-light');
+  return {
+    gridColor: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)',
+    tickColor: isDark ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.4)',
+    tooltipBg: isDark ? '#1c1c24' : '#ffffff',
+    tooltipFg: isDark ? 'rgba(255,255,255,.9)' : 'rgba(0,0,0,.85)',
+  };
+}
+
+// Destroy + recreate a chart safely
+function makeChart(id, config){
+  if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  chartInstances[id] = new Chart(canvas, config);
+}
+
+// ── renderAdvancedAnalytics ─────────────────────────────────
+function renderAdvancedAnalytics(){
+  const data = getAnalyticsTickets();
+  const cd   = chartDefaults();
+
+  // Badge
+  const badgeWrap = document.getElementById('analytics-filter-badge-wrap');
+  if((analyticsDateFrom || analyticsDateTo) && badgeWrap){
+    const from = analyticsDateFrom ? new Date(analyticsDateFrom).toLocaleDateString('th-TH') : '—';
+    const to   = analyticsDateTo   ? new Date(analyticsDateTo).toLocaleDateString('th-TH')   : '—';
+    badgeWrap.innerHTML = `<div class="analytics-filter-badge">📅 ${from} — ${to} <span class="badge-close" onclick="clearAnalyticsFilter()">✕</span></div>`;
+  } else if(badgeWrap){
+    badgeWrap.innerHTML = '';
+  }
+
+  // Mini stats
+  const waiting = data.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
+  const inprog  = data.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
+  const done    = data.filter(t=>t.status==='เสร็จสิ้น ✅').length;
+  document.getElementById('ms-total').textContent  = data.length;
+  document.getElementById('ms-wait').textContent   = waiting;
+  document.getElementById('ms-inprog').textContent = inprog;
+  document.getElementById('ms-done').textContent   = done;
+
+  // ── 1. Monthly Trend Chart ──────────────────────────────
+  // Group by year-month
+  const monthMap = {};
+  data.forEach(t=>{
+    const d = parseTicketDate(t);
+    if(!d) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    monthMap[key] = (monthMap[key]||0)+1;
+  });
+  // Fill contiguous range (up to 12 months back from latest)
+  const sortedKeys = Object.keys(monthMap).sort();
+  let monthLabels = sortedKeys;
+  let monthValues = sortedKeys.map(k=>monthMap[k]);
+  // If no data → show last 6 months as zero
+  if(!monthLabels.length){
+    const now = new Date();
+    for(let i=5;i>=0;i--){
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      monthLabels.push(k); monthValues.push(0);
+    }
+  }
+  const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const monthDisplayLabels = monthLabels.map(k=>{
+    const [y,m] = k.split('-');
+    return THAI_MONTHS[parseInt(m,10)-1]+' '+(parseInt(y,10)+543-2500);
+  });
+
+  makeChart('monthlyTrendChart', {
+    type: 'line',
+    data: {
+      labels: monthDisplayLabels,
+      datasets: [{
+        label: 'Ticket',
+        data: monthValues,
+        borderColor: '#00e5a0',
+        backgroundColor: 'rgba(0,229,160,.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#00e5a0',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cd.tooltipBg,
+          titleColor: cd.tooltipFg,
+          bodyColor: cd.tooltipFg,
+          borderColor: '#00e5a0',
+          borderWidth: 1,
+          padding: 10,
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: cd.tickColor, font:{size:11} },
+          grid:  { color: cd.gridColor }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
+          grid:  { color: cd.gridColor }
+        }
+      }
+    }
+  });
+
+  // ── 2. Branch Breakdown Chart ──────────────────────────
+  const branchMap = {};
+  data.forEach(t=>{
+    const b = (t.branchCode||t.branch||'ไม่ระบุ').trim();
+    branchMap[b] = (branchMap[b]||0)+1;
+  });
+  const branchEntries = Object.entries(branchMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const branchLabels  = branchEntries.map(e=>e[0]);
+  const branchValues  = branchEntries.map(e=>e[1]);
+  const barColors = branchLabels.map((_,i)=>{
+    const palette = ['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316','#84cc16','#ec4899','#06b6d4'];
+    return palette[i % palette.length];
+  });
+
+  makeChart('branchBreakdownChart', {
+    type: 'bar',
+    data: {
+      labels: branchLabels.length ? branchLabels : ['ไม่มีข้อมูล'],
+      datasets: [{
+        label: 'Ticket',
+        data: branchValues.length ? branchValues : [0],
+        backgroundColor: branchLabels.length ? barColors.map(c=>c+'33') : ['rgba(100,100,100,.15)'],
+        borderColor: branchLabels.length ? barColors : ['#666'],
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cd.tooltipBg,
+          titleColor: cd.tooltipFg,
+          bodyColor: cd.tooltipFg,
+          borderColor: 'rgba(255,255,255,.1)',
+          borderWidth: 1,
+          padding: 10,
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: cd.tickColor, font:{size:10}, maxRotation:45 },
+          grid:  { color: 'transparent' }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
+          grid:  { color: cd.gridColor }
+        }
+      }
+    }
+  });
+
+  // ── 3. Status Doughnut ─────────────────────────────────
+  const STATUS_DEFS = [
+    { key: 'รอดำเนินการ ⏱️', label: 'รอดำเนินการ',   color: '#a855f7' },
+    { key: 'ตรวจงาน',        label: 'ตรวจงาน',        color: '#22d3ee' },
+    { key: 'อยู่ระหว่างดำเนินการ ⚙️', label: 'กำลังดำเนินการ', color: '#3b82f6' },
+    { key: 'เสร็จสิ้น ✅',   label: 'เสร็จสิ้น',      color: '#00e5a0' },
+    { key: 'ยกเลิก ❌',      label: 'ยกเลิก',         color: '#ef4444' },
+    { key: 'แก้ไข',          label: 'แก้ไข',           color: '#f59e0b' },
+  ];
+  const doughnutCounts = STATUS_DEFS.map(s=>data.filter(t=>t.status===s.key).length);
+  const doughnutColors = STATUS_DEFS.map(s=>s.color);
+  const doughnutLabels = STATUS_DEFS.map(s=>s.label);
+  const hasAny = doughnutCounts.some(v=>v>0);
+
+  makeChart('statusDoughnutChart', {
+    type: 'doughnut',
+    data: {
+      labels: doughnutLabels,
+      datasets: [{
+        data: hasAny ? doughnutCounts : [1],
+        backgroundColor: hasAny ? doughnutColors.map(c=>c+'bb') : ['rgba(100,100,100,.15)'],
+        borderColor: hasAny ? doughnutColors : ['#444'],
+        borderWidth: 2,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: cd.tickColor,
+            font: { size: 11, family: "'Noto Sans Thai', sans-serif" },
+            boxWidth: 12,
+            padding: 10,
+          }
+        },
+        tooltip: {
+          backgroundColor: cd.tooltipBg,
+          titleColor: cd.tooltipFg,
+          bodyColor: cd.tooltipFg,
+          borderColor: 'rgba(255,255,255,.1)',
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            label: ctx => hasAny
+              ? ` ${ctx.label}: ${ctx.parsed} ticket`
+              : ' ไม่มีข้อมูล',
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Filter controls: date range pickers ─────────────────────
+document.getElementById('analytics-date-from').addEventListener('change', function(){ analyticsDateFrom = this.value; });
+document.getElementById('analytics-date-to').addEventListener('change', function(){ analyticsDateTo = this.value; });
+
+// Re-render charts when theme changes (pick up new colors)
+const _origToggleTheme = window.toggleTheme;
+
+// ════════════════════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════════════════════
 async function tryAutoLogin(){
   const saved = localStorage.getItem('admin_auth');
   if(!saved) return false;
   try{
-    const {token, user: savedUser} = JSON.parse(saved);
+    const {token} = JSON.parse(saved);
     if(!token) { localStorage.removeItem('admin_auth'); return false; }
-
-    // ✅ แก้: ตั้ง timeout สั้นลง 8s — ถ้า server ยังไม่ตื่น ให้ login ใหม่เลย
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 8000);
     let d;
@@ -719,22 +1000,16 @@ async function tryAutoLogin(){
         signal: ctrl.signal
       }).then(r => r.json());
     } catch(fetchErr) {
-      // ✅ ถ้า network error / server หลับ → แสดง login form ทันที ไม่ loop
       clearTimeout(tid);
       console.warn('[AutoLogin] Server unreachable:', fetchErr.message);
       localStorage.removeItem('admin_auth');
       return false;
     }
     clearTimeout(tid);
-
     if(d.ok && ['superadmin','admin','manager'].includes(d.user.role)){
       AUTH={token,user:d.user}; return true;
     }
-    // ✅ Token หมดอายุ (server restart) — ล้างแล้วให้ login ใหม่
-    console.log('[AutoLogin] Token expired or invalid — please login again');
-  }catch(e){
-    console.warn('[AutoLogin] Error:', e.message);
-  }
+  }catch(e){ console.warn('[AutoLogin] Error:', e.message); }
   localStorage.removeItem('admin_auth');
   return false;
 }
@@ -760,7 +1035,7 @@ document.getElementById('btn-login').onclick = async()=>{
 ['l-user','l-pass'].forEach(id=>{ document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}; });
 
 // ════════════════════════════════════════════════════════════════
-// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
+// THEME
 // ════════════════════════════════════════════════════════════════
 function applyTheme(mode) {
   const isLight = mode !== 'dark';
@@ -772,6 +1047,8 @@ function applyTheme(mode) {
   if (label) label.textContent = isLight ? 'โหมดมืด' : 'โหมดสว่าง';
   if (iconM) iconM.textContent = isLight ? '🌙' : '☀️';
   try { localStorage.setItem('admin_theme', mode); } catch(_) {}
+  // Re-render charts on theme change
+  if(tickets.length) setTimeout(renderAdvancedAnalytics, 50);
 }
 function toggleTheme() {
   try {
@@ -795,25 +1072,20 @@ async function bootApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('ready');
   const u=AUTH.user;
-  // Sidebar user
   const av=document.getElementById('sb-avatar');
   av.textContent=ai(u.name); av.style.background=ac(u.name); av.style.color='#000';
   document.getElementById('sb-name').textContent=u.name;
   document.getElementById('sb-role').textContent=({'superadmin':'Super Admin','admin':'Admin','manager':'Manager'})[u.role]||u.role;
-  // Hide user management for non-superadmin
   if(!['superadmin','admin'].includes(u.role)){
     document.getElementById('nav-users').style.display='none';
-  }
-  if(!['superadmin','admin'].includes(u.role)){
     document.getElementById('nav-debug').style.display='none';
   }
   connectSSE();
-  // โหลด data ใน background — ไม่ block การแสดง UI
   Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
   if(['superadmin','admin'].includes(u.role)) loadUsers();
   renderDashboard();
   window.hideSplash?.();
-  window.initAdminFab?.(); // Init FAB after app ready
+  window.initAdminFab?.();
   setInterval(loadTickets, 60_000);
 }
 
@@ -846,10 +1118,7 @@ async function loadTickets(){
   try{
     const d=await api('/api/tickets');
     if(d.ok){ tickets=d.tickets||[]; updateBadge(); if(currentPage==='tickets') renderTicketsPage(); if(currentPage==='dashboard') renderDashboard(); }
-  }catch(e){
-    console.warn('[loadTickets] error:', e.message);
-    // ไม่ throw — ให้ UI ยังแสดงได้ แค่ไม่มีข้อมูล
-  }
+  }catch(e){ console.warn('[loadTickets] error:', e.message); }
 }
 async function loadLogs(){
   const d=await api('/api/logs?limit=200');
@@ -859,7 +1128,6 @@ async function loadUsers(){
   const d=await api('/api/users');
   if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
 }
-
 function updateBadge(){
   const n=tickets.filter(t=>t.status==='แก้ไข').length;
   ['nb-pending','bnav-badge'].forEach(id=>{
@@ -880,19 +1148,14 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-  // Lazy render
   if(page==='dashboard') renderDashboard();
   if(page==='tickets') renderTicketsPage();
-
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
-  // Close mobile sidebar + overlay
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-overlay')?.classList.remove('open');
 }
-document.querySelectorAll('[data-page]').forEach(btn=>{
-  btn.onclick=()=>navTo(btn.dataset.page);
-});
+document.querySelectorAll('[data-page]').forEach(btn=>{ btn.onclick=()=>navTo(btn.dataset.page); });
 document.getElementById('btn-menu').onclick=()=>{
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebar-overlay');
@@ -914,7 +1177,6 @@ function renderDashboard(){
   const inprog   = tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
   const done     = tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
-  // Update dropdown options with counts
   const sel = document.getElementById('dash-status-select');
   if(sel){
     const cur = sel.value;
@@ -926,7 +1188,7 @@ function renderDashboard(){
       <option value="เสร็จสิ้น ✅">✅ เสร็จสิ้น (${done})</option>
       <option value="ยกเลิก ❌">❌ ยกเลิก (${tickets.filter(t=>t.status==='ยกเลิก ❌').length})</option>
     `;
-    sel.value = cur; // restore selection
+    sel.value = cur;
     sel.onchange = ()=>{
       filterStatus = sel.value;
       navTo('tickets');
@@ -939,12 +1201,10 @@ function renderDashboard(){
   if(badge) badge.textContent = `รวม ${total} Ticket · รอ ${waiting} · ดำเนินการ ${inprog} · เสร็จ ${done}`;
   // Brand chart + recent
   const brandMap={};
-  // แสดงครบ 5 แบรนด์เสมอ — เริ่มต้นด้วย 0 ทุกแบรนด์
   const FIXED_BRANDS = ["Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];
   FIXED_BRANDS.forEach(b=>brandMap[b]=0);
-  // normalize ชื่อจาก Lark → map กลับมา 5 แบรนด์
   const BRAND_NORM = {
-    "dunkin'":"Dunkin'","dunkin’":"Dunkin'","dunkin":"Dunkin'",
+    "dunkin'":"Dunkin'","dunkin":"Dunkin'",
     "greyhound cafe":"Greyhound Cafe","greyhound original":"Greyhound Original","greyhound":"Greyhound Cafe",
     "au bon pain":"Au Bon Pain","aubonpain":"Au Bon Pain",
     "funky fries":"Funky Fries","funkyfries":"Funky Fries"
@@ -952,19 +1212,10 @@ function renderDashboard(){
   const normBrand = b => {
     const k = (b||'').toLowerCase().trim();
     if(BRAND_NORM[k]) return BRAND_NORM[k];
-    // partial match — ถ้า Lark ส่งชื่อบางส่วน
-    for(const [key,val] of Object.entries(BRAND_NORM)){
-      if(k.includes(key) || key.includes(k)) return val;
-    }
-    return null; // ไม่ match → ไม่นับ
+    for(const [key,val] of Object.entries(BRAND_NORM)){ if(k.includes(key)||key.includes(k)) return val; }
+    return null;
   };
-  tickets.forEach(t=>{
-    const b = normBrand(t.brand);
-    if(b) brandMap[b]=(brandMap[b]||0)+1;
-  });
-  // DEBUG: แสดง brand values จริงใน console — เปิด DevTools F12 → Console
-  console.log('[Brand Debug] raw brands from Lark:', [...new Set(tickets.map(t=>t.brand))]);
-  console.log('[Brand Debug] normalized map:', brandMap);
+  tickets.forEach(t=>{ const b=normBrand(t.brand); if(b) brandMap[b]=(brandMap[b]||0)+1; });
   const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]);
   const maxB=brands[0]?.[1]||1;
   const recent=tickets.slice(0,8);
@@ -987,8 +1238,9 @@ function renderDashboard(){
         </li>`).join('')}
       </ul>
     </div>`;
+  // Render advanced analytics charts after dash-grid is in DOM
+  renderAdvancedAnalytics();
 }
-
 document.getElementById('btn-refresh-dash').onclick=async()=>{
   const btn=document.getElementById('btn-refresh-dash');
   btn.classList.add('spinning'); await loadTickets(); btn.classList.remove('spinning');
@@ -1005,21 +1257,15 @@ function getFiltered(){
   if(searchQ){
     const q=searchQ.toLowerCase();
     data=data.filter(t=>
-      String(t.id||'').toLowerCase().includes(q)||
-      String(t._recordId||'').toLowerCase().includes(q)||
-      String(t.reporter||'').toLowerCase().includes(q)||
-      String(t.phone||'').includes(q)||
-      String(t.type||'').toLowerCase().includes(q)||
-      String(t.detail||'').toLowerCase().includes(q)||
-      String(t.brand||'').toLowerCase().includes(q)||
-      String(t.branchCode||'').toLowerCase().includes(q)
+      String(t.id||'').toLowerCase().includes(q)||String(t._recordId||'').toLowerCase().includes(q)||
+      String(t.reporter||'').toLowerCase().includes(q)||String(t.phone||'').includes(q)||
+      String(t.type||'').toLowerCase().includes(q)||String(t.detail||'').toLowerCase().includes(q)||
+      String(t.brand||'').toLowerCase().includes(q)||String(t.branchCode||'').toLowerCase().includes(q)
     );
   }
   return data;
 }
-
 function renderTicketsPage(){
-  // Populate brand filter
   const brands=[...new Set(tickets.map(t=>t.brand).filter(Boolean))].sort();
   const fb=document.getElementById('filter-brand');
   const curBrand=fb.value;
@@ -1028,10 +1274,9 @@ function renderTicketsPage(){
   const total=Math.max(1,Math.ceil(data.length/PER_PAGE));
   tbPage=Math.min(tbPage,total);
   const paged=data.slice((tbPage-1)*PER_PAGE,tbPage*PER_PAGE);
-
   if(!paged.length){
     document.getElementById('ticket-tbody').innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">ไม่พบ Ticket</div></div></td></tr>`;
-    const _pg=document.getElementById('tbl-pagination'); if(_pg) _pg.innerHTML=''; return;
+    return;
   }
   document.getElementById('ticket-tbody').innerHTML=paged.map(t=>{
     const sc=statusColor(t.status);
@@ -1040,10 +1285,7 @@ function renderTicketsPage(){
         <div class="cell-id">${esc(t.id||t._recordId||'—')}</div>
         <div class="cell-sub">${esc(t.brand||'-')}</div>
       </td>
-      <td>
-        <div class="cell-type">${esc(t.type||'—')}</div>
-        <div class="cell-detail">${esc(t.detail||'-')}</div>
-      </td>
+      <td><div class="cell-type">${esc(t.type||'—')}</div><div class="cell-detail">${esc(t.detail||'-')}</div></td>
       <td class="td-hide-mobile" style="font-size:13px">${esc(t.branchCode||'-')}</td>
       <td><span class="status-pill s-${(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim()}">${esc(t.status||'-')}</span></td>
       <td class="td-hide-mobile" style="font-size:12.5px;color:var(--fg2)">${esc(t.sentDate||'-')}</td>
@@ -1056,31 +1298,23 @@ function renderTicketsPage(){
       </td>
     </tr>`;
   }).join('');
-
-  // ── FAB pagination update ───────────────────────────────────
-  if(window.renderFabPagination) renderFabPagination(Math.max(1, Math.ceil(data.length / PER_PAGE)), tbPage, PER_PAGE);
+  if(window.renderFabPagination) renderFabPagination(Math.max(1, Math.ceil(data.length/PER_PAGE)), tbPage, PER_PAGE);
 }
 function sqBtn(t,status,color,label){
   const active=t.status===status;
   return `<button class="sq-btn" style="border-color:${color};color:${active?'#000':color};background:${active?color:'transparent'}" onclick="quickStatus('${esc(t._recordId)}','${esc(status)}')">${esc(label)}</button>`;
 }
-
-// Filters
 document.getElementById('search-input').oninput=function(){searchQ=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('filter-brand').onchange=function(){filterBrand=this.value;tbPage=1;renderTicketsPage();};
-document.getElementById('filter-sla') && (document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
-
-
-document.getElementById('filter-status').onchange=function(){
-  filterStatus=this.value; tbPage=1; renderTicketsPage();
-};
+document.getElementById('filter-sla')&&(document.getElementById('filter-sla').onchange=function(){filterSla=this.value;tbPage=1;renderTicketsPage();});
+document.getElementById('filter-status').onchange=function(){filterStatus=this.value;tbPage=1;renderTicketsPage();};
 document.getElementById('btn-refresh-tbl').onclick=async()=>{
   const btn=document.getElementById('btn-refresh-tbl');
   btn.classList.add('spinning'); await loadTickets(); btn.classList.remove('spinning');
 };
 
 // ════════════════════════════════════════════════════════════════
-// QUICK STATUS (table)
+// QUICK STATUS
 // ════════════════════════════════════════════════════════════════
 async function quickStatus(rid,status){
   try{
@@ -1109,13 +1343,11 @@ function closeDrawer(){
   document.body.style.overflow='';
 }
 document.getElementById('drawer-overlay').onclick=closeDrawer;
-
 function renderDrawerContent(){
   const t=tickets.find(x=>x._recordId===openTicketId);
   if(!t){ document.getElementById('drawer-inner').innerHTML='<div class="loading"><div class="spinner"></div></div>'; return; }
   const ticketLogs=logs.filter(l=>l.ticketId===t._recordId||l.ticketLabel===t.id).slice(0,10);
   const STATUSES=['แก้ไข','อยู่ระหว่างดำเนินการ ⚙️','รอดำเนินการ ⏱️','เสร็จสิ้น ✅','ยกเลิก ❌'];
-
   document.getElementById('drawer-inner').innerHTML=`
     <div class="drawer-head">
       <div style="flex:1">
@@ -1129,10 +1361,7 @@ function renderDrawerContent(){
       </div>
       <button onclick="closeDrawer()" style="background:var(--bg3);border:1px solid var(--b2);border-radius:9px;color:var(--fg2);font-size:16px;padding:7px 11px;cursor:pointer;flex-shrink:0;margin-top:4px">✕</button>
     </div>
-
     <div class="drawer-body">
-
-      <!-- Quick actions -->
       <div class="d-section">
         <div class="d-section-title">จัดการ Ticket</div>
         <div class="d-actions">
@@ -1140,11 +1369,10 @@ function renderDrawerContent(){
             <button class="btn-action btn-assign" onclick="openAssignModal('${esc(t._recordId)}')">🔄 เปลี่ยนช่าง</button>
             ${!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`<button class="btn-action btn-close-ticket" onclick="openCloseModal('${esc(t._recordId)}')">✅ จบงาน</button>`:''}
             <button class="btn-action btn-note" onclick="openNoteModal('${esc(t._recordId)}')">📝 หมายเหตุ</button>
-          ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
+            ${t.status!=='ยกเลิก ❌'?`<button class="btn-action btn-cancel btn-sm" onclick="quickStatus('${esc(t._recordId)}','ยกเลิก ❌');closeDrawer()">✕ ยกเลิก</button>`:''}
+          </div>
         </div>
       </div>
-
-      <!-- Status quick change -->
       <div class="d-section">
         <div class="d-section-title">เปลี่ยนสถานะ</div>
         <select onchange="quickStatus('${esc(t._recordId)}',this.value);closeDrawer()"
@@ -1152,21 +1380,16 @@ function renderDrawerContent(){
           ${STATUSES.map(s=>`<option value="${esc(s)}"${t.status===s?' selected':''}>${esc(s)}</option>`).join('')}
         </select>
       </div>
-
       <div class="d-divider"></div>
-
-      <!-- Ticket info -->
       <div class="d-section">
         <div class="d-section-title">ข้อมูลผู้แจ้ง</div>
         ${dRow('ชื่อ',t.reporter)}${dRow('เบอร์',t.phone)}${dRow('วันที่',t.sentDate)}
         ${dRow('สถานที่',t.location)}${dRow('SLA',t.sla)}
       </div>
-
       <div class="d-section">
         <div class="d-section-title">รายละเอียดปัญหา</div>
         <div class="d-detail-box">${esc(t.detail||'-')}</div>
       </div>
-
       ${t.engineerName||t.workDetail?`
       <div class="d-section">
         <div class="d-section-title">รายงานช่าง</div>
@@ -1177,20 +1400,14 @@ function renderDrawerContent(){
           ${t.workHours?`<div style="font-size:12px;color:var(--fg2)">ชั่วโมง: ${esc(t.workHours)}</div>`:''}
         </div>
       </div>`:''}
-
       ${t.adminNote||t.closedBy?`
       <div class="d-section">
         <div class="d-section-title">หมายเหตุ Admin</div>
         <div class="d-admin-box">
-          ${(t.adminNote && typeof t.adminNote==='string' && t.adminNote.trim())?
-            `<div style="margin-bottom:4px">${esc(t.adminNote)}</div>`
-            :`<div style="color:var(--fg3);font-style:italic;font-size:12px">Admin ยังไม่มี Remark</div>`
-          }
-          ${(t.closedBy && typeof t.closedBy==='string' && !t.closedBy.includes('[object'))?`<div style="font-size:11.5px;color:var(--fg3);margin-top:4px">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
+          ${(t.adminNote&&typeof t.adminNote==='string'&&t.adminNote.trim())?`<div style="margin-bottom:4px">${esc(t.adminNote)}</div>`:`<div style="color:var(--fg3);font-style:italic;font-size:12px">Admin ยังไม่มี Remark</div>`}
+          ${(t.closedBy&&typeof t.closedBy==='string'&&!t.closedBy.includes('[object'))?`<div style="font-size:11.5px;color:var(--fg3);margin-top:4px">ปิดโดย ${esc(t.closedBy)} · ${esc(t.closedAt||'-')}</div>`:''}
         </div>
       </div>`:''}
-
-      <!-- Log timeline -->
       ${ticketLogs.length?`
       <div class="d-section">
         <div class="d-section-title">ประวัติ Ticket</div>
@@ -1206,10 +1423,8 @@ function renderDrawerContent(){
           </div>
         </div>`).join('')}
       </div>`:''}
-
     </div>`;
 }
-
 function dRow(label,val){ return `<div class="d-row"><span class="d-label">${esc(label)}</span><span class="d-value">${esc(val||'-')}</span></div>`; }
 
 // ════════════════════════════════════════════════════════════════
@@ -1219,7 +1434,6 @@ function openModal(html){ document.getElementById('modal-box').innerHTML=html; d
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow=''; }
 document.getElementById('modal-overlay').onclick=e=>{ if(e.target===e.currentTarget)closeModal(); };
 
-// Assign engineer modal
 function openAssignModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   const engUsers=users.filter(u=>u.role==='engineer')||[];
@@ -1241,9 +1455,7 @@ function openAssignModal(rid){
       <button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก ❌</button>
       <button class="btn-modal btn-modal-primary" id="m-assign-btn" onclick="doAssign('${esc(rid)}')">มอบหมาย</button>
     </div>`);
-  document.getElementById('m-eng').onchange=function(){
-    document.getElementById('m-eng-manual').style.display=this.value==='__manual'?'block':'none';
-  };
+  document.getElementById('m-eng').onchange=function(){ document.getElementById('m-eng-manual').style.display=this.value==='__manual'?'block':'none'; };
 }
 async function doAssign(rid){
   const sel=document.getElementById('m-eng').value;
@@ -1259,8 +1471,6 @@ async function doAssign(rid){
     showToast('✅ มอบหมายให้ '+name);
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='มอบหมาย';}
 }
-
-// Close ticket modal
 function openCloseModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   openModal(`
@@ -1268,7 +1478,7 @@ function openCloseModal(rid){
     ${t?.workDetail?`<div class="d-work-box" style="margin-bottom:14px">
       <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px">รายงานช่าง</div>
       ${esc(t.workDetail.slice(0,200))}${t.workDetail.length>200?'…':''}
-    </div>`:'<div class="alert-info" style="padding:10px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:13px;color:#93c5fd;margin-bottom:14px">⚠️ ยังไม่มีรายงานจากช่าง</div>'}
+    </div>`:'<div style="padding:10px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:13px;color:#93c5fd;margin-bottom:14px">⚠️ ยังไม่มีรายงานจากช่าง</div>'}
     <div class="d-form-group"><label class="d-form-label">หมายเหตุ / ผลการตรวจรับ</label>
       <textarea class="d-form-textarea" id="m-note" placeholder="เช่น ตรวจรับงานเรียบร้อย, ทดสอบแล้วปกติ" rows="3"></textarea>
     </div>
@@ -1289,8 +1499,6 @@ async function doClose(rid){
     showToast('✅ ปิดงานเรียบร้อย');
   }catch(e){showToast('❌ '+e.message,'error'); btn.disabled=false; btn.textContent='✅ ยืนยันจบงาน';}
 }
-
-// Note modal
 function openNoteModal(rid){
   const t=tickets.find(x=>x._recordId===rid);
   openModal(`
@@ -1369,9 +1577,7 @@ function renderUsersPage(){
       </div>
     </div>`).join('');
 }
-
 document.getElementById('btn-add-user').onclick=()=>openAddUserModal();
-
 function userFormFields(u={}){
   const BRANDS=['ALL',"Dunkin'",'Greyhound Cafe','Greyhound Original','Au Bon Pain','Funky Fries'];
   return `
@@ -1391,7 +1597,6 @@ function userFormFields(u={}){
       </div>
     </div>`;
 }
-
 function openAddUserModal(){
   openModal(`<div class="modal-title">👤 เพิ่มผู้ใช้งาน</div>${userFormFields()}
     <div class="modal-actions">
@@ -1506,7 +1711,6 @@ function rerenderCurrent(){
   if(currentPage==='dashboard') renderDashboard();
   if(currentPage==='log') renderLogPage();
 }
-
 let toastTimer;
 function showToast(msg,type='success'){
   const el=document.getElementById('toast');
@@ -1520,238 +1724,74 @@ function showToast(msg,type='success'){
 // BOOT
 // ════════════════════════════════════════════════════════════════
 (async()=>{
-  // ✅ 1. init theme ทันที ก่อนอื่น
-  try {
-    const saved = localStorage.getItem('admin_theme') || 'light';
-    applyTheme(saved);
-  } catch(_) {
-    document.body.classList.add('theme-light');
-  }
-
-  // ✅ 2. ซ่อน splash ทันที — ไม่รอ API
+  try { const saved = localStorage.getItem('admin_theme') || 'light'; applyTheme(saved); } catch(_) { document.body.classList.add('theme-light'); }
   window.hideSplash?.();
-
-  // ✅ 3. ค่อย tryAutoLogin ในพื้นหลัง — user เห็น login form เลย
   const autoOk = await Promise.race([
     tryAutoLogin(),
     new Promise(r => setTimeout(()=>r(false), 5000))
   ]);
   if(autoOk) bootApp();
 })();
-// ═══════════════════════════════════════════════════════════════
-// FAB NAVIGATION PANEL — Admin
-// Init หลัง bootApp() เพื่อให้ elements พร้อม
-// ═══════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+// FAB NAVIGATION PANEL
+// ════════════════════════════════════════════════════════════════
 window.initAdminFab = function(){
   let fabOpen = false, fabSearchOpen = false;
-
-  const fabWrap    = document.getElementById('admin-fab-wrap');
-  const fabMain    = document.getElementById('fab-main-btn');
-  const fabTop     = document.getElementById('fab-branch-top');
-  const fabSearch  = document.getElementById('fab-search-btn');
-  const fabPagBar  = document.getElementById('fab-pag-bar');
-  const searchPop  = document.getElementById('fab-search-pop');
-  const searchInp  = document.getElementById('fab-search-input');
-  const btnTop     = document.getElementById('fab-to-top');
-  const btnBottom  = document.getElementById('fab-to-bottom');
-  if(!fabWrap || !fabMain) return; // guard: not ready yet
-
-  // ── Open/Close FAB ──────────────────────────────────────────
-  function openFab(){
-    fabOpen = true;
-    fabWrap.classList.add('fab-open');
-    // Show fab-wrap only on tickets page
-    fabPagBar.style.display = (currentPage === 'tickets') ? 'flex' : 'none';
-  }
-  function closeFab(){
-    fabOpen = false;
-    fabWrap.classList.remove('fab-open');
-    closeSearch();
-  }
-  function toggleFab(){ fabOpen ? closeFab() : openFab(); }
-
-  // ── Search Popup ────────────────────────────────────────────
-  function openSearch(){
-    openFab();
-    fabSearchOpen = true;
-    searchPop.classList.add('fab-search-open');
-    setTimeout(()=>searchInp.focus(), 60);
-  }
-  function closeSearch(){
-    fabSearchOpen = false;
-    searchPop.classList.remove('fab-search-open');
-  }
-
-  // ── Pagination Render ────────────────────────────────────────
-  // Called by renderTicketsPage after it updates tbPage/total
+  const fabWrap=document.getElementById('admin-fab-wrap'),fabMain=document.getElementById('fab-main-btn');
+  const fabSearch=document.getElementById('fab-search-btn'),fabPagBar=document.getElementById('fab-pag-bar');
+  const searchPop=document.getElementById('fab-search-pop'),searchInp=document.getElementById('fab-search-input');
+  const btnTop=document.getElementById('fab-to-top'),btnBottom=document.getElementById('fab-to-bottom');
+  if(!fabWrap||!fabMain) return;
+  function openFab(){ fabOpen=true; fabWrap.classList.add('fab-open'); fabPagBar.style.display=(currentPage==='tickets')?'flex':'none'; }
+  function closeFab(){ fabOpen=false; fabWrap.classList.remove('fab-open'); closeSearch(); }
+  function toggleFab(){ fabOpen?closeFab():openFab(); }
+  function openSearch(){ openFab(); fabSearchOpen=true; searchPop.classList.add('fab-search-open'); setTimeout(()=>searchInp.focus(),60); }
+  function closeSearch(){ fabSearchOpen=false; searchPop.classList.remove('fab-search-open'); }
   window.renderFabPagination = function(totalPages, currentPg, perPg){
     if(!fabPagBar) return;
-    const isFirst = currentPg === 1;
-    const isLast  = currentPg === totalPages;
-
-    // Generate page range with ellipsis
-    function pageRange(cur, tot){
-      if(tot <= 7) return Array.from({length:tot},(_,i)=>i+1);
-      const pages = [1];
-      let left = Math.max(2, cur-1), right = Math.min(tot-1, cur+1);
-      if(left > 2) pages.push('…');
-      for(let i=left;i<=right;i++) pages.push(i);
-      if(right < tot-1) pages.push('…');
-      pages.push(tot);
-      return pages;
-    }
-
-    let html = '';
-    // Per-page selector (rightmost = first in row-reverse)
-    html += `<select class="fab-perpage" id="fab-perpage-sel" title="แสดงต่อหน้า">
+    const isFirst=currentPg===1, isLast=currentPg===totalPages;
+    function pageRange(cur,tot){ if(tot<=7) return Array.from({length:tot},(_,i)=>i+1); const pages=[1]; let left=Math.max(2,cur-1),right=Math.min(tot-1,cur+1); if(left>2)pages.push('…'); for(let i=left;i<=right;i++)pages.push(i); if(right<tot-1)pages.push('…'); pages.push(tot); return pages; }
+    let html=`<select class="fab-perpage" id="fab-perpage-sel">
       <option value="10"${perPg===10?' selected':''}>10/หน้า</option>
       <option value="20"${perPg===20?' selected':''}>20/หน้า</option>
       <option value="50"${perPg===50?' selected':''}>50/หน้า</option>
       <option value="999"${perPg===999?' selected':''}>ทั้งหมด</option>
     </select>`;
-    // Last
-    html += `<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
-    // Next
-    html += `<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
-    // Page numbers
-    pageRange(currentPg, totalPages).forEach(p=>{
-      if(p==='…') html += `<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`;
-      else html += `<button class="fab-btn${p===currentPg?' fab-active':''}" data-page="${p}">${p}</button>`;
-    });
-    // Prev
-    html += `<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
-    // First
-    html += `<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
-
-    fabPagBar.innerHTML = html;
-
-    // Wire per-page select
-    const ppSel = document.getElementById('fab-perpage-sel');
-    if(ppSel) ppSel.onchange = function(){
-      PER_PAGE = Number(this.value)||20;
-      tbPage = 1;
-      renderTicketsPage();
-    };
+    html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
+    html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
+    pageRange(currentPg,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===currentPg?' fab-active':''}" data-page="${p}">${p}</button>`; });
+    html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
+    html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
+    fabPagBar.innerHTML=html;
+    const ppSel=document.getElementById('fab-perpage-sel');
+    if(ppSel) ppSel.onchange=function(){ PER_PAGE=Number(this.value)||20; tbPage=1; renderTicketsPage(); };
   };
-
-  // ── Pagination click ─────────────────────────────────────────
-  fabPagBar.addEventListener('click', e=>{
-    const btn = e.target.closest('button');
-    if(!btn || btn.classList.contains('fab-disabled')) return;
-    const page = btn.dataset.page;
-    const pag  = btn.dataset.pag;
-    const filtered = getFiltered();
-    const total = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-    if(page){ tbPage = Number(page); renderTicketsPage(); return; }
-    switch(pag){
-      case 'first': tbPage=1; break;
-      case 'prev':  tbPage=Math.max(1,tbPage-1); break;
-      case 'next':  tbPage=Math.min(total,tbPage+1); break;
-      case 'last':  tbPage=total; break;
-    }
-    renderTicketsPage();
-    document.getElementById('page-content')?.scrollTo({top:0, behavior:'smooth'});
-  });
-
-  // ── Search input → filter ────────────────────────────────────
-  searchInp.addEventListener('input', e=>{
-    searchQ = e.target.value;
-    // Sync with existing search-input
-    const si = document.getElementById('search-input');
-    if(si) si.value = searchQ;
-    tbPage = 1;
-    renderTicketsPage();
-  });
-
-  // Sync existing search-input → fab search
-  const existingSearch = document.getElementById('search-input');
-  if(existingSearch){
-    const orig = existingSearch.oninput;
-    existingSearch.addEventListener('input', e=>{
-      searchInp.value = e.target.value;
-    });
-  }
-
-  // ── Buttons ──────────────────────────────────────────────────
-  fabMain.addEventListener('click', e=>{ e.stopPropagation(); toggleFab(); });
-  fabSearch.addEventListener('click', e=>{ e.stopPropagation(); fabSearchOpen ? closeSearch() : openSearch(); });
-  btnTop.addEventListener('click', ()=>{ document.getElementById('page-content')?.scrollTo({top:0,behavior:'smooth'}); });
-  btnBottom.addEventListener('click', ()=>{
-    const pc = document.getElementById('page-content');
-    if(pc) pc.scrollTo({top:pc.scrollHeight, behavior:'smooth'});
-  });
-
-  // ── Close on outside click ───────────────────────────────────
-  document.addEventListener('click', e=>{
-    if(!e.target.closest('#admin-fab-wrap')) closeFab();
-  });
-
-  // ── Close search on scroll ───────────────────────────────────
-  document.getElementById('page-content')?.addEventListener('scroll', ()=>{
-    if(fabSearchOpen) closeSearch();
-  }, {passive:true});
-
-  // ── ESC to close ─────────────────────────────────────────────
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeFab(); });
-
-  // ── Patch navTo to toggle fab-pag-bar ───────────────────────
-  const _origNavTo = window.navTo;
-  window.navTo = function(page){
-    _origNavTo(page);
-    if(fabPagBar) fabPagBar.style.display = (page==='tickets') ? 'flex' : 'none';
-  };
+  fabPagBar.addEventListener('click',e=>{ const btn=e.target.closest('button'); if(!btn||btn.classList.contains('fab-disabled')) return; const page=btn.dataset.page,pag=btn.dataset.pag; const filtered=getFiltered(); const total=Math.max(1,Math.ceil(filtered.length/PER_PAGE)); if(page){tbPage=Number(page);renderTicketsPage();return;} switch(pag){case 'first':tbPage=1;break;case 'prev':tbPage=Math.max(1,tbPage-1);break;case 'next':tbPage=Math.min(total,tbPage+1);break;case 'last':tbPage=total;break;} renderTicketsPage(); document.getElementById('page-content')?.scrollTo({top:0,behavior:'smooth'}); });
+  searchInp.addEventListener('input',e=>{ searchQ=e.target.value; const si=document.getElementById('search-input'); if(si)si.value=searchQ; tbPage=1; renderTicketsPage(); });
+  const existingSearch=document.getElementById('search-input');
+  if(existingSearch){ existingSearch.addEventListener('input',e=>{ searchInp.value=e.target.value; }); }
+  fabMain.addEventListener('click',e=>{ e.stopPropagation(); toggleFab(); });
+  fabSearch.addEventListener('click',e=>{ e.stopPropagation(); fabSearchOpen?closeSearch():openSearch(); });
+  btnTop.addEventListener('click',()=>{ document.getElementById('page-content')?.scrollTo({top:0,behavior:'smooth'}); });
+  btnBottom.addEventListener('click',()=>{ const pc=document.getElementById('page-content'); if(pc)pc.scrollTo({top:pc.scrollHeight,behavior:'smooth'}); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#admin-fab-wrap'))closeFab(); });
+  document.getElementById('page-content')?.addEventListener('scroll',()=>{ if(fabSearchOpen)closeSearch(); },{passive:true});
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeFab(); });
+  const _origNavTo=window.navTo;
+  window.navTo=function(page){ _origNavTo(page); if(fabPagBar)fabPagBar.style.display=(page==='tickets')?'flex':'none'; };
 };
 
-
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // CLOCK + TEMPERATURE
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 (function(){
-  // อัป clock ทุก 1 วินาที
-  function tickClock(){
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(now.getMinutes()).padStart(2,'0');
-    const ss = String(now.getSeconds()).padStart(2,'0');
-    const el = document.getElementById('clock-time');
-    if(el) el.textContent = hh+':'+mm+':'+ss;
-  }
-  tickClock();
-  setInterval(tickClock, 1000);
-
-  // ดึงอุณหภูมิจาก Open-Meteo (Bangkok default, ถ้าได้ GPS ใช้ตำแหน่งจริง)
-  async function fetchTemp(lat, lon){
-    try{
-      const r = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
-      );
-      const d = await r.json();
-      const t = d.current_weather?.temperature;
-      const el = document.getElementById('clock-temp');
-      if(el && t !== undefined) el.textContent = Math.round(t)+'°C';
-    }catch(_){}
-  }
-
-  // ขอ GPS ถ้าได้ ใช้ตำแหน่งจริง ถ้าไม่ได้ใช้กรุงเทพ
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-      ()  => fetchTemp(13.75, 100.52) // กรุงเทพ fallback
-    );
-  } else {
-    fetchTemp(13.75, 100.52);
-  }
-  // refresh อุณหภูมิทุก 10 นาที
-  setInterval(()=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-        ()  => fetchTemp(13.75, 100.52)
-      );
-    } else { fetchTemp(13.75, 100.52); }
-  }, 600_000);
+  function tickClock(){ const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0'),el=document.getElementById('clock-time'); if(el)el.textContent=hh+':'+mm+':'+ss; }
+  tickClock(); setInterval(tickClock,1000);
+  async function fetchTemp(lat,lon){ try{ const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`); const d=await r.json(); const t=d.current_weather?.temperature; const el=document.getElementById('clock-temp'); if(el&&t!==undefined)el.textContent=Math.round(t)+'°C'; }catch(_){} }
+  if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>fetchTemp(pos.coords.latitude,pos.coords.longitude),()=>fetchTemp(13.75,100.52)); } else { fetchTemp(13.75,100.52); }
+  setInterval(()=>{ if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>fetchTemp(pos.coords.latitude,pos.coords.longitude),()=>fetchTemp(13.75,100.52)); } else { fetchTemp(13.75,100.52); } },600_000);
 })();
-
 </script>
 </body>
 </html>
