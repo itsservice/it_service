@@ -259,7 +259,7 @@ function toWriteFields(fields) {
   }
 
   for (const [key, val] of Object.entries(fields)) {
-    if (val === undefined || val === null || val === '') continue;
+    if (val === undefined || val === null) continue;
     if (!WRITABLE_KEYS.has(key)) continue;
     const colName = fm[key];
     if (!colName) {
