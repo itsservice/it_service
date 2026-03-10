@@ -244,7 +244,9 @@ app.post('/api/tickets', async (req, res) => {
       return res.json({ ok:false, error:'กรุณากรอกข้อมูลให้ครบ (reporter, phone, brand, type, detail)' });
     }
 
-    const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
+    // ✅ sentDate เป็น ISO YYYY-MM-DD (ค.ศ.) เพื่อให้ Analytics filter ทำงานถูกต้อง
+    const _now = new Date();
+    const sentDateISO = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
 
     const t = await createTicket({
       reporter,
@@ -255,7 +257,7 @@ app.post('/api/tickets', async (req, res) => {
       detail,
       location:  location  || '',
       status:    'รอดำเนินการ ⏱️',
-      sentDate:  now,
+      sentDate:  sentDateISO,   // ✅ "2026-03-10" แทน "10/03/2569"
     });
 
     const log = addLog({
