@@ -4,1425 +4,425 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>แจ้งปัญหา — IT Support</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<title>แจ้งปัญหา IT — IT Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#080809;--bg2:#0e0e12;--bg3:#16161d;
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
-  --fg:rgba(255,255,255,.92);--fg2:rgba(255,255,255,.52);--fg3:rgba(255,255,255,.25);
-  --accent:#00e5a0;--accent2:#0099ff;--warn:#ff9640;--danger:#ff4d6d;
-  --r:12px;--r2:18px;--r3:24px;
+  --bg:#07070a;--bg2:#0d0d12;--bg3:#141419;--bg4:#1c1c24;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
+  --fg:rgba(255,255,255,.93);--fg2:rgba(255,255,255,.5);--fg3:rgba(255,255,255,.22);
+  --accent:#00e5a0;--blue:#3b82f6;--warn:#f59e0b;--danger:#ef4444;
+  --r:10px;--r2:16px;--r3:20px;
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-  --font-th:'Noto Sans Thai',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
 }
-/* ── Light mode ───────────────────────────────────────────── */
 body.theme-light{
-  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;
+  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
   --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
-  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.52);--fg3:rgba(0,0,0,.3);
-  --accent:#00b87a;--accent2:#1d6ff0;--warn:#d97706;--danger:#dc2626;
+  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
+  --accent:#00b87a;--blue:#2563eb;--warn:#d97706;--danger:#dc2626;
 }
-body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15)}
-/* inputs / selects / textarea ต้องชัดใน light mode */
-body.theme-light input,
-body.theme-light select,
-body.theme-light textarea{
-  background:var(--bg3);color:var(--fg);border-color:var(--b2);
-}
-body.theme-light input::placeholder,
-body.theme-light textarea::placeholder{color:var(--fg3)}
-body.theme-light input:focus,
-body.theme-light select:focus,
-body.theme-light textarea:focus{border-color:var(--accent)}
-/* ticket-card ใน light mode */
-body.theme-light .ticket-card{box-shadow:0 1px 4px rgba(0,0,0,.08)}
-body.theme-light .ticket-row:hover{background:var(--bg3)}
-/* modal ใน light mode */
-body.theme-light .td-modal{box-shadow:0 -4px 24px rgba(0,0,0,.15)}
-body.theme-light .history-toggle{background:var(--bg2)}
-body.theme-light .history-dropdown{background:var(--bg2)}
-/* tabs */
-body.theme-light .tab{color:var(--fg2)}
-body.theme-light .tab.active{color:var(--fg);border-bottom-color:var(--accent)}
-/* ── Light mode: ทุก element ที่มีตัวอักษรต้องเห็นชัด ── */
-/* form labels */
-body.theme-light label{color:var(--fg)}
-body.theme-light .req{color:var(--danger)}
-/* char counter */
-body.theme-light #char-num{color:var(--fg2)}
-/* hint text */
-body.theme-light .search-hint{color:var(--fg3)}
-body.theme-light #filter-hint-ok{color:var(--fg2)}
-body.theme-light #filter-hint-default{color:var(--fg3)}
-/* ticket card */
-body.theme-light .tc-id{color:var(--accent)}
-body.theme-light .tc-brand{color:var(--fg3)}
-body.theme-light .tc-type{color:var(--fg)}
-body.theme-light .tc-detail{color:var(--fg2)}
-body.theme-light .tc-meta{color:var(--fg3)}
-/* timeline */
-body.theme-light .tl-title{color:var(--fg3)}
-body.theme-light .tl-label{color:var(--fg3)}
-body.theme-light .tl-step.done .tl-label,
-body.theme-light .tl-step.active .tl-label{color:var(--fg)}
-body.theme-light .tl-dot{background:var(--bg2);border-color:var(--b2)}
-/* history */
-body.theme-light .history-toggle{color:var(--fg2)}
-body.theme-light .history-item{color:var(--fg)}
-/* modal */
-body.theme-light .td-modal-id{color:var(--accent)}
-body.theme-light .td-modal-brand{color:var(--fg3)}
-body.theme-light .td-modal-type{color:var(--fg)}
-body.theme-light .td-modal-detail{color:var(--fg2)}
-body.theme-light .td-modal-meta{color:var(--fg3)}
-body.theme-light .td-modal-work-title{color:var(--accent)}
-body.theme-light .td-modal-work-text{color:var(--fg2)}
-body.theme-light .td-modal-parts{color:var(--fg3)}
-body.theme-light .td-modal-close{color:var(--fg2)}
-/* success card */
-body.theme-light .success-card{background:var(--bg2);color:var(--fg)}
-body.theme-light .ticket-badge{color:var(--fg2)}
-/* group labels */
-body.theme-light .group-toggle{color:var(--fg)}
-body.theme-light .g-count{color:var(--fg3)}
-body.theme-light .ticket-row-type{color:var(--fg2)}
-body.theme-light .ticket-row-branch{color:var(--fg3)}
-body.theme-light .hi-id{color:var(--accent)}
-/* header */
-body.theme-light .header-text h1{color:var(--fg)}
-body.theme-light .header-text p{color:var(--fg3)}
-body.theme-light #btn-theme{color:var(--fg2)}
-/* loading */
-body.theme-light .loading{color:var(--fg2)}
-/* section headings */
-body.theme-light .ph-title{color:var(--fg)}
-body.theme-light .ph-sub{color:var(--fg2)}
-/* select options และ branch dropdown */
-body.theme-light select option{background:var(--bg2);color:var(--fg)}
-body.theme-light .fab-search-pop{background:var(--bg2)}
-body.theme-light .fab-search-input{background:var(--bg3);color:var(--fg)}
-/* ── Theme toggle button ──────────────────────────────────── */
-#btn-theme{
-  background:var(--bg2);border:1px solid var(--b2);border-radius:50%;
-  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:17px;transition:background .2s,border-color .2s;
-  flex-shrink:0;
-}
-#btn-theme:hover{background:var(--b1)}
-html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:15px;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+html,body{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+a{color:inherit;text-decoration:none}
 
-/* ── LAYOUT ── */
-.app{min-height:100vh;display:flex;flex-direction:column;padding-top:calc(var(--safe-top) + 0px);background:var(--bg)}
-.header{padding:20px 20px 0;display:flex;align-items:center;gap:12px}
-.logo{width:40px;height:40px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;font-weight:800;color:#000;flex-shrink:0}
-.header-text h1{font-family:var(--font-head);font-size:18px;font-weight:700;line-height:1.1}
-.header-text p{font-size:12px;color:var(--fg3);margin-top:2px}
-.online-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;transition:background .3s}
-.header-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.refresh-dot{width:8px;height:8px;border-radius:50%;background:transparent;flex-shrink:0}
-.refresh-dot.spinning{background:#3b82f6;animation:pulse-blue .7s ease-in-out infinite}
-@keyframes pulse-blue{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 20px;padding-top:calc(var(--safe-top)+12px);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+.tb-logo{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#000;flex-shrink:0}
+.tb-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
+.btn-icon{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:16px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-icon:hover{background:var(--b1);color:var(--fg)}
 
-/* ── TABS ── */
-.tabs{display:flex;margin:20px 20px 0;background:var(--bg2);border-radius:var(--r2);padding:4px;border:1px solid var(--b1)}
-.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--fg2);font-family:var(--font-th);font-size:14px;font-weight:500;border-radius:var(--r);cursor:pointer;transition:all .2s;text-align:center}
-.tab.active{background:var(--bg3);color:var(--fg);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+/* LAYOUT */
+.page-wrap{max-width:680px;margin:0 auto;padding:28px 20px;padding-bottom:calc(var(--safe-bottom)+40px)}
 
-/* ── MAIN ── */
-.main{flex:1;padding:20px;padding-bottom:calc(90px + var(--safe-bottom));background:var(--bg)}
-.section{display:none}.section.active{display:block}
+/* SECTION HEADERS */
+.section-header{margin-bottom:24px}
+.section-title{font-family:var(--font-h);font-size:20px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:14px;color:var(--fg2)}
 
-/* ── FORM ── */
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r3);padding:24px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+
+/* BRAND PICKER */
+.brand-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.brand-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:12px 10px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500}
+.brand-opt:hover{border-color:var(--b2)}
+.brand-opt.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
+.brand-opt .brand-icon{font-size:20px;margin-bottom:4px}
+
+/* FORM */
 .form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:12px;font-weight:600;color:var(--fg2);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
-.form-group label .req{color:var(--accent);margin-left:2px}
-.form-group input,.form-group select,.form-group textarea{
-  width:100%;background:var(--bg2);border:1.5px solid var(--b2);border-radius:var(--r);
-  padding:13px 15px;color:var(--fg);font-family:var(--font-th);font-size:15px;outline:none;
-  transition:border-color .2s;appearance:none;-webkit-appearance:none
-}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
-.form-group input::placeholder,.form-group textarea::placeholder{color:var(--fg3)}
-.form-group select option{background:var(--bg2);color:var(--fg)}
-.form-group textarea{resize:none;min-height:100px;line-height:1.6}
+.form-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--fg2);margin-bottom:7px;letter-spacing:.03em}
+.form-label .req{color:var(--danger);font-size:14px}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:12px 14px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--fg3)}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+body.theme-light .form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+.form-textarea{resize:none;min-height:120px;line-height:1.7}
+.form-hint{font-size:11.5px;color:var(--fg3);margin-top:5px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.char-count{font-size:11px;color:var(--fg3);text-align:right;margin-top:4px}
 
-/* ── BUTTONS ── */
-.btn-submit{
-  width:100%;padding:16px;background:var(--accent);color:#000;
-  border:none;border-radius:var(--r2);font-family:var(--font-th);
-  font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;
-  transition:opacity .15s,transform .1s;letter-spacing:.01em
-}
-.btn-submit:hover{opacity:.88}.btn-submit:active{transform:scale(.98)}
-.btn-submit:disabled{opacity:.4;cursor:default}
+/* TYPE PILLS */
+.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.type-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:500}
+.type-opt:hover{border-color:var(--b2)}
+.type-opt.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
+.type-opt .type-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
 
-/* ── SUCCESS STATE ── */
-.success-card{
-  background:var(--bg2);border:1.5px solid rgba(0,229,160,.2);
-  border-radius:var(--r3);padding:28px 22px;text-align:center;margin-top:8px;
-  animation:fadeIn .4s ease
-}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.success-icon{font-size:44px;margin-bottom:12px}
-.success-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:8px}
-.ticket-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);
-  border-radius:8px;padding:8px 16px;margin:14px 0;
-  font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--accent)
-}
-.success-note{font-size:13px;color:var(--fg2);line-height:1.7;margin-bottom:18px}
-.btn-new{
-  padding:12px 24px;background:transparent;border:1.5px solid var(--b2);
-  color:var(--fg);border-radius:var(--r);font-family:var(--font-th);
-  font-size:14px;cursor:pointer;transition:border-color .15s
-}
-.btn-new:hover{border-color:var(--b3)}
-.btn-copy{
-  padding:7px 14px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);
-  color:var(--accent);border-radius:8px;font-size:12px;cursor:pointer;
-  margin-left:8px;font-family:var(--font-th);border:none;transition:background .15s
-}
-.btn-copy:hover{background:rgba(0,229,160,.2)}
+/* PRIORITY */
+.priority-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.prio-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 12px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500}
+.prio-opt:hover{border-color:var(--b2)}
+.prio-opt.selected{font-weight:700}
+.prio-low.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
+.prio-med.selected{border-color:var(--warn);background:rgba(245,158,11,.08);color:var(--warn)}
+.prio-high.selected{border-color:var(--danger);background:rgba(239,68,68,.08);color:var(--danger)}
+.prio-icon{font-size:18px;margin-bottom:3px}
 
-/* ── TRACK ── */
-.search-wrap{position:relative;margin-bottom:20px}
-.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--fg3);font-size:16px;pointer-events:none}
-.search-input{
-  width:100%;background:var(--bg2);border:1.5px solid var(--b2);
-  border-radius:var(--r2);padding:14px 14px 14px 42px;
-  color:var(--fg);font-family:var(--font-th);font-size:15px;outline:none;
-  transition:border-color .2s
-}
-.search-input:focus{border-color:var(--accent)}
-.search-input::placeholder{color:var(--fg3)}
-.search-hint{font-size:12px;color:var(--fg3);margin-top:8px;text-align:center}
+/* SUBMIT */
+.btn-submit{width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn-submit:hover{opacity:.88;transform:translateY(-1px)}
+.btn-submit:active{transform:translateY(0)}
+.btn-submit:disabled{opacity:.4;cursor:default;transform:none}
 
-/* ── TICKET CARD ── */
-.ticket-card{
-  background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);
-  padding:18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s
-}
-.ticket-card:hover{border-color:var(--b2)}
-.tc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-.tc-id{font-family:var(--font-mono);font-size:13px;color:var(--accent);font-weight:500}
-.tc-brand{font-size:11px;color:var(--fg3);margin-top:3px}
-.status-pill{
-  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;
-  flex-shrink:0;white-space:nowrap
-}
-.tc-type{font-size:14px;font-weight:600;margin-bottom:6px;line-height:1.4}
-.tc-detail{font-size:13px;color:var(--fg2);line-height:1.6;margin-bottom:10px;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.tc-meta{display:flex;gap:14px;font-size:11.5px;color:var(--fg3)}
+/* SUCCESS SCREEN */
+#success-screen{display:none;text-align:center;padding:60px 20px}
+.success-circle{width:80px;height:80px;border-radius:50%;background:rgba(0,229,160,.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 24px}
+.success-title{font-family:var(--font-h);font-size:24px;font-weight:700;margin-bottom:8px}
+.success-sub{font-size:15px;color:var(--fg2);margin-bottom:8px}
+.success-id{font-family:var(--font-m);font-size:20px;color:var(--accent);font-weight:600;margin:16px 0}
+.success-note{font-size:13px;color:var(--fg3);max-width:360px;margin:0 auto 32px;line-height:1.7}
+.btn-new{padding:12px 28px;background:var(--bg2);color:var(--fg);border:1.5px solid var(--b2);border-radius:var(--r2);font-family:var(--font-th);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 6px}
+.btn-new:hover{border-color:var(--fg)}
+.btn-track{padding:12px 28px;background:var(--accent);color:#000;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin:0 6px}
+.btn-track:hover{opacity:.85}
 
-/* ── TIMELINE ── */
-.timeline{margin-top:20px;padding-top:20px;border-top:1px solid var(--b1)}
-.tl-title{font-size:12px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px}
-.tl-steps{display:flex;gap:0;position:relative}
-.tl-step{flex:1;position:relative;padding-bottom:8px}
-.tl-step::after{content:'';position:absolute;top:12px;left:calc(50% + 12px);right:calc(-50% + 12px);height:2px;background:var(--b1)}
-.tl-step:last-child::after{display:none}
-.tl-step.done::after{background:var(--accent)}
-.tl-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--b2);background:var(--bg2);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:10px;position:relative;z-index:1}
-.tl-step.done .tl-dot{background:var(--accent);border-color:var(--accent);color:#000;font-size:11px}
-.tl-step.active .tl-dot{border-color:var(--accent);box-shadow:0 0 12px rgba(0,229,160,.4)}
-.tl-label{text-align:center;font-size:10.5px;color:var(--fg3);line-height:1.3}
-.tl-step.done .tl-label,.tl-step.active .tl-label{color:var(--fg)}
-.tl-step.cancelled .tl-dot{background:rgba(255,77,109,.2);border-color:#ff4d6d;color:#ff4d6d}
+/* TRACK SECTION */
+.track-wrap{background:var(--bg3);border-radius:var(--r2);padding:16px;margin-top:12px}
+.track-title{font-size:13px;font-weight:700;color:var(--fg2);margin-bottom:12px}
+.track-input-row{display:flex;gap:8px}
+.track-input{flex:1;background:var(--bg);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s}
+.track-input:focus{border-color:var(--accent)}
+.btn-track-go{padding:11px 16px;background:var(--bg2);border:1.5px solid var(--b2);border-radius:var(--r);color:var(--fg);font-family:var(--font-th);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-track-go:hover{border-color:var(--accent);color:var(--accent)}
+.track-result{margin-top:12px;display:none}
+.track-card{background:var(--bg);border:1px solid var(--b1);border-radius:var(--r);padding:14px}
+.track-status{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:8px}
+.track-type{font-size:15px;font-weight:600;margin-bottom:4px}
+.track-meta{font-size:12.5px;color:var(--fg2)}
+.s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
+.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
+.s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
+.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
+.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
+.s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
+.track-err{font-size:13px;color:var(--danger);margin-top:8px;display:none}
 
-/* ── HISTORY (recent from localStorage) ── */
-.history-title{font-size:12px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin:20px 0 12px}
-.history-toggle{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 14px;background:var(--bg2);border-radius:var(--r);
-  border:1px solid var(--b1);cursor:pointer;font-size:13px;color:var(--fg2);
-  transition:border-color .15s;user-select:none;margin-top:8px
+/* VALIDATION */
+.field-err{font-size:12px;color:var(--danger);margin-top:5px;display:none}
+.form-input.err,.form-select.err,.form-textarea.err{border-color:var(--danger)!important}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+20px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 20px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--accent);color:var(--accent)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+
+@media(max-width:600px){
+  .brand-grid{grid-template-columns:repeat(2,1fr)}
+  .type-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .page-wrap{padding:16px 14px;padding-bottom:40px}
 }
-.history-toggle:hover{border-color:var(--b2)}
-.history-toggle .ht-arrow{margin-left:auto;transition:transform .2s;font-size:10px}
-.history-toggle.open .ht-arrow{transform:rotate(180deg)}
-.history-dropdown{
-  background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);
-  margin-top:4px;overflow:hidden;
-  max-height:0;opacity:0;
-  transition:max-height .25s ease, opacity .2s ease;
-}
-.history-dropdown.open{max-height:500px;opacity:1}
-
-/* ══ TICKET DETAIL MODAL ══════════════════════════════════════ */
-.td-modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.65);
-  z-index:2000;display:flex;align-items:flex-end;justify-content:center;
-  backdrop-filter:blur(4px);opacity:0;visibility:hidden;
-  transition:opacity .25s ease,visibility .25s ease;
-}
-.td-modal-overlay.open{opacity:1;visibility:visible}
-.td-modal{
-  width:100%;max-width:520px;max-height:88vh;overflow-y:auto;
-  background:var(--bg2);border-radius:24px 24px 0 0;
-  padding:0 0 env(safe-area-inset-bottom,16px);
-  transform:translateY(40px);transition:transform .28s cubic-bezier(.22,.61,.36,1);
-  box-shadow:0 -8px 40px rgba(0,0,0,.5);
-}
-.td-modal-overlay.open .td-modal{transform:translateY(0)}
-.td-modal-handle{width:40px;height:4px;background:var(--b2);border-radius:4px;margin:12px auto 0}
-.td-modal-head{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  padding:16px 20px 12px;border-bottom:1px solid var(--b1);gap:12px;
-}
-.td-modal-id{font-family:var(--font-mono);font-size:14px;color:var(--accent);font-weight:600}
-.td-modal-brand{font-size:12px;color:var(--fg3);margin-top:3px}
-.td-modal-close{
-  background:var(--bg3);border:1px solid var(--b1);border-radius:50%;
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:16px;color:var(--fg2);flex-shrink:0;
-  transition:background .15s;
-}
-.td-modal-close:hover{background:var(--b1)}
-.td-modal-body{padding:16px 20px 20px}
-.td-modal-type{font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.4}
-.td-modal-detail{font-size:13px;color:var(--fg2);line-height:1.65;margin-bottom:14px;white-space:pre-line}
-.td-modal-meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--fg3);margin-bottom:16px}
-.td-modal-meta span{display:flex;align-items:center;gap:4px}
-.td-modal-work{
-  margin-top:14px;padding:14px;
-  background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.2);
-  border-radius:12px;
-}
-.td-modal-work-title{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.04em;margin-bottom:8px}
-.td-modal-work-text{font-size:13px;color:var(--fg2);line-height:1.6}
-.td-modal-parts{font-size:12px;color:var(--fg3);margin-top:6px}
-/* ── ทำให้ ticket-row ดูคลิกได้ชัดขึ้น ── */
-.ticket-row{position:relative}
-.ticket-row::after{
-  content:'›';position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  color:var(--fg3);font-size:18px;transition:color .15s,right .15s;
-}
-.ticket-row:hover::after{color:var(--accent);right:10px}
-
-.history-item{
-  display:flex;align-items:center;gap:10px;padding:12px;
-  background:transparent;cursor:pointer;
-  border-bottom:1px solid var(--b1);transition:background .15s
-}
-.history-item:last-child{border-bottom:none}
-.history-item:hover{background:var(--bg3,#1a1a22)}
-.branch-sug-item:hover{background:var(--bg3,#222)}
-.hi-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);flex:1}
-.hi-brand{font-size:12px;color:var(--fg2)}
-.hi-status{margin-left:auto}
-
-/* ── STATUS COLORS ── */
-.s-แก้ไข{background:rgba(255,150,64,.18);color:#c06a00}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.18);color:#0066cc}
-.s-รอดำเนินการ{background:rgba(130,60,180,.18);color:#7b2fbe}
-.s-เสร็จสิ้น{background:rgba(0,185,120,.18);color:#007a50}
-.s-ยกเลิก{background:rgba(255,77,109,.18);color:#c0003c}
-body:not(.theme-light) .s-แก้ไข{color:#ff9640}
-body:not(.theme-light) .s-อยู่ระหว่างดำเนินการ{color:#4db8ff}
-body:not(.theme-light) .s-รอดำเนินการ{color:#c084fc}
-body:not(.theme-light) .s-เสร็จสิ้น{color:#00e5a0}
-body:not(.theme-light) .s-ยกเลิก{color:#ff6b8a}
-
-/* ── ERROR / INFO ── */
-.alert{padding:12px 16px;border-radius:var(--r);font-size:13.5px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
-.alert-err{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);color:#cc0033}
-.alert-info{background:rgba(0,153,255,.08);border:1px solid rgba(0,153,255,.2);color:#0055cc}
-body:not(.theme-light) .alert-err{color:#ff8099}
-body:not(.theme-light) .alert-info{color:#66b3ff}
-
-/* ── EMPTY ── */
-.empty{text-align:center;padding:50px 20px;color:var(--fg3)}
-.empty-icon{font-size:40px;margin-bottom:10px}
-.empty-text{font-size:15px}
-.empty-sub{font-size:13px;margin-top:6px;opacity:.6}
-
-/* ── LOADING ── */
-.filter-row{display:flex;gap:8px;align-items:stretch}
-.filter-select{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r);color:var(--fg);font-size:13px;padding:0 12px;height:46px;min-width:0;flex:1;outline:none;appearance:none;-webkit-appearance:none}
-.filter-select:focus{border-color:var(--accent)}
-.filter-select::placeholder{color:var(--fg3)}
-@media(max-width:480px){.filter-row{flex-wrap:wrap}.filter-select{flex:1 1 45%}}
-.loading{display:flex;align-items:center;gap:10px;padding:30px;justify-content:center;color:var(--fg3)}
-.spinner{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── RESPONSIVE ── */
-@media(min-width:640px){
-  .app{max-width:520px;margin:0 auto;padding-top:40px}
-  .header{padding:0 0 0}
-  .tabs,.main{padding-left:0;padding-right:0}
-  .btn-submit{max-width:100%}
-}
-
-.group-section{margin-bottom:8px}
-.group-toggle{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--b1);cursor:pointer;font-size:13px;font-weight:600;color:var(--fg);user-select:none}
-.group-toggle .ht-arrow{transition:transform .2s;font-size:10px}
-.group-toggle.open .ht-arrow{transform:rotate(180deg)}
-.g-count{background:var(--accent);color:#000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px}
-.group-body{overflow:hidden;max-height:0;transition:max-height .25s ease}
-.group-body.open{max-height:1000px}
-.ticket-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .15s}
-.ticket-row:hover{background:var(--bg3,#1a1a22)}
-.ticket-row:last-child{border-bottom:none}
-.ticket-row-type{font-size:12px;color:var(--fg2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ticket-row-branch{font-size:11px;color:var(--fg3);white-space:nowrap}
-/* ═══════════════════════════════════════════════════
-   FAB NAVIGATION PANEL
-   - ปุ่มหลักมุมขวาล่าง fixed
-   - กางออก L-shape: แนวตั้ง (↑⌕↓) + แนวนอน (pagination)
-   - mobile: bottom ขยับเหนือ bottom-nav
-═══════════════════════════════════════════════════ */
-.fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
-.fab-wrap *{pointer-events:auto}
-.fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
-.fab-main:hover{background:#00c98a}
-.fab-wrap.fab-open .fab-main{transform:rotate(45deg)}
-/* Top branch — แนวตั้ง ↑⌕↓ */
-.fab-branch-top{position:absolute;right:2px;bottom:calc(50px + 12px);display:flex;flex-direction:column-reverse;align-items:center;gap:8px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
-.fab-wrap.fab-open .fab-branch-top{opacity:1;visibility:visible}
-/* Left branch — แนวนอน pagination */
-.fab-branch-left{position:absolute;right:calc(50px + 12px);bottom:2px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;max-width:calc(100vw - 90px);overflow-x:auto;padding:4px 2px;scrollbar-width:none}
-.fab-branch-left::-webkit-scrollbar{display:none}
-.fab-wrap.fab-open .fab-branch-left{opacity:1;visibility:visible}
-/* FAB buttons */
-.fab-btn{min-width:40px;height:40px;border:none;border-radius:20px;background:var(--bg3);color:var(--fg);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);padding:0 12px;font-size:13px;font-family:var(--font-th);white-space:nowrap;transition:transform .15s,background .15s,opacity .15s;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center}
-.fab-btn:hover{transform:translateY(-2px);background:var(--bg4,#1c1c24)}
-.fab-btn.fab-icon{width:40px;min-width:40px;padding:0;font-size:16px}
-.fab-btn.fab-active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
-.fab-btn.fab-disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-/* Search popup */
-.fab-search-pop{position:absolute;right:calc(40px + 16px);bottom:calc(40px + 56px);width:min(260px,calc(100vw - 100px));background:var(--bg2);border:1px solid var(--b2);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .2s ease;z-index:10}
-.fab-search-pop.fab-search-open{opacity:1;visibility:visible;transform:translateY(0)}
-.fab-search-pop label{display:block;font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
-.fab-search-input{width:100%;height:40px;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;padding:0 12px;outline:none;color:var(--fg);font-family:var(--font-th);font-size:14px;transition:border-color .2s}
-.fab-search-input:focus{border-color:var(--accent)}
-.fab-search-hint{margin-top:7px;font-size:11px;color:var(--fg3);line-height:1.5}
-/* per-page selector in fab */
-.fab-perpage{background:var(--bg3);border:1px solid var(--b2);border-radius:20px;color:var(--fg);font-family:var(--font-th);font-size:12px;padding:0 10px;height:40px;outline:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-/* Mobile: ขยับเหนือ bottom-nav */
-@media(max-width:768px){
-  .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
-  .fab-branch-left{max-width:calc(100vw - 80px)}
-}
-
-/* Report: no bottom-nav so FAB stays at default bottom */
-@media(max-width:768px){
-  .fab-wrap{bottom:16px}
-}
-
-
-/* CLOCK + TEMP widget — report header */
-.clock-widget{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--fg2);background:var(--b1);border:1px solid var(--b2);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0;margin-top:6px}
-#clock-time{font-family:monospace;font-size:12px;color:var(--fg);font-weight:500}
-#clock-temp{color:var(--accent);font-weight:600}
-
 </style>
 </head>
 <body>
-<style>
-#app-splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
-#app-splash.hide{opacity:0;pointer-events:none}
-.splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
-@keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
-.splash-text{font-size:13px;color:var(--fg3);font-family:'Noto Sans Thai',sans-serif}
-.splash-bar{width:160px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
-.splash-fill{height:100%;background:#00e5a0;border-radius:2px;animation:splashLoad 2s ease-out forwards}
-@keyframes splashLoad{from{width:0}to{width:85%}}
-</style>
-<div id="app-splash">
-  <div class="splash-logo">IT</div>
-  <div class="splash-bar"><div class="splash-fill"></div></div>
-  <div class="splash-text">กำลังโหลด...</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo">IT</div>
+  <div class="tb-title">แจ้งปัญหา IT Support</div>
+  <button class="btn-icon" id="btn-theme" title="สลับธีม">🌙</button>
+  <a href="/admin" class="btn-icon" title="Admin">⚙️</a>
 </div>
 
-<!-- ══ TICKET DETAIL MODAL ═══════════════════════════════════ -->
-<div class="td-modal-overlay" id="td-modal-overlay" onclick="closeTicketModal(event)">
-  <div class="td-modal" id="td-modal">
-    <div class="td-modal-handle"></div>
-    <div class="td-modal-head">
-      <div>
-        <div class="td-modal-id" id="tdm-id">—</div>
-        <div class="td-modal-brand" id="tdm-brand">—</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="status-pill" id="tdm-status-pill">—</span>
-        <button class="td-modal-close" onclick="closeTicketModal()">✕</button>
-      </div>
+<!-- MAIN FORM -->
+<div class="page-wrap" id="form-wrap">
+  <div class="section-header">
+    <div class="section-title">แจ้งปัญหา IT 🛠️</div>
+    <div class="section-sub">กรอกข้อมูลให้ครบถ้วน ทีม IT จะรับงานและแจ้งกลับทาง LINE</div>
+  </div>
+
+  <!-- BRAND -->
+  <div class="card">
+    <div class="card-title">🏪 เลือกแบรนด์ <span style="color:var(--danger)">*</span></div>
+    <div class="brand-grid" id="brand-grid">
+      <div class="brand-opt" onclick="selectBrand(this,&quot;Dunkin'&quot;)"><div class="brand-icon">🍩</div>Dunkin'</div>
+      <div class="brand-opt" onclick="selectBrand(this,'Greyhound Cafe')"><div class="brand-icon">☕</div>Greyhound Cafe</div>
+      <div class="brand-opt" onclick="selectBrand(this,'Greyhound Original')"><div class="brand-icon">🐕</div>Greyhound Original</div>
+      <div class="brand-opt" onclick="selectBrand(this,'Au Bon Pain')"><div class="brand-icon">🥐</div>Au Bon Pain</div>
+      <div class="brand-opt" onclick="selectBrand(this,'Funky Fries')"><div class="brand-icon">🍟</div>Funky Fries</div>
     </div>
-    <div class="td-modal-body">
-      <div class="td-modal-type" id="tdm-type">—</div>
-      <div class="td-modal-detail" id="tdm-detail">—</div>
-      <div class="td-modal-meta" id="tdm-meta"></div>
-      <div class="timeline">
-        <div class="tl-title">สถานะงาน</div>
-        <div class="tl-steps" id="tdm-timeline"></div>
+    <div class="field-err" id="err-brand">กรุณาเลือกแบรนด์</div>
+  </div>
+
+  <!-- BRANCH INFO -->
+  <div class="card">
+    <div class="card-title">📍 ข้อมูลสาขา</div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">รหัสสาขา / Branch Code <span class="req">*</span></label>
+        <input class="form-input" id="f-branch" type="text" placeholder="เช่น DK-MBK-04, ABP-SIAM-01" autocomplete="off"/>
+        <div class="field-err" id="err-branch">กรุณากรอกรหัสสาขา</div>
       </div>
-      <div class="td-modal-work" id="tdm-work" style="display:none">
-        <div class="td-modal-work-title">📋 รายงานช่าง</div>
-        <div class="td-modal-work-text" id="tdm-work-text"></div>
-        <div class="td-modal-parts" id="tdm-parts" style="display:none"></div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">ชื่อสาขา (ถ้ามี)</label>
+        <input class="form-input" id="f-branchname" type="text" placeholder="เช่น MBK Floor 4, สยาม Paragon"/>
       </div>
     </div>
   </div>
+
+  <!-- REPORTER -->
+  <div class="card">
+    <div class="card-title">👤 ข้อมูลผู้แจ้ง</div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">ชื่อ-สกุล <span class="req">*</span></label>
+        <input class="form-input" id="f-reporter" type="text" placeholder="ชื่อพนักงานที่แจ้ง"/>
+        <div class="field-err" id="err-reporter">กรุณากรอกชื่อผู้แจ้ง</div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">เบอร์โทรศัพท์ <span class="req">*</span></label>
+        <input class="form-input" id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/>
+        <div class="field-err" id="err-phone">กรุณากรอกเบอร์โทรศัพท์</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROBLEM TYPE -->
+  <div class="card">
+    <div class="card-title">🔍 ประเภทปัญหา <span style="color:var(--danger)">*</span></div>
+    <div class="type-grid" id="type-grid">
+      <div class="type-opt" onclick="selectType(this,'POS System')"><div class="type-icon">🖥️</div>POS System</div>
+      <div class="type-opt" onclick="selectType(this,'กล้องวงจรปิด (CCTV)')"><div class="type-icon">📷</div>กล้องวงจรปิด (CCTV)</div>
+      <div class="type-opt" onclick="selectType(this,'ระบบเครือข่าย / Internet')"><div class="type-icon">📡</div>ระบบเครือข่าย / Internet</div>
+      <div class="type-opt" onclick="selectType(this,'Printer / Barcode')"><div class="type-icon">🖨️</div>Printer / Barcode</div>
+      <div class="type-opt" onclick="selectType(this,'คอมพิวเตอร์ / อุปกรณ์ IT')"><div class="type-icon">💻</div>คอมพิวเตอร์ / อุปกรณ์ IT</div>
+      <div class="type-opt" onclick="selectType(this,'อื่นๆ')"><div class="type-icon">📋</div>อื่นๆ</div>
+    </div>
+    <div class="field-err" id="err-type" style="margin-top:8px">กรุณาเลือกประเภทปัญหา</div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="card">
+    <div class="card-title">📝 รายละเอียดปัญหา</div>
+    <div class="form-group">
+      <label class="form-label">หัวข้อสั้นๆ <span class="req">*</span></label>
+      <input class="form-input" id="f-subject" type="text" placeholder="เช่น เครื่อง POS ค้าง ไม่ยอม Print ใบเสร็จ"/>
+      <div class="field-err" id="err-subject">กรุณากรอกหัวข้อปัญหา</div>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">รายละเอียดเพิ่มเติม</label>
+      <textarea class="form-textarea" id="f-detail" placeholder="อธิบายปัญหาที่พบ เช่น เกิดขึ้นตอนไหน มี Error message อะไร ลองทำอะไรไปแล้วบ้าง..."></textarea>
+      <div class="form-hint">ยิ่งละเอียดมาก ช่าง IT แก้ได้เร็วขึ้น 🚀</div>
+    </div>
+  </div>
+
+  <!-- PRIORITY -->
+  <div class="card">
+    <div class="card-title">⚡ ระดับความเร่งด่วน</div>
+    <div class="priority-row">
+      <div class="prio-opt prio-low selected" id="prio-low" onclick="selectPriority('low')">
+        <div class="prio-icon">🟢</div>
+        <div style="font-weight:700">ปกติ</div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:2px">SLA 24 ชม.</div>
+      </div>
+      <div class="prio-opt prio-med" id="prio-med" onclick="selectPriority('med')">
+        <div class="prio-icon">🟡</div>
+        <div style="font-weight:700">เร่งด่วน</div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:2px">SLA 8 ชม.</div>
+      </div>
+      <div class="prio-opt prio-high" id="prio-high" onclick="selectPriority('high')">
+        <div class="prio-icon">🔴</div>
+        <div style="font-weight:700">ฉุกเฉิน</div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:2px">กระทบการขาย</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+    📤 ส่งแจ้งปัญหา
+  </button>
+
+  <!-- TRACK -->
+  <div style="margin-top:24px">
+    <div class="track-wrap">
+      <div class="track-title">🔍 ตรวจสอบสถานะ Ticket</div>
+      <div class="track-input-row">
+        <input class="track-input" id="track-id" placeholder="กรอก Ticket ID เช่น IT-1042" autocomplete="off"/>
+        <button class="btn-track-go" onclick="trackTicket()">ค้นหา</button>
+      </div>
+      <div class="track-result" id="track-result"></div>
+      <div class="track-err" id="track-err">ไม่พบ Ticket นี้ กรุณาตรวจสอบ ID อีกครั้ง</div>
+    </div>
+  </div>
 </div>
+
+<!-- SUCCESS SCREEN -->
+<div id="success-screen" class="page-wrap">
+  <div class="success-circle">✅</div>
+  <div class="success-title">ส่งแจ้งปัญหาเรียบร้อย!</div>
+  <div class="success-sub">ทีม IT ได้รับแจ้งแล้ว และจะดำเนินการโดยเร็วที่สุด</div>
+  <div class="success-id" id="success-ticket-id">—</div>
+  <div class="success-note">เก็บ Ticket ID ไว้เพื่อติดตามสถานะ<br>ทีม IT จะแจ้งความคืบหน้าผ่าน LINE</div>
+  <div>
+    <button class="btn-new" onclick="resetForm()">📋 แจ้งปัญหาใหม่</button>
+    <button class="btn-track" onclick="goTrack()">🔍 ติดตามสถานะ</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-// ซ่อน splash เมื่อหน้าพร้อม
-window.hideSplash = function(){
-  const s = document.getElementById('app-splash');
-  if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
-};
-// บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 3000);
-</script>
-<div class="app">
-  <div class="header">
-    <div class="logo">IT</div>
-    <div class="header-text">
-      <h1>IT Support</h1>
-      <p>ระบบแจ้งปัญหาและติดตามงาน</p>
-    </div>
-    <div class="header-right" style="flex-direction:column;align-items:flex-end;gap:4px">
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="refresh-dot" id="refresh-dot"></div>
-      <div class="online-dot" id="dot"></div>
-      <button id="btn-theme" onclick="toggleTheme()" title="เปลี่ยนธีม">☀️</button>
-    </div>
-    <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
-  </div>
-  </div>
+const API='';
+let selectedBrand='';
+let selectedType='';
+let selectedPriority='low';
+let lastTicketId='';
 
-  <div class="tabs" style="margin-top:20px">
-    <button class="tab active" data-tab="submit">✏️ แจ้งปัญหา</button>
-    <button class="tab" data-tab="track">🔍 ติดตาม</button>
-  </div>
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2800);}
 
-  <div class="main">
-    <!-- SUBMIT TAB -->
-    <div class="section active" id="tab-submit">
-      <div id="form-area">
-        <div id="form-error" class="alert alert-err" style="display:none"></div>
-        <div class="form-group">
-          <label>ชื่อผู้แจ้ง <span class="req">*</span></label>
-          <input type="text" id="f-name" placeholder="กรอกชื่อ-นามสกุล" autocomplete="name"/>
-        </div>
-        <div class="form-group">
-          <label>เบอร์ติดต่อ <span class="req">*</span></label>
-          <input type="tel" id="f-phone" placeholder="0812345678" autocomplete="tel"/>
-        </div>
-        <div class="form-group">
-          <label>แบรนด์ <span class="req">*</span></label>
-          <select id="f-brand">
-            <option value="">— เลือกแบรนด์ —</option>
-            <option value="Dunkin'">Dunkin'</option>
-            <option value="Greyhound Cafe">Greyhound Cafe</option>
-            <option value="Greyhound Original">Greyhound Original</option>
-            <option value="Au Bon Pain">Au Bon Pain</option>
-            <option value="Funky Fries">Funky Fries</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="position:relative">
-            <label>รหัสสาขา</label>
-            <input type="text" id="f-branch" placeholder="พิมพ์หรือเลือกสาขา"
-                list="branch-list-form" autocomplete="new-password"/>
-            <datalist id="branch-list-form"></datalist>
-          </div>
-          <div class="form-group">
-            <label>ประเภทปัญหา <span class="req">*</span></label>
-            <select id="f-type">
-              <option value="">— เลือกประเภทปัญหา —</option>
-              <option>งานระบบไฟฟ้า/แสงว่าง</option>
-              <option>งานระบบประปาและสุขาภิบาล</option>
-              <option>งานระบบปรับอากาศ</option>
-              <option>งานเครื่องจักร/อุปกรณ์เฉพาะทาง</option>
-              <option>เครื่องทำกาแฟ/เครื่องบดกาแฟ</option>
-              <option>เครื่องทำน้ำร้อน</option>
-              <option>ตู้แช่/ตู้เย็น</option>
-              <option>เครื่องกรอกน้ำ/ไส้กรอกน้ำ</option>
-              <option>เครื่องซีลแก้ว</option>
-              <option>งานโครงสร้าง</option>
-              <option>กล้องวงจรปิด</option>
-              <option>งานระบบ IT/Network</option>
-              <option>อื่นๆ</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>สถานที่/โซน</label>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="text" id="f-location" placeholder="เช่น ชั้น 2 / ครัว / เคาน์เตอร์" style="flex:1"/>
-            <button type="button" id="btn-geo" onclick="openLocationPicker()" title="เลือกตำแหน่งจากแผนที่" style="padding:0 14px;height:40px;background:var(--accent,#00e5a0);border:none;border-radius:8px;color:#000;cursor:pointer;font-size:14px;font-weight:700;white-space:nowrap">📍 เลือก</button>
-          </div>
-          <div id="geo-status" style="font-size:11px;color:var(--fg3);margin-top:4px;display:none"></div>
-        </div>
-        <div class="form-group">
-          <label>รายละเอียดปัญหา <span class="req">*</span></label>
-          <textarea id="f-detail" placeholder="อธิบายอาการปัญหา เช่น เครื่องปรับอากาศไม่ทำงาน เปิดไม่ติดตั้งแต่เช้า..." maxlength="500"></textarea>
-          <div class="char-count"><span id="char-num">0</span>/500</div>
-        </div>
-        <button class="btn-submit" id="btn-submit">
-          <span id="submit-text">📤 ส่งแจ้งปัญหา</span>
-        </button>
-      </div>
-      <div id="success-section" style="display:none;text-align:center;padding:32px 16px">
-        <div style="font-size:44px;margin-bottom:12px">✅</div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:8px">ส่งแจ้งปัญหาสำเร็จ!</div>
-        <div style="font-size:13px;color:var(--fg2);margin-bottom:16px">หมายเลขอ้างอิง: <span id="success-id" style="font-family:var(--font-mono);color:var(--accent)">—</span></div>
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-          <button class="btn-copy" id="btn-copy">คัดลอก</button>
-          <button class="btn-new" id="btn-new">แจ้งปัญหาใหม่</button>
-        </div>
-      </div>
-      <div id="success-area" style="display:none"></div>
-    </div>
-
-    <!-- TRACK TAB -->
-    <div class="section" id="tab-track">
-      <!-- บรรทัด 1: ค้นหาด้วย Ticket ID -->
-      <div class="filter-row" style="margin-bottom:8px">
-        <div class="search-wrap" style="flex:1">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" id="track-input" type="text" placeholder="ค้นหาด้วย Ticket ID / เบอร์โทร (ไม่บังคับ)"/>
-        </div>
-      </div>
-      <!-- บรรทัด 2: แบรนด์ + สาขา -->
-      <div class="filter-row">
-        <select class="filter-select" id="f-filter-brand" required style="flex:1">
-          <option value="">— แบรนด์ —</option>
-          <option value="Dunkin'">Dunkin'</option>
-          <option value="Greyhound Cafe">Greyhound Cafe</option>
-          <option value="Greyhound Original">Greyhound Original</option>
-          <option value="Au Bon Pain">Au Bon Pain</option>
-          <option value="Funky Fries">Funky Fries</option>
-        </select>
-        <div style="position:relative;flex:1">
-          <input class="filter-select" id="f-filter-branch" type="text" placeholder="รหัสสาขา"
-            list="branch-list-track" autocomplete="new-password" style="width:100%"
-            oninput="triggerSearch()"
-            onchange="triggerSearch()"/>
-          <datalist id="branch-list-track"></datalist>
-        </div>
-      </div>
-      <div class="search-hint" id="filter-hint" style="color:var(--danger);display:none">⚠️ กรุณาเลือกแบรนด์และกรอกรหัสสาขา</div>
-      <div class="search-hint" id="filter-hint-ok" style="display:none">ค้นหา Ticket ด้วย ID หรือเบอร์มือถือที่ใช้แจ้ง</div>
-      <div class="search-hint" id="filter-hint-default">กรอกแบรนด์และรหัสสาขาเพื่อค้นหา</div>
-      <div id="track-result"></div>
-      <div id="track-history-wrap" style="position:relative">
-        <div id="track-history"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════
-     FAB NAVIGATION PANEL (Report)
-     - search popup → เชื่อม #f-search input เดิม
-     - pagination → แบ่งหน้าผลใน #track-result
-═══════════════════════════════════════════════════ -->
-<div class="fab-wrap" id="rpt-fab-wrap">
-  <div class="fab-search-pop" id="fab-search-pop">
-    <label>ค้นหา Ticket</label>
-    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="ID, ชื่อ, ประเภท…"/>
-    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
-  </div>
-  <div class="fab-branch-top">
-    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
-    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
-    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
-  </div>
-  <div class="fab-branch-left" id="fab-pag-bar"></div>
-  <button class="fab-main" id="fab-main-btn">+</button>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════════
-// GLOBAL FUNCTIONS — ต้องเป็น global เพราะ HTML onclick เรียกโดยตรง
-// ══════════════════════════════════════════════════════════════
-
-// ── Theme Toggle ──────────────────────────────────────────────
-function applyTheme(mode) {
-  const isLight = mode !== 'dark';
-  document.body.classList.toggle('theme-light', isLight);
-  const btn = document.getElementById('btn-theme');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
-  try { localStorage.setItem('report_theme', mode); } catch(_) {}
+function selectBrand(el,val){
+  document.querySelectorAll('.brand-opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBrand=val;
+  document.getElementById('err-brand').style.display='none';
 }
-function toggleTheme() {
-  try {
-    const cur = localStorage.getItem('report_theme') || 'light';
-    applyTheme(cur === 'light' ? 'dark' : 'light');
-  } catch(e) { console.warn('toggleTheme:', e.message); }
+function selectType(el,val){
+  document.querySelectorAll('.type-opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedType=val;
+  document.getElementById('err-type').style.display='none';
 }
-// init theme ทันที ก่อน DOMContentLoaded เพื่อไม่ให้กระพริบ
-(function(){
-  try {
-    const saved = localStorage.getItem('report_theme') || 'light';
-    applyTheme(saved);
-  } catch(_) {
-    document.body.classList.add('theme-light');
-  }
-})();
-
-// ── Ticket Detail Modal ───────────────────────────────────────
-function openTicketModal(rid) {
-  // allTickets อยู่ใน scope ของ DOMContentLoaded
-  // ใช้ window._allTickets แทน
-  const tickets = window._allTickets || [];
-  const t = tickets.find(x => x._recordId === rid || x.id === rid);
-  if (!t) { console.warn('openTicketModal: ticket not found', rid); return; }
-
-  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
-  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
-  const STATUS_IDX = {'แก้ไข':0,'รอดำเนินการ ⏱️':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'ตรวจงาน':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':-1};
-  const si = STATUS_IDX[t.status] ?? 0;
-  const isCancelled = t.status === 'ยกเลิก ❌';
-
-  function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function _safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
-  function _cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
-
-  document.getElementById('tdm-id').textContent    = '🎫 ' + (t.id || t._recordId || '—');
-  document.getElementById('tdm-brand').textContent = (t.brand||'-') + (t.branchCode ? ' · ' + t.branchCode : '');
-
-  const pill = document.getElementById('tdm-status-pill');
-  pill.textContent = t.status || 'แก้ไข';
-  pill.className   = 'status-pill s-' + _cssStatus(t.status);
-
-  document.getElementById('tdm-type').textContent   = t.type || '—';
-  document.getElementById('tdm-detail').textContent = _safe(t.detail) || '-';
-
-  const metaItems = [
-    t.reporter     ? '👤 ' + t.reporter   : '',
-    t.sentDate     ? '📅 ' + t.sentDate   : '',
-    t.engineerName ? '🔧 ' + t.engineerName : '',
-    t.phone        ? '📞 ' + t.phone      : '',
-    (t.location && t.location.length < 100 && !t.location.startsWith('http')) ? '📍 ' + t.location : '',
-  ].filter(Boolean);
-  document.getElementById('tdm-meta').innerHTML = metaItems.map(m => `<span>${_esc(m)}</span>`).join('');
-
-  const steps = TL_LABELS.map((label, i) => `
-    <div class="tl-step ${isCancelled ? 'cancelled' : (i < si ? 'done' : i === si ? 'active' : '')}">
-      <div class="tl-dot">${isCancelled ? '✕' : i < si ? '✓' : i === si ? TL_ICONS[i] : ''}</div>
-      <div class="tl-label">${label}</div>
-    </div>`).join('');
-  document.getElementById('tdm-timeline').innerHTML = steps;
-
-  const workEl = document.getElementById('tdm-work');
-  if (t.workDetail) {
-    workEl.style.display = 'block';
-    document.getElementById('tdm-work-text').textContent = t.workDetail;
-    const partsEl = document.getElementById('tdm-parts');
-    if (t.partsUsed) { partsEl.style.display='block'; partsEl.textContent='อะไหล่: '+t.partsUsed; }
-    else              { partsEl.style.display='none'; }
-  } else {
-    workEl.style.display = 'none';
-  }
-
-  document.getElementById('td-modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+function selectPriority(p){
+  selectedPriority=p;
+  document.querySelectorAll('.prio-opt').forEach(x=>x.classList.remove('selected'));
+  document.getElementById('prio-'+p).classList.add('selected');
 }
 
-function closeTicketModal(e) {
-  if (e && e.target !== document.getElementById('td-modal-overlay')) return;
-  document.getElementById('td-modal-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeTicketModal();
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-
-// ── Brand from URL path ───────────────────────────────────────
-(function applyBrandFromUrl(){
-  const BRAND_MAP = {
-    'dunkin':             "Dunkin'",
-    'greyhound cafe':     'Greyhound Cafe',
-    'greyhound original': 'Greyhound Original',
-    'au bon pain':        'Au Bon Pain',
-    'funky fries':        'Funky Fries',
-  };
-  const raw   = decodeURIComponent(window.location.pathname.split('/').pop()||'');
-  const slug  = raw.replace(/[+]/g,' ').trim().toLowerCase();
-  const brand = BRAND_MAP[slug];
-  if(!brand) return;
-
-  // Lock form brand select
-  const fBrand = document.getElementById('f-brand');
-  if(fBrand){ fBrand.value=brand; fBrand.disabled=true; fBrand.style.cssText+='opacity:.6;cursor:not-allowed'; }
-
-  // Lock filter brand select
-  const fFilter = document.getElementById('f-filter-brand');
-  if(fFilter){ fFilter.value=brand; fFilter.disabled=true; fFilter.style.cssText+='opacity:.6;cursor:not-allowed'; }
-
-  // Show brand name under header
-  const hdr = document.querySelector('.header-text');
-  if(hdr){
-    const b = document.createElement('div');
-    b.style.cssText = 'font-size:11px;color:var(--accent);font-weight:600;margin-top:2px';
-    b.textContent = brand;
-    hdr.appendChild(b);
-  }
-  // Auto-trigger search
-  setTimeout(()=>{ if(typeof triggerSearch==='function') triggerSearch(); }, 600);
-})();
-
-// ── State ────────────────────────────────────────────────────
-const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','ตรวจงาน','อยู่ระหว่างดำเนินการ ⚙️','เสร็จสิ้น ✅','ยกเลิก ❌'];
-// ✅ expose allTickets ให้ global functions เข้าถึงได้
-let allTickets = [];
-window._allTickets = allTickets;
-function _setAllTickets(arr) { allTickets = arr; window._allTickets = arr; }
-let sseConn = null;
-let trackTimer = null;
-
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
-function safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
-
-// ── SSE ──────────────────────────────────────────────────────
-function connectSSE(){
-  sseConn = new EventSource('/api/events');
-  sseConn.addEventListener('ticket_updated', async e => {
-    try{
-      const d = JSON.parse(e.data);
-      _setAllTickets(allTickets.map(t => t._recordId===d.recordId ? {...t, status:d.status||t.status} : t));
-      renderHistory();
-      // อัปเดต modal ถ้ากำลังเปิดอยู่
-      const overlay = document.getElementById('td-modal-overlay');
-      if(overlay && overlay.classList.contains('open')){
-        const shownId = document.getElementById('tdm-id')?.textContent?.replace('🎫 ','').trim();
-        if(shownId === d.recordId || shownId === (allTickets.find(x=>x._recordId===d.recordId)?.id)) {
-          openTicketModal(d.recordId);
-        }
-      }
-      // อัปเดต track-result ถ้าแสดง card เดิม
-      const shown = document.getElementById('track-result').dataset.rid;
-      if(shown && shown===d.recordId) searchById(d.recordId, true);
-    }catch(_){}
+function validate(){
+  let ok=true;
+  if(!selectedBrand){document.getElementById('err-brand').style.display='block';ok=false;}
+  ['branch','reporter','phone','subject'].forEach(id=>{
+    const el=document.getElementById('f-'+id);
+    const err=document.getElementById('err-'+id);
+    if(!el.value.trim()){el.classList.add('err');err.style.display='block';ok=false;}
+    else{el.classList.remove('err');err.style.display='none';}
   });
-  sseConn.onopen  = () => { document.getElementById('dot').style.background='#00e5a0'; };
-  sseConn.onerror = () => { document.getElementById('dot').style.background='#ff4d6d'; setTimeout(connectSSE,5000); };
+  if(!selectedType){document.getElementById('err-type').style.display='block';ok=false;}
+  return ok;
 }
-connectSSE();
 
-// ── Load tickets (cached) ────────────────────────────────────
-async function loadTickets(){
+async function submitForm(){
+  if(!validate()){toast('กรุณากรอกข้อมูลให้ครบ','error');return;}
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=true;btn.textContent='⏳ กำลังส่ง...';
+  const payload={
+    brand:selectedBrand,
+    branchCode:document.getElementById('f-branch').value.trim(),
+    branch:document.getElementById('f-branchname').value.trim()||document.getElementById('f-branch').value.trim(),
+    reporter:document.getElementById('f-reporter').value.trim(),
+    phone:document.getElementById('f-phone').value.trim(),
+    type:selectedType,
+    detail:document.getElementById('f-subject').value.trim()+(document.getElementById('f-detail').value.trim()?'\n\n'+document.getElementById('f-detail').value.trim():''),
+    priority:selectedPriority,
+    status:'รอดำเนินการ ⏱️',
+    sentDate:new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit'})
+  };
   try{
-    const ctrl = new AbortController();
-    const tid  = setTimeout(()=>ctrl.abort(), 12000); // timeout 8s
-    const r = await fetch('/api/tickets', { signal: ctrl.signal });
-    clearTimeout(tid);
-    const d = await r.json();
-    if(d.ok) _setAllTickets(d.tickets);
+    const r=await fetch(API+'/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.message||'ส่งไม่สำเร็จ');
+    const tid=d.ticket?.id||d.id||d.recordId||('IT-'+Date.now().toString().slice(-4));
+    lastTicketId=tid;
+    document.getElementById('success-ticket-id').textContent='Ticket ID: '+tid;
+    document.getElementById('form-wrap').style.display='none';
+    document.getElementById('success-screen').style.display='block';
+    window.scrollTo(0,0);
   }catch(e){
-    console.warn('[loadTickets]', e.message);
+    toast('❌ '+e.message,'error');
+    btn.disabled=false;btn.textContent='📤 ส่งแจ้งปัญหา';
   }
 }
 
-// ── Initial load ─────────────────────────────────────────────
-(async()=>{
-  // แสดงหน้าทันที แล้วโหลด data ใน background
-  renderHistory();
-  loadBranches();
-  window.hideSplash?.();
-  // init branch suggest dropdowns
-  // branch dropdowns are event-driven (onfocus/oninput/onclick) // แสดง UI ก่อนเลย
-  try{
-    await loadTickets();
-    renderHistory();
-  }catch(e){ console.error('boot error:',e); }
-})();
-
-// ── Auto-refresh ทุก 30 วิ ────────────────────────────────────
-setInterval(async()=>{
-  const rdot = document.getElementById('refresh-dot');
-  if(rdot) rdot.classList.add('spinning');
-  try{
-    await loadTickets();
-    renderHistory();
-    const shown = document.getElementById('track-result').dataset.rid;
-    if(shown) searchById(shown, true);
-  } finally {
-    if(rdot) setTimeout(()=>rdot.classList.remove('spinning'), 500);
-  }
-}, 30000);
-
-// ── Tabs ──────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(t => {
-  t.onclick = () => {
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
-    if(t.dataset.tab==='track') renderHistory();
-  };
-});
-
-// ── Search input ──────────────────────────────────────────────
-function triggerSearch(){
-  clearTimeout(trackTimer);
-  const brand  = (document.getElementById('f-filter-brand')?.value||'').trim();
-  const branch = (document.getElementById('f-filter-branch')?.value||'').trim();
-  const q      = (document.getElementById('track-input')?.value||'').trim();
-  // Brand และ Branch บังคับ
-  if(!brand || !branch){
-    document.getElementById('filter-hint').style.display = 'flex';
-    document.getElementById('filter-hint-default').style.display = 'none';
-    document.getElementById('filter-hint-ok').style.display = 'none';
-    document.getElementById('track-result').innerHTML='';
-    document.getElementById('track-result').dataset.rid='';
-    renderHistory();
-    return;
-  }
-  document.getElementById('filter-hint').style.display = 'none';
-  document.getElementById('filter-hint-default').style.display = 'none';
-  document.getElementById('filter-hint-ok').style.display = 'block';
-  trackTimer = setTimeout(()=>doSearch(q, brand, branch), 300);
-}
-document.getElementById('track-input').oninput = triggerSearch;
-document.getElementById('f-filter-brand').onchange = function(){
-  triggerSearch();
-  // rebuild branch suggest for new brand
-  const inp = document.getElementById('f-filter-branch');
-  if(inp) inp.dispatchEvent(new Event('input'));
-};
-document.getElementById('f-filter-branch').oninput = triggerSearch;
-
-async function doSearch(q, brand, branch){
-  if(!allTickets.length) await loadTickets();
-  const ql = (q||'').toLowerCase();
-  const bl = (branch||'').toLowerCase();
-  let found = allTickets.filter(t => {
-    // Brand และ Branch บังคับตรง
-    const brandOk  = brand  ? (t.brand||'').toLowerCase().includes(brand.toLowerCase()) : true;
-    const branchOk = branch ? (t.branchCode||'').toLowerCase().includes(bl) : true;
-    if(!brandOk || !branchOk) return false;
-    // keyword ไม่บังคับ
-    if(!ql) return true;
-    return (t.id||'').toLowerCase().includes(ql) ||
-           (t.phone||'').includes(ql) ||
-           (t.reporter||'').toLowerCase().includes(ql) ||
-           (t.detail||'').toLowerCase().includes(ql);
-  });
-  const el = document.getElementById('track-result');
-  el.dataset.rid = '';
-  if(!found.length){
-    el.innerHTML='<div class="alert alert-err">⚠️ ไม่พบ Ticket ของ <b>'+esc(brand)+'</b> สาขา <b>'+esc(branch)+'</b>'+(ql?' ที่ตรงกับ "'+esc(q)+'"':'')+'</div>';
-    return;
-  }
-  el.innerHTML = renderGrouped(found);
-}
-
-async function searchById(rid, silent=false){
-  if(!rid) return;
-  const resultEl = document.getElementById('track-result');
-  resultEl.dataset.rid = rid;
-  if(!silent){
-    document.getElementById('track-input').value='';
-    resultEl.innerHTML='<div class="loading"><div class="spinner"></div> กำลังโหลด...</div>';
-    await loadTickets();
-  }
-  const t = allTickets.find(x => x._recordId===rid || x.id===rid);
-  if(t) resultEl.innerHTML = ticketCard(t, true);
-  else  resultEl.innerHTML = '<div class="alert alert-err">ไม่พบ Ticket นี้</div>';
-}
-
-// ── Render grouped by status ──────────────────────────────────
-function renderGrouped(tickets){
-  const GROUPS = [
-    { label:'⏱️ รอดำเนินการ',      statuses:['รอดำเนินการ ⏱️','แก้ไข'] },
-    { label:'⚙️ กำลังดำเนินการ',   statuses:['อยู่ระหว่างดำเนินการ ⚙️'] },
-    { label:'🔍 ตรวจสอบ',           statuses:['ตรวจงาน'] },
-    { label:'✅ เสร็จสิ้น',         statuses:['เสร็จสิ้น ✅'] },
-    { label:'❌ ยกเลิก',            statuses:['ยกเลิก ❌'] },
-  ];
-  let html = '';
-  GROUPS.forEach(g => {
-    const items = tickets.filter(t => g.statuses.includes(t.status||'แก้ไข'));
-    if(!items.length) return;
-    html += `<div class="group-section">
-      <div class="group-toggle open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-        <span>${g.label}</span>
-        <span class="g-count">${items.length}</span>
-        <span class="ht-arrow" style="margin-left:auto">▼</span>
-      </div>
-      <div class="group-body open">
-        ${items.map(t => `<div class="ticket-row" onclick="openTicketModal('${esc(t._recordId||t.id)}')">
-          <span class="hi-id">🎫 ${esc(t.id||'—')}</span>
-          <span class="ticket-row-type">${esc(t.type||'-')}</span>
-          <span class="ticket-row-branch">${esc(t.branchCode||t.brand||'-')}</span>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  });
-  return html || '<div class="alert alert-info">ไม่มีข้อมูล</div>';
-}
-
-// ── History dropdown (10 latest from API) ────────────────────
-function toggleHistory(el){
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
-async function renderHistory(){
-  const el = document.getElementById('track-history');
-  if(!el) return;
-
-  // ดึงจาก localStorage — เฉพาะ ticket ที่เครื่องนี้เคยแจ้ง
-  let localHistory = [];
-  try{ localHistory = JSON.parse(localStorage.getItem('it_history')||'[]'); }catch(_){}
-
-  const isOpen = !!(el.querySelector && el.querySelector('.history-dropdown.open'));
-
-  if(!localHistory.length){
-    el.innerHTML=`<div class="history-toggle" onclick="toggleHistory(this)">
-      <span>📋 TICKET ล่าสุดของคุณ</span>
-      <span class="ht-arrow">▼</span>
-    </div>
-    <div class="history-dropdown">
-      <div style="padding:16px;text-align:center;color:var(--fg3);font-size:13px">ยังไม่มีประวัติการแจ้งจากเครื่องนี้</div>
-    </div>`;
-    return;
-  }
-
-  // อัปเดต status จาก allTickets ล่าสุด
-  const enriched = localHistory.map(h => {
-    const live = allTickets.find(t => t._recordId===h._recordId || t.id===h.id);
-    return live ? { ...h, status: live.status, type: live.type } : h;
-  });
-
-  const rows = enriched.map(h=>`<div class="history-item" onclick="openTicketModal('${esc(h._recordId||h.id)}')" style="cursor:pointer">
-    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="hi-id">🎫 ${esc(h.id||'—')}</span>
-        <span style="font-size:11px;color:var(--accent);font-weight:600">${esc(h.brand||'-')}</span>
-        ${h.branchCode?`<span style="font-size:11px;color:var(--fg3)">· ${esc(h.branchCode)}</span>`:''}
-      </div>
-      <span style="font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.type||h.detail||'-')}</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <span class="status-pill s-${cssStatus(h.status)}" style="font-size:10px;padding:2px 8px;white-space:nowrap">${esc(h.status||'รอดำเนินการ ⏱️')}</span>
-      <span style="color:var(--fg3);font-size:14px">›</span>
-    </div>
-  </div>`).join('');
-
-  el.innerHTML=`<div class="history-toggle ${isOpen?'open':''}" onclick="toggleHistory(this)">
-    <span>📋 TICKET ล่าสุดของคุณ</span>
-    <span style="background:var(--accent);color:#000000;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px">${enriched.length}</span>
-    <span class="ht-arrow">▼</span>
-  </div>
-  <div class="history-dropdown ${isOpen?'open':''}">${rows}</div>`;
-}
-
-function ticketCard(t, expanded=false){
-  const TL        = ['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅'];
-  const TL_LABELS = ['รอดำเนินการ','กำลังดำเนินการ','ตรวจสอบ','เสร็จสิ้น'];
-  const TL_ICONS  = ['⏱️','⚙️','🔍','✅'];
-  const STATUS_IDX = {'แก้ไข':0,'รอดำเนินการ ⏱️':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'ตรวจงาน':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':-1};
-  const si = STATUS_IDX[t.status] ?? 0;
-  const isCancelled = t.status === 'ยกเลิก ❌';
-  const steps = TL.map((s,i)=>`
-    <div class="tl-step ${isCancelled?'cancelled':(i<si?'done':i===si?'active':'')}">
-      <div class="tl-dot">${isCancelled?'✕':i<si?'✓':i===si?TL_ICONS[i]:''}</div>
-      <div class="tl-label">${TL_LABELS[i]}</div>
-    </div>`).join('');
-  return `<div class="ticket-card">
-    <div class="tc-head">
-      <div>
-        <div class="tc-id">🎫 ${esc(t.id||t._recordId||'—')}</div>
-        <div class="tc-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}</div>
-      </div>
-      <span class="status-pill s-${cssStatus(t.status)}">${esc(t.status||'แก้ไข')}</span>
-    </div>
-    <div class="tc-type">${esc(t.type||'—')}</div>
-    <div class="tc-detail">${esc(safe(t.detail)||'-')}</div>
-    <div class="tc-meta">
-      <span>👤 ${esc(t.reporter||'-')}</span>
-      <span>📅 ${esc(t.sentDate||'-')}</span>
-      ${t.engineerName?`<span>🔧 ${esc(t.engineerName)}</span>`:''}
-      ${t.location && t.location.length<100 && !t.location.startsWith('http')?`<span>📍 ${esc(t.location)}</span>`:''}
-    </div>
-    <div class="timeline">
-      <div class="tl-title">สถานะงาน</div>
-      <div class="tl-steps">${steps}</div>
-    </div>
-    ${t.workDetail?`<div style="margin-top:14px;padding:12px;background:rgba(0,185,120,.08);border-radius:8px;border:1px solid rgba(0,185,120,.2)">
-      <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">📋 รายงานช่าง</div>
-      <div style="font-size:13px;color:var(--fg2)">${esc(t.workDetail)}</div>
-      ${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:4px">อะไหล่: ${esc(t.partsUsed)}</div>`:''}
-    </div>`:''}
-  </div>`;
-}
-
-
-
-
-// ── Form ──────────────────────────────────────────────────────
-function showErr(msg){ const e=document.getElementById('form-error'); e.textContent='⚠️ '+msg; e.style.display='flex'; }
-function showSuccess(ticket){
-  document.getElementById('form-area').style.display='none';
-  document.getElementById('success-section').style.display='block';
-  document.getElementById('success-id').textContent = ticket.id || ticket._recordId || '—';
-  saveHistory(ticket);
-}
 function resetForm(){
-  document.getElementById('form-area').style.display='block';
-  document.getElementById('success-section').style.display='none';
-  ['f-name','f-phone','f-branch','f-location','f-detail'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const fs=document.getElementById('f-type');if(fs)fs.selectedIndex=0;
-  document.getElementById('char-num').textContent='0';
-  document.getElementById('form-error').style.display='none';
-}
-function saveHistory(ticket){
-  const key='it_history';
-  let h=[];
-  try{ h=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-  // ไม่เก็บซ้ำ
-  h = h.filter(x => x._recordId !== ticket._recordId && x.id !== ticket.id);
-  h.unshift({
-    _recordId: ticket._recordId,
-    id:        ticket.id,
-    brand:     ticket.brand,
-    branchCode:ticket.branchCode,
-    type:      ticket.type,
-    detail:    ticket.detail,
-    status:    ticket.status || 'รอดำเนินการ ⏱️',
-    savedAt:   Date.now()
+  selectedBrand='';selectedType='';selectedPriority='low';lastTicketId='';
+  document.querySelectorAll('.brand-opt,.type-opt').forEach(x=>x.classList.remove('selected'));
+  document.querySelectorAll('.prio-opt').forEach(x=>x.classList.remove('selected'));
+  document.getElementById('prio-low').classList.add('selected');
+  ['branch','branchname','reporter','phone','subject','detail'].forEach(id=>{
+    const el=document.getElementById('f-'+id);
+    if(el){el.value='';el.classList.remove('err');}
   });
-  h = h.slice(0,30); // เก็บสูงสุด 30 รายการ
-  try{ localStorage.setItem(key, JSON.stringify(h)); }catch(_){}
+  document.querySelectorAll('.field-err').forEach(e=>e.style.display='none');
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=false;btn.textContent='📤 ส่งแจ้งปัญหา';
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-wrap').style.display='block';
+  window.scrollTo(0,0);
 }
 
-// ── Branch Dropdown ───────────────────────────────────────────
-// ── Branch datalist ──────────────────────────────────────────
-// รายการสาขาสำรอง — อัปเดตจาก /debug/branches
-
-let _branchData = {}; // { "Dunkin'": [{code, nameTh, nameEn}, ...] }
-
-async function loadBranches(){
-  try {
-    const r = await fetch('/api/branches');
-    const d = await r.json();
-    if(d.ok) _branchData = d.branches;
-  } catch(e) { console.warn('[Branches]', e.message); }
-  updateBranchList('branch-list-form',  'f-brand');
-  updateBranchList('branch-list-track', 'f-filter-brand');
+function goTrack(){
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-wrap').style.display='block';
+  document.getElementById('track-id').value=lastTicketId;
+  setTimeout(()=>{
+    document.getElementById('track-id').scrollIntoView({behavior:'smooth',block:'center'});
+    trackTicket();
+  },300);
 }
 
-function getBranchList(brand){
-  const list = brand ? (_branchData[brand]||[]) : Object.values(_branchData).flat();
-  const seen = new Set();
-  return list.filter(b=>{ if(seen.has(b.code)) return false; seen.add(b.code); return true; })
-             .sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
-}
-
-function updateBranchList(datalistId, brandSelectId){
-  const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
-  const branches = getBranchList(brand);
-  const dl = document.getElementById(datalistId);
-  if(!dl) return;
-  dl.innerHTML = branches.map(b=>{
-    const label = b.nameTh ? b.code+' – '+b.nameTh : b.code;
-    return `<option value="${b.code}" label="${label}">`;
-  }).join('');
-}
-
-function renderBranchDD(ddId, inputId, brand, q=''){
-  const dd = document.getElementById(ddId);
-  if(!dd) return;
-  let branches = getBranchList(brand);
-  console.log('[BranchDD] brand='+brand+' allTickets='+allTickets.length+' branches='+JSON.stringify(branches));
-  if(q) branches = branches.filter(b => b.toLowerCase().includes(q.toLowerCase()));
-  if(!branches.length){
-    // ถ้าไม่มีข้อมูล — แสดงข้อความแต่ยัง show dropdown
-    dd.innerHTML=`<div style="padding:12px 14px;color:var(--fg3);font-size:13px;text-align:center">
-      ${allTickets.length===0 ? '⏳ กำลังโหลดข้อมูล...' : '🔍 ไม่พบสาขา — พิมพ์รหัสสาขาเองได้'}
-    </div>`;
-    dd.style.display='block';
-    return;
-  }
-  dd.innerHTML = branches.slice(0,30).map(b =>
-    `<div onmousedown="pickBranchDD('${inputId}','${ddId}','${b.replace(/'/g,"\'")}')"
-      style="padding:11px 16px;cursor:pointer;font-size:14px;color:var(--fg);background:var(--bg2);border-bottom:1px solid var(--b1);transition:background .12s"
-      onmouseover="this.style.background='var(--bg3,#23232f)'"
-      onmouseout="this.style.background=''">
-      <span style="font-family:var(--font-m,monospace);color:var(--accent)">${b}</span>
-    </div>`
-  ).join('');
-  dd.style.display='block';
-}
-
-function showBranchDropdown(inputId, ddId, brandSelectId){
-  const inp   = document.getElementById(inputId);
-  const brand = brandSelectId ? (document.getElementById(brandSelectId)?.value||'') : '';
-  renderBranchDD(ddId, inputId, brand, inp?.value||'');
-}
-
-function hideBranchDropdown(ddId){
-  const dd = document.getElementById(ddId);
-  if(dd) dd.style.display='none';
-}
-// ปิด dropdown เมื่อคลิกนอก
-document.addEventListener('click', e => {
-  ['branch-dd-form','branch-dd-track'].forEach(id => {
-    const dd = document.getElementById(id);
-    if(dd && dd.style.display!=='none'){
-      const inp = dd.previousElementSibling;
-      if(!dd.contains(e.target) && e.target !== inp) dd.style.display='none';
-    }
-  });
-});
-
-function toggleBranchDropdown(inputId, ddId, brandSelectId){
-  const dd = document.getElementById(ddId);
-  if(dd && dd.style.display !== 'none'){
-    dd.style.display='none';
-  } else {
-    // โหลด tickets ก่อนถ้ายังไม่มี แล้วแสดง dropdown
-    if(allTickets.length === 0){
-      loadTickets().then(()=> showBranchDropdown(inputId, ddId, brandSelectId));
-    }
-    showBranchDropdown(inputId, ddId, brandSelectId);
-    document.getElementById(inputId)?.focus();
-  }
-}
-
-function pickBranchDD(inputId, ddId, val){
-  document.getElementById(inputId).value = val;
-  document.getElementById(ddId).style.display='none';
-  if(inputId==='f-filter-branch') triggerSearch();
-}
-
-// ── Location Picker ───────────────────────────────────────────
-function openLocationPicker(){
-  const btn = document.getElementById('btn-geo');
-  const st  = document.getElementById('geo-status');
-  if(!navigator.geolocation){
-    // fallback: เปิด Google Maps ให้เลือกเอง
-    window.open('https://maps.google.com','_blank');
-    if(st){ st.textContent='กรุณาคัดลอก URL จาก Google Maps มาวาง'; st.style.display='block'; }
-    return;
-  }
-  if(btn){ btn.disabled=true; btn.textContent='⏳ รอ...'; }
-  if(st){ st.textContent='กำลังระบุตำแหน่ง GPS...'; st.style.display='block'; st.style.color='var(--fg3)'; }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude.toFixed(6);
-      const lng = pos.coords.longitude.toFixed(6);
-      const mapsUrl = `https://maps.google.com/maps?q=${lat},${lng}`;
-      document.getElementById('f-location').value = mapsUrl;
-      if(btn){ btn.disabled=false; btn.textContent='📍 เลือก'; }
-      if(st){
-        st.innerHTML = `✅ <a href="${mapsUrl}" target="_blank" style="color:var(--accent)">เปิดดูแผนที่</a> · ${lat}, ${lng}`;
-        st.style.display='block'; st.style.color='var(--accent)';
-      }
-    },
-    err => {
-      // ถ้า GPS ไม่ได้ → เปิด maps.google.com ให้ค้นหาและ copy URL
-      if(btn){ btn.disabled=false; btn.textContent='📍 เลือก'; }
-      if(st){ st.textContent='⚠️ GPS ไม่ได้ — กรอกสถานที่เองหรือวาง Google Maps URL'; st.style.display='block'; st.style.color='#ff8099'; }
-      window.open('https://maps.google.com','_blank');
-    },
-    { timeout:10000, enableHighAccuracy:true }
-  );
-}
-
-// ── Search + switch to track tab ─────────────────────────────
-function searchByIdAndSwitch(rid){
-  // สลับไป tab ติดตาม
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelector('.tab[data-tab="track"]')?.classList.add('active');
-  document.getElementById('tab-track')?.classList.add('active');
-  // ค้นหา
-  searchById(rid);
-  // scroll ขึ้น
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-
-document.getElementById('char-num') && (document.getElementById('f-detail').oninput = ()=>{
-  document.getElementById('char-num').textContent = document.getElementById('f-detail').value.length;
-});
-
-document.getElementById('btn-submit').onclick = async () => {
-  const err = document.getElementById('form-error');
-  err.style.display='none';
-  const name     = document.getElementById('f-name').value.trim();
-  const phone    = document.getElementById('f-phone').value.trim();
-  const brand    = document.getElementById('f-brand').value.trim();
-  const branch   = document.getElementById('f-branch').value.trim();
-  const type     = document.getElementById('f-type').value;
-  const location = document.getElementById('f-location').value.trim();
-  const detail   = document.getElementById('f-detail').value.trim();
-  if(!name)   return showErr('กรุณากรอกชื่อผู้แจ้ง');
-  if(!phone)  return showErr('กรุณากรอกเบอร์ติดต่อ');
-  if(!brand)  return showErr('กรุณากรอกแบรนด์');
-  if(!type)   return showErr('กรุณาเลือกประเภทปัญหา');
-  if(!detail) return showErr('กรุณากรอกรายละเอียดปัญหา');
-  const btn = document.getElementById('btn-submit');
-  btn.disabled=true; btn.textContent='⏳ กำลังส่ง...';
+async function trackTicket(){
+  const tid=document.getElementById('track-id').value.trim();
+  const resultEl=document.getElementById('track-result');
+  const errEl=document.getElementById('track-err');
+  resultEl.style.display='none';errEl.style.display='none';
+  if(!tid){toast('กรุณากรอก Ticket ID','error');return;}
   try{
-    const r = await fetch('/api/tickets',{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ reporter:name, phone, brand, branchCode:branch, type, location, detail }) });
-    const d = await r.json();
-    if(d.ok){ showSuccess(d.ticket); await loadTickets(); renderHistory(); }
-    else showErr(d.error||'เกิดข้อผิดพลาด');
-  }catch(e){ showErr('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
-  finally{ btn.disabled=false; btn.textContent='📤 ส่งแจ้งปัญหา'; }
-};
+    const r=await fetch(API+'/api/tickets?id='+encodeURIComponent(tid));
+    const d=await r.json();
+    const tickets=(d.tickets||d||[]);
+    const t=tickets.find(x=>x.id===tid||x._recordId===tid);
+    if(!t){errEl.style.display='block';return;}
+    const sk=(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();
+    resultEl.innerHTML=`<div class="track-card">
+      <span class="track-status s-${esc(sk)}">${esc(t.status||'-')}</span>
+      <div class="track-type">${esc(t.type||'—')}</div>
+      <div class="track-meta">🏪 ${esc(t.brand||'-')} · 📍 ${esc(t.branchCode||'-')} · 📅 ${esc(t.sentDate||'-')}</div>
+      ${t.engineerName?`<div class="track-meta" style="margin-top:6px">🔧 ช่าง: ${esc(t.engineerName)}</div>`:''}
+      ${t.workDetail?`<div class="track-meta" style="margin-top:6px;color:var(--accent)">✅ ${esc(t.workDetail.substring(0,80))}${t.workDetail.length>80?'...':''}</div>`:''}
+    </div>`;
+    resultEl.style.display='block';
+  }catch(e){errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่';errEl.style.display='block';}
+}
+document.getElementById('track-id').addEventListener('keydown',e=>{if(e.key==='Enter')trackTicket();});
 
-document.getElementById('btn-copy') && (document.getElementById('btn-copy').onclick = ()=>{
-  const id = document.getElementById('success-id').textContent;
-  navigator.clipboard?.writeText(id);
-  document.getElementById('btn-copy').textContent='✅ คัดลอกแล้ว';
-  setTimeout(()=>{ document.getElementById('btn-copy').textContent='คัดลอก'; },2000);
-});
-document.getElementById('btn-new') && (document.getElementById('btn-new').onclick = resetForm);
-
-});
-
-// ═══════════════════════════════════════════════════════════════
-// FAB NAVIGATION PANEL — Report
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", (function(){
-  let rptPage=1, rptPerPage=20, fabOpen=false, fabSearchOpen=false;
-  let _lastRptTickets=[];
-
-  const fabWrap   = document.getElementById('rpt-fab-wrap');
-  const fabMain   = document.getElementById('fab-main-btn');
-  const fabPagBar = document.getElementById('fab-pag-bar');
-  const searchPop = document.getElementById('fab-search-pop');
-  const searchInp = document.getElementById('fab-search-input');
-  const fabSBtn   = document.getElementById('fab-search-btn');
-
-  if(!fabWrap||!fabMain) return;
-
-  // ── Patch renderGrouped to paginate ─────────────────────────
-  const _orig = window.renderGrouped;
-  window.renderGrouped = function(tickets){
-    _lastRptTickets = tickets;
-    const tot=Math.max(1,Math.ceil(tickets.length/rptPerPage));
-    rptPage=Math.min(Math.max(rptPage,1),tot);
-    const paged=tickets.slice((rptPage-1)*rptPerPage,rptPage*rptPerPage);
-    _orig(paged);
-    renderRptPag(tickets.length,tot);
-  };
-
-  function renderRptPag(total,totalPages){
-    if(!fabPagBar) return;
-    const isFirst=rptPage===1, isLast=rptPage===totalPages;
-    function pageRange(cur,tot){
-      if(tot<=7) return Array.from({length:tot},(_,i)=>i+1);
-      const pages=[1]; let l=Math.max(2,cur-1),r=Math.min(tot-1,cur+1);
-      if(l>2) pages.push('…'); for(let i=l;i<=r;i++) pages.push(i);
-      if(r<tot-1) pages.push('…'); pages.push(tot); return pages;
-    }
-    let html=`<select class="fab-perpage" id="fab-perpage-sel"><option value="10"${rptPerPage===10?' selected':''}>10/หน้า</option><option value="20"${rptPerPage===20?' selected':''}>20/หน้า</option><option value="50"${rptPerPage===50?' selected':''}>50/หน้า</option><option value="999"${rptPerPage===999?' selected':''}>ทั้งหมด</option></select>`;
-    if(totalPages>1){
-      html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
-      html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
-      pageRange(rptPage,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===rptPage?' fab-active':''}" data-page="${p}">${p}</button>`; });
-      html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
-      html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
-    } else { html+=`<span style="font-size:12px;color:var(--fg2);padding:0 8px">${total} รายการ</span>`; }
-    fabPagBar.innerHTML=html;
-    const pp=document.getElementById('fab-perpage-sel');
-    if(pp) pp.onchange=function(){ rptPerPage=Number(this.value)||20; rptPage=1; renderGrouped(_lastRptTickets); };
-  }
-
-  fabPagBar.addEventListener('click',e=>{
-    const btn=e.target.closest('button');
-    if(!btn||btn.classList.contains('fab-disabled')) return;
-    const page=btn.dataset.page, pag=btn.dataset.pag;
-    const tot=Math.max(1,Math.ceil(_lastRptTickets.length/rptPerPage));
-    if(page){ rptPage=Number(page); } else { switch(pag){ case 'first':rptPage=1;break; case 'prev':rptPage=Math.max(1,rptPage-1);break; case 'next':rptPage=Math.min(tot,rptPage+1);break; case 'last':rptPage=tot;break; } }
-    renderGrouped(_lastRptTickets);
-    window.scrollTo({top:0,behavior:'smooth'});
-  });
-
-  function openFab(){ fabOpen=true; fabWrap.classList.add('fab-open'); }
-  function closeFab(){ fabOpen=false; fabWrap.classList.remove('fab-open'); closeSearch(); }
-  function openSearch(){ openFab(); fabSearchOpen=true; searchPop.classList.add('fab-search-open'); setTimeout(()=>searchInp.focus(),60); }
-  function closeSearch(){ fabSearchOpen=false; searchPop.classList.remove('fab-search-open'); }
-
-  fabMain.addEventListener('click',e=>{ e.stopPropagation(); fabOpen?closeFab():openFab(); });
-  fabSBtn.addEventListener('click',e=>{ e.stopPropagation(); fabSearchOpen?closeSearch():openSearch(); });
-  document.getElementById('fab-to-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
-  document.getElementById('fab-to-bottom')?.addEventListener('click',()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}));
-  searchInp.addEventListener('input',e=>{
-    const fs=document.getElementById('f-search');
-    if(fs){ fs.value=e.target.value; fs.dispatchEvent(new Event('input')); }
-    rptPage=1;
-  });
-  document.addEventListener('click',e=>{ if(!e.target.closest('#rpt-fab-wrap')) closeFab(); });
-  window.addEventListener('scroll',()=>{ if(fabSearchOpen) closeSearch(); },{passive:true});
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFab(); });
-})());
-
-// ═══════════════════════════════════════════════════════════════
-// CLOCK + TEMPERATURE
-// ═══════════════════════════════════════════════════════════════
-(function(){
-  // อัป clock ทุก 1 วินาที
-  function tickClock(){
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(now.getMinutes()).padStart(2,'0');
-    const ss = String(now.getSeconds()).padStart(2,'0');
-    const el = document.getElementById('clock-time');
-    if(el) el.textContent = hh+':'+mm+':'+ss;
-  }
-  tickClock();
-  setInterval(tickClock, 1000);
-
-  // ดึงอุณหภูมิจาก Open-Meteo (Bangkok default, ถ้าได้ GPS ใช้ตำแหน่งจริง)
-  async function fetchTemp(lat, lon){
-    try{
-      const r = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
-      );
-      const d = await r.json();
-      const t = d.current_weather?.temperature;
-      const el = document.getElementById('clock-temp');
-      if(el && t !== undefined) el.textContent = Math.round(t)+'°C';
-    }catch(_){}
-  }
-
-  // ขอ GPS ถ้าได้ ใช้ตำแหน่งจริง ถ้าไม่ได้ใช้กรุงเทพ
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-      ()  => fetchTemp(13.75, 100.52) // กรุงเทพ fallback
-    );
-  } else {
-    fetchTemp(13.75, 100.52);
-  }
-  // refresh อุณหภูมิทุก 10 นาที
-  setInterval(()=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-        ()  => fetchTemp(13.75, 100.52)
-      );
-    } else { fetchTemp(13.75, 100.52); }
-  }, 600_000);
-})();
-
+// THEME
+const btnTheme=document.getElementById('btn-theme');
+let dark=true;
+function applyTheme(){document.body.classList.toggle('theme-light',!dark);btnTheme.textContent=dark?'🌙':'☀️';}
+btnTheme.onclick=()=>{dark=!dark;localStorage.setItem('report_theme',dark?'dark':'light');applyTheme();}
+const saved=localStorage.getItem('report_theme');
+if(saved==='light'){dark=false;applyTheme();}
 </script>
-
 </body>
 </html>
