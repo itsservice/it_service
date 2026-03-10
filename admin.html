@@ -347,16 +347,12 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
   .bottom-nav{padding-bottom:env(safe-area-inset-bottom)}
   body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 }
-@media(min-width:1025px) and (max-width:1280px){
+@media(min-width:769px) and (max-width:1100px){
   :root{--sidebar-w:200px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .analytics-grid{grid-template-columns:1fr}
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:200px;transform:translateX(-100%)}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;transform:translateX(-100%);transition:transform .3s cubic-bezier(.22,.61,.36,1)}
   .sidebar.mobile-open{transform:translateX(0)}
   .topbar-mobile{display:flex}
-  .bottom-nav{display:block}
-  .drawer{width:480px}
-  .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
 }
 
 /* FAB */
@@ -1242,13 +1238,15 @@ async function bootApp(){
     document.getElementById('nav-users').style.display='none';
     document.getElementById('nav-debug').style.display='none';
   }
-  connectSSE();
-  Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
-  if(['superadmin','admin'].includes(u.role)) loadUsers();
-  renderDashboard();
-  window.hideSplash?.();
-  window.initAdminFab?.();
-  setInterval(loadTickets, 60_000);
+connectSSE();
+window.hideSplash?.();
+window.initAdminFab?.();
+// โหลด data ก่อน แล้วค่อย render Dashboard
+Promise.all([loadTickets(), loadLogs()])
+  .catch(e => console.warn('[boot] data load error:', e.message))
+  .finally(() => renderDashboard());
+if(['superadmin','admin'].includes(u.role)) loadUsers();
+setInterval(loadTickets, 60_000);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1318,16 +1316,21 @@ function navTo(page){
   document.getElementById('sidebar-overlay')?.classList.remove('open');
 }
 document.querySelectorAll('[data-page]').forEach(btn=>{ btn.onclick=()=>navTo(btn.dataset.page); });
-document.getElementById('btn-menu').onclick=()=>{
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sidebar-overlay');
-  const open = sb.classList.toggle('mobile-open');
-  if(ov) ov.classList.toggle('open', open);
-};
-document.getElementById('sidebar-overlay').onclick=()=>{
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('btn-menu').onclick=()=>{
+  const sb = document.getElementById('sidebar');
+  sb.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
 };
+document.getElementById('sidebar-overlay').onclick = closeSidebar;
 
 // ════════════════════════════════════════════════════════════════
 // DASHBOARD
