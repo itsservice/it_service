@@ -13,9 +13,7 @@ app.use(express.json({ limit:'10mb', verify:(req,_,buf)=>{ req.rawBody=buf; } })
 app.use(express.urlencoded({ extended:true }));
 
 // ── Request timeout middleware — กัน request ค้างนาน ─────────────
-// ทุก API ถ้าไม่ตอบใน 25s จะ return error อัตโนมัติ
 app.use((req, res, next) => {
-  // ยกเว้น SSE (event stream ต้อง long-lived)
   if (req.path === '/api/events') return next();
   const timer = setTimeout(() => {
     if (!res.headersSent) {
@@ -45,7 +43,6 @@ app.get('/api/events', (req, res) => {
 });
 
 // ── Static pages ─────────────────────────────────────────────
-// Health check — lightweight, used by keep-alive and monitoring
 app.get('/health', (_, res) => {
   const mb = process.memoryUsage().heapUsed / 1024 / 1024;
   res.json({
@@ -55,16 +52,24 @@ app.get('/health', (_, res) => {
     memory: `${mb.toFixed(0)}MB`,
   });
 });
-app.get('/', (_, res) => res.redirect('/report'));
+
+// ── ✅ root redirect ไป Landing Page แทน /report ──────────────
+app.get('/', (_, res) => res.redirect('/Itsupportlanding'));
 
 const noCacheHtml = (file) => (_, res) => {
   res.set({
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
+    'Pragma':        'no-cache',
+    'Expires':       '0',
   });
   res.sendFile(path.join(__dirname, file));
 };
+
+// ── ✅ Landing Page routes (เพิ่มใหม่) ────────────────────────
+app.get('/Itsupportlanding', noCacheHtml('itsupport-landing.html'));
+app.get('/landing',          noCacheHtml('itsupport-landing.html')); // alias สั้น
+
+// ── System pages ──────────────────────────────────────────────
 app.get('/report',        noCacheHtml('report.html'));
 app.get('/report/:brand', noCacheHtml('report.html'));
 app.get('/admin',         noCacheHtml('admin.html'));
@@ -79,7 +84,6 @@ app.post('/api/auth/login', (req, res) => {
 
     const user = getUserByUsername(username);
 
-    // ✅ แก้: แยก error ให้ชัดว่าปัญหาอยู่ที่ไหน
     if (!user)
       return res.json({ ok:false, error:`ไม่พบ username "${username}"` });
     if (!user.active)
@@ -167,7 +171,6 @@ app.get('/api/branches', async (req, res) => {
       return String(v);
     }
 
-    // Master branch table (single table for all brands)
     const masterTableId = process.env.LARK_BRANCH_TABLE;
     if (masterTableId) {
       const items = await fetchAllRecords(masterTableId);
@@ -182,7 +185,6 @@ app.get('/api/branches', async (req, res) => {
       });
     }
 
-    // Per-brand tables (fill gaps)
     await Promise.allSettled(
       BRANCH_TABLES.filter(b => b.tableId && !result[b.brand]?.length).map(async ({ brand, tableId }) => {
         const items = await fetchAllRecords(tableId);
@@ -208,13 +210,11 @@ app.get('/api/branches', async (req, res) => {
 // ── Tickets ───────────────────────────────────────────────────
 app.get('/api/tickets', async (req, res) => {
   try {
-    // ✅ ลด timeout เป็น 15s (เดิม 20s) — ถ้าค้างให้ return cache ทันที
     let tickets = await Promise.race([
       listTickets(),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Lark timeout')), 15_000))
     ]).catch(async (e) => {
       console.warn('[API] listTickets error:', e.message, '— using stale cache');
-      // ✅ ถ้า Lark ช้าหรือล่ม ส่ง cache เก่าคืนทันที ไม่รอ
       try {
         const { listTickets: lt } = require('./larkService');
         return await lt({ noCache: false }) || [];
@@ -236,17 +236,14 @@ app.get('/api/tickets/:rid', async (req, res) => {
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-// ✅ แก้: POST /api/tickets — เพิ่ม sentDate + status อัตโนมัติ + error message ชัดเจน
 app.post('/api/tickets', async (req, res) => {
   try {
     const { reporter, phone, brand, branchCode, type, detail, location } = req.body || {};
 
-    // Validate required fields
     if (!reporter || !phone || !brand || !type || !detail) {
       return res.json({ ok:false, error:'กรุณากรอกข้อมูลให้ครบ (reporter, phone, brand, type, detail)' });
     }
 
-    // ✅ เพิ่ม sentDate และ status เริ่มต้นเสมอ
     const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
 
     const t = await createTicket({
@@ -257,8 +254,8 @@ app.post('/api/tickets', async (req, res) => {
       type,
       detail,
       location:  location  || '',
-      status:    'รอดำเนินการ ⏱️',  // ✅ ค่าเริ่มต้น
-      sentDate:  now,                 // ✅ วันที่แจ้งอัตโนมัติ
+      status:    'รอดำเนินการ ⏱️',
+      sentDate:  now,
     });
 
     const log = addLog({
@@ -301,6 +298,7 @@ app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
+// ── ✅ รองรับทั้ง /engineer-submit และ /engineer (ที่ report.html/engineer.html ส่งมา) ──
 app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
   try {
     const { workDetail, partsUsed, workHours } = req.body || {};
@@ -312,6 +310,24 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
     });
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString(), log });
+    res.json({ ok:true, ticket:t });
+  } catch(e) { res.json({ ok:false, error:e.message }); }
+});
+
+// ✅ alias: /engineer → /engineer-submit (engineer.html ใช้ endpoint นี้)
+app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
+  try {
+    const { workDetail, status, engineerName } = req.body || {};
+    if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
+    const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const t = await updateTicket(req.params.rid, {
+      workDetail,
+      engineerName: engineerName || req.user.name,
+      completedAt:  now,
+      status:       status || 'ตรวจงาน',
+    });
+    const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
+    broadcast('ticket_updated', { recordId:req.params.rid, status: status || 'ตรวจงาน', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -378,7 +394,6 @@ app.get('/debug/env', (_, res) => {
     hasLarkTableId:            !!process.env.LARK_TABLE_ID,
     hasLarkTableDunkin:        !!process.env.LARK_TABLE_DUNKIN,
     hasLarkTableGreyhoundCafe: !!process.env.LARK_TABLE_GREYHOUND_CAFE,
-    // ✅ แสดงทั้งสองชื่อ
     hasLarkTableGreyhoundOri:  !!(process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI),
     hasLarkTableAuBonPain:     !!process.env.LARK_TABLE_AU_BON_PAIN,
     hasLarkTableFunkyFries:    !!process.env.LARK_TABLE_FUNKY_FRIES,
@@ -390,11 +405,10 @@ app.get('/debug/env', (_, res) => {
   });
 });
 
-// ✅ ใหม่: Force rebuild fieldMap (ใช้เมื่อ field names ใน Lark เปลี่ยน)
 app.get('/debug/rebuild-fieldmap', async (_, res) => {
   try {
     const { ensureFieldMap } = require('./larkService');
-    await ensureFieldMap(true); // force rebuild
+    await ensureFieldMap(true);
     const { debugSchema } = require('./larkService');
     const d = await debugSchema();
     res.json({ ok:true, message:'fieldMap rebuilt', fieldMap: d.fieldMap, schema: d.schema });
@@ -451,7 +465,6 @@ app.get('/debug/tables', async (_, res) => {
   const tables = [
     { brand: "Dunkin'",            tableId: process.env.LARK_TABLE_DUNKIN || process.env.LARK_TABLE_ID },
     { brand: "Greyhound Cafe",     tableId: process.env.LARK_TABLE_GREYHOUND_CAFE },
-    // ✅ แก้: รองรับทั้งสองชื่อ
     { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI },
     { brand: "Au Bon Pain",        tableId: process.env.LARK_TABLE_AU_BON_PAIN },
     { brand: "Funky Fries",        tableId: process.env.LARK_TABLE_FUNKY_FRIES },
