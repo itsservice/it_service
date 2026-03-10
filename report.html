@@ -20,6 +20,23 @@
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
   --font-th:'Noto Sans Thai',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
+/* ── Light mode ───────────────────────────────────────────── */
+body.theme-light{
+  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
+  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.52);--fg3:rgba(0,0,0,.3);
+  --accent:#00b87a;--accent2:#1d6ff0;--warn:#d97706;--danger:#dc2626;
+}
+body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15)}
+body.theme-light #app-splash{background:var(--bg)}
+/* ── Theme toggle button ──────────────────────────────────── */
+#btn-theme{
+  background:var(--bg2);border:1px solid var(--b2);border-radius:50%;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:17px;transition:background .2s,border-color .2s;
+  flex-shrink:0;
+}
+#btn-theme:hover{background:var(--b1)}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:15px;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 
@@ -395,6 +412,7 @@ setTimeout(window.hideSplash, 3000);
     <div style="display:flex;align-items:center;gap:8px">
       <div class="refresh-dot" id="refresh-dot"></div>
       <div class="online-dot" id="dot"></div>
+      <button id="btn-theme" onclick="toggleTheme()" title="เปลี่ยนธีม">☀️</button>
     </div>
     <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
   </div>
@@ -591,6 +609,23 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function cssStatus(s){ return String(s||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim(); }
 function safe(s){ if(!s) return ''; if(String(s).startsWith('http')) return ''; return String(s); }
 
+// ══════════════════════════════════════════════════════════════
+// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
+// ══════════════════════════════════════════════════════════════
+function applyTheme(mode) {
+  const isLight = mode !== 'dark';
+  document.body.classList.toggle('theme-light', isLight);
+  const btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+  try { localStorage.setItem('report_theme', mode); } catch(_) {}
+}
+function toggleTheme() {
+  try {
+    const cur = localStorage.getItem('report_theme') || 'light';
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  } catch(e) { console.warn('toggleTheme:', e.message); }
+}
+
 // ── SSE ──────────────────────────────────────────────────────
 function connectSSE(){
   sseConn = new EventSource('/api/events');
@@ -633,6 +668,13 @@ async function loadTickets(){
 
 // ── Initial load ─────────────────────────────────────────────
 (async()=>{
+  // ✅ init theme ทันที (default = light)
+  try {
+    const saved = localStorage.getItem('report_theme') || 'light';
+    applyTheme(saved);
+  } catch(_) {
+    document.body.classList.add('theme-light');
+  }
   // แสดงหน้าทันที แล้วโหลด data ใน background
   renderHistory();
   loadBranches();
