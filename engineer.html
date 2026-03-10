@@ -4,947 +4,506 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Engineer — IT Support</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#080809;--bg2:#0e0e12;--bg3:#16161d;--bg4:#1e1e28;
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
-  --fg:rgba(255,255,255,.92);--fg2:rgba(255,255,255,.52);--fg3:rgba(255,255,255,.25);
-  --accent:#00e5a0;--accent2:#0099ff;--warn:#ff9640;--danger:#ff4d6d;--purple:#b87be8;
-  --r:10px;--r2:16px;--r3:22px;
+  --bg:#07070a;--bg2:#0d0d12;--bg3:#141419;--bg4:#1c1c24;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
+  --fg:rgba(255,255,255,.93);--fg2:rgba(255,255,255,.5);--fg3:rgba(255,255,255,.22);
+  --accent:#00e5a0;--blue:#3b82f6;--warn:#f59e0b;--danger:#ef4444;--purple:#a855f7;
+  --r:10px;--r2:16px;--r3:20px;
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-  --font-th:'Noto Sans Thai',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
 }
-/* ── Light mode ─────────────────────────────── */
 body.theme-light{
   --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
   --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
   --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
-  --accent:#00b87a;--accent2:#1d6ff0;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;
+  --accent:#00b87a;--blue:#2563eb;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;
 }
-body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18)}
-/* ── Theme toggle button ────────────────────── */
-.btn-theme-eng{
-  background:transparent;border:1px solid var(--b2);
-  border-radius:8px;color:var(--fg2);font-size:18px;
-  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .2s;flex-shrink:0;
-}
-.btn-theme-eng:hover{background:var(--b1);color:var(--fg)}
-html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:15px;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+a{color:inherit;text-decoration:none}
 
 /* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(var(--safe-top)+20px)}
-.login-box{width:100%;max-width:380px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r3);padding:36px 28px}
-.login-logo{text-align:center;margin-bottom:28px}
-.login-icon{display:inline-flex;width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#00b37a);border-radius:16px;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px}
-.login-title{font-family:var(--font-head);font-size:22px;font-weight:700}
-.login-sub{font-size:13px;color:var(--fg2);margin-top:4px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11.5px;font-weight:600;color:var(--fg3);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase}
-.field input{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:13px 15px;color:var(--fg);font-family:var(--font-th);font-size:15px;outline:none;transition:border-color .2s}
-.field input:focus{border-color:var(--accent)}
-.btn-login{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .15s}
-.btn-login:hover{opacity:.85}.btn-login:disabled{opacity:.4;cursor:default}
-.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.login-card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--b2);border-radius:24px;padding:40px 32px;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.l-logo{text-align:center;margin-bottom:32px}
+.l-icon{display:inline-flex;width:60px;height:60px;background:var(--blue);border-radius:18px;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px}
+.l-title{font-family:var(--font-h);font-size:22px;font-weight:700}
+.l-sub{font-size:13px;color:var(--fg2);margin-top:5px}
+.l-field{margin-bottom:14px}
+.l-field label{display:block;font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px}
+.l-field input{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:13px 15px;color:var(--fg);font-family:var(--font-th);font-size:15px;outline:none;transition:border-color .2s}
+.l-field input:focus{border-color:var(--blue)}
+.l-btn{width:100%;margin-top:8px;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.l-btn:hover{opacity:.85}.l-btn:disabled{opacity:.4;cursor:default}
+.l-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.l-links{text-align:center;margin-top:18px;font-size:13px;color:var(--fg3)}
+.l-links a{color:var(--fg2)}
 
-/* APP LAYOUT */
-.app{display:none;flex-direction:column;height:100vh;overflow:hidden}
-.app.shown{display:flex}
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.ready{display:flex}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 20px;padding-top:calc(var(--safe-top)+12px);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+.tb-logo{width:34px;height:34px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+.tb-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
+.tb-user{font-size:12px;color:var(--fg2);white-space:nowrap}
+.tb-actions{display:flex;gap:8px;align-items:center}
+.btn-icon{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:16px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-icon:hover{background:var(--b1);color:var(--fg)}
+.main{flex:1;padding:20px;max-width:900px;margin:0 auto;width:100%;padding-bottom:80px}
 
-/* TOPBAR */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 16px;padding-top:calc(var(--safe-top)+12px);display:flex;align-items:center;gap:10px;flex-shrink:0}
-.topbar-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-.topbar-name{font-weight:600;font-size:15px;flex:1;overflow:hidden}
-.topbar-role{font-size:11px;color:var(--fg2)}
-.topbar-badge{font-size:11px;background:rgba(0,229,160,.12);color:var(--accent);border-radius:6px;padding:3px 8px;font-weight:600;margin-left:auto}
-.btn-logout{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:12px;padding:6px 10px;cursor:pointer;font-family:var(--font-th)}
-
-/* CONTENT */
-.content{flex:1;overflow-y:auto;padding:0 0 calc(var(--safe-bottom)+100px)}
-
-/* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--b1);padding:10px 0;padding-bottom:calc(var(--safe-bottom)+10px);display:flex;z-index:50}
-.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:2px 0;border:none;background:transparent;color:var(--fg3);font-family:var(--font-th);font-size:10px;font-weight:500;transition:color .15s}
-.bnav-item.active{color:var(--accent)}
-.bnav-icon{font-size:20px}
-
-/* PAGES */
-.page{display:none;padding:16px}.page.active{display:block}
-
-/* SECTION HEADER */
-.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sec-title{font-family:var(--font-head);font-size:17px;font-weight:700}
-.sec-count{font-size:12px;color:var(--fg2)}
-
-/* TICKET CARD (engineer view) */
-.eng-card{
-  background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r2);
-  padding:16px;margin-bottom:10px;cursor:pointer;
-  transition:border-color .15s,background .15s;position:relative;overflow:hidden
-}
-.eng-card:hover{border-color:var(--b2);background:var(--bg3)}
-.eng-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--status-color,var(--b2))}
-.card-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:500}
-.card-brand{font-size:11.5px;color:var(--fg2);margin-top:2px}
-.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.card-type{font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.3}
-.card-detail{font-size:13px;color:var(--fg2);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
-.card-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--fg3)}
-.status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap}
-.s-แก้ไข{background:rgba(255,150,64,.15);color:#ff9640}
-.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(0,153,255,.15);color:#0099ff}
-.s-รอดำเนินการ{background:rgba(184,123,232,.15);color:#b87be8}
-.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
-.s-ยกเลิก{background:rgba(255,77,109,.15);color:#ff4d6d}
-
-/* BADGE PENDING */
-.badge-pending{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:18px;height:18px;background:var(--danger);border-radius:9px;
-  font-size:10px;font-weight:700;color:#fff;margin-left:6px
-}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.scard{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--sc,var(--b1))}
+.scard-label{font-size:11.5px;color:var(--fg2);margin-bottom:6px}
+.scard-num{font-family:var(--font-h);font-size:26px;font-weight:700;color:var(--sc,var(--fg))}
 
 /* FILTER TABS */
-.filter-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.filter-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
 .filter-tabs::-webkit-scrollbar{height:0}
-.ftab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--b1);background:transparent;color:var(--fg2);font-size:12.5px;font-weight:500;font-family:var(--font-th);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.ftab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.ftab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--b1);background:transparent;color:var(--fg2);font-size:13px;font-weight:500;font-family:var(--font-th);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.ftab.active{font-weight:700}
+.ftab-all.active{background:rgba(255,255,255,.08);border-color:var(--fg);color:var(--fg)}
+.ftab-wait.active{background:rgba(245,158,11,.12);border-color:var(--warn);color:var(--warn)}
+.ftab-mine.active{background:rgba(59,130,246,.15);border-color:var(--blue);color:var(--blue)}
+.ftab-done.active{background:rgba(0,229,160,.12);border-color:var(--accent);color:var(--accent)}
 
-/* DETAIL PANEL (slide up) */
-.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:flex-end}
-.detail-overlay.open{display:flex}
-.detail-sheet{
-  width:100%;max-height:92vh;overflow-y:auto;
-  background:var(--bg2);border-radius:var(--r3) var(--r3) 0 0;
-  padding:0 0 calc(var(--safe-bottom)+16px);
-  animation:slideUp .3s cubic-bezier(.22,.61,.36,1)
-}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.detail-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:12px auto 0}
-.detail-head{padding:14px 20px 0;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--b1);padding-bottom:14px}
-.detail-body{padding:16px 20px 0}
-.detail-section{margin-bottom:16px}
-.detail-section-title{font-size:10.5px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.info-row{display:flex;margin-bottom:6px;font-size:13.5px;gap:8px}
-.info-label{color:var(--fg2);min-width:90px;flex-shrink:0}
-.info-value{color:var(--fg);font-weight:500;flex:1}
+/* TICKET CARDS */
+.ticket-list{display:flex;flex-direction:column;gap:10px}
+.tcard{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;cursor:pointer;transition:border-color .15s,background .12s;position:relative;overflow:hidden}
+.tcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc,var(--b1))}
+.tcard:hover{border-color:var(--b2);background:var(--bg3)}
+.tcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.tcard-id{font-family:var(--font-m);font-size:11.5px;color:var(--accent)}
+.tcard-status{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.tcard-title{font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.3}
+.tcard-detail{font-size:13px;color:var(--fg2);margin-bottom:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--fg3)}
+.tcard-badge{background:var(--b1);padding:3px 8px;border-radius:6px;color:var(--fg2)}
+.tcard-assigned{background:rgba(59,130,246,.1);color:#60a5fa;padding:3px 8px;border-radius:6px;font-weight:600}
+.empty-state{text-align:center;padding:60px 20px;color:var(--fg3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:15px}
 
-/* WORK FORM */
-.work-form-label{font-size:12px;font-weight:600;color:var(--fg2);margin-bottom:7px;letter-spacing:.03em;text-transform:uppercase}
-.work-form-input{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:12px}
-.work-form-input:focus{border-color:var(--accent)}
-.work-form-textarea{resize:none;min-height:120px;line-height:1.7}
-.photo-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.photo-thumb{width:100%;aspect-ratio:1;border-radius:var(--r);object-fit:cover;background:var(--bg3);border:1.5px dashed var(--b2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--fg3);font-size:24px}
-.photo-thumb.filled{border-style:solid;border-color:var(--b2)}
-.photo-thumb img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--r) - 1px)}
-.btn-add-photo{width:100%;padding:12px;background:var(--bg3);border:1.5px dashed var(--b2);border-radius:var(--r);color:var(--fg2);font-family:var(--font-th);font-size:14px;cursor:pointer;margin-bottom:12px;transition:border-color .15s;text-align:center}
-.btn-add-photo:hover{border-color:var(--b3)}
+/* STATUS PILLS */
+.s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
+.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
+.s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
+.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
+.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
+.s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
 
-/* SUBMIT BTN */
-.btn-big{
-  width:100%;padding:16px;border:none;border-radius:var(--r2);
-  font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;
-  transition:opacity .15s,transform .1s
-}
-.btn-big:hover{opacity:.88}.btn-big:active{transform:scale(.98)}
-.btn-big:disabled{opacity:.4;cursor:default}
-.btn-primary{background:var(--accent);color:#000}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-outline-sm{padding:8px 14px;border:1px solid var(--b2);border-radius:var(--r);background:transparent;color:var(--fg2);font-family:var(--font-th);font-size:13px;cursor:pointer}
+/* DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;cursor:pointer;backdrop-filter:blur(2px)}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:480px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:201;overflow-y:auto;padding-bottom:calc(var(--safe-bottom)+20px);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:var(--safe-top)}
+.drawer.open{transform:none}
+.drawer-head{padding:18px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:flex-start;gap:12px;position:sticky;top:0;background:var(--bg2);z-index:10}
+.drawer-head-info{flex:1;min-width:0}
+.drawer-id{font-family:var(--font-m);font-size:12px;color:var(--accent)}
+.drawer-title{font-size:15px;font-weight:700;margin-top:3px;line-height:1.3}
+.btn-close-dr{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
+.btn-close-dr:hover{background:var(--b1);color:var(--fg)}
+.drawer-body{padding:18px 20px 0}
+.d-section{margin-bottom:20px}
+.d-section-title{font-size:10.5px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.d-row{display:flex;margin-bottom:6px;font-size:13.5px;gap:8px;line-height:1.5}
+.d-label{color:var(--fg2);min-width:80px;flex-shrink:0;font-size:13px}
+.d-value{color:var(--fg);font-weight:500;flex:1;word-break:break-word}
+.d-detail-box{background:var(--bg3);border-radius:var(--r);padding:13px;font-size:13.5px;line-height:1.8}
+.d-work-box{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:var(--r);padding:13px;font-size:13px;line-height:1.8}
+.d-divider{height:1px;background:var(--b1);margin:0 0 20px}
 
-/* STATUS QUICK CHANGE */
-.status-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.status-btn{padding:7px 14px;border-radius:20px;border:1.5px solid;background:transparent;font-family:var(--font-th);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
-.status-btn.active{opacity:1;font-weight:700}
-
-/* EMPTY */
-.empty{text-align:center;padding:60px 20px;color:var(--fg3)}
-.empty-icon{font-size:44px;margin-bottom:10px;opacity:.5}
+/* SUBMIT FORM */
+.submit-form{background:var(--bg3);border-radius:var(--r2);padding:18px;border:1px solid var(--b1)}
+.submit-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.d-form-group{margin-bottom:12px}
+.d-form-label{font-size:11.5px;font-weight:600;color:var(--fg2);margin-bottom:6px;display:block;letter-spacing:.03em}
+.d-form-input,.d-form-select,.d-form-textarea{width:100%;background:var(--bg);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none}
+.d-form-input:focus,.d-form-select:focus,.d-form-textarea:focus{border-color:var(--blue)}
+.d-form-textarea{resize:none;min-height:100px;line-height:1.7}
+.btn-submit-work{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px}
+.btn-submit-work:hover{opacity:.85}
+.btn-submit-work:disabled{opacity:.4;cursor:default}
+.btn-review{width:100%;padding:13px;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:8px}
+.btn-review:hover{opacity:.85}
+.success-msg{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--accent);text-align:center;margin-top:10px}
+.already-submitted{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:var(--r);padding:14px;font-size:13px;color:var(--accent);line-height:1.7}
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:#1a1a24;border:1px solid var(--b2);border-radius:var(--r2);padding:12px 20px;font-size:14px;color:var(--fg);z-index:200;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .25s ease;pointer-events:none}
-@keyframes toastIn{from{opacity:0;bottom:calc(80px + var(--safe-bottom))}to{opacity:1;bottom:calc(90px + var(--safe-bottom))}}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+20px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 20px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s cubic-bezier(.22,.61,.36,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--accent);color:var(--accent)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
 
-/* LOADING */
-.spinner{width:20px;height:20px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading{display:flex;align-items:center;gap:10px;padding:40px;justify-content:center;color:var(--fg3)}
-
-/* PROFILE PAGE */
-.profile-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:20px;margin-bottom:12px}
-.profile-avatar{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:0 auto 12px}
-.profile-name{text-align:center;font-family:var(--font-head);font-size:20px;font-weight:700}
-.profile-role{text-align:center;font-size:13px;color:var(--fg2);margin-top:4px}
-.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
-.stat-box{background:var(--bg3);border-radius:var(--r);padding:14px;text-align:center}
-.stat-num{font-family:var(--font-head);font-size:22px;font-weight:700}
-.stat-lbl{font-size:11px;color:var(--fg2);margin-top:2px}
-/* ═══════════════════════════════════════════════════
-   FAB NAVIGATION PANEL
-   - ปุ่มหลักมุมขวาล่าง fixed
-   - กางออก L-shape: แนวตั้ง (↑⌕↓) + แนวนอน (pagination)
-   - mobile: bottom ขยับเหนือ bottom-nav
-═══════════════════════════════════════════════════ */
-.fab-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:flex-end;justify-content:flex-end;pointer-events:none}
-.fab-wrap *{pointer-events:auto}
-.fab-main{width:50px;height:50px;border:none;border-radius:50%;background:var(--accent);color:#000;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,229,160,.35);cursor:pointer;transition:transform .25s ease,background .2s;position:relative;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
-.fab-main:hover{background:#00c98a}
-.fab-wrap.fab-open .fab-main{transform:rotate(45deg)}
-/* Top branch — แนวตั้ง ↑⌕↓ */
-.fab-branch-top{position:absolute;right:2px;bottom:calc(50px + 12px);display:flex;flex-direction:column-reverse;align-items:center;gap:8px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
-.fab-wrap.fab-open .fab-branch-top{opacity:1;visibility:visible}
-/* Left branch — แนวนอน pagination */
-.fab-branch-left{position:absolute;right:calc(50px + 12px);bottom:2px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;max-width:calc(100vw - 90px);overflow-x:auto;padding:4px 2px;scrollbar-width:none}
-.fab-branch-left::-webkit-scrollbar{display:none}
-.fab-wrap.fab-open .fab-branch-left{opacity:1;visibility:visible}
-/* FAB buttons */
-.fab-btn{min-width:40px;height:40px;border:none;border-radius:20px;background:var(--bg3);color:var(--fg);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);padding:0 12px;font-size:13px;font-family:var(--font-th);white-space:nowrap;transition:transform .15s,background .15s,opacity .15s;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center}
-.fab-btn:hover{transform:translateY(-2px);background:var(--bg4,#1c1c24)}
-.fab-btn.fab-icon{width:40px;min-width:40px;padding:0;font-size:16px}
-.fab-btn.fab-active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
-.fab-btn.fab-disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-/* Search popup */
-.fab-search-pop{position:absolute;right:calc(40px + 16px);bottom:calc(40px + 56px);width:min(260px,calc(100vw - 100px));background:var(--bg2);border:1px solid var(--b2);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .2s ease;z-index:10}
-.fab-search-pop.fab-search-open{opacity:1;visibility:visible;transform:translateY(0)}
-.fab-search-pop label{display:block;font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
-.fab-search-input{width:100%;height:40px;background:var(--bg3);border:1.5px solid var(--b1);border-radius:10px;padding:0 12px;outline:none;color:var(--fg);font-family:var(--font-th);font-size:14px;transition:border-color .2s}
-.fab-search-input:focus{border-color:var(--accent)}
-.fab-search-hint{margin-top:7px;font-size:11px;color:var(--fg3);line-height:1.5}
-/* per-page selector in fab */
-.fab-perpage{background:var(--bg3);border:1px solid var(--b2);border-radius:20px;color:var(--fg);font-family:var(--font-th);font-size:12px;padding:0 10px;height:40px;outline:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-/* Mobile: ขยับเหนือ bottom-nav */
-@media(max-width:768px){
-  .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
-  .fab-branch-left{max-width:calc(100vw - 80px)}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .drawer{width:100vw}
+  .main{padding:14px;padding-bottom:60px}
+  .topbar{padding:10px 14px;padding-top:calc(var(--safe-top)+10px)}
+  .tb-user{display:none}
 }
-
-/* Engineer FAB — use engineer accent */
-.fab-main{background:#00e5a0;color:#000}
-
-
-/* CLOCK + TEMP widget — engineer topbar */
-.clock-widget{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2);background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0;margin-right:8px}
-#clock-time{font-family:var(--font-mono);font-size:12px;color:var(--fg);font-weight:500}
-#clock-temp{color:var(--accent);font-weight:600}
-
 </style>
 </head>
 <body>
-<style>
-#app-splash{position:fixed;inset:0;background:var(--bg,#f0f2f7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
-#app-splash.hide{opacity:0;pointer-events:none}
-.splash-logo{width:56px;height:56px;background:#00e5a0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;font-family:'Syne',sans-serif;animation:splashPulse 1.2s ease-in-out infinite}
-@keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
-.splash-text{font-size:13px;color:rgba(255,255,255,.35);font-family:'Noto Sans Thai',sans-serif}
-.splash-bar{width:160px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
-.splash-fill{height:100%;background:#00e5a0;border-radius:2px;animation:splashLoad 2s ease-out forwards}
-@keyframes splashLoad{from{width:0}to{width:85%}}
-</style>
-<div id="app-splash">
-  <div class="splash-logo">IT</div>
-  <div class="splash-bar"><div class="splash-fill"></div></div>
-  <div class="splash-text">กำลังโหลด...</div>
-</div>
-<script>
-// ซ่อน splash เมื่อหน้าพร้อม
-window.hideSplash = function(){
-  const s = document.getElementById('app-splash');
-  if(s){ s.classList.add('hide'); setTimeout(()=>s.remove(), 450); }
-};
-// บังคับซ่อน splash หลัง 8 วิ ถ้า load ไม่เสร็จ
-setTimeout(window.hideSplash, 1500);
-</script>
 
-<!-- ══ LOGIN ══════════════════════════════════════════════ -->
-<div class="login-wrap" id="login-wrap">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-icon">🔧</div>
-      <div class="login-title">Engineer Portal</div>
-      <div class="login-sub">เข้าสู่ระบบช่าง IT Support</div>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="l-logo">
+      <div class="l-icon">🔧</div>
+      <div class="l-title">IT Support — ช่าง</div>
+      <div class="l-sub">Engineer Portal</div>
     </div>
-    <div class="field"><label>Username</label>
-      <input type="text" id="l-user" placeholder="กรอก username" autocomplete="username"/>
+    <div class="l-field">
+      <label>Username</label>
+      <input type="text" id="l-user" placeholder="กรอก Username" autocomplete="username"/>
     </div>
-    <div class="field"><label>Password</label>
-      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+    <div class="l-field">
+      <label>Password</label>
+      <input type="password" id="l-pass" placeholder="กรอกรหัสผ่าน" autocomplete="current-password"/>
     </div>
-    <button class="btn-login" id="btn-login">เข้าสู่ระบบ</button>
-    <div class="login-err" id="login-err"></div>
-    <div style="text-align:center;margin-top:16px">
-      <a href="/report" style="font-size:13px;color:var(--fg3)">← กลับหน้าแจ้งปัญหา</a>
+    <button class="l-btn" id="btn-login">เข้าสู่ระบบช่าง</button>
+    <div class="l-err" id="l-err"></div>
+    <div class="l-links">
+      <a href="/report">← หน้าแจ้งปัญหา</a> &nbsp;·&nbsp; <a href="/admin">Admin</a>
     </div>
   </div>
 </div>
 
-<!-- ══ APP ════════════════════════════════════════════════ -->
-<div class="app" id="app">
+<!-- APP -->
+<div id="app">
   <div class="topbar">
-    <div class="topbar-avatar" id="tb-avatar">👷</div>
-    <div>
-      <div class="topbar-name" id="tb-name">Engineer</div>
-      <div class="topbar-role">ช่างเทคนิค</div>
-    </div>
-    <span class="topbar-badge" id="tb-brand">—</span>
-    <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
-    <button class="btn-theme-eng" id="btn-theme-eng" onclick="toggleTheme()" title="เปลี่ยนธีม"><span id="theme-icon-eng">☀️</span></button>
-    <button class="btn-logout" id="btn-logout">Log out</button>
-  </div>
-
-  <div class="content">
-    <!-- MY TICKETS PAGE -->
-    <div class="page active" id="pg-tickets">
-      <div class="sec-head">
-        <span class="sec-title">งานของฉัน</span>
-        <span class="sec-count" id="ticket-count">—</span>
-      </div>
-      <div class="filter-tabs">
-        <button class="ftab active" data-f="all">ทั้งหมด</button>
-        <button class="ftab" data-f="แก้ไข">✏️ แก้ไข</button>
-        <button class="ftab" data-f="รอดำเนินการ ⏱️">⏱️ รอดำเนินการ</button>
-        <button class="ftab" data-f="ตรวจงาน">🔍 ตรวจงาน</button>
-        <button class="ftab" data-f="อยู่ระหว่างดำเนินการ ⚙️">⚙️ กำลังทำ</button>
-        <button class="ftab" data-f="เสร็จสิ้น ✅">✅ เสร็จ</button>
-      </div>
-      <div id="ticket-list"></div>
-    </div>
-
-    <!-- PROFILE PAGE -->
-    <div class="page" id="pg-profile">
-      <div class="sec-title" style="margin-bottom:16px">โปรไฟล์ของฉัน</div>
-      <div class="profile-card" id="profile-content"></div>
-      <div style="margin-top:16px">
-        <button class="btn-big btn-danger" id="btn-logout2">ออกจากระบบ</button>
-      </div>
+    <div class="tb-logo">🔧</div>
+    <div class="tb-title">Engineer View</div>
+    <div class="tb-user" id="tb-user">—</div>
+    <div class="tb-actions">
+      <button class="btn-icon" id="btn-theme" title="สลับธีม">🌙</button>
+      <button class="btn-icon" id="btn-refresh" title="รีเฟรช">↻</button>
+      <button class="btn-icon" id="btn-logout" title="ออกจากระบบ">⏻</button>
     </div>
   </div>
 
-  <nav class="bottom-nav">
-    <button class="bnav-item active" data-page="tickets"><span class="bnav-icon">🔧</span>งานของฉัน</button>
-    <button class="bnav-item" data-page="profile"><span class="bnav-icon">👤</span>โปรไฟล์</button>
-  </nav>
-</div>
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="scard" style="--sc:var(--warn)"><div class="scard-label">งานของฉัน (รอดำเนินการ)</div><div class="scard-num" id="s-mine">—</div></div>
+      <div class="scard" style="--sc:var(--blue)"><div class="scard-label">กำลังดำเนินการ</div><div class="scard-num" id="s-inprog">—</div></div>
+      <div class="scard" style="--sc:var(--purple)"><div class="scard-label">รอตรวจงาน</div><div class="scard-num" id="s-review">—</div></div>
+      <div class="scard" style="--sc:var(--accent)"><div class="scard-label">เสร็จสิ้นแล้ว</div><div class="scard-num" id="s-done">—</div></div>
+    </div>
 
-<!-- ══ DETAIL SHEET ════════════════════════════════════════ -->
-<div class="detail-overlay" id="detail-overlay">
-  <div class="detail-sheet" id="detail-sheet">
-    <div class="detail-handle"></div>
-    <div id="detail-content"></div>
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button class="ftab ftab-mine active" onclick="setFilter('mine')">📋 งานของฉัน</button>
+      <button class="ftab ftab-all" onclick="setFilter('all')">🌐 ทั้งหมด</button>
+      <button class="ftab ftab-wait" onclick="setFilter('wait')">⏱️ รอดำเนินการ</button>
+      <button class="ftab ftab-done" onclick="setFilter('done')">✅ เสร็จสิ้น</button>
+    </div>
+
+    <!-- Ticket list -->
+    <div class="ticket-list" id="ticket-list">
+      <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">กำลังโหลด...</div></div>
+    </div>
   </div>
 </div>
 
-<div class="toast" id="toast" style="display:none"></div>
-<input type="file" id="photo-input" accept="image/*" multiple style="display:none"/>
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     FAB NAVIGATION PANEL (Engineer)
-     - search → กรอง tickets realtime
-     - pagination → แบ่งหน้า ticket-list
-═══════════════════════════════════════════════════ -->
-<div class="fab-wrap" id="eng-fab-wrap">
-  <div class="fab-search-pop" id="fab-search-pop">
-    <label>ค้นหางาน</label>
-    <input class="fab-search-input" id="fab-search-input" type="text" placeholder="Ticket ID, ชื่อ, ประเภท…"/>
-    <div class="fab-search-hint">พิมพ์เพื่อกรองทันที · คลิกนอกเพื่อปิด</div>
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-head-info">
+      <div class="drawer-id" id="d-id">—</div>
+      <div class="drawer-title" id="d-title">—</div>
+      <div style="margin-top:6px" id="d-status-wrap"></div>
+    </div>
+    <button class="btn-close-dr" onclick="closeDrawer()">✕</button>
   </div>
-  <div class="fab-branch-top">
-    <button class="fab-btn fab-icon" id="fab-to-top">↑</button>
-    <button class="fab-btn fab-icon" id="fab-search-btn">⌕</button>
-    <button class="fab-btn fab-icon" id="fab-to-bottom">↓</button>
-  </div>
-  <div class="fab-branch-left" id="fab-pag-bar"></div>
-  <button class="fab-main" id="fab-main-btn">+</button>
+  <div class="drawer-body" id="drawer-body"></div>
 </div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-// ── State ─────────────────────────────────────────────────────
-let AUTH = null; // { token, user }
+const API = '';
+let AUTH = null;
 let tickets = [];
-let filterStatus = 'all';
-let openTicket = null;
-let photos = []; // base64 photos for work form
+let currentFilter = 'mine';
+let openId = null;
+const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅','ยกเลิก ❌'];
 
-// ── Avatar colors ─────────────────────────────────────────────
-const AVATAR_COLORS = ['#00e5a0','#0099ff','#ff9640','#b87be8','#ff4d6d','#22d3ee','#f59e0b'];
-function avatarColor(name){ return AVATAR_COLORS[(name||'').charCodeAt(0)%AVATAR_COLORS.length]; }
-function avatarInitial(name){ return (name||'?').charAt(0).toUpperCase(); }
-function statusColor(s){return{'แก้ไข':'#f59e0b','รอดำเนินการ ⏱️':'#a855f7','ตรวจงาน':'#22d3ee','อยู่ระหว่างดำเนินการ ⚙️':'#3b82f6','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ef4444'}[s]||'#444';}
+// ── util ──
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2500);}
+function statusColor(s=''){
+  if(s.includes('รอดำเนินการ'))return '#c084fc';
+  if(s.includes('อยู่ระหว่าง'))return '#60a5fa';
+  if(s.includes('ตรวจงาน'))return '#22d3ee';
+  if(s.includes('เสร็จสิ้น'))return '#00e5a0';
+  if(s.includes('ยกเลิก'))return '#f87171';
+  if(s.includes('แก้ไข'))return '#f59e0b';
+  return '#888';
+}
+function statusKey(s=''){return s.replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();}
 
-// ── SSE ───────────────────────────────────────────────────────
-let sse = null;
-function connectSSE(){
-  if(!AUTH) return;
-  sse = new EventSource('/api/events');
-  sse.addEventListener('ticket_updated', e => {
-    try{
-      const d = JSON.parse(e.data);
-      tickets = tickets.map(t => t._recordId===d.recordId ? {...t, ...d} : t);
-      renderList();
-      if(openTicket && openTicket._recordId===d.recordId){
-        openTicket = {...openTicket, ...d};
-        // Re-render status section in detail
-        const pill = document.querySelector('.detail-status-pill');
-        if(pill){ pill.className='status-pill s-'+esc(openTicket.status||''); pill.textContent=esc(openTicket.status||'-'); }
-      }
-      showToast('📢 Ticket อัพเดท: '+esc(d.status||''));
-    }catch(_){}
-  });
-  sse.onerror = () => { setTimeout(connectSSE, 5000); };
+async function api(path,opts={}){
+  const hdrs={'Content-Type':'application/json'};
+  if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
+  const r=await fetch(API+path,{...opts,headers:{...hdrs,...(opts.headers||{})}});
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.message||'Error');
+  return d;
 }
 
-// ── Auth ───────────────────────────────────────────────────────
-async function tryAutoLogin(){
-  const saved = localStorage.getItem('eng_auth');
-  if(!saved) return false;
+// ── AUTH ──
+async function tryRestoreAuth(){
+  const saved=localStorage.getItem('eng_auth');
+  if(!saved)return false;
   try{
-    const { token } = JSON.parse(saved);
-    if(!token) { localStorage.removeItem('eng_auth'); return false; }
-    // ✅ timeout 8s — ถ้า server ยังไม่ตื่นให้ login ใหม่ทันที
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 8000);
-    let d;
-    try {
-      const r = await fetch('/api/auth/me', { headers:{'Authorization':'Bearer '+token}, signal:ctrl.signal });
-      clearTimeout(tid);
-      d = await r.json();
-    } catch(fetchErr) {
-      clearTimeout(tid);
-      console.warn('[AutoLogin] Server unreachable:', fetchErr.message);
-      localStorage.removeItem('eng_auth');
-      return false;
-    }
-    if(d.ok && ['engineer','admin','superadmin','manager'].includes(d.user.role)){
-      AUTH = { token, user: d.user };
-      return true;
-    }
-  }catch(e){ console.warn('[AutoLogin] Error:', e.message); }
+    const {token}=JSON.parse(saved);
+    const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});
+    if(d.ok && d.user.role==='engineer'){AUTH={token,user:d.user};return true;}
+  }catch(_){}
   localStorage.removeItem('eng_auth');
   return false;
 }
 
-document.getElementById('btn-login').onclick = async () => {
-  const u = document.getElementById('l-user').value.trim();
-  const p = document.getElementById('l-pass').value;
-  const btn = document.getElementById('btn-login');
-  const err = document.getElementById('login-err');
-  err.textContent='';
-  if(!u||!p){ err.textContent='กรุณากรอก username และ password'; return; }
-  btn.disabled=true; btn.textContent='⏳ กำลังเข้าสู่ระบบ...';
+document.getElementById('btn-login').onclick=async()=>{
+  const uname=document.getElementById('l-user').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err');
+  const btn=document.getElementById('btn-login');
+  if(!uname||!pass){err.textContent='กรุณากรอก Username และ Password';return;}
+  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';err.textContent='';
   try{
-    const r = await fetch('/api/auth/login',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:u, password:p})
-    });
-    const d = await r.json();
-    if(!d.ok) throw new Error(d.error);
-    if(!['engineer','admin','superadmin','manager'].includes(d.user.role)){
-      throw new Error('บัญชีนี้ไม่ใช่บัญชีช่าง กรุณาใช้หน้า /admin');
-    }
-    AUTH = { token: d.token, user: d.user };
-    localStorage.setItem('eng_auth', JSON.stringify(AUTH));
+    const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:uname,password:pass})});
+    if(d.user.role!=='engineer') throw new Error('บัญชีนี้ไม่ใช่ช่าง กรุณาใช้หน้า Admin');
+    AUTH={token:d.token,user:d.user};
+    localStorage.setItem('eng_auth',JSON.stringify(AUTH));
     startApp();
-  }catch(e){
-    err.textContent = e.message;
-  }finally{
-    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
-  }
+  }catch(e){err.textContent='❌ '+e.message;btn.disabled=false;btn.textContent='เข้าสู่ระบบช่าง';}
 };
+['l-user','l-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}));
 
-['l-user','l-pass'].forEach(id=>{
-  document.getElementById(id).onkeydown = e => { if(e.key==='Enter') document.getElementById('btn-login').click(); };
-});
+function logout(){
+  try{api('/api/auth/logout',{method:'POST'});}catch(_){}
+  AUTH=null;localStorage.removeItem('eng_auth');
+  document.getElementById('app').classList.remove('ready');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+document.getElementById('btn-logout').onclick=logout;
 
+// ── APP START ──
 async function startApp(){
-  document.getElementById('login-wrap').style.display='none';
-  document.getElementById('app').classList.add('shown');
-  const u = AUTH.user;
-  // Topbar
-  const av = document.getElementById('tb-avatar');
-  av.textContent = avatarInitial(u.name);
-  av.style.background = avatarColor(u.name);
-  av.style.color = '#000';
-  document.getElementById('tb-name').textContent = u.name;
-  document.getElementById('tb-brand').textContent = u.brand==='ALL'?'ทุกแบรนด์':u.brand;
-  // Profile
-  renderProfile();
-  // Load tickets
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('ready');
+  document.getElementById('tb-user').textContent='🔧 '+AUTH.user.name;
   await loadTickets();
-  connectSSE();
-  // Auto refresh every 60s
-  setInterval(loadTickets, 60_000);
-}
-
-// Logout
-// ════════════════════════════════════════════════════════════════
-// THEME TOGGLE — light / dark  (ค่าเริ่มต้น: light)
-// ════════════════════════════════════════════════════════════════
-function applyTheme(mode) {
-  const isLight = mode !== 'dark';
-  document.body.classList.toggle('theme-light', isLight);
-  const icon = document.getElementById('theme-icon-eng');
-  if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-  try { localStorage.setItem('eng_theme', mode); } catch(_) {}
-}
-function toggleTheme() {
-  try {
-    const current = localStorage.getItem('eng_theme') || 'light';
-    applyTheme(current === 'light' ? 'dark' : 'light');
-  } catch(e) { console.warn('toggleTheme error:', e.message); }
-}
-
-[document.getElementById('btn-logout'), document.getElementById('btn-logout2')].forEach(btn => {
-  btn.onclick = async () => {
-    try{ await fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+AUTH.token}}); }catch(_){}
-    AUTH=null;
-    localStorage.removeItem('eng_auth');
-    location.reload();
-  };
-});
-
-// ── Load Tickets ───────────────────────────────────────────────
-async function loadTickets(){
+  // SSE
   try{
-    const r = await fetch('/api/tickets', { headers:{'Authorization':'Bearer '+AUTH.token} });
-    const d = await r.json();
-    if(d.ok){ tickets=d.tickets||[]; renderList(); }
+    const sse=new EventSource(API+'/api/events');
+    sse.addEventListener('ticket_created',()=>loadTickets());
+    sse.addEventListener('ticket_updated',e=>{try{const d=JSON.parse(e.data);tickets=tickets.map(t=>t._recordId===d.recordId?{...t,...d}:t);render();}catch(_){loadTickets();}});
   }catch(_){}
 }
 
-// ── Filter ─────────────────────────────────────────────────────
-document.querySelectorAll('.ftab').forEach(t => {
-  t.onclick = () => {
-    document.querySelectorAll('.ftab').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    filterStatus = t.dataset.f;
-    renderList();
-  };
-});
+async function loadTickets(){
+  const btn=document.getElementById('btn-refresh');
+  btn.textContent='↻';btn.style.animation='spin .7s linear infinite';
+  try{
+    const d=await api('/api/tickets');
+    tickets=d.tickets||d||[];
+    render();
+  }catch(e){toast('โหลดข้อมูลไม่สำเร็จ','error');}
+  btn.style.animation='';btn.textContent='↻';
+}
+document.getElementById('btn-refresh').onclick=loadTickets;
 
-// ── Render list ────────────────────────────────────────────────
-function renderList(){
-  let data = tickets;
-  if(filterStatus!=='all') data = data.filter(t=>t.status===filterStatus);
-  // Sort: pending first
-  const ORDER = {'แก้ไข':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'รอดำเนินการ ⏱️':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':4};
-  data.sort((a,b)=>(ORDER[a.status]??9)-(ORDER[b.status]??9));
+// ── FILTER ──
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  const map={mine:'ftab-mine',all:'ftab-all',wait:'ftab-wait',done:'ftab-done'};
+  document.querySelector('.'+map[f])?.classList.add('active');
+  render();
+}
 
-  const pending = tickets.filter(t=>!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
-  document.getElementById('ticket-count').textContent = `${data.length} รายการ${pending?` (${pending} รอดำเนินการ)`:''}`;
+// ── RENDER ──
+function render(){
+  const me=AUTH?.user?.name||'';
+  // stats
+  document.getElementById('s-mine').textContent=tickets.filter(t=>t.engineerName===me&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
+  document.getElementById('s-inprog').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
+  document.getElementById('s-review').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='ตรวจงาน').length;
+  document.getElementById('s-done').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='เสร็จสิ้น ✅').length;
 
+  let data=[...tickets];
+  if(currentFilter==='mine') data=data.filter(t=>t.engineerName===me);
+  else if(currentFilter==='wait') data=data.filter(t=>['แก้ไข','รอดำเนินการ ⏱️'].includes(t.status));
+  else if(currentFilter==='done') data=data.filter(t=>t.status==='เสร็จสิ้น ✅');
+
+  const list=document.getElementById('ticket-list');
   if(!data.length){
-    document.getElementById('ticket-list').innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div>ไม่มีงาน${filterStatus!=='all'?' ในสถานะนี้':''}</div></div>`;
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงานในหมวดนี้</div></div>';
     return;
   }
-  document.getElementById('ticket-list').innerHTML = data.map(t=>{
-    const sc = statusColor(t.status);
-    return `<div class="eng-card" style="--status-color:${sc}" onclick="openDetail('${esc(t._recordId)}')">
-      <div class="card-head">
-        <div>
-          <div class="card-id">🎫 ${esc(t.id||t._recordId||'—')}</div>
-          <div class="card-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}
-          </div>
-        </div>
-        <span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
+  list.innerHTML=data.map(t=>{
+    const sc=statusColor(t.status);
+    const sk=statusKey(t.status);
+    const isMe=t.engineerName===me;
+    return `<div class="tcard" style="--tc:${sc}" onclick="openDrawer('${esc(t._recordId)}')">
+      <div class="tcard-top">
+        <div class="tcard-id">${esc(t.id||t._recordId||'—')}</div>
+        <span class="tcard-status s-${esc(sk)}">${esc(t.status||'-')}</span>
       </div>
-      <div class="card-type">${esc(t.type||'—')}</div>
-      <div class="card-detail">${esc(t.detail||'-')}</div>
-      <div class="card-meta">
-        <span>👤 ${esc(t.reporter||'-')}</span>
-        <span>📅 ${esc(t.sentDate||'-')}</span>
-        <span>📍 ${esc(t.location||'-')}</span>
+      <div class="tcard-title">${esc(t.type||'—')}</div>
+      <div class="tcard-detail">${esc(t.detail||'-')}</div>
+      <div class="tcard-meta">
+        <span class="tcard-badge">🏪 ${esc(t.brand||'-')}</span>
+        <span class="tcard-badge">📍 ${esc(t.branchCode||t.branch||'-')}</span>
+        <span class="tcard-badge">📅 ${esc(t.sentDate||'-')}</span>
+        ${isMe?'<span class="tcard-assigned">👤 งานของฉัน</span>':(t.engineerName?`<span class="tcard-badge">🔧 ${esc(t.engineerName)}</span>`:'<span class="tcard-badge" style="color:var(--warn)">⚠ ยังไม่มอบหมาย</span>')}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── Open Detail ────────────────────────────────────────────────
-function openDetail(rid){
-  openTicket = tickets.find(t=>t._recordId===rid||t.id===rid)||null;
-  if(!openTicket) return;
-  photos=[];
-  renderDetail();
-  document.getElementById('detail-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
+// ── DRAWER ──
+function openDrawer(id){
+  const t=tickets.find(x=>x._recordId===id);
+  if(!t)return;
+  openId=id;
+  document.getElementById('d-id').textContent='🎫 '+(t.id||t._recordId||'—');
+  document.getElementById('d-title').textContent=t.type||'—';
+  const sk=statusKey(t.status);
+  document.getElementById('d-status-wrap').innerHTML=`<span class="tcard-status s-${esc(sk)}">${esc(t.status||'-')}</span>`;
+  renderDrawerBody(t);
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
 }
 
-document.getElementById('detail-overlay').onclick = e => {
-  if(e.target===e.currentTarget) closeDetail();
-};
-
-function closeDetail(){
-  document.getElementById('detail-overlay').classList.remove('open');
-  document.body.style.overflow='';
-  openTicket=null; photos=[];
+function closeDrawer(){
+  openId=null;
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
 }
 
-function renderDetail(){
-  const t = openTicket;
-  const submitted = !!t.workDetail;
-  const done = ['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status);
-  const STATUSES = ['แก้ไข','อยู่ระหว่างดำเนินการ ⚙️','รอดำเนินการ ⏱️','เสร็จสิ้น ✅','ยกเลิก ❌'];
-  const SCOLORS  = {'แก้ไข':'#ff9640','อยู่ระหว่างดำเนินการ ⚙️':'#0099ff','รอดำเนินการ ⏱️':'#b87be8','เสร็จสิ้น ✅':'#00e5a0','ยกเลิก ❌':'#ff4d6d'};
+function renderDrawerBody(t){
+  const me=AUTH?.user?.name||'';
+  const isMe=t.engineerName===me;
+  const canSubmit=isMe&&!['เสร็จสิ้น ✅','ยกเลิก ❌','ตรวจงาน'].includes(t.status);
+  const alreadySubmitted=isMe&&t.workDetail&&['ตรวจงาน','เสร็จสิ้น ✅'].includes(t.status);
 
-  document.getElementById('detail-content').innerHTML = `
-    <div class="detail-head">
-      <div style="flex:1">
-        <div style="font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:4px">🎫 ${esc(t.id||t._recordId||'—')}</div>
-        <div style="font-size:16px;font-weight:700;line-height:1.3">${esc(t.type||'—')}</div>
-        <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <span class="status-pill detail-status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span>
-          <span style="font-size:12px;color:var(--fg3)">${esc(t.brand||'-')}</span>
-        </div>
-      </div>
-      <button onclick="closeDetail()" style="background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:16px;padding:6px 10px;cursor:pointer;flex-shrink:0">✕</button>
+  document.getElementById('drawer-body').innerHTML=`
+    <div class="d-section">
+      <div class="d-section-title">ข้อมูลงาน</div>
+      <div class="d-row"><span class="d-label">สาขา</span><span class="d-value">${esc(t.branchCode||t.branch||'-')}</span></div>
+      <div class="d-row"><span class="d-label">แบรนด์</span><span class="d-value">${esc(t.brand||'-')}</span></div>
+      <div class="d-row"><span class="d-label">ผู้แจ้ง</span><span class="d-value">${esc(t.reporter||'-')}</span></div>
+      <div class="d-row"><span class="d-label">เบอร์</span><span class="d-value">${esc(t.phone||'-')}</span></div>
+      <div class="d-row"><span class="d-label">วันที่แจ้ง</span><span class="d-value">${esc(t.sentDate||'-')}</span></div>
     </div>
 
-    <div class="detail-body">
-      <!-- Ticket Info -->
-      <div class="detail-section">
-        <div class="detail-section-title">ข้อมูล Ticket</div>
-        ${infoRow('แบรนด์',t.brand)}
-        ${infoRow('รหัสสาขา',t.branchCode)}
-        ${infoRow('สถานที่',t.location)}
-        ${infoRow('ผู้แจ้ง',t.reporter)}
-        ${infoRow('เบอร์ติดต่อ',t.phone)}
-        ${infoRow('วันที่แจ้ง',t.sentDate)}
+    <div class="d-divider"></div>
+
+    <div class="d-section">
+      <div class="d-section-title">รายละเอียดปัญหา</div>
+      <div class="d-detail-box">${esc(t.detail||t.type||'ไม่มีรายละเอียด')}</div>
+    </div>
+
+    ${t.workDetail?`
+    <div class="d-divider"></div>
+    <div class="d-section">
+      <div class="d-section-title">สิ่งที่ช่างดำเนินการ</div>
+      <div class="d-work-box">
+        <div style="font-size:11.5px;color:var(--accent);margin-bottom:6px;font-weight:600">🔧 ${esc(t.engineerName||'-')} · ${esc(t.completedAt||'-')}</div>
+        ${esc(t.workDetail)}
       </div>
+    </div>`:''}
 
-      <!-- Problem Detail -->
-      <div class="detail-section">
-        <div class="detail-section-title">รายละเอียดปัญหา</div>
-        <div style="background:var(--bg3);border-radius:var(--r);padding:13px;font-size:14px;line-height:1.8;color:var(--fg)">${esc(t.detail||'-')}</div>
+    ${t.adminNote?`
+    <div class="d-divider"></div>
+    <div class="d-section">
+      <div class="d-section-title">หมายเหตุจาก Admin</div>
+      <div class="d-admin-box">${esc(t.adminNote)}</div>
+    </div>`:''}
+
+    <div class="d-divider"></div>
+
+    ${canSubmit?`
+    <div class="d-section">
+      <div class="submit-form">
+        <div class="submit-title">🔧 บันทึกผลการดำเนินการ</div>
+        <div class="d-form-group">
+          <label class="d-form-label">สิ่งที่ดำเนินการ / วิธีแก้ไข *</label>
+          <textarea class="d-form-textarea" id="eng-workdetail" placeholder="อธิบายสิ่งที่ทำเพื่อแก้ปัญหา เช่น รีสตาร์ท POS, เปลี่ยนสาย LAN..."></textarea>
+        </div>
+        <div class="d-form-group">
+          <label class="d-form-label">สถานะงาน</label>
+          <select class="d-form-select" id="eng-status">
+            <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ อยู่ระหว่างดำเนินการ</option>
+            <option value="ตรวจงาน" selected>🔍 ส่งตรวจงาน (เสร็จแล้ว รอ Admin ตรวจ)</option>
+          </select>
+        </div>
+        <button class="btn-submit-work" id="btn-submit-eng" onclick="submitWork('${esc(t._recordId)}')">📤 ส่งผลการดำเนินการ</button>
       </div>
-
-      <!-- Quick Status Change -->
-      <div class="detail-section">
-        <div class="detail-section-title">เปลี่ยนสถานะด่วน</div>
-        <div class="status-grid">
-          ${STATUSES.filter(s=>s!=='ยกเลิก ❌'&&s!=='เสร็จสิ้น ✅').map(s=>{
-            const c=SCOLORS[s]; const active=t.status===s;
-            return `<button class="status-btn ${active?'active':''}" style="border-color:${c};color:${c};background:${active?c+'22':'transparent'}"
-              onclick="quickStatus('${esc(s)}')">${esc(s)}</button>`;
-          }).join('')}
-        </div>
+    </div>`
+    :alreadySubmitted?`
+    <div class="d-section">
+      <div class="already-submitted">
+        ✅ ส่งผลการดำเนินการแล้ว รอ Admin ตรวจสอบ
       </div>
-
-      <!-- Work Log (if already submitted) -->
-      ${submitted?`
-      <div class="detail-section">
-        <div class="detail-section-title">รายงานงานล่าสุด</div>
-        <div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:var(--r);padding:13px">
-          <div style="font-size:13.5px;line-height:1.8;margin-bottom:8px">${esc(t.workDetail)}</div>
-          ${t.partsUsed?`<div style="font-size:12.5px;color:var(--fg2)">🔧 อะไหล่: ${esc(t.partsUsed)}</div>`:''}
-          ${t.workHours?`<div style="font-size:12.5px;color:var(--fg2)">⏱ ชั่วโมง: ${esc(t.workHours)}</div>`:''}
-          <div style="font-size:11.5px;color:var(--fg3);margin-top:6px">โดย ${esc(t.engineerName||'-')} · ${esc(t.completedAt||'-')}</div>
-        </div>
-      </div>`:''}
-
-      <!-- Work Form -->
-      ${!done?`
-      <div class="detail-section">
-        <div class="detail-section-title">${submitted?'อัพเดทรายงานงาน':'📝 บันทึกงาน / ส่งงาน'}</div>
-        <div class="work-form-label">รายละเอียดงานที่ทำ *</div>
-        <textarea class="work-form-input work-form-textarea" id="wd-detail" placeholder="อธิบายการซ่อม เช่น เปลี่ยน capacitor, ล้างแผง PCB, ทดสอบแล้วปกติ...">${esc(t.workDetail||'')}</textarea>
-        <div class="work-form-label">อะไหล่ที่ใช้</div>
-        <input class="work-form-input" id="wd-parts" placeholder="ชื่ออะไหล่ หรือ ไม่มี" value="${esc(t.partsUsed||'')}"/>
-        <div class="work-form-label">ชั่วโมงทำงาน</div>
-        <input class="work-form-input" type="number" id="wd-hours" placeholder="เช่น 2.5" min="0" step="0.5" value="${esc(t.workHours||'')}"/>
-        <div class="work-form-label">ภาพถ่าย (กดเพิ่มรูป)</div>
-        <div class="photo-row" id="photo-row">
-          <button class="photo-thumb" onclick="addPhoto()">📷<br><span style="font-size:10px">เพิ่มรูป</span></button>
-        </div>
-        <button class="btn-big btn-primary" id="btn-eng-submit" onclick="submitWork()">
-          📤 ส่งงาน / รายงานผล
-        </button>
-      </div>`:''}
-    </div>`;
+    </div>`
+    :!isMe&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`
+    <div class="d-section">
+      <div class="already-submitted" style="color:var(--warn);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.05)">
+        ⚠️ งานนี้ยังไม่ได้รับมอบหมายให้คุณ
+      </div>
+    </div>`:''}
+  `;
 }
 
-function infoRow(label,val){
-  return `<div class="info-row"><span class="info-label">${esc(label)}</span><span class="info-value">${esc(val||'-')}</span></div>`;
-}
-
-// ── Quick status ───────────────────────────────────────────────
-async function quickStatus(status){
-  const rid = openTicket._recordId;
+async function submitWork(rid){
+  const workDetail=document.getElementById('eng-workdetail').value.trim();
+  const status=document.getElementById('eng-status').value;
+  if(!workDetail){toast('กรุณากรอกสิ่งที่ดำเนินการ','error');return;}
+  const btn=document.getElementById('btn-submit-eng');
+  btn.disabled=true;btn.textContent='กำลังบันทึก...';
   try{
-    const r = await fetch(`/api/tickets/${rid}/status`,{
-      method:'PATCH', headers:{'Content-Type':'application/json','Authorization':'Bearer '+AUTH.token},
-      body:JSON.stringify({status})
-    });
-    const d = await r.json();
-    if(!d.ok) throw new Error(d.error);
-    openTicket.status=status;
-    tickets=tickets.map(t=>t._recordId===rid?{...t,status}:t);
-    renderDetail(); renderList();
-    showToast('✅ เปลี่ยนสถานะแล้ว: '+status);
-  }catch(e){ showToast('❌ '+e.message); }
+    const d=await api(`/api/tickets/${rid}/engineer`,{method:'PATCH',body:JSON.stringify({workDetail,status,engineerName:AUTH.user.name})});
+    tickets=tickets.map(t=>t._recordId===rid?{...t,workDetail,status,engineerName:AUTH.user.name,completedAt:new Date().toLocaleString('th-TH')}:t);
+    toast('✅ บันทึกผลเรียบร้อย');
+    const t=tickets.find(x=>x._recordId===rid);
+    if(t){renderDrawerBody(t);document.getElementById('d-status-wrap').innerHTML=`<span class="tcard-status s-${esc(statusKey(t.status))}">${esc(t.status)}</span>`;}
+    render();
+  }catch(e){toast('❌ '+e.message,'error');btn.disabled=false;btn.textContent='📤 ส่งผลการดำเนินการ';}
 }
 
-// ── Add photo ──────────────────────────────────────────────────
-function addPhoto(){
-  document.getElementById('photo-input').click();
-}
-document.getElementById('photo-input').onchange = e => {
-  const files = Array.from(e.target.files||[]);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      if(photos.length < 5) photos.push(ev.target.result);
-      renderPhotoRow();
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value='';
-};
+// ── THEME ──
+const btnTheme=document.getElementById('btn-theme');
+let dark=true;
+function applyTheme(){document.body.classList.toggle('theme-light',!dark);btnTheme.textContent=dark?'🌙':'☀️';}
+btnTheme.onclick=()=>{dark=!dark;localStorage.setItem('eng_theme',dark?'dark':'light');applyTheme();}
+const savedTheme=localStorage.getItem('eng_theme');
+if(savedTheme==='light'){dark=false;applyTheme();}
 
-function renderPhotoRow(){
-  const row = document.getElementById('photo-row');
-  if(!row) return;
-  row.innerHTML = photos.map((p,i)=>`
-    <div class="photo-thumb filled" style="position:relative;cursor:default">
-      <img src="${p}" alt="photo ${i+1}"/>
-      <button onclick="removePhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:10px;cursor:pointer">✕</button>
-    </div>`).join('') +
-    (photos.length<5?`<button class="photo-thumb" onclick="addPhoto()">📷<br><span style="font-size:10px">เพิ่ม</span></button>`:'');
-}
-function removePhoto(i){ photos.splice(i,1); renderPhotoRow(); }
-
-// ── Submit work ────────────────────────────────────────────────
-async function submitWork(){
-  const detail = (document.getElementById('wd-detail')||{}).value?.trim();
-  const parts  = (document.getElementById('wd-parts')||{}).value?.trim();
-  const hours  = (document.getElementById('wd-hours')||{}).value||'';
-  if(!detail){ showToast('❌ กรุณากรอกรายละเอียดงาน'); return; }
-  const btn = document.getElementById('btn-eng-submit');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ กำลังส่ง...'; }
-  try{
-    const r = await fetch(`/api/tickets/${openTicket._recordId}/engineer-submit`,{
-      method:'PATCH', headers:{'Content-Type':'application/json','Authorization':'Bearer '+AUTH.token},
-      body:JSON.stringify({ workDetail:detail, partsUsed:parts, workHours:hours })
-    });
-    const d = await r.json();
-    if(!d.ok) throw new Error(d.error);
-    openTicket={...openTicket, workDetail:detail, partsUsed:parts, workHours:hours, status:'แก้ไข'};
-    tickets=tickets.map(t=>t._recordId===openTicket._recordId?openTicket:t);
-    renderDetail(); renderList();
-    showToast('✅ ส่งงานสำเร็จ! Admin จะตรวจรับงาน');
-    photos=[];
-  }catch(e){
-    showToast('❌ '+e.message);
-    if(btn){ btn.disabled=false; btn.textContent='📤 ส่งงาน / รายงานผล'; }
-  }
-}
-
-// ── Profile ────────────────────────────────────────────────────
-function renderProfile(){
-  if(!AUTH) return;
-  const u=AUTH.user;
-  const done=tickets.filter(t=>t.status==='เสร็จสิ้น ✅').length;
-  const inprog=tickets.filter(t=>t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  document.getElementById('profile-content').innerHTML=`
-    <div class="profile-avatar" style="background:${avatarColor(u.name)};color:#000">${avatarInitial(u.name)}</div>
-    <div class="profile-name">${esc(u.name)}</div>
-    <div class="profile-role">ช่างเทคนิค · ${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand)}</div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="stat-num">${tickets.length}</div><div class="stat-lbl">งานทั้งหมด</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${inprog}</div><div class="stat-lbl">กำลังดำเนินการ ⚙️</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--accent)">${done}</div><div class="stat-lbl">เสร็จแล้ว</div></div>
-    </div>`;
-}
-
-// ── Bottom nav ─────────────────────────────────────────────────
-document.querySelectorAll('.bnav-item').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.bnav-item').forEach(x=>x.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('pg-'+btn.dataset.page).classList.add('active');
-    if(btn.dataset.page==='profile') renderProfile();
-  };
-});
-
-// ── Toast ──────────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.style.display='block';
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>{ el.style.display='none'; },3000);
-}
-
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// ── Boot ───────────────────────────────────────────────────────
+// ── INIT ──
 (async()=>{
-  // ✅ 1. init theme ทันที
-  try {
-    const saved = localStorage.getItem('eng_theme') || 'light';
-    applyTheme(saved);
-  } catch(_) {
-    document.body.classList.add('theme-light');
-  }
-
-  // ✅ 2. ซ่อน splash ทันที — ไม่รอ API
-  window.hideSplash?.();
-
-  // ✅ 3. tryAutoLogin ในพื้นหลัง
-  const autoOk = await Promise.race([
-    tryAutoLogin(),
-    new Promise(r => setTimeout(()=>r(false), 5000))
-  ]);
-  if(autoOk) startApp();
+  const ok=await tryRestoreAuth();
+  if(ok){startApp();}
 })();
-
-// ═══════════════════════════════════════════════════════════════
-// FAB NAVIGATION PANEL — Engineer
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", (function(){
-  let engPage=1, engPerPage=10, fabOpen=false, fabSearchOpen=false, fabSearchQ='';
-
-  const fabWrap   = document.getElementById('eng-fab-wrap');
-  const fabMain   = document.getElementById('fab-main-btn');
-  const fabPagBar = document.getElementById('fab-pag-bar');
-  const searchPop = document.getElementById('fab-search-pop');
-  const searchInp = document.getElementById('fab-search-input');
-  const fabSBtn   = document.getElementById('fab-search-btn');
-
-  if(!fabWrap||!fabMain) return;
-
-  // ── Patch renderList with pagination + search ────────────────
-  const _orig = window.renderList;
-  window.renderList = function(){
-    let data = tickets;
-    if(filterStatus!=='all') data=data.filter(t=>t.status===filterStatus);
-    const ORDER={'แก้ไข':0,'อยู่ระหว่างดำเนินการ ⚙️':1,'รอดำเนินการ ⏱️':2,'เสร็จสิ้น ✅':3,'ยกเลิก ❌':4};
-    data.sort((a,b)=>(ORDER[a.status]??9)-(ORDER[b.status]??9));
-    if(fabSearchQ.trim()){
-      const q=fabSearchQ.toLowerCase();
-      data=data.filter(t=>String(t.id||'').toLowerCase().includes(q)||String(t.type||'').toLowerCase().includes(q)||String(t.detail||'').toLowerCase().includes(q)||String(t.reporter||'').toLowerCase().includes(q));
-    }
-    const pending=tickets.filter(t=>!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
-    document.getElementById('ticket-count').textContent=`${data.length} รายการ${pending?` (${pending} รอดำเนินการ)`:''}`;
-    if(!data.length){
-      document.getElementById('ticket-list').innerHTML='<div class="empty"><div class="empty-icon">✅</div><div>ไม่พบงาน</div></div>';
-      renderEngPag(0,1); return;
-    }
-    const tot=Math.max(1,Math.ceil(data.length/engPerPage));
-    engPage=Math.min(Math.max(engPage,1),tot);
-    const paged=data.slice((engPage-1)*engPerPage,engPage*engPerPage);
-    document.getElementById('ticket-list').innerHTML=paged.map(t=>{
-      const sc=statusColor(t.status);
-      return `<div class="eng-card" style="--status-color:${sc}" onclick="openDetail('${esc(t._recordId)}')"><div class="card-head"><div><div class="card-id">🎫 ${esc(t.id||t._recordId||'—')}</div><div class="card-brand">${esc(t.brand||'-')} ${t.branchCode?'· '+esc(t.branchCode):''}</div></div><span class="status-pill s-${esc(t.status||'แก้ไข')}">${esc(t.status||'แก้ไข')}</span></div><div class="card-type">${esc(t.type||'—')}</div><div class="card-detail">${esc(t.detail||'-')}</div><div class="card-meta"><span>👤 ${esc(t.reporter||'-')}</span><span>📅 ${esc(t.sentDate||'-')}</span><span>📍 ${esc(t.location||'-')}</span></div></div>`;
-    }).join('');
-    renderEngPag(data.length,tot);
-  };
-
-  // ── Render pagination in FAB ─────────────────────────────────
-  function renderEngPag(total,totalPages){
-    if(!fabPagBar) return;
-    const isFirst=engPage===1, isLast=engPage===totalPages;
-    function pageRange(cur,tot){
-      if(tot<=7) return Array.from({length:tot},(_,i)=>i+1);
-      const pages=[1]; let l=Math.max(2,cur-1),r=Math.min(tot-1,cur+1);
-      if(l>2) pages.push('…'); for(let i=l;i<=r;i++) pages.push(i);
-      if(r<tot-1) pages.push('…'); pages.push(tot); return pages;
-    }
-    let html=`<select class="fab-perpage" id="fab-perpage-sel"><option value="10"${engPerPage===10?' selected':''}>10/หน้า</option><option value="20"${engPerPage===20?' selected':''}>20/หน้า</option><option value="50"${engPerPage===50?' selected':''}>50/หน้า</option><option value="999"${engPerPage===999?' selected':''}>ทั้งหมด</option></select>`;
-    if(totalPages>1){
-      html+=`<button class="fab-btn${isLast?' fab-disabled':''}" data-pag="last">สุดท้าย</button>`;
-      html+=`<button class="fab-btn fab-icon${isLast?' fab-disabled':''}" data-pag="next">›</button>`;
-      pageRange(engPage,totalPages).forEach(p=>{ if(p==='…') html+=`<button class="fab-btn fab-disabled" style="min-width:32px;padding:0">…</button>`; else html+=`<button class="fab-btn${p===engPage?' fab-active':''}" data-page="${p}">${p}</button>`; });
-      html+=`<button class="fab-btn fab-icon${isFirst?' fab-disabled':''}" data-pag="prev">‹</button>`;
-      html+=`<button class="fab-btn${isFirst?' fab-disabled':''}" data-pag="first">แรก</button>`;
-    } else { html+=`<span style="font-size:12px;color:var(--fg2);padding:0 8px">${total} รายการ</span>`; }
-    fabPagBar.innerHTML=html;
-    const pp=document.getElementById('fab-perpage-sel');
-    if(pp) pp.onchange=function(){ engPerPage=Number(this.value)||10; engPage=1; renderList(); };
-  }
-
-  fabPagBar.addEventListener('click',e=>{
-    const btn=e.target.closest('button');
-    if(!btn||btn.classList.contains('fab-disabled')) return;
-    const page=btn.dataset.page, pag=btn.dataset.pag;
-    let data=tickets; if(filterStatus!=='all') data=data.filter(t=>t.status===filterStatus);
-    if(fabSearchQ.trim()){ const q=fabSearchQ.toLowerCase(); data=data.filter(t=>String(t.id||'').toLowerCase().includes(q)||String(t.type||'').toLowerCase().includes(q)); }
-    const tot=Math.max(1,Math.ceil(data.length/engPerPage));
-    if(page){ engPage=Number(page); } else { switch(pag){ case 'first':engPage=1;break; case 'prev':engPage=Math.max(1,engPage-1);break; case 'next':engPage=Math.min(tot,engPage+1);break; case 'last':engPage=tot;break; } }
-    renderList();
-    document.querySelector('.content')?.scrollTo({top:0,behavior:'smooth'});
-  });
-
-  function openFab(){ fabOpen=true; fabWrap.classList.add('fab-open'); }
-  function closeFab(){ fabOpen=false; fabWrap.classList.remove('fab-open'); closeSearch(); }
-  function openSearch(){ openFab(); fabSearchOpen=true; searchPop.classList.add('fab-search-open'); setTimeout(()=>searchInp.focus(),60); }
-  function closeSearch(){ fabSearchOpen=false; searchPop.classList.remove('fab-search-open'); }
-
-  fabMain.addEventListener('click',e=>{ e.stopPropagation(); fabOpen?closeFab():openFab(); });
-  fabSBtn.addEventListener('click',e=>{ e.stopPropagation(); fabSearchOpen?closeSearch():openSearch(); });
-  document.getElementById('fab-to-top')?.addEventListener('click',()=>document.querySelector('.content')?.scrollTo({top:0,behavior:'smooth'}));
-  document.getElementById('fab-to-bottom')?.addEventListener('click',()=>{ const c=document.querySelector('.content'); if(c) c.scrollTo({top:c.scrollHeight,behavior:'smooth'}); });
-  searchInp.addEventListener('input',e=>{ fabSearchQ=e.target.value; engPage=1; renderList(); });
-  document.addEventListener('click',e=>{ if(!e.target.closest('#eng-fab-wrap')) closeFab(); });
-  document.querySelector('.content')?.addEventListener('scroll',()=>{ if(fabSearchOpen) closeSearch(); },{passive:true});
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFab(); });
-})());
-
-// ═══════════════════════════════════════════════════════════════
-// CLOCK + TEMPERATURE
-// ═══════════════════════════════════════════════════════════════
-(function(){
-  // อัป clock ทุก 1 วินาที
-  function tickClock(){
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(now.getMinutes()).padStart(2,'0');
-    const ss = String(now.getSeconds()).padStart(2,'0');
-    const el = document.getElementById('clock-time');
-    if(el) el.textContent = hh+':'+mm+':'+ss;
-  }
-  tickClock();
-  setInterval(tickClock, 1000);
-
-  // ดึงอุณหภูมิจาก Open-Meteo (Bangkok default, ถ้าได้ GPS ใช้ตำแหน่งจริง)
-  async function fetchTemp(lat, lon){
-    try{
-      const r = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
-      );
-      const d = await r.json();
-      const t = d.current_weather?.temperature;
-      const el = document.getElementById('clock-temp');
-      if(el && t !== undefined) el.textContent = Math.round(t)+'°C';
-    }catch(_){}
-  }
-
-  // ขอ GPS ถ้าได้ ใช้ตำแหน่งจริง ถ้าไม่ได้ใช้กรุงเทพ
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-      ()  => fetchTemp(13.75, 100.52) // กรุงเทพ fallback
-    );
-  } else {
-    fetchTemp(13.75, 100.52);
-  }
-  // refresh อุณหภูมิทุก 10 นาที
-  setInterval(()=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchTemp(pos.coords.latitude, pos.coords.longitude),
-        ()  => fetchTemp(13.75, 100.52)
-      );
-    } else { fetchTemp(13.75, 100.52); }
-  }, 600_000);
-})();
-
 </script>
-
 </body>
 </html>
