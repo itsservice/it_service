@@ -388,6 +388,30 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .clock-widget{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2);background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0}
 #clock-time{font-family:var(--font-mono);font-size:12px;color:var(--fg);font-weight:500}
 #clock-temp{color:var(--accent);font-weight:600}
+
+/* ── Chart Popup Draggable ───────────────────────────────── */
+.chart-popup{
+  position:fixed;z-index:900;background:var(--bg2);border:1px solid var(--b2);
+  border-radius:var(--r2);box-shadow:0 8px 32px rgba(0,0,0,.45);
+  min-width:220px;max-width:340px;
+  animation:fadeInScale .18s ease;
+  user-select:none;
+}
+.chart-popup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--b1);cursor:move;
+  font-size:12.5px;font-weight:700;color:var(--fg2);gap:8px;
+}
+.chart-popup-accent{width:3px;height:16px;border-radius:2px;flex-shrink:0}
+.chart-popup-title{flex:1;font-family:var(--font-h);font-size:13px;color:var(--fg)}
+.chart-popup-close{background:transparent;border:none;color:var(--fg3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s}
+.chart-popup-close:hover{color:var(--danger)}
+.chart-popup-body{padding:14px 16px;font-size:14px;color:var(--fg2);line-height:1.7}
+.chart-popup-resize{
+  position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;
+  display:flex;align-items:center;justify-content:center;color:var(--fg3);font-size:10px;
+}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -522,6 +546,11 @@ setTimeout(window.hideSplash, 800);
               <input type="date" id="analytics-date-from" class="analytics-date-input" title="วันเริ่มต้น"/>
               <span style="font-size:12px;color:var(--fg3)">ถึง</span>
               <input type="date" id="analytics-date-to" class="analytics-date-input" title="วันสิ้นสุด"/>
+              <select id="analytics-topn" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:100px">
+                <option value="5">🏆 Top 5</option>
+                <option value="10">🏆 Top 10</option>
+                <option value="99">ทั้งหมด</option>
+              </select>
               <button class="btn-apply-filter" onclick="applyAnalyticsFilter()">กรอง</button>
               <button class="btn-clear-filter" onclick="clearAnalyticsFilter()">ล้าง</button>
             </div>
@@ -813,12 +842,13 @@ function getAnalyticsTickets(){
 }
 
 // Apply / clear filter buttons
+let analyticsTopN = 5;
 function applyAnalyticsFilter(){
   analyticsDateFrom = document.getElementById('analytics-date-from').value;
   analyticsDateTo   = document.getElementById('analytics-date-to').value;
   analyticsBrand    = document.getElementById('analytics-brand').value;
   analyticsBranch   = document.getElementById('analytics-branch').value;
-  // อัพเดต branch dropdown ตาม brand ที่เลือก
+  analyticsTopN     = parseInt(document.getElementById('analytics-topn')?.value||'5');
   _updateBranchDropdown();
   renderAdvancedAnalytics();
 }
@@ -826,10 +856,12 @@ function applyAnalyticsFilter(){
 function clearAnalyticsFilter(){
   analyticsDateFrom = ''; analyticsDateTo = '';
   analyticsBrand = ''; analyticsBranch = '';
+  analyticsTopN = 5;
   document.getElementById('analytics-date-from').value  = '';
   document.getElementById('analytics-date-to').value    = '';
   document.getElementById('analytics-brand').value      = '';
   document.getElementById('analytics-branch').value     = '';
+  const tn = document.getElementById('analytics-topn'); if(tn) tn.value='5';
   _updateBranchDropdown();
   renderAdvancedAnalytics();
 }
@@ -990,7 +1022,14 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
           grid:  { color:cd.gridColor }
         }
       },
-      animation: { duration:600, easing:'easeInOutCubic' }
+      animation: { duration:600, easing:'easeInOutCubic' },
+      onClick: (e, elements) => {
+        if(!elements.length) return;
+        const idx = elements[0].index;
+        const label = dayDisplayLabels[idx];
+        const count = dayValues[idx];
+        if(count > 0) openChartPopup(`📅 ${label}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket`, '#00e5a0');
+      }
     }
   });
 
@@ -1000,12 +1039,14 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
     const b = (t.branchCode||t.branch||'ไม่ระบุ').trim();
     branchMap[b] = (branchMap[b]||0)+1;
   });
-  const branchEntries = Object.entries(branchMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const branchEntries = Object.entries(branchMap).sort((a,b)=>b[1]-a[1]).slice(0, typeof analyticsTopN!=="undefined" ? analyticsTopN : 5);
   const branchLabels  = branchEntries.map(e=>e[0]);
   const branchValues  = branchEntries.map(e=>e[1]);
-  const barColors = branchLabels.map((_,i)=>{
-    const palette = ['#00e5a0','#3b82f6','#f59e0b','#a855f7','#ef4444','#22d3ee','#f97316','#84cc16','#ec4899','#06b6d4'];
-    return palette[i % palette.length];
+  // สีไล่ระดับ rank — อันดับ 1 สว่างสุด จางลงตามอันดับ (single-hue professional)
+  const _maxVal = branchValues[0] || 1;
+  const barBg = branchValues.map(v => {
+    const intensity = 0.25 + 0.65 * (v / _maxVal);
+    return `rgba(0,229,160,${intensity.toFixed(2)})`;
   });
 
   makeChart('branchBreakdownChart', {
@@ -1015,10 +1056,10 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
       datasets: [{
         label: 'Ticket',
         data: branchValues.length ? branchValues : [0],
-        backgroundColor: branchLabels.length ? barColors.map(c=>c+'33') : ['rgba(100,100,100,.15)'],
-        borderColor: branchLabels.length ? barColors : ['#666'],
-        borderWidth: 1.5,
-        borderRadius: 4,
+        backgroundColor: branchLabels.length ? barBg : ['rgba(100,100,100,.15)'],
+        borderColor: branchLabels.length ? barBg.map(()=>'rgba(0,229,160,.8)') : ['#666'],
+        borderWidth: 1,
+        borderRadius: 5,
       }]
     },
     options: {
@@ -1045,6 +1086,14 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
           ticks: { color: cd.tickColor, font:{size:11}, precision:0 },
           grid:  { color: cd.gridColor }
         }
+      },
+      onClick: (e, elements) => {
+        if(!elements.length) return;
+        const idx = elements[0].index;
+        const branch = branchLabels[idx];
+        const count  = branchValues[idx];
+        const pct    = data.length ? Math.round(count/data.length*100) : 0;
+        openChartPopup(`🏪 สาขา: ${branch}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket (${pct}% ของทั้งหมด)`, '#00e5a0');
       }
     }
   });
@@ -1063,30 +1112,53 @@ const STATUS_DEFS = [
   const doughnutLabels = STATUS_DEFS.map(s=>s.label);
   const hasAny = doughnutCounts.some(v=>v>0);
 
+  const totalDonut = doughnutCounts.reduce((a,b)=>a+b,0)||1;
   makeChart('statusDoughnutChart', {
     type: 'doughnut',
     data: {
       labels: doughnutLabels,
       datasets: [{
         data: hasAny ? doughnutCounts : [1],
-        backgroundColor: hasAny ? doughnutColors.map(c=>c+'bb') : ['rgba(100,100,100,.15)'],
+        backgroundColor: hasAny ? doughnutColors.map(c=>c+'cc') : ['rgba(100,100,100,.15)'],
         borderColor: hasAny ? doughnutColors : ['#444'],
         borderWidth: 2,
-        hoverOffset: 6,
+        hoverOffset: 10,
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '62%',
+      cutout: '58%',
       plugins: {
         legend: {
           position: 'right',
           labels: {
             color: cd.tickColor,
-            font: { size: 11, family: "'Noto Sans Thai', sans-serif" },
-            boxWidth: 12,
-            padding: 10,
+            font: { size: 12, family: "'Noto Sans Thai', sans-serif" },
+            boxWidth: 14, boxHeight: 14,
+            padding: 14,
+            generateLabels: chart => {
+              const ds = chart.data.datasets[0];
+              return chart.data.labels.map((label,i)=>{
+                const val = ds.data[i]||0;
+                const pct = hasAny ? Math.round(val/totalDonut*100) : 0;
+                return {
+                  text: `${label}  ${val} (${pct}%)`,
+                  fillStyle: ds.backgroundColor[i],
+                  strokeStyle: ds.borderColor[i],
+                  lineWidth: 1,
+                  index: i,
+                  hidden: false,
+                };
+              });
+            }
+          },
+          onClick: (e, legendItem, legend) => {
+            const idx = legendItem.index;
+            const label = doughnutLabels[idx];
+            const count = doughnutCounts[idx];
+            const color = doughnutColors[idx];
+            openChartPopup(`สถานะ: ${label}`, `จำนวน: <b>${count}</b> ticket (${Math.round(count/totalDonut*100)}%)`, color);
           }
         },
         tooltip: {
@@ -1095,13 +1167,24 @@ const STATUS_DEFS = [
           bodyColor: cd.tooltipFg,
           borderColor: 'rgba(255,255,255,.1)',
           borderWidth: 1,
-          padding: 10,
+          padding: 12,
           callbacks: {
-            label: ctx => hasAny
-              ? ` ${ctx.label}: ${ctx.parsed} ticket`
-              : ' ไม่มีข้อมูล',
+            label: ctx => {
+              if(!hasAny) return ' ไม่มีข้อมูล';
+              const pct = Math.round(ctx.parsed/totalDonut*100);
+              return ` ${ctx.label}: ${ctx.parsed} ticket (${pct}%)`;
+            }
           }
         }
+      },
+      onClick: (e, elements) => {
+        if(!elements.length || !hasAny) return;
+        const idx = elements[0].index;
+        const label = doughnutLabels[idx];
+        const count = doughnutCounts[idx];
+        const color = doughnutColors[idx];
+        const pct = Math.round(count/totalDonut*100);
+        openChartPopup(`📊 สถานะ: ${label}`, `จำนวน: <b style="color:${color}">${count}</b> ticket (${pct}%)`, color);
       }
     }
   });
@@ -1250,6 +1333,8 @@ await Promise.all([loadTickets(), loadLogs(), loadUsers()]).catch(e => console.w
 document.getElementById('login-screen').style.display='none';
 document.getElementById('app').classList.add('ready');
 renderDashboard();
+// auto-run analytics filter ทันทีหลัง boot
+setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} }, 200);
 window.hideSplash?.();
 window.initAdminFab?.();
 }
@@ -2149,6 +2234,84 @@ document.addEventListener('visibilitychange',()=>{
     _ticketInterval=setInterval(loadTickets,60_000);
   }
 });
+
+// ── Chart Popup Draggable ─────────────────────────────────────
+function openChartPopup(title, bodyHtml, accentColor){
+  // ลบ popup เก่า
+  document.querySelectorAll('.chart-popup').forEach(el=>el.remove());
+
+  const pop = document.createElement('div');
+  pop.className = 'chart-popup';
+  // ตำแหน่งเริ่มต้นกลางจอ
+  const cx = Math.round(window.innerWidth/2 - 160);
+  const cy = Math.round(window.innerHeight/2 - 80);
+  pop.style.left = cx+'px'; pop.style.top = cy+'px';
+
+  pop.innerHTML = `
+    <div class="chart-popup-header" id="cph-drag">
+      <div class="chart-popup-accent" style="background:${accentColor||'var(--accent)'}"></div>
+      <div class="chart-popup-title">${title}</div>
+      <button class="chart-popup-close" onclick="this.closest('.chart-popup').remove()">✕</button>
+    </div>
+    <div class="chart-popup-body">${bodyHtml}</div>
+    <div class="chart-popup-resize" title="ลาก resize">⤡</div>`;
+  document.body.appendChild(pop);
+
+  // ── Drag ──
+  const header = pop.querySelector('#cph-drag');
+  let ox=0,oy=0,mx=0,my=0,dragging=false;
+  header.addEventListener('mousedown', e=>{
+    dragging=true; ox=pop.offsetLeft; oy=pop.offsetTop; mx=e.clientX; my=e.clientY;
+    e.preventDefault();
+  });
+  header.addEventListener('touchstart', e=>{
+    dragging=true; ox=pop.offsetLeft; oy=pop.offsetTop;
+    mx=e.touches[0].clientX; my=e.touches[0].clientY; e.preventDefault();
+  },{passive:false});
+  const onMove = e=>{
+    if(!dragging) return;
+    const cx2 = e.clientX||e.touches?.[0]?.clientX||mx;
+    const cy2 = e.clientY||e.touches?.[0]?.clientY||my;
+    pop.style.left = Math.max(0, ox+(cx2-mx))+'px';
+    pop.style.top  = Math.max(0, oy+(cy2-my))+'px';
+  };
+  const onUp = ()=>{ dragging=false; };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove,{passive:false});
+  document.addEventListener('touchend', onUp);
+
+  // ── Resize ──
+  const resizeHandle = pop.querySelector('.chart-popup-resize');
+  let rDragging=false, rox=0, roy=0, rw=0, rh=0;
+  resizeHandle.addEventListener('mousedown', e=>{
+    rDragging=true; rox=e.clientX; roy=e.clientY;
+    rw=pop.offsetWidth; rh=pop.offsetHeight; e.preventDefault(); e.stopPropagation();
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!rDragging) return;
+    pop.style.width  = Math.max(200, rw+(e.clientX-rox))+'px';
+    pop.style.height = Math.max(100, rh+(e.clientY-roy))+'px';
+    pop.style.overflow = 'auto';
+  });
+  document.addEventListener('mouseup', ()=>{ rDragging=false; });
+
+  // คลิกนอก popup ปิด
+  setTimeout(()=>{
+    document.addEventListener('mousedown', function closeOnOut(e){
+      if(!pop.contains(e.target)){ pop.remove(); document.removeEventListener('mousedown',closeOnOut); }
+    });
+  }, 100);
+}
+
+// ── Auto-run analytics filter ตอน boot ───────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  // ถ้า data โหลดแล้วให้ render analytics ทันที
+  if(typeof renderAdvancedAnalytics === 'function'){
+    setTimeout(()=>{ try{ renderAdvancedAnalytics(); }catch(_){} }, 500);
+  }
+});
+
 </script>
 </body>
 </html>
