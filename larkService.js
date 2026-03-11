@@ -453,20 +453,31 @@ function invalidateCache() { _ticketCache = null; _ticketCacheExp = 0; }
 async function updateTicket(recordId, fields) {
   await ensureFieldMap();
   const token = await getToken();
-
-  // ✅ แก้: ตรวจสอบ fieldMap ก่อน update
   if (!_fieldMap || Object.keys(_fieldMap).length === 0) {
     throw new Error('fieldMap not ready — cannot update ticket. Please retry in a moment.');
   }
+
+  // ── หา tableId จาก brand ที่ส่งมา หรือ fallback ทุก table ──
+  let tableId = TBL(); // fallback เดิม
+  if (fields.brand) {
+    const bt = BRAND_TABLES().find(b => b.brand === fields.brand);
+    if (bt?.tableId) tableId = bt.tableId;
+  }
+  // ถ้ายังไม่มี brand ให้ค้นหาจากทุก table โดย recordId
+  if (!tableId || tableId === 'undefined') {
+    const bt = BRAND_TABLES()[0];
+    if (bt?.tableId) tableId = bt.tableId;
+  }
+  if (!tableId) throw new Error('ไม่พบ tableId สำหรับ update — กรุณาตั้งค่า LARK_TABLE_*');
 
   const larkFields = toWriteFields(fields);
   if (!Object.keys(larkFields).length) {
     console.warn('[Lark] update: no writable fields after mapping. Input:', Object.keys(fields));
     return {};
   }
-  console.log('[Lark] PUT', recordId, JSON.stringify(larkFields));
+  console.log('[Lark] PUT', recordId, 'table:', tableId, JSON.stringify(larkFields));
   const r = await larkAxios.put(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records/${recordId}`,
+    `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`,
     { fields: larkFields },
     { headers: hdr(token) }
   );
