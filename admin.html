@@ -1245,15 +1245,14 @@ async function bootApp(){
   if(!['superadmin','admin'].includes(u.role)){
     document.getElementById('nav-debug').style.display='none';
   }
-  connectSSE();
-  if(['superadmin','admin'].includes(u.role)) loadUsers();
-  setInterval(loadTickets, 60_000);
-  await Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('ready');
-  renderDashboard();
-  window.hideSplash?.();
-  window.initAdminFab?.();
+connectSSE();
+setInterval(loadTickets, 60_000);
+await Promise.all([loadTickets(), loadLogs(), loadUsers()]).catch(e => console.warn('[boot] data load error:', e.message));
+document.getElementById('login-screen').style.display='none';
+document.getElementById('app').classList.add('ready');
+renderDashboard();
+window.hideSplash?.();
+window.initAdminFab?.();
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1292,8 +1291,10 @@ async function loadLogs(){
   if(d.ok){ logs=d.logs; if(currentPage==='log') renderLogPage(); }
 }
 async function loadUsers(){
-  const d=await api('/api/users');
-  if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
+  try{
+    const d=await api('/api/users');
+    if(d.ok){ users=d.users||[]; if(currentPage==='users') renderUsersPage(); }
+  }catch(e){ console.warn('[loadUsers] error:', e.message); }
 }
 function updateBadge(){
   const n=tickets.filter(t=>t.status==='แก้ไข'||t.status==='รอดำเนินการ ⏱️').length;
