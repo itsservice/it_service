@@ -1643,7 +1643,8 @@ document.getElementById('btn-refresh-tbl').onclick=async()=>{
 // ════════════════════════════════════════════════════════════════
 async function quickStatus(rid,status){
   try{
-    const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status})});
+    const t=tickets.find(x=>x._recordId===rid);
+const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status,brand:t?.brand||''})});
     if(!d.ok) throw new Error(d.error);
     tickets=tickets.map(t=>t._recordId===rid?{...t,status}:t);
     renderTicketsPage(); updateBadge();
@@ -1789,7 +1790,8 @@ async function doAssign(rid){
   const btn=document.getElementById('m-assign-btn');
   btn.disabled=true; btn.textContent='⏳ กำลังบันทึก...';
   try{
-    const d=await api(`/api/tickets/${rid}/assign`,{method:'PATCH',body:JSON.stringify({engineerName:name,assignedTo:name})});
+const t=tickets.find(x=>x._recordId===rid);
+const d=await api(`/api/tickets/${rid}/assign`,{method:'PATCH',body:JSON.stringify({engineerName:name,assignedTo:name,brand:t?.brand||''})});
     if(!d.ok) throw new Error(d.error);
     tickets=tickets.map(t=>t._recordId===rid?{...t,engineerName:name,status:'อยู่ระหว่างดำเนินการ ⚙️'}:t);
     closeModal(); renderDrawerContent(); renderTicketsPage();
@@ -1817,7 +1819,8 @@ async function doClose(rid){
   const btn=document.getElementById('m-close-btn');
   btn.disabled=true; btn.textContent='⏳ กำลังบันทึก...';
   try{
-    const d=await api(`/api/tickets/${rid}/close`,{method:'PATCH',body:JSON.stringify({adminNote:note})});
+    const t=tickets.find(x=>x._recordId===rid);
+const d=await api(`/api/tickets/${rid}/close`,{method:'PATCH',body:JSON.stringify({adminNote:note,brand:t?.brand||''})});
     if(!d.ok) throw new Error(d.error);
     tickets=tickets.map(t=>t._recordId===rid?{...t,status:'เสร็จสิ้น ✅',adminNote:note,closedBy:AUTH.user.name}:t);
     closeModal(); closeDrawer(); renderTicketsPage(); updateBadge();
