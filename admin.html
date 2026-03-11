@@ -1404,10 +1404,11 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-  if(page==='dashboard') renderDashboard();
-  if(page==='tickets') renderTicketsPage();
-  if(page==='log'){ loadLogs(); }
-  if(page==='users'){ loadUsers(); }
+if(page==='dashboard') renderDashboard();
+if(page==='tickets') renderTicketsPage();
+if(page==='log'){ loadLogs(); }
+if(page==='users'){ loadUsers(); }
+if(page==='analytics'){ setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} }, 50); }
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-overlay')?.classList.remove('open');
 }
