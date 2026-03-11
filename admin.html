@@ -406,7 +406,17 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .chart-popup-title{flex:1;font-family:var(--font-h);font-size:13px;color:var(--fg)}
 .chart-popup-close{background:transparent;border:none;color:var(--fg3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s}
 .chart-popup-close:hover{color:var(--danger)}
-.chart-popup-body{padding:14px 16px;font-size:14px;color:var(--fg2);line-height:1.7}
+.chart-popup-body{padding:14px 16px;font-size:14px;color:var(--fg2);line-height:1.7;overflow-y:auto;max-height:420px}
+.cp-ticket-card{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.cp-ticket-card:hover{border-color:var(--accent)}
+.cp-ticket-card:last-child{margin-bottom:0}
+.cp-ticket-id{font-family:var(--font-m);font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px}
+.cp-ticket-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2);margin-bottom:2px}
+.cp-ticket-row b{color:var(--fg);font-weight:600}
+.cp-ticket-status{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;margin-top:4px}
+.cp-summary{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.cp-summary-chip{background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--fg2)}
+.cp-summary-chip b{color:var(--fg)}
 .chart-popup-resize{
   position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;
   display:flex;align-items:center;justify-content:center;color:var(--fg3);font-size:10px;
@@ -1028,7 +1038,13 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
         const idx = elements[0].index;
         const label = dayDisplayLabels[idx];
         const count = dayValues[idx];
-        if(count > 0) openChartPopup(`📅 ${label}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket`, '#00e5a0');
+        if(count > 0){
+          // หา key ของวันนั้น
+          const _di = dayDisplayLabels[idx];
+          const _k = Object.keys(dayMap).find(k=>{ const d=new Date(k+'T00:00:00'); return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]}`===_di; });
+          const _ts = _k ? data.filter(t=>{ const d=parseTicketDate(t); if(!d) return false; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`===_k; }) : [];
+          openChartPopup(`📅 ${label}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket`, '#00e5a0', _ts);
+        }
       }
     }
   });
@@ -1093,7 +1109,8 @@ const done    = data.filter(t=>(t.status||'').includes('เสร็จสิ้
         const branch = branchLabels[idx];
         const count  = branchValues[idx];
         const pct    = data.length ? Math.round(count/data.length*100) : 0;
-        openChartPopup(`🏪 สาขา: ${branch}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket (${pct}% ของทั้งหมด)`, '#00e5a0');
+        const _bts = data.filter(t=>(t.branchCode||t.branch||'ไม่ระบุ').trim()===branch);
+        openChartPopup(`🏪 สาขา: ${branch}`, `จำนวน: <b style="color:#00e5a0">${count}</b> ticket (${pct}% ของทั้งหมด)`, '#00e5a0', _bts);
       }
     }
   });
@@ -1158,7 +1175,8 @@ const STATUS_DEFS = [
             const label = doughnutLabels[idx];
             const count = doughnutCounts[idx];
             const color = doughnutColors[idx];
-            openChartPopup(`สถานะ: ${label}`, `จำนวน: <b>${count}</b> ticket (${Math.round(count/totalDonut*100)}%)`, color);
+            const _lts = data.filter(t=>(t.status||'').includes(STATUS_DEFS[idx].key));
+            openChartPopup(`📊 สถานะ: ${label}`, `จำนวน: <b style="color:${color}">${count}</b> ticket (${Math.round(count/totalDonut*100)}%)`, color, _lts);
           }
         },
         tooltip: {
@@ -1184,7 +1202,8 @@ const STATUS_DEFS = [
         const count = doughnutCounts[idx];
         const color = doughnutColors[idx];
         const pct = Math.round(count/totalDonut*100);
-        openChartPopup(`📊 สถานะ: ${label}`, `จำนวน: <b style="color:${color}">${count}</b> ticket (${pct}%)`, color);
+        const _sts = data.filter(t=>(t.status||'').includes(STATUS_DEFS[idx].key));
+        openChartPopup(`📊 สถานะ: ${label}`, `จำนวน: <b style="color:${color}">${count}</b> ticket (${pct}%)`, color, _sts);
       }
     }
   });
@@ -1404,11 +1423,10 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-if(page==='dashboard') renderDashboard();
-if(page==='tickets') renderTicketsPage();
-if(page==='log'){ loadLogs(); }
-if(page==='users'){ loadUsers(); }
-if(page==='analytics'){ setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} }, 50); }
+  if(page==='dashboard') renderDashboard();
+  if(page==='tickets') renderTicketsPage();
+  if(page==='log'){ loadLogs(); }
+  if(page==='users'){ loadUsers(); }
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-overlay')?.classList.remove('open');
 }
@@ -2237,16 +2255,43 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 // ── Chart Popup Draggable ─────────────────────────────────────
-function openChartPopup(title, bodyHtml, accentColor){
+function _cpTicketCards(ticketList, accentColor){
+  if(!ticketList || !ticketList.length) return '<div style="color:var(--fg3);text-align:center;padding:20px 0">ไม่มี ticket</div>';
+  const statusColor = s => {
+    if(s.includes('รอ')) return '#a855f7';
+    if(s.includes('ระหว่าง')||s.includes('ดำเนินการ')) return '#3b82f6';
+    if(s.includes('เสร็จ')) return '#00e5a0';
+    if(s.includes('ยกเลิก')) return '#ef4444';
+    if(s.includes('ตรวจ')) return '#22d3ee';
+    return '#888';
+  };
+  return ticketList.map(t=>`
+    <div class="cp-ticket-card" onclick="openDrawer('${t._recordId||''}');document.querySelectorAll('.chart-popup').forEach(e=>e.remove())">
+      <div class="cp-ticket-id">${t.id||t._recordId||'—'}</div>
+      <div class="cp-ticket-row">🏪 <b>${t.brand||'-'}</b> &nbsp;·&nbsp; 📍 ${t.branchCode||t.branch||'-'}</div>
+      <div class="cp-ticket-row">🔧 ${t.type||'-'}</div>
+      ${t.detail?`<div class="cp-ticket-row" style="color:var(--fg3);font-size:11px">📝 ${t.detail.slice(0,60)}${t.detail.length>60?'…':''}</div>`:''}
+      <div class="cp-ticket-row">👤 ${t.reporter||'-'} ${t.phone?`· 📞 ${t.phone}`:''}${t.engineerName?` · 🔧 ${t.engineerName}`:''}</div>
+      ${t.sentDate?`<div class="cp-ticket-row" style="font-size:11px;color:var(--fg3)">📅 ${t.sentDate}</div>`:''}
+      <span class="cp-ticket-status" style="background:${statusColor(t.status||'')}22;color:${statusColor(t.status||'')};border:1px solid ${statusColor(t.status||'')}44">${t.status||'-'}</span>
+    </div>`).join('');
+}
+
+function openChartPopup(title, bodyHtml, accentColor, ticketList){
   // ลบ popup เก่า
   document.querySelectorAll('.chart-popup').forEach(el=>el.remove());
 
   const pop = document.createElement('div');
   pop.className = 'chart-popup';
+  pop.style.width = '360px';
   // ตำแหน่งเริ่มต้นกลางจอ
-  const cx = Math.round(window.innerWidth/2 - 160);
-  const cy = Math.round(window.innerHeight/2 - 80);
-  pop.style.left = cx+'px'; pop.style.top = cy+'px';
+  const cx = Math.round(window.innerWidth/2 - 180);
+  const cy = Math.round(window.innerHeight/2 - 200);
+  pop.style.left = cx+'px'; pop.style.top = Math.max(10,cy)+'px';
+
+  const cardsHtml = ticketList && ticketList.length
+    ? `<div class="cp-summary">${[...new Set(ticketList.map(t=>t.status||'-'))].slice(0,4).map(s=>`<span class="cp-summary-chip">${s}</span>`).join('')}</div>` + _cpTicketCards(ticketList, accentColor)
+    : '';
 
   pop.innerHTML = `
     <div class="chart-popup-header" id="cph-drag">
@@ -2254,7 +2299,10 @@ function openChartPopup(title, bodyHtml, accentColor){
       <div class="chart-popup-title">${title}</div>
       <button class="chart-popup-close" onclick="this.closest('.chart-popup').remove()">✕</button>
     </div>
-    <div class="chart-popup-body">${bodyHtml}</div>
+    <div class="chart-popup-body">
+      <div style="margin-bottom:${cardsHtml?'12px':'0'}">${bodyHtml}</div>
+      ${cardsHtml}
+    </div>
     <div class="chart-popup-resize" title="ลาก resize">⤡</div>`;
   document.body.appendChild(pop);
 
