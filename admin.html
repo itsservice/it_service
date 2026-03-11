@@ -81,6 +81,9 @@ a{color:inherit;text-decoration:none}
 .sb-footer{padding:12px 18px;border-top:1px solid var(--b1)}
 .btn-logout{width:100%;padding:10px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-family:var(--font-th);font-size:13px;cursor:pointer;transition:all .15s;text-align:center}
 .btn-logout:hover{background:rgba(239,68,68,.1);border-color:var(--danger);color:var(--danger)}
+.sb-link{padding:6px 4px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:11px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;overflow:hidden}
+.sb-link:hover{background:var(--b1);color:var(--fg)}
+.sb-footer{padding:8px 12px;border-top:1px solid var(--b1)}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .topbar-mobile{
   display:none;background:var(--bg2);border-bottom:1px solid var(--b1);
@@ -468,19 +471,19 @@ setTimeout(window.hideSplash, 800);
       <button class="nav-item" data-page="users" id="nav-users"><span class="nav-icon">👥</span>ผู้ใช้งาน</button>
       <button class="nav-item" data-page="debug" id="nav-debug"><span class="nav-icon">🔍</span>ตรวจสอบระบบ</button>
     </nav>
-    <div class="sb-footer">
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <a href="/report" style="flex:1;padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">📋 แจ้งปัญหา</a>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:8px">
-        <a href="/engineer" style="flex:1;padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">🔧 ช่าง</a>
-        <a href="/" style="padding:7px 6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:12px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='var(--b1)';this.style.color='var(--fg)'" onmouseout="this.style.background='';this.style.color='var(--fg2)'">🏠</a>
-      </div>
-      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">
-        <span id="theme-icon">☀️</span><span id="theme-label">โหมดสว่าง</span>
-      </button>
-      <button class="btn-logout" id="btn-logout">ออกจากระบบ</button>
-    </div>
+<div class="sb-footer">
+  <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:5px;margin-bottom:6px">
+    <a href="/report" class="sb-link">📋 แจ้งปัญหา</a>
+    <a href="/engineer" class="sb-link">🔧 ช่าง</a>
+    <a href="/" class="sb-link" style="padding:0;justify-content:center">🏠</a>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+    <button class="sb-link" id="btn-theme" onclick="toggleTheme()" style="border:1px solid var(--b2);cursor:pointer;background:transparent;font-family:var(--font-th)">
+      <span id="theme-icon">☀️</span><span id="theme-label" style="font-size:11px">โหมดสว่าง</span>
+    </button>
+    <button class="btn-logout" id="btn-logout" style="padding:6px">ออกจากระบบ</button>
+  </div>
+</div>
   </aside>
 
   <div class="main-area">
@@ -1236,16 +1239,13 @@ async function logout(){
 // BOOT APP
 // ════════════════════════════════════════════════════════════════
 async function bootApp(){
-  // แสดงหน้า Loading ก่อน
   document.getElementById('login-screen').innerHTML=`
     <div style="text-align:center">
       <div style="width:48px;height:48px;border:3px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px"></div>
       <div style="font-family:var(--font-h);font-size:18px;font-weight:700;margin-bottom:8px">กำลังโหลดข้อมูล...</div>
       <div style="font-size:13px;color:var(--fg2)">กรุณารอสักครู่</div>
     </div>`;
-
   const u=AUTH.user;
-  // Sidebar user (เตรียมไว้ก่อน ยังไม่แสดง app)
   const av=document.getElementById('sb-avatar');
   av.textContent=ai(u.name); av.style.background=ac(u.name); av.style.color='#000';
   document.getElementById('sb-name').textContent=u.name;
@@ -1259,11 +1259,7 @@ async function bootApp(){
   connectSSE();
   if(['superadmin','admin'].includes(u.role)) loadUsers();
   setInterval(loadTickets, 60_000);
-
-  // รอโหลดข้อมูลก่อน แล้วค่อยเข้า Dashboard
   await Promise.all([loadTickets(), loadLogs()]).catch(e => console.warn('[boot] data load error:', e.message));
-
-  // ซ่อน loading → แสดง app พร้อมข้อมูล
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('ready');
   renderDashboard();
