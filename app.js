@@ -277,9 +277,9 @@ app.post('/api/tickets', async (req, res) => {
 
 app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
   try {
-    const { status } = req.body || {};
+    const { status, brand } = req.body || {};
     if (!status) return res.json({ ok:false, error:'Missing status' });
-    const t = await updateTicket(req.params.rid, { status });
+    const t = await updateTicket(req.params.rid, { status, brand });
     const log = addLog({ user:req.user, action:'update_status', ticketId:req.params.rid, detail:`เปลี่ยนสถานะเป็น ${status}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status, ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
@@ -288,12 +288,11 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
-    const { engineerName, assignedTo } = req.body || {};
+    const { engineerName, assignedTo, brand } = req.body || {};
     if (!engineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่าง' });
     const t = await updateTicket(req.params.rid, {
-      engineerName: engineerName,
-      assignedTo:   assignedTo||engineerName,
-      status:       'อยู่ระหว่างดำเนินการ ⚙️'
+      engineerName, assignedTo: assignedTo||engineerName,
+      status: 'อยู่ระหว่างดำเนินการ ⚙️', brand
     });
     
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
