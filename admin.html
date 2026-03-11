@@ -32,7 +32,7 @@ body.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18)}
 body.theme-light .sync-dot{box-shadow:0 0 6px #00b87a}
 .btn-theme{width:100%;padding:10px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-family:var(--font-th);font-size:13px;cursor:pointer;transition:all .2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
 .btn-theme:hover{background:var(--b1);color:var(--fg)}
-.theme-toggle-mobile{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.theme-toggle-mobile{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;padding:0}
 .theme-toggle-mobile:hover{background:var(--b1);color:var(--fg)}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -504,7 +504,7 @@ setTimeout(window.hideSplash, 800);
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
     <button class="sb-link" id="btn-theme" onclick="toggleTheme()" style="border:1px solid var(--b2);cursor:pointer;background:transparent;font-family:var(--font-th)">
-      <span id="theme-icon">☀️</span><span id="theme-label" style="font-size:10px">สว่าง</span>
+      <span id="theme-icon" style="display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#sun-clip)"><path d="M8 1.11V2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 3.13L12.24 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.89 8H14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 12.87L12.24 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14.89V14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 12.87L3.76 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.11 8H2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 3.13L3.76 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.78A3.78 3.78 0 1 0 8 4.22a3.78 3.78 0 0 0 0 7.56Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="sun-clip"><rect width="16" height="16" fill="white"/></clipPath></defs></svg></span><span id="theme-label" style="font-size:10px">สว่าง</span>
     </button>
     <button class="btn-logout" id="btn-logout" style="padding:5px;font-size:12px">ออก</button>
   </div>
@@ -518,7 +518,7 @@ setTimeout(window.hideSplash, 800);
       <div style="display:flex;align-items:center;gap:8px">
         <div class="topbar-sync"><div class="sync-dot" id="sync-dot"></div></div>
         <div class="clock-widget"><span>🕐</span><span id="clock-time">--:--:--</span><span id="clock-temp">--°C</span></div>
-        <button class="theme-toggle-mobile" id="btn-theme-mobile" onclick="toggleTheme()" title="เปลี่ยนธีม"><span id="theme-icon-mobile">☀️</span></button>
+        <button class="theme-toggle-mobile" id="btn-theme-mobile" onclick="toggleTheme()" title="เปลี่ยนธีม"><span id="theme-icon-mobile" style="display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#sun-clip)"><path d="M8 1.11V2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 3.13L12.24 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.89 8H14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 12.87L12.24 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14.89V14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 12.87L3.76 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.11 8H2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 3.13L3.76 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.78A3.78 3.78 0 1 0 8 4.22a3.78 3.78 0 0 0 0 7.56Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="sun-clip"><rect width="16" height="16" fill="white"/></clipPath></defs></svg></span></button>
         <button id="btn-logout-mobile" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-th)">Log out</button>
       </div>
     </div>
@@ -1306,9 +1306,11 @@ function applyTheme(mode) {
   const icon  = document.getElementById('theme-icon');
   const label = document.getElementById('theme-label');
   const iconM = document.getElementById('theme-icon-mobile');
-  if (icon)  icon.textContent  = isLight ? '🌙' : '☀️';
-  if (label) label.textContent = isLight ? 'โหมดมืด' : 'โหมดสว่าง';
-  if (iconM) iconM.textContent = isLight ? '🌙' : '☀️';
+  const _svgSun  = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#sun-clip)"><path d="M8 1.11V2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 3.13L12.24 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.89 8H14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.87 12.87L12.24 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14.89V14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 12.87L3.76 12.24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.11 8H2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.13 3.13L3.76 3.76" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.78A3.78 3.78 0 1 0 8 4.22a3.78 3.78 0 0 0 0 7.56Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="sun-clip"><rect width="16" height="16" fill="white"/></clipPath></defs></svg>`;
+  const _svgMoon = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 8.5A5.5 5.5 0 0 1 7.5 2.5a5.5 5.5 0 1 0 6 6Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if (icon)  icon.innerHTML  = isLight ? _svgMoon : _svgSun;
+  if (label) label.textContent = isLight ? 'มืด' : 'สว่าง';
+  if (iconM) iconM.innerHTML = isLight ? _svgMoon : _svgSun;
   try { localStorage.setItem('admin_theme', mode); } catch(_) {}
   // Re-render charts on theme change
   setTimeout(renderAdvancedAnalytics, 100);
