@@ -1246,7 +1246,6 @@ async function bootApp(){
     document.getElementById('nav-debug').style.display='none';
   }
 connectSSE();
-setInterval(loadTickets, 60_000);
 await Promise.all([loadTickets(), loadLogs(), loadUsers()]).catch(e => console.warn('[boot] data load error:', e.message));
 document.getElementById('login-screen').style.display='none';
 document.getElementById('app').classList.add('ready');
@@ -1255,10 +1254,11 @@ window.hideSplash?.();
 window.initAdminFab?.();
 }
 
-// ════════════════════════════════════════════════════════════════
-// SSE
-// ════════════════════════════════════════════════════════════════
+let _sseTimer=null;
 function connectSSE(){
+  if(sse){try{sse.close();}catch(_){} sse=null;}
+  if(_sseTimer){clearTimeout(_sseTimer);_sseTimer=null;}
+  if(document.hidden) return;
   sse=new EventSource('/api/events');
   sse.addEventListener('ticket_created',e=>{
     try{const d=JSON.parse(e.data); tickets.unshift(d.ticket); updateBadge(); rerenderCurrent(); showToast('🆕 Ticket ใหม่: '+esc(d.ticket.id||''));}catch(_){}
@@ -1274,9 +1274,12 @@ function connectSSE(){
     }catch(_){}
   });
   sse.onopen=()=>{ document.getElementById('sync-dot').style.background='#00e5a0'; };
-  sse.onerror=()=>{ document.getElementById('sync-dot').style.background='#ef4444'; setTimeout(connectSSE,5000); };
+  sse.onerror=()=>{
+    document.getElementById('sync-dot').style.background='#ef4444';
+    if(sse){try{sse.close();}catch(_){} sse=null;}
+    if(!document.hidden) _sseTimer=setTimeout(connectSSE,5000);
+  };
 }
-
 // ════════════════════════════════════════════════════════════════
 // DATA
 // ════════════════════════════════════════════════════════════════
@@ -2133,6 +2136,19 @@ window.initAdminFab = function(){
   if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>fetchTemp(pos.coords.latitude,pos.coords.longitude),()=>fetchTemp(13.75,100.52)); } else { fetchTemp(13.75,100.52); }
   setInterval(()=>{ if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>fetchTemp(pos.coords.latitude,pos.coords.longitude),()=>fetchTemp(13.75,100.52)); } else { fetchTemp(13.75,100.52); } },600_000);
 })();
+  // ── หยุด/resume เมื่อ tab เปลี่ยน ──────────────────────────────
+let _ticketInterval=setInterval(loadTickets,60_000);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    if(sse){try{sse.close();}catch(_){} sse=null;}
+    if(_sseTimer){clearTimeout(_sseTimer);_sseTimer=null;}
+    clearInterval(_ticketInterval);_ticketInterval=null;
+  } else {
+    connectSSE();
+    loadTickets();
+    _ticketInterval=setInterval(loadTickets,60_000);
+  }
+});
 </script>
 </body>
 </html>
