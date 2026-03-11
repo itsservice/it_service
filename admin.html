@@ -414,8 +414,10 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 .cp-ticket-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2);margin-bottom:2px}
 .cp-ticket-row b{color:var(--fg);font-weight:600}
 .cp-ticket-status{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;margin-top:4px}
-.cp-summary{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.cp-summary-chip{background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--fg2)}
+.cp-summary{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.cp-summary-chip{background:var(--bg3);border:1px solid var(--b1);border-radius:20px;padding:5px 12px;font-size:11.5px;color:var(--fg2);cursor:pointer;transition:all .15s;user-select:none}
+.cp-summary-chip:hover{border-color:var(--accent);color:var(--fg)}
+.cp-summary-chip.active{background:rgba(0,229,160,.15);border-color:var(--accent);color:var(--accent);font-weight:600}
 .cp-summary-chip b{color:var(--fg)}
 .chart-popup-resize{
   position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;
@@ -2255,26 +2257,48 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 // ── Chart Popup Draggable ─────────────────────────────────────
-function _cpTicketCards(ticketList, accentColor){
+function _cpChipClick(chipEl, status, pop){
+  const wasActive = chipEl.classList.contains('active');
+  // ยกเลิก active ทั้งหมดก่อน
+  pop.querySelectorAll('.cp-summary-chip').forEach(c=>c.classList.remove('active'));
+  if(wasActive){
+    // กดซ้ำ → ยกเลิก filter แสดงทั้งหมด
+    _cpRenderCards(pop, pop._allTickets, null);
+  } else {
+    chipEl.classList.add('active');
+    _cpRenderCards(pop, pop._allTickets, status);
+  }
+}
+
+const _statusColor = s => {
+  if(s.includes('รอ')) return '#a855f7';
+  if(s.includes('ระหว่าง')||s.includes('ดำเนินการ')) return '#3b82f6';
+  if(s.includes('เสร็จ')) return '#00e5a0';
+  if(s.includes('ยกเลิก')) return '#ef4444';
+  if(s.includes('ตรวจ')) return '#22d3ee';
+  return '#888';
+};
+
+function _cpTicketCards(ticketList){
   if(!ticketList || !ticketList.length) return '<div style="color:var(--fg3);text-align:center;padding:20px 0">ไม่มี ticket</div>';
-  const statusColor = s => {
-    if(s.includes('รอ')) return '#a855f7';
-    if(s.includes('ระหว่าง')||s.includes('ดำเนินการ')) return '#3b82f6';
-    if(s.includes('เสร็จ')) return '#00e5a0';
-    if(s.includes('ยกเลิก')) return '#ef4444';
-    if(s.includes('ตรวจ')) return '#22d3ee';
-    return '#888';
-  };
   return ticketList.map(t=>`
-    <div class="cp-ticket-card" onclick="openDrawer('${t._recordId||''}');document.querySelectorAll('.chart-popup').forEach(e=>e.remove())">
+    <div class="cp-ticket-card" onclick="openDrawer('${t._recordId||''}')">
       <div class="cp-ticket-id">${t.id||t._recordId||'—'}</div>
       <div class="cp-ticket-row">🏪 <b>${t.brand||'-'}</b> &nbsp;·&nbsp; 📍 ${t.branchCode||t.branch||'-'}</div>
       <div class="cp-ticket-row">🔧 ${t.type||'-'}</div>
       ${t.detail?`<div class="cp-ticket-row" style="color:var(--fg3);font-size:11px">📝 ${t.detail.slice(0,60)}${t.detail.length>60?'…':''}</div>`:''}
       <div class="cp-ticket-row">👤 ${t.reporter||'-'} ${t.phone?`· 📞 ${t.phone}`:''}${t.engineerName?` · 🔧 ${t.engineerName}`:''}</div>
       ${t.sentDate?`<div class="cp-ticket-row" style="font-size:11px;color:var(--fg3)">📅 ${t.sentDate}</div>`:''}
-      <span class="cp-ticket-status" style="background:${statusColor(t.status||'')}22;color:${statusColor(t.status||'')};border:1px solid ${statusColor(t.status||'')}44">${t.status||'-'}</span>
+      <span class="cp-ticket-status" style="background:${_statusColor(t.status||'')}22;color:${_statusColor(t.status||'')};border:1px solid ${_statusColor(t.status||'')}44">${t.status||'-'}</span>
     </div>`).join('');
+}
+
+function _cpRenderCards(pop, allTickets, activeStatus){
+  const list = activeStatus ? allTickets.filter(t=>(t.status||'').includes(activeStatus)) : allTickets;
+  const body = pop.querySelector('.cp-cards-wrap');
+  if(body) body.innerHTML = list.length
+    ? _cpTicketCards(list)
+    : '<div style="color:var(--fg3);text-align:center;padding:20px 0">ไม่มี ticket ในสถานะนี้</div>';
 }
 
 function openChartPopup(title, bodyHtml, accentColor, ticketList){
@@ -2289,9 +2313,15 @@ function openChartPopup(title, bodyHtml, accentColor, ticketList){
   const cy = Math.round(window.innerHeight/2 - 200);
   pop.style.left = cx+'px'; pop.style.top = Math.max(10,cy)+'px';
 
-  const cardsHtml = ticketList && ticketList.length
-    ? `<div class="cp-summary">${[...new Set(ticketList.map(t=>t.status||'-'))].slice(0,4).map(s=>`<span class="cp-summary-chip">${s}</span>`).join('')}</div>` + _cpTicketCards(ticketList, accentColor)
-    : '';
+  // สรุป status chips
+  let _activeStatus = null;
+  const _allTickets = ticketList || [];
+  const statusGroups = {};
+  _allTickets.forEach(t=>{ const s=t.status||'-'; statusGroups[s]=(statusGroups[s]||0)+1; });
+  const summaryChips = Object.entries(statusGroups).map(([s,n])=>`
+    <span class="cp-summary-chip" data-status="${s}" onclick="_cpChipClick(this,'${s.replace(/'/g,"\'")}',_cpPopRef)">
+      ${s} <b style="margin-left:4px">${n}</b>
+    </span>`).join('');
 
   pop.innerHTML = `
     <div class="chart-popup-header" id="cph-drag">
@@ -2300,10 +2330,15 @@ function openChartPopup(title, bodyHtml, accentColor, ticketList){
       <button class="chart-popup-close" onclick="this.closest('.chart-popup').remove()">✕</button>
     </div>
     <div class="chart-popup-body">
-      <div style="margin-bottom:${cardsHtml?'12px':'0'}">${bodyHtml}</div>
-      ${cardsHtml}
+      <div style="margin-bottom:10px">${bodyHtml}</div>
+      ${summaryChips ? `<div class="cp-summary" id="cp-chips">${summaryChips}</div>` : ''}
+      <div class="cp-cards-wrap">${_cpTicketCards(_allTickets)}</div>
     </div>
     <div class="chart-popup-resize" title="ลาก resize">⤡</div>`;
+
+  // เก็บ ref ให้ chip ใช้
+  const _cpPopRef = pop;
+  pop._allTickets = _allTickets;
   document.body.appendChild(pop);
 
   // ── Drag ──
