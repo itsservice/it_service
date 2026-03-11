@@ -61,7 +61,8 @@ a{color:inherit;text-decoration:none}
 /* APP SHELL */
 #app{display:none;height:100vh;overflow:hidden}
 #app.ready{display:flex}
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:calc(var(--safe-top)+0px)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;height:100vh;overflow:hidden;transform:translateX(-100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:calc(var(--safe-top)+0px)}
+.sidebar.mobile-open{transform:translateX(0)}
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:149;display:none;backdrop-filter:blur(1px)}
 .sidebar-overlay.open{display:block}
 .sb-head{padding:20px 18px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px}
@@ -83,14 +84,12 @@ a{color:inherit;text-decoration:none}
 .btn-logout:hover{background:rgba(239,68,68,.1);border-color:var(--danger);color:var(--danger)}
 .sb-link{padding:6px 4px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--fg2);font-size:11px;text-align:center;text-decoration:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;overflow:hidden}
 .sb-link:hover{background:var(--b1);color:var(--fg)}
-.sb-footer{padding:8px 12px;border-top:1px solid var(--b1)}
-.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.sb-footer{padding:6px 10px;border-top:1px solid var(--b1);flex-shrink:0}
+.main-area{width:100%;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .topbar-mobile{
-  display:none;background:var(--bg2);border-bottom:1px solid var(--b1);
+  display:flex;background:var(--bg2);border-bottom:1px solid var(--b1);
   padding:6px 14px;padding-top:calc(var(--safe-top)+6px);
-  align-items:center;gap:10px;flex-shrink:0;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 12px rgba(0,0,0,.4)
+  ...
 }
 .btn-menu{background:transparent;border:none;color:var(--fg2);font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .topbar-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
@@ -324,15 +323,9 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
 /* RESPONSIVE */
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   
-@media(max-width:768px){
-  .fab-wrap{bottom:calc(60px + var(--safe-bottom) + 8px)}
-  .fab-branch-left{max-width:calc(100vw - 80px)}
-}
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%)}
-  .sidebar.mobile-open{transform:translateX(0)}
-  .topbar-mobile{display:flex}
+/* mobile ≤480px */
+@media(max-width:480px){
   .bottom-nav{display:block}
-  .page-content{padding-bottom:0}
   .stats-grid{grid-template-columns:repeat(2,1fr);padding:14px}
   .filter-bar,.status-chips{padding-left:14px;padding-right:14px}
   .tbl-wrap{padding:0 14px;padding-bottom:130px}
@@ -341,30 +334,26 @@ body:not(.theme-light) .analytics-date-input{color-scheme:dark}
   .user-grid{padding:0 14px 80px;grid-template-columns:1fr}
   .log-list{padding:0 14px;padding-bottom:80px}
   .drawer{width:100%;border-left:none;border-radius:var(--r3) var(--r3) 0 0;top:auto;height:92vh}
-  .tbl{display:block}
-  .tbl thead{display:none}
-  .tbl tbody{display:block}
+  .tbl{display:block}.tbl thead{display:none}.tbl tbody{display:block}
   .tbl-row{display:block;margin-bottom:8px;border-radius:var(--r2)!important;border:1px solid var(--b1)!important;padding:12px}
   .tbl-row td{display:block;border:none!important;padding:3px 0!important;border-radius:0!important}
   .tbl-row td.td-accent{border-left:3px solid var(--row-color,var(--b1))!important;padding-left:10px!important;border-radius:0!important}
   .tbl-row td.td-hide-mobile{display:none}
-  .sq-btns{margin-top:6px}
-  .cell-type{max-width:none;white-space:normal}
+  .sq-btns{margin-top:6px}.cell-type{max-width:none;white-space:normal}
   .analytics-grid{grid-template-columns:1fr}
   .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
   .analytics-section{padding:0 14px 80px}
-  .topbar-mobile{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
-  .sidebar{padding-bottom:env(safe-area-inset-bottom)}
-  .page-content{padding-bottom:env(safe-area-inset-bottom)}
-  .bottom-nav{padding-bottom:env(safe-area-inset-bottom)}
-  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  .fab-wrap{bottom:calc(52px + var(--safe-bottom) + 8px)}
+  .fab-branch-left{max-width:calc(100vw - 80px)}
 }
-@media(min-width:769px) and (max-width:1100px){
-  :root{--sidebar-w:200px}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;transform:translateX(-100%);transition:transform .3s cubic-bezier(.22,.61,.36,1)}
-  .sidebar.mobile-open{transform:translateX(0)}
-  .topbar-mobile{display:flex}
+/* tablet 481–1024px */
+@media(min-width:481px) and (max-width:1024px){
+  .bottom-nav{display:block}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+  .analytics-stat-row{grid-template-columns:repeat(2,1fr)}
+  .dash-grid{grid-template-columns:1fr}
+  .fab-wrap{bottom:calc(52px + var(--safe-bottom) + 8px)}
+  .fab-branch-left{max-width:calc(100vw - 80px)}
 }
 
 /* FAB */
@@ -472,16 +461,16 @@ setTimeout(window.hideSplash, 800);
       <button class="nav-item" data-page="debug" id="nav-debug"><span class="nav-icon">🔍</span>ตรวจสอบระบบ</button>
     </nav>
 <div class="sb-footer">
-  <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:5px;margin-bottom:6px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:5px;margin-bottom:5px">
     <a href="/report" class="sb-link">📋 แจ้งปัญหา</a>
     <a href="/engineer" class="sb-link">🔧 ช่าง</a>
     <a href="/" class="sb-link" style="padding:0;justify-content:center">🏠</a>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
     <button class="sb-link" id="btn-theme" onclick="toggleTheme()" style="border:1px solid var(--b2);cursor:pointer;background:transparent;font-family:var(--font-th)">
-      <span id="theme-icon">☀️</span><span id="theme-label" style="font-size:11px">โหมดสว่าง</span>
+      <span id="theme-icon">☀️</span><span id="theme-label" style="font-size:10px">สว่าง</span>
     </button>
-    <button class="btn-logout" id="btn-logout" style="padding:6px">ออกจากระบบ</button>
+    <button class="btn-logout" id="btn-logout" style="padding:5px;font-size:12px">ออก</button>
   </div>
 </div>
   </aside>
