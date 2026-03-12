@@ -2,43 +2,25 @@
 const axios = require('axios');
 const BASE = 'https://open.larksuite.com/open-apis';
 
-// ── Axios instance with aggressive timeouts ────────────────────
-// กัน Lark API ค้างทำให้ทุก request หยุดรอ
 const larkAxios = axios.create({
-  timeout: 12_000,          // 12s max per request
-  httpAgent:  new (require('http').Agent)({
-    keepAlive: true,
-    maxSockets: 10,          // จำกัด concurrent connections
-    timeout: 12_000,
-  }),
-  httpsAgent: new (require('https').Agent)({
-    keepAlive: true,
-    maxSockets: 10,
-    timeout: 12_000,
-  }),
+  timeout: 12_000,
+  httpAgent:  new (require('http').Agent)({ keepAlive: true, maxSockets: 10, timeout: 12_000 }),
+  httpsAgent: new (require('https').Agent)({ keepAlive: true, maxSockets: 10, timeout: 12_000 }),
 });
 
-// ── Circuit breaker กัน Lark ล่มทำให้ทุก request ค้าง ─────────
-let _circuitOpen = false;
-let _circuitFailCount = 0;
-let _circuitLastFail = 0;
-const CIRCUIT_THRESHOLD = 5;      // เปิด circuit หลังล้มเหลว 5 ครั้ง
-const CIRCUIT_RESET_MS  = 60_000; // ลอง reset หลัง 1 นาที
+let _circuitOpen = false, _circuitFailCount = 0, _circuitLastFail = 0;
+const CIRCUIT_THRESHOLD = 5, CIRCUIT_RESET_MS = 60_000;
 
 function circuitCheck() {
   if (!_circuitOpen) return;
   if (Date.now() - _circuitLastFail > CIRCUIT_RESET_MS) {
     console.log('[Lark] Circuit breaker RESET — retrying Lark API');
-    _circuitOpen = false;
-    _circuitFailCount = 0;
-  } else {
-    throw new Error('Lark API circuit open — service temporarily unavailable, retry in 1 min');
-  }
+    _circuitOpen = false; _circuitFailCount = 0;
+  } else throw new Error('Lark API circuit open — service temporarily unavailable, retry in 1 min');
 }
 function circuitSuccess() { _circuitFailCount = 0; _circuitOpen = false; }
 function circuitFail(msg) {
-  _circuitFailCount++;
-  _circuitLastFail = Date.now();
+  _circuitFailCount++; _circuitLastFail = Date.now();
   if (_circuitFailCount >= CIRCUIT_THRESHOLD) {
     if (!_circuitOpen) console.error(`[Lark] Circuit breaker OPEN after ${_circuitFailCount} failures`);
     _circuitOpen = true;
@@ -47,12 +29,10 @@ function circuitFail(msg) {
 }
 
 let _token = null, _tokenExp = 0;
-let _fieldMap = null;    // internalKey → larkColumnName
-let _fieldTypes = {};    // larkColumnName → field ui_type
-let _fieldOptions = {};  // larkColumnName → Set of valid option names
-let _optionMap = {};     // "optXXXX" → "text value"
+let _fieldMap = null, _fieldTypes = {}, _fieldOptions = {}, _optionMap = {};
 let _ticketCache = null, _ticketCacheExp = 0;
-const CACHE_TTL = 10 * 60_000; // ✅ แก้: 10 นาที (เดิม 30 วิ) — ประหยัด Lark API quota ~95%
+// ✅ FIX 1: เพิ่ม cache จาก 30 วิ → 10 นาที ประหยัด Lark API quota ~95%
+const CACHE_TTL = 10 * 60_000;
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -75,11 +55,9 @@ async function getToken() {
 const hdr = t => ({ Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' });
 const APP = () => process.env.LARK_APP_TOKEN;
 
-// ── Multi-brand table map ─────────────────────────────────────
 const BRAND_TABLES = () => [
   { brand: "Dunkin'",            tableId: process.env.LARK_TABLE_DUNKIN            || process.env.LARK_TABLE_ID },
   { brand: "Greyhound Cafe",     tableId: process.env.LARK_TABLE_GREYHOUND_CAFE    },
-  // ✅ แก้: รองรับทั้ง GREYHOUND_ORI และ GREYHOUND_ORIGINAL
   { brand: "Greyhound Original", tableId: process.env.LARK_TABLE_GREYHOUND_ORIGINAL || process.env.LARK_TABLE_GREYHOUND_ORI },
   { brand: "Au Bon Pain",        tableId: process.env.LARK_TABLE_AU_BON_PAIN       },
   { brand: "Funky Fries",        tableId: process.env.LARK_TABLE_FUNKY_FRIES       },
@@ -87,7 +65,6 @@ const BRAND_TABLES = () => [
 
 const TBL = () => process.env.LARK_TABLE_ID;
 
-// ── Keyword → internal key mapping ────────────────────────────
 const KEYWORDS = [
   { key: 'id',           words: ['ticket id','ticketid','ticket no','ticket_id','number ticket','หมายเลข ticket','เลข ticket','ticket number','no.'] },
   { key: 'status',       words: ['status','สถานะ','state','สถานะงาน','สถานะ.','สถานะ '] },
@@ -156,8 +133,7 @@ function parseVal(v, key) {
     if (v.startsWith('opt') && _optionMap[v]) return _optionMap[v];
     return v;
   }
-  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v)
-    return String(v.text || '');
+  if (v && typeof v === 'object' && !Array.isArray(v) && 'text' in v) return String(v.text || '');
   if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object' && 'text' in v[0])
     return v.map(x => String(x.text || '')).join(', ');
   if (Array.isArray(v) && v.length && typeof v[0] === 'string' && v[0].startsWith('opt'))
@@ -185,11 +161,8 @@ function buildFieldMap(record) {
 }
 
 const BRAND_ID_PREFIX = {
-  "Dunkin'":           'DK',
-  "Greyhound Cafe":    'GH',
-  "Greyhound Original":'GO',
-  "Au Bon Pain":       'ABP',
-  "Funky Fries":       'FF',
+  "Dunkin'": 'DK', "Greyhound Cafe": 'GH', "Greyhound Original": 'GO',
+  "Au Bon Pain": 'ABP', "Funky Fries": 'FF',
 };
 let _seq = 0;
 const _idCache = new Map();
@@ -202,23 +175,17 @@ function makeId(recordId, brand) {
 }
 
 const STATUS_NORMALIZE = {
-  'แก้ไข':                      'แก้ไข',
-  'รอตรวจงาน':                  'แก้ไข',
-  'รอดำเนินการ':                 'รอดำเนินการ ⏱️',
-  'รอดำเนินการ ⏱️':             'รอดำเนินการ ⏱️',
-  'ตรวจงาน':                    'ตรวจงาน',
-  'อยู่ระหว่างดำเนินการ':        'อยู่ระหว่างดำเนินการ ⚙️',
-  'อยู่ระหว่างดำเนินการ ⚙️':    'อยู่ระหว่างดำเนินการ ⚙️',
-  'รอชิ้นส่วน':                  'รอดำเนินการ ⏱️',
-  'เสร็จสิ้น':                   'เสร็จสิ้น ✅',
-  'เสร็จสิ้น ✅':               'เสร็จสิ้น ✅',
-  'ยกเลิก':                      'ยกเลิก ❌',
-  'ยกเลิก ❌':                  'ยกเลิก ❌',
+  'แก้ไข': 'แก้ไข', 'รอตรวจงาน': 'แก้ไข',
+  'รอดำเนินการ': 'รอดำเนินการ ⏱️', 'รอดำเนินการ ⏱️': 'รอดำเนินการ ⏱️',
+  'ตรวจงาน': 'ตรวจงาน',
+  'อยู่ระหว่างดำเนินการ': 'อยู่ระหว่างดำเนินการ ⚙️', 'อยู่ระหว่างดำเนินการ ⚙️': 'อยู่ระหว่างดำเนินการ ⚙️',
+  'รอชิ้นส่วน': 'รอดำเนินการ ⏱️',
+  'เสร็จสิ้น': 'เสร็จสิ้น ✅', 'เสร็จสิ้น ✅': 'เสร็จสิ้น ✅',
+  'ยกเลิก': 'ยกเลิก ❌', 'ยกเลิก ❌': 'ยกเลิก ❌',
 };
 function normalizeStatus(s) {
   if (!s) return '';
-  const clean = String(s).trim();
-  return STATUS_NORMALIZE[clean] || clean;
+  return STATUS_NORMALIZE[String(s).trim()] || String(s).trim();
 }
 
 function parseRecord(rec) {
@@ -232,45 +199,28 @@ function parseRecord(rec) {
   for (const k of Object.keys(out)) {
     if (typeof out[k] === 'string' && out[k].startsWith('http')) {
       if (URL_FIELDS.has(k)) { out[k] = ''; }
-      else {
-        if (!out._links) out._links = {};
-        out._links[k] = out[k];
-        out[k] = '';
-      }
+      else { if (!out._links) out._links = {}; out._links[k] = out[k]; out[k] = ''; }
     }
   }
-  if (out.id && !String(out.id).startsWith('rec')) {
-    // use as-is
-  } else {
-    out.id = makeId(rec.record_id, out.brand);
-  }
+  if (out.id && !String(out.id).startsWith('rec')) { /* use as-is */ }
+  else { out.id = makeId(rec.record_id, out.brand); }
   if (!out.brand) out.brand = process.env.DEFAULT_BRAND || "Dunkin'";
   return out;
 }
 
-// ✅ แก้: ตรวจสอบ fieldMap ก่อน write และ log ชัดเจน
 function toWriteFields(fields) {
   const out = {};
   const fm = _fieldMap || {};
-  const hasFm = Object.keys(fm).length > 0;
-
-  if (!hasFm) {
-    console.error('[Lark] ⚠️  toWriteFields called but _fieldMap is empty! Fields will be skipped.');
-  }
-
+  if (!Object.keys(fm).length) console.error('[Lark] ⚠️  toWriteFields called but _fieldMap is empty!');
   for (const [key, val] of Object.entries(fields)) {
     if (val === undefined || val === null) continue;
     if (!WRITABLE_KEYS.has(key)) continue;
     const colName = fm[key];
-    if (!colName) {
-      console.warn(`[Lark] no column mapped for key "${key}" — skipping (fieldMap keys: ${Object.keys(fm).join(', ')})`);
-      continue;
-    }
+    if (!colName) { console.warn(`[Lark] no column mapped for key "${key}" — skipping`); continue; }
     if (DATE_KEYS.has(key)) {
       const ts = toUnixMs(val);
       if (ts) { out[colName] = ts; continue; }
-      console.warn(`[Lark] skip date field "${key}" — cannot convert:`, val);
-      continue;
+      console.warn(`[Lark] skip date field "${key}" — cannot convert:`, val); continue;
     }
     const fieldType = _fieldTypes[colName];
     if (fieldType === 'SingleSelect') {
@@ -281,14 +231,9 @@ function toWriteFields(fields) {
           o.toLowerCase() === valStr.toLowerCase() ||
           o.replace(/[.\s]/g,'').toLowerCase() === valStr.replace(/[.\s]/g,'').toLowerCase()
         );
-        if (!matched) {
-          console.warn(`[Lark] SingleSelect "${colName}" skip "${val}" (not in options: ${[...validOpts].join(', ')})`);
-          continue;
-        }
+        if (!matched) { console.warn(`[Lark] SingleSelect "${colName}" skip "${val}"`); continue; }
         out[colName] = matched;
-      } else {
-        out[colName] = String(val);
-      }
+      } else { out[colName] = String(val); }
       continue;
     }
     out[colName] = typeof val === 'number' ? String(val) : val;
@@ -310,34 +255,20 @@ function toUnixMs(val) {
   return isNaN(dt) ? null : dt.getTime();
 }
 
-// ✅ แก้: ensureFieldMap รอจริงๆ และ retry ถ้า fieldMap ว่าง
 async function ensureFieldMap(forceRebuild = false) {
   if (!forceRebuild && _fieldMap && Object.keys(_fieldMap).length > 0) return;
   console.log('[Lark] Building fieldMap from ALL brand tables...');
   try {
     const token = await getToken();
     const tables = BRAND_TABLES();
-
-    if (tables.length === 0) {
-      throw new Error('No brand tables configured. Check LARK_TABLE_* env vars.');
-    }
-
+    if (tables.length === 0) throw new Error('No brand tables configured. Check LARK_TABLE_* env vars.');
     let firstItems = null;
-    _fieldTypes = {};
-    _fieldOptions = {};
-    _optionMap = {};
-
+    _fieldTypes = {}; _fieldOptions = {}; _optionMap = {};
     await Promise.all(tables.map(async ({ brand: brandName, tableId }) => {
       try {
-        const r = await larkAxios.get(
-          `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`,
-          { headers: hdr(token) }
-        );
+        const r = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/fields`, { headers: hdr(token) });
         const items = r.data.data?.items || [];
-        if (!items.length) {
-          console.warn(`[Lark] No fields returned for ${brandName} (tableId: ${tableId})`);
-          return;
-        }
+        if (!items.length) { console.warn(`[Lark] No fields returned for ${brandName}`); return; }
         if (!firstItems) firstItems = items;
         items.forEach(f => {
           _fieldTypes[f.field_name] = f.ui_type;
@@ -349,32 +280,20 @@ async function ensureFieldMap(forceRebuild = false) {
           }
         });
         console.log(`[Lark] Schema loaded: ${brandName} — ${items.length} fields`);
-      } catch(e) {
-        console.error(`[Lark] Schema failed for ${brandName} (${tableId}):`, e.message);
-      }
+      } catch(e) { console.error(`[Lark] Schema failed for ${brandName}:`, e.message); }
     }));
-
     if (firstItems && firstItems.length > 0) {
       const fakeRecord = { record_id: 'fake', fields: {} };
       firstItems.forEach(f => { fakeRecord.fields[f.field_name] = ''; });
       _fieldMap = buildFieldMap(fakeRecord);
       console.log(`[Lark] ✅ fieldMap ready: ${Object.keys(_fieldMap).length} keys mapped`);
-      if (Object.keys(_fieldMap).length === 0) {
-        console.error('[Lark] ⚠️  fieldMap built but 0 keys mapped! Field names may not match KEYWORDS.');
-        console.log('[Lark] Available field names:', firstItems.map(f => f.field_name).join(', '));
-      }
     } else {
       console.warn('[Lark] No fields found via schema API — falling back to listTickets()');
       await listTickets({ noCache: true });
     }
   } catch(e) {
     console.error('[Lark] ensureFieldMap error:', e.message);
-    // Fallback: try to build from existing records
-    try {
-      await listTickets({ noCache: true });
-    } catch(e2) {
-      console.error('[Lark] Fallback listTickets also failed:', e2.message);
-    }
+    try { await listTickets({ noCache: true }); } catch(e2) { console.error('[Lark] Fallback also failed:', e2.message); }
   }
 }
 
@@ -388,49 +307,33 @@ async function listTickets({ brand, status, noCache } = {}) {
   const token = await getToken();
   const tables = BRAND_TABLES();
   let allTickets = [];
-
-  const TABLE_TIMEOUT = 12_000;
   const fetchTable = async ({ brand: brandName, tableId }) => {
     let all = [], pt;
     do {
       const params = { page_size: 100 };
       if (pt) params.page_token = pt;
-      const r = await larkAxios.get(
-        `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`,
-        { headers: hdr(token), params, }
-      );
+      const r = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records`, { headers: hdr(token), params });
       const items = r.data.data?.items || [];
-      // Build fieldMap from first record if not yet built
-      if ((!_fieldMap || Object.keys(_fieldMap).length === 0) && items.length) {
-        _fieldMap = buildFieldMap(items[0]);
-      }
-      const parsed = items.map(rec => {
-        const t = parseRecord(rec);
-        t.brand = brandName;
-        return t;
-      });
+      if ((!_fieldMap || Object.keys(_fieldMap).length === 0) && items.length) _fieldMap = buildFieldMap(items[0]);
+      const parsed = items.map(rec => { const t = parseRecord(rec); t.brand = brandName; return t; });
       all = all.concat(parsed);
       pt = r.data.data?.has_more ? r.data.data.page_token : undefined;
     } while (pt);
     console.log(`[Lark] Fetched ${all.length} tickets from ${brandName}`);
     return all;
   };
-
   const results = await Promise.allSettled(tables.map(t => fetchTable(t)));
   results.forEach((r, i) => {
     if (r.status === 'fulfilled') allTickets = allTickets.concat(r.value);
     else console.error(`[Lark] ${tables[i].brand} failed:`, r.reason?.message);
   });
-
   allTickets.sort((a, b) => {
     const ai = parseInt(String(a.id||'0').replace(/\D/g,''))||0;
     const bi = parseInt(String(b.id||'0').replace(/\D/g,''))||0;
     return bi - ai;
   });
-
   _ticketCache = allTickets;
   _ticketCacheExp = Date.now() + CACHE_TTL;
-
   let result = allTickets;
   if (brand) result = result.filter(t => t.brand === brand);
   if (status) result = result.filter(t => t.status === status);
@@ -440,168 +343,99 @@ async function listTickets({ brand, status, noCache } = {}) {
 async function getTicket(recordId, tableId) {
   const token = await getToken();
   const tbl = tableId || TBL();
-  const r = await larkAxios.get(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${tbl}/records/${recordId}`,
-    { headers: hdr(token) }
-  );
+  const r = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${tbl}/records/${recordId}`, { headers: hdr(token) });
   if (r.data.code !== 0) throw new Error(`Lark get: ${r.data.msg}`);
   return parseRecord(r.data.data?.record || {});
 }
 
 function invalidateCache() { _ticketCache = null; _ticketCacheExp = 0; }
 
-// ✅ แก้: ค้นหา tableId จาก recordId จริงๆ โดย scan ทุก brand table
-// เพราะ admin ส่ง PATCH มักไม่มี brand field → หา table ผิด
+// ✅ FIX 2: ค้นหา tableId จาก recordId จริงๆ โดย scan ทุก brand table
 async function findTableForRecord(recordId, token) {
   const tables = BRAND_TABLES();
-  // ลองทีละ table จนเจอ
   for (const { brand: brandName, tableId } of tables) {
     try {
-      const r = await larkAxios.get(
-        `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`,
-        { headers: hdr(token), timeout: 8000 }
-      );
+      const r = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`, { headers: hdr(token), timeout: 8000 });
       if (r.data.code === 0) {
-        console.log(`[Lark] Found record ${recordId} in table: ${brandName} (${tableId})`);
+        console.log(`[Lark] Found record ${recordId} in table: ${brandName}`);
         return tableId;
       }
     } catch(_) { /* ไม่อยู่ table นี้ ลองต่อ */ }
   }
-  // fallback: return table แรก
   return tables[0]?.tableId || TBL();
 }
 
 async function updateTicket(recordId, fields) {
   await ensureFieldMap();
   const token = await getToken();
-  if (!_fieldMap || Object.keys(_fieldMap).length === 0) {
+  if (!_fieldMap || Object.keys(_fieldMap).length === 0)
     throw new Error('fieldMap not ready — cannot update ticket. Please retry in a moment.');
-  }
 
-  // ✅ แก้: หา tableId ที่ถูกต้องโดย scan ทุก brand table
+  // ✅ FIX 2: หา tableId ที่ถูกต้อง — ลองจาก brand ก่อน ถ้าไม่มีค่อย scan ทุก table
   let tableId = null;
-  // ถ้ามี brand ให้ลองจาก brand ก่อน (เร็วกว่า)
   if (fields.brand) {
     const bt = BRAND_TABLES().find(b => b.brand === fields.brand);
     if (bt?.tableId) tableId = bt.tableId;
   }
-  // ถ้าไม่มี brand หรือ brand ไม่ match → scan ทุก table
-  if (!tableId) {
-    tableId = await findTableForRecord(recordId, token);
-  }
+  if (!tableId) tableId = await findTableForRecord(recordId, token);
   if (!tableId) throw new Error('ไม่พบ tableId สำหรับ update — กรุณาตั้งค่า LARK_TABLE_*');
 
   const larkFields = toWriteFields(fields);
-  if (!Object.keys(larkFields).length) {
-    console.warn('[Lark] update: no writable fields after mapping. Input:', Object.keys(fields));
-    return {};
-  }
+  if (!Object.keys(larkFields).length) { console.warn('[Lark] update: no writable fields'); return {}; }
   console.log('[Lark] PUT', recordId, 'table:', tableId, JSON.stringify(larkFields));
-  const r = await larkAxios.put(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`,
-    { fields: larkFields },
-    { headers: hdr(token) }
-  );
+  const r = await larkAxios.put(`${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`, { fields: larkFields }, { headers: hdr(token) });
   if (r.data.code !== 0) throw new Error(`Lark update: ${r.data.msg}`);
   invalidateCache();
   return parseRecord(r.data.data?.record || {});
 }
 
-// ✅ แก้หลัก: createTicket — ตรวจสอบ fieldMap, เพิ่ม sentDate/status อัตโนมัติ, log ชัดเจน
 async function createTicket(fields) {
-  // Retry ensureFieldMap สูงสุด 3 ครั้งถ้ายังไม่มี fieldMap
   for (let attempt = 1; attempt <= 3; attempt++) {
     if (_fieldMap && Object.keys(_fieldMap).length > 0) break;
     console.log(`[Lark] ensureFieldMap attempt ${attempt}/3...`);
-    await ensureFieldMap(attempt > 1); // force rebuild ตั้งแต่ attempt 2
+    await ensureFieldMap(attempt > 1);
     if (_fieldMap && Object.keys(_fieldMap).length > 0) break;
     if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
   }
-
-  if (!_fieldMap || Object.keys(_fieldMap).length === 0) {
-    throw new Error('ระบบยังโหลด field map ไม่สำเร็จ กรุณาลองใหม่ในอีก 10 วินาที (fieldMap empty)');
-  }
+  if (!_fieldMap || Object.keys(_fieldMap).length === 0)
+    throw new Error('ระบบยังโหลด field map ไม่สำเร็จ กรุณาลองใหม่ในอีก 10 วินาที');
 
   const token = await getToken();
-
-  // เลือก table ตาม brand
   const brandTable = BRAND_TABLES().find(b => b.brand === fields.brand);
   const targetTable = brandTable?.tableId || TBL();
+  if (!targetTable) throw new Error(`ไม่พบ Table ID สำหรับแบรนด์ "${fields.brand}"`);
 
-  if (!targetTable) {
-    throw new Error(`ไม่พบ Table ID สำหรับแบรนด์ "${fields.brand}" — กรุณาตั้งค่า env LARK_TABLE_* ให้ครบ`);
-  }
-
-  // ✅ เพิ่ม sentDate และ status อัตโนมัติถ้าไม่มี
   const now = new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric' });
-  const enrichedFields = {
-    sentDate: now,
-    status: 'รอดำเนินการ ⏱️',
-    ...fields, // fields จาก user จะ override ค่า default ถ้ามี
-  };
-
+  const enrichedFields = { sentDate: now, status: 'รอดำเนินการ ⏱️', ...fields };
   console.log(`[Lark] createTicket → brand="${fields.brand}" tableId="${targetTable}"`);
-  console.log('[Lark] fieldMap state:', JSON.stringify(_fieldMap));
-  console.log('[Lark] input fields:', JSON.stringify(enrichedFields));
 
-  // ลอง pass 1: ส่งทุก field
   let larkFields = toWriteFields(enrichedFields);
+  if (!Object.keys(larkFields).length)
+    throw new Error(`ไม่สามารถแมป fields ได้\nfieldMap keys: ${Object.keys(_fieldMap).join(', ')}\ninput keys: ${Object.keys(enrichedFields).join(', ')}`);
 
-  if (!Object.keys(larkFields).length) {
-    // ✅ แก้: ถ้า toWriteFields คืน {} แสดงว่า field names ใน Lark ไม่ match KEYWORDS
-    // ลอง fallback: ส่ง raw field names โดยตรง (ใช้ชื่อ column จาก firstItems ถ้ามี)
-    throw new Error(
-      `ไม่สามารถแมป fields ได้ (toWriteFields คืนค่าว่าง)\n` +
-      `fieldMap keys: ${Object.keys(_fieldMap).join(', ')}\n` +
-      `input keys: ${Object.keys(enrichedFields).join(', ')}\n` +
-      `กรุณาเปิด /debug/lark-fields เพื่อดู field names จริงใน Lark`
-    );
-  }
+  let r = await larkAxios.post(`${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`, { fields: larkFields }, { headers: hdr(token) });
 
-  console.log('[Lark] POST ticket fields:', JSON.stringify(larkFields));
-
-  let r = await larkAxios.post(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
-    { fields: larkFields },
-    { headers: hdr(token) }
-  );
-
-  // Retry ถ้า SingleSelect error — ส่งเฉพาะ text fields
-  if (r.data.code !== 0 && r.data.msg && r.data.msg.includes('SelectFieldConvFail')) {
+  if (r.data.code !== 0 && r.data.msg?.includes('SelectFieldConvFail')) {
     console.warn('[Lark] SingleSelect error — retrying with text-only fields');
     const SAFE_KEYS = ['reporter','phone','detail','location','workDetail','partsUsed','adminNote'];
     const safeFields = {};
     SAFE_KEYS.forEach(k => { if (enrichedFields[k]) safeFields[k] = enrichedFields[k]; });
     larkFields = toWriteFields(safeFields);
     if (!Object.keys(larkFields).length) throw new Error(`Lark create: ${r.data.msg}`);
-    console.log('[Lark] Retry POST (text-only):', JSON.stringify(larkFields));
-    r = await larkAxios.post(
-      `${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`,
-      { fields: larkFields },
-      { headers: hdr(token) }
-    );
+    r = await larkAxios.post(`${BASE}/bitable/v1/apps/${APP()}/tables/${targetTable}/records`, { fields: larkFields }, { headers: hdr(token) });
   }
 
-  // ✅ แก้: log error body ชัดเจน
   if (r.data.code !== 0) {
     console.error('[Lark] create failed:', r.data.code, r.data.msg);
-    console.error('[Lark] fields sent:', JSON.stringify(larkFields));
     throw new Error(`Lark create: ${r.data.msg} (code: ${r.data.code})`);
   }
 
   const created = parseRecord(r.data.data?.record || {});
-
-  // Fetch กลับมาเพื่อดึง auto-number จาก Lark
   try {
     await new Promise(resolve => setTimeout(resolve, 800));
     const fresh = await getTicket(created._recordId, targetTable);
-    if (fresh && fresh._recordId) {
-      invalidateCache();
-      return fresh;
-    }
-  } catch(e) {
-    console.warn('[Lark] re-fetch after create failed:', e.message);
-  }
+    if (fresh && fresh._recordId) { invalidateCache(); return fresh; }
+  } catch(e) { console.warn('[Lark] re-fetch after create failed:', e.message); }
 
   invalidateCache();
   return created;
@@ -609,19 +443,13 @@ async function createTicket(fields) {
 
 async function debugSchema() {
   const token = await getToken();
-  const rf = await larkAxios.get(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`,
-    { headers: hdr(token) }
-  );
+  const rf = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/fields`, { headers: hdr(token) });
   const schema = (rf.data.data?.items || []).map(f => ({
     name: f.field_name, type: f.type, ui_type: f.ui_type,
     mapped_to: detectKey(f.field_name) || '(unmapped)',
     options: f.property?.options?.map(o => o.name) || [],
   }));
-  const rr = await larkAxios.get(
-    `${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`,
-    { headers: hdr(token), params: { page_size: 1 } }
-  );
+  const rr = await larkAxios.get(`${BASE}/bitable/v1/apps/${APP()}/tables/${TBL()}/records`, { headers: hdr(token), params: { page_size: 1 } });
   const sample = rr.data.data?.items?.[0] ? parseRecord(rr.data.data.items[0]) : null;
   return { schema, fieldMap: _fieldMap, fieldTypes: _fieldTypes, sample };
 }
