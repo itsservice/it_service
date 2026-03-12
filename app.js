@@ -208,6 +208,10 @@ app.get('/api/branches', async (req, res) => {
 });
 
 // ── Tickets ───────────────────────────────────────────────────
+// ── ✅ แก้: เก็บ brand ของแต่ละ recordId ไว้ใน memory cache ──────
+// เพื่อให้ update endpoints ทุกตัวรู้ว่า ticket นี้อยู่ brand ไหน
+const _ticketBrandCache = new Map(); // recordId → brand
+
 app.get('/api/tickets', async (req, res) => {
   try {
     let tickets = await Promise.race([
@@ -224,6 +228,8 @@ app.get('/api/tickets', async (req, res) => {
     if (s && s.user.role==='engineer' && s.user.brand !== 'ALL') {
       tickets = tickets.filter(t => t.brand === s.user.brand);
     }
+    // ✅ แก้: cache brand ของทุก ticket ไว้ใน memory
+    tickets.forEach(t => { if (t._recordId && t.brand) _ticketBrandCache.set(t._recordId, t.brand); });
     global._debugTickets = tickets;
     res.json({ ok:true, tickets });
   } catch(e) { res.json({ ok:false, error:e.message }); }
@@ -275,10 +281,16 @@ app.post('/api/tickets', async (req, res) => {
   }
 });
 
+// ✅ helper: ดึง brand จาก cache หรือจาก body
+function getBrand(rid, body) {
+  return body?.brand || _ticketBrandCache.get(rid) || null;
+}
+
 app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
   try {
-    const { status, brand } = req.body || {};
+    const { status } = req.body || {};
     if (!status) return res.json({ ok:false, error:'Missing status' });
+    const brand = getBrand(req.params.rid, req.body);
     const t = await updateTicket(req.params.rid, { status, brand });
     const log = addLog({ user:req.user, action:'update_status', ticketId:req.params.rid, detail:`เปลี่ยนสถานะเป็น ${status}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status, ts:new Date().toISOString(), log });
@@ -288,28 +300,29 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
 
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
-    const { engineerName, assignedTo, brand } = req.body || {};
+    const { engineerName, assignedTo } = req.body || {};
     if (!engineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่าง' });
+    const brand = getBrand(req.params.rid, req.body);
     const t = await updateTicket(req.params.rid, {
       engineerName, assignedTo: assignedTo||engineerName,
       status: 'อยู่ระหว่างดำเนินการ ⚙️', brand
     });
-    
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
     broadcast('ticket_updated', { recordId:req.params.rid, engineerName, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-// ── ✅ รองรับทั้ง /engineer-submit และ /engineer (ที่ report.html/engineer.html ส่งมา) ──
+// ── รองรับทั้ง /engineer-submit และ /engineer ──
 app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
   try {
     const { workDetail, partsUsed, workHours } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
+    const brand = getBrand(req.params.rid, req.body);
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
     const t = await updateTicket(req.params.rid, {
       workDetail, partsUsed:partsUsed||'', workHours:workHours||'',
-      engineerName:req.user.name, completedAt:now, status:'ตรวจงาน'
+      engineerName:req.user.name, completedAt:now, status:'ตรวจงาน', brand
     });
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString(), log });
@@ -317,17 +330,19 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-// ✅ alias: /engineer → /engineer-submit (engineer.html ใช้ endpoint นี้)
+// alias: /engineer → /engineer-submit
 app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
   try {
     const { workDetail, status, engineerName } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
+    const brand = getBrand(req.params.rid, req.body);
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
     const t = await updateTicket(req.params.rid, {
       workDetail,
       engineerName: engineerName || req.user.name,
       completedAt:  now,
       status:       status || 'ตรวจงาน',
+      brand,
     });
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status: status || 'ตรวจงาน', ts:new Date().toISOString(), log });
@@ -338,9 +353,10 @@ app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','admin','superad
 app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const { adminNote } = req.body || {};
+    const brand = getBrand(req.params.rid, req.body);
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
     const t = await updateTicket(req.params.rid, {
-      status:'เสร็จสิ้น ✅', adminNote:adminNote||'', closedAt:now, closedBy:req.user.name
+      status:'เสร็จสิ้น ✅', adminNote:adminNote||'', closedAt:now, closedBy:req.user.name, brand
     });
     const log = addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:'ปิดงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', closedBy:req.user.name, ts:new Date().toISOString(), log });
@@ -350,7 +366,8 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
 
 app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
-    const t = await updateTicket(req.params.rid, req.body);
+    const brand = getBrand(req.params.rid, req.body);
+    const t = await updateTicket(req.params.rid, { ...req.body, brand });
     const log = addLog({ user:req.user, action:'update', ticketId:req.params.rid, detail:'อัพเดทข้อมูล' });
     broadcast('ticket_updated', { recordId:req.params.rid, ts:new Date().toISOString(), log });
     res.json({ ok:true, ticket:t });
