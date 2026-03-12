@@ -1457,8 +1457,11 @@ document.getElementById('sidebar-overlay').onclick = closeSidebar;
 function renderDashboard(){
   const total    = tickets.length;
   const waiting  = tickets.filter(t=>{const s=t.status||''; return s.includes('รอดำเนินการ')||s.includes('แก้ไข');}).length;
-const inprog   = tickets.filter(t=>(t.status||'').includes('อยู่ระหว่างดำเนินการ')).length;
-const done     = tickets.filter(t=>(t.status||'').includes('เสร็จสิ้น')).length;
+  const inprog   = tickets.filter(t=>(t.status||'').includes('อยู่ระหว่างดำเนินการ')).length;
+  const done     = tickets.filter(t=>(t.status||'').includes('เสร็จสิ้น')).length;
+  const review   = tickets.filter(t=>(t.status||'').includes('ตรวจงาน')).length;
+  const cancel   = tickets.filter(t=>(t.status||'').includes('ยกเลิก')).length;
+
   document.getElementById('dash-sub').textContent=`อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
   const sel = document.getElementById('dash-status-select');
   if(sel){
