@@ -52,7 +52,7 @@ let _fieldTypes = {};    // larkColumnName → field ui_type
 let _fieldOptions = {};  // larkColumnName → Set of valid option names
 let _optionMap = {};     // "optXXXX" → "text value"
 let _ticketCache = null, _ticketCacheExp = 0;
-const CACHE_TTL = 30_000;
+const CACHE_TTL = 10 * 60_000; // ✅ แก้: 10 นาที (เดิม 30 วิ) — ประหยัด Lark API quota ~95%
 
 async function getToken() {
   if (_token && Date.now() < _tokenExp - 60_000) return _token;
@@ -450,6 +450,27 @@ async function getTicket(recordId, tableId) {
 
 function invalidateCache() { _ticketCache = null; _ticketCacheExp = 0; }
 
+// ✅ แก้: ค้นหา tableId จาก recordId จริงๆ โดย scan ทุก brand table
+// เพราะ admin ส่ง PATCH มักไม่มี brand field → หา table ผิด
+async function findTableForRecord(recordId, token) {
+  const tables = BRAND_TABLES();
+  // ลองทีละ table จนเจอ
+  for (const { brand: brandName, tableId } of tables) {
+    try {
+      const r = await larkAxios.get(
+        `${BASE}/bitable/v1/apps/${APP()}/tables/${tableId}/records/${recordId}`,
+        { headers: hdr(token), timeout: 8000 }
+      );
+      if (r.data.code === 0) {
+        console.log(`[Lark] Found record ${recordId} in table: ${brandName} (${tableId})`);
+        return tableId;
+      }
+    } catch(_) { /* ไม่อยู่ table นี้ ลองต่อ */ }
+  }
+  // fallback: return table แรก
+  return tables[0]?.tableId || TBL();
+}
+
 async function updateTicket(recordId, fields) {
   await ensureFieldMap();
   const token = await getToken();
@@ -457,16 +478,16 @@ async function updateTicket(recordId, fields) {
     throw new Error('fieldMap not ready — cannot update ticket. Please retry in a moment.');
   }
 
-  // ── หา tableId จาก brand ที่ส่งมา หรือ fallback ทุก table ──
-  let tableId = TBL(); // fallback เดิม
+  // ✅ แก้: หา tableId ที่ถูกต้องโดย scan ทุก brand table
+  let tableId = null;
+  // ถ้ามี brand ให้ลองจาก brand ก่อน (เร็วกว่า)
   if (fields.brand) {
     const bt = BRAND_TABLES().find(b => b.brand === fields.brand);
     if (bt?.tableId) tableId = bt.tableId;
   }
-  // ถ้ายังไม่มี brand ให้ค้นหาจากทุก table โดย recordId
-  if (!tableId || tableId === 'undefined') {
-    const bt = BRAND_TABLES()[0];
-    if (bt?.tableId) tableId = bt.tableId;
+  // ถ้าไม่มี brand หรือ brand ไม่ match → scan ทุก table
+  if (!tableId) {
+    tableId = await findTableForRecord(recordId, token);
   }
   if (!tableId) throw new Error('ไม่พบ tableId สำหรับ update — กรุณาตั้งค่า LARK_TABLE_*');
 
