@@ -211,12 +211,22 @@ body.theme-light .d-form-select{color-scheme:light}
 
 /* DASHBOARD CHARTS */
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 24px}
+@media(max-width:480px){
+  .dash-grid{grid-template-columns:1fr;padding:0 14px 80px}
+  .dash-grid .dash-card:nth-child(2){order:3}
+}
 .dash-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:18px}
 .dash-card-title{font-size:12px;font-weight:700;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .brand-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .brand-bar-wrap{flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden}
 .brand-bar{height:100%;border-radius:3px;background:var(--accent);transition:width .5s ease}
 .brand-name{font-size:12.5px;min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:480px){
+  .brand-name{min-width:28px;max-width:28px;font-size:12px}
+  .brand-name span.bn-full{display:inline-block;white-space:nowrap;transition:transform .4s ease}
+  .brand-row:active .bn-full,.brand-row:focus-within .bn-full{animation:marquee-brand 2s linear}
+  @keyframes marquee-brand{0%{transform:translateX(0)}60%{transform:translateX(-60%)}100%{transform:translateX(0)}}
+}
 .brand-count{font-family:var(--font-m);font-size:12px;color:var(--fg2);min-width:24px;text-align:right}
 .recent-list{list-style:none}
 .recent-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b1)}
@@ -230,6 +240,14 @@ body.theme-light .d-form-select{color-scheme:light}
 .analytics-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .analytics-title{font-family:var(--font-h);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .analytics-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:480px){
+  .analytics-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .analytics-controls .ac-dates{grid-column:1/-1;display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+  .analytics-controls .ac-btns{grid-column:1/-1;display:flex;gap:8px}
+  .analytics-controls .ac-btns .btn-apply-filter{flex:1}
+  .analytics-controls .ac-btns .btn-clear-filter{flex:1}
+  .analytics-controls select.analytics-date-input{width:100%}
+}
 .analytics-date-input{background:var(--bg2);border:1.5px solid var(--b1);border-radius:var(--r);padding:8px 12px;color:var(--fg);font-family:var(--font-th);font-size:13px;outline:none;transition:border-color .2s;appearance:none;cursor:pointer}
 .analytics-date-input:focus{border-color:var(--accent)}
 body.theme-light .analytics-date-input{color-scheme:light}
@@ -555,52 +573,52 @@ setTimeout(window.hideSplash, 800);
               <select id="analytics-branch" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:130px">
                 <option value="">📍 ทุกสาขา</option>
               </select>
-              <input type="date" id="analytics-date-from" class="analytics-date-input" title="วันเริ่มต้น"/>
-              <span style="font-size:12px;color:var(--fg3)">ถึง</span>
-              <input type="date" id="analytics-date-to" class="analytics-date-input" title="วันสิ้นสุด"/>
-              <select id="analytics-topn" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:100px">
-                <option value="5">🏆 Top 5</option>
-                <option value="10">🏆 Top 10</option>
-                <option value="99">ทั้งหมด</option>
-              </select>
-              <button class="btn-apply-filter" onclick="applyAnalyticsFilter()">กรอง</button>
-              <button class="btn-clear-filter" onclick="clearAnalyticsFilter()">ล้าง</button>
+              <div class="ac-dates">
+                <input type="date" id="analytics-date-from" class="analytics-date-input" title="วันเริ่มต้น"/>
+                <span style="font-size:12px;color:var(--fg3);text-align:center">ถึง</span>
+                <input type="date" id="analytics-date-to" class="analytics-date-input" title="วันสิ้นสุด"/>
+              </div>
+              <div class="ac-btns">
+                <button class="btn-apply-filter" onclick="applyAnalyticsFilter()">กรอง</button>
+                <button class="btn-clear-filter" onclick="clearAnalyticsFilter()">ล้าง</button>
+              </div>
             </div>
-          </div>
-          <div id="analytics-filter-badge-wrap"></div>
+</div>
+<div id="analytics-filter-badge-wrap"></div>
 
-          <!-- Mini stats row -->
-          <div class="analytics-stat-row" id="analytics-mini-stats">
-            <div class="mini-stat"><div class="mini-stat-label">ทั้งหมด</div><div class="mini-stat-val" id="ms-total" style="color:var(--fg)">—</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">กำลังดำเนินการ</div><div class="mini-stat-val" id="ms-inprog" style="color:var(--blue)">—</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">เสร็จสิ้น</div><div class="mini-stat-val" id="ms-done" style="color:var(--accent)">—</div></div>
-          </div>
+<div class="analytics-grid">
+  <!-- Monthly Trend -->
+  <div class="analytics-card analytics-card-full">
+    <div class="analytics-card-title">📅 Monthly Trend — จำนวน Ticket รายเดือน</div>
+    <div class="analytics-chart-wrap"><canvas id="monthlyTrendChart"></canvas></div>
+  </div>
+  <!-- Branch Breakdown -->
+  <div class="analytics-card">
+    <div class="analytics-card-title">🏪 Branch Breakdown — Ticket ตาม Branch
+      <span style="margin-left:auto">
+        <select id="analytics-topn" class="analytics-date-input" onchange="applyAnalyticsFilter()" style="min-width:100px;font-size:11px">
+          <option value="5">🏆 Top 5</option>
+          <option value="10">🏆 Top 10</option>
+          <option value="99">ทั้งหมด</option>
+        </select>
+      </span>
+    </div>
+    <div class="analytics-chart-wrap"><canvas id="branchBreakdownChart"></canvas></div>
+  </div>
+  <!-- Status Doughnut -->
+  <div class="analytics-card">
+    <div class="analytics-card-title">🔵 สัดส่วนสถานะ Ticket</div>
+    <div class="analytics-chart-wrap"><canvas id="statusDoughnutChart"></canvas></div>
+  </div>
+</div>
 
-          <div class="analytics-grid">
-            <!-- Monthly Trend -->
-            <div class="analytics-card analytics-card-full">
-              <div class="analytics-card-title">📅 Monthly Trend — จำนวน Ticket รายเดือน</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="monthlyTrendChart"></canvas>
-              </div>
-            </div>
-            <!-- Branch Breakdown -->
-            <div class="analytics-card">
-              <div class="analytics-card-title">🏪 Branch Breakdown — Ticket ตาม Branch</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="branchBreakdownChart"></canvas>
-              </div>
-            </div>
-            <!-- Status Doughnut -->
-            <div class="analytics-card">
-              <div class="analytics-card-title">🔵 สัดส่วนสถานะ Ticket</div>
-              <div class="analytics-chart-wrap">
-                <canvas id="statusDoughnutChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+<!-- Mini stats ย้ายมาไว้ล่างสุด -->
+<div class="analytics-stat-row" id="analytics-mini-stats" style="margin-top:14px">
+  <div class="mini-stat"><div class="mini-stat-label">ทั้งหมด</div><div class="mini-stat-val" id="ms-total" style="color:var(--fg)">—</div></div>
+  <div class="mini-stat"><div class="mini-stat-label">รอดำเนินการ</div><div class="mini-stat-val" id="ms-wait" style="color:var(--purple)">—</div></div>
+  <div class="mini-stat"><div class="mini-stat-label">กำลังดำเนินการ</div><div class="mini-stat-val" id="ms-inprog" style="color:var(--blue)">—</div></div>
+  <div class="mini-stat"><div class="mini-stat-label">เสร็จสิ้น</div><div class="mini-stat-val" id="ms-done" style="color:var(--accent)">—</div></div>
+</div>
         <!-- END ADVANCED ANALYTICS -->
       </div>
 
@@ -1509,7 +1527,7 @@ function renderDashboard(){
     <div class="dash-card">
       <div class="dash-card-title">📊 Ticket ตามแบรนด์</div>
       ${brands.map(([b,n])=>`<div class="brand-row" onclick="showBrandPopup('${esc(b)}')" style="cursor:pointer" title="ดู Ticket ของ ${esc(b)}">
-        <div class="brand-name">${esc(b)}</div>
+        <div class="brand-name"><span class="bn-full">${esc(b)}</span></div>
         <div class="brand-bar-wrap">
           <div class="brand-bar" style="width:${Math.round(n/maxB*100)}%;transition:width .4s ease"></div>
         </div>
