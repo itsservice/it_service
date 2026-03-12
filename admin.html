@@ -1445,7 +1445,7 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-  if(page==='dashboard') renderDashboard();
+  if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },50); }
   if(page==='tickets') renderTicketsPage();
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
@@ -1472,6 +1472,18 @@ document.getElementById('sidebar-overlay').onclick = closeSidebar;
 // ════════════════════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════════════════════
+const BRAND_NORM_MAP = {
+  "dunkin'":"Dunkin'","dunkin":"Dunkin'",
+  "greyhound cafe":"Greyhound Cafe","greyhound original":"Greyhound Original","greyhound":"Greyhound Cafe",
+  "au bon pain":"Au Bon Pain","aubonpain":"Au Bon Pain",
+  "funky fries":"Funky Fries","funkyfries":"Funky Fries"
+};
+function normBrand(b){
+  const k=(b||'').toLowerCase().trim();
+  if(BRAND_NORM_MAP[k]) return BRAND_NORM_MAP[k];
+  for(const [key,val] of Object.entries(BRAND_NORM_MAP)){ if(k.includes(key)||key.includes(k)) return val; }
+  return null;
+}
 function renderDashboard(){
   const total    = tickets.length;
   const waiting  = tickets.filter(t=>{const s=t.status||''; return s.includes('รอดำเนินการ')||s.includes('แก้ไข');}).length;
@@ -1507,18 +1519,7 @@ function renderDashboard(){
   const brandMap={};
   const FIXED_BRANDS = ["Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];
   FIXED_BRANDS.forEach(b=>brandMap[b]=0);
-  const BRAND_NORM = {
-    "dunkin'":"Dunkin'","dunkin":"Dunkin'",
-    "greyhound cafe":"Greyhound Cafe","greyhound original":"Greyhound Original","greyhound":"Greyhound Cafe",
-    "au bon pain":"Au Bon Pain","aubonpain":"Au Bon Pain",
-    "funky fries":"Funky Fries","funkyfries":"Funky Fries"
-  };
-  const normBrand = b => {
-    const k = (b||'').toLowerCase().trim();
-    if(BRAND_NORM[k]) return BRAND_NORM[k];
-    for(const [key,val] of Object.entries(BRAND_NORM)){ if(k.includes(key)||key.includes(k)) return val; }
-    return null;
-  };
+
   tickets.forEach(t=>{ const b=normBrand(t.brand); if(b) brandMap[b]=(brandMap[b]||0)+1; });
   const brands=Object.entries(brandMap).sort((a,b)=>b[1]-a[1]);
   const maxB=brands[0]?.[1]||1;
@@ -2411,13 +2412,7 @@ function openChartPopup(title, bodyHtml, accentColor, ticketList){
   }, 100);
 }
 
-// ── Auto-run analytics filter ตอน boot ───────────────────────
-document.addEventListener('DOMContentLoaded', ()=>{
-  // ถ้า data โหลดแล้วให้ render analytics ทันที
-  if(typeof renderAdvancedAnalytics === 'function'){
-    setTimeout(()=>{ try{ renderAdvancedAnalytics(); }catch(_){} }, 500);
-  }
-});
+
 
 
 // ── Password toggle ──────────────────────────────────────────
