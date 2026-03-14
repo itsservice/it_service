@@ -1446,7 +1446,7 @@ function navTo(page){
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
   if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },50); }
-  if(page==='tickets') renderTicketsPage();
+  if(page==='tickets') setTimeout(()=>renderTicketsPage(), 50);
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
   document.getElementById('sidebar').classList.remove('mobile-open');
