@@ -344,13 +344,15 @@ function setFilter(f){
 function render(){
   const me=AUTH?.user?.name||'';
   // stats
-  document.getElementById('s-mine').textContent=tickets.filter(t=>t.engineerName===me&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
-  document.getElementById('s-inprog').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  document.getElementById('s-review').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='ตรวจงาน').length;
-  document.getElementById('s-done').textContent=tickets.filter(t=>t.engineerName===me&&t.status==='เสร็จสิ้น ✅').length;
+  // ✅ isMyTicket: ตรวจทั้ง engineerName และ assignedTo
+  const isMyTicket = t => t.engineerName===me || t.assignedTo===me || t.assignedTo===AUTH?.user?.username;
+  document.getElementById('s-mine').textContent=tickets.filter(t=>isMyTicket(t)&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
+  document.getElementById('s-inprog').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
+  document.getElementById('s-review').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='ตรวจงาน').length;
+  document.getElementById('s-done').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='เสร็จสิ้น ✅').length;
 
   let data=[...tickets];
-  if(currentFilter==='mine') data=data.filter(t=>t.engineerName===me);
+  if(currentFilter==='mine') data=data.filter(t=>isMyTicket(t));
   else if(currentFilter==='wait') data=data.filter(t=>['แก้ไข','รอดำเนินการ ⏱️'].includes(t.status));
   else if(currentFilter==='done') data=data.filter(t=>t.status==='เสร็จสิ้น ✅');
 
@@ -362,7 +364,7 @@ function render(){
   list.innerHTML=data.map(t=>{
     const sc=statusColor(t.status);
     const sk=statusKey(t.status);
-    const isMe=t.engineerName===me;
+    const isMe=t.engineerName===me||t.assignedTo===me||t.assignedTo===AUTH?.user?.username;
     return `<div class="tcard" style="--tc:${sc}" onclick="openDrawer('${esc(t._recordId)}')">
       <div class="tcard-top">
         <div class="tcard-id">${esc(t.id||t._recordId||'—')}</div>
@@ -402,7 +404,7 @@ function closeDrawer(){
 
 function renderDrawerBody(t){
   const me=AUTH?.user?.name||'';
-  const isMe=t.engineerName===me;
+  const isMe=t.engineerName===me||t.assignedTo===me||t.assignedTo===AUTH?.user?.username;
   const canSubmit=isMe&&!['เสร็จสิ้น ✅','ยกเลิก ❌','ตรวจงาน'].includes(t.status);
   const alreadySubmitted=isMe&&t.workDetail&&['ตรวจงาน','เสร็จสิ้น ✅'].includes(t.status);
 
@@ -482,9 +484,11 @@ async function submitWork(rid){
   const btn=document.getElementById('btn-submit-eng');
   btn.disabled=true;btn.textContent='กำลังบันทึก...';
   try{
+    // ✅ ส่งผ่าน Render backend → FastAPI
     const d=await api(`/api/tickets/${rid}/engineer`,{method:'PATCH',body:JSON.stringify({workDetail,status,engineerName:AUTH.user.name})});
+    if(d && d.ok===false) throw new Error(d.error||'บันทึกไม่สำเร็จ');
     tickets=tickets.map(t=>t._recordId===rid?{...t,workDetail,status,engineerName:AUTH.user.name,completedAt:new Date().toLocaleString('th-TH')}:t);
-    toast('✅ บันทึกผลเรียบร้อย');
+    toast('✅ ส่งงานเรียบร้อย!');
     const t=tickets.find(x=>x._recordId===rid);
     if(t){renderDrawerBody(t);document.getElementById('d-status-wrap').innerHTML=`<span class="tcard-status s-${esc(statusKey(t.status))}">${esc(t.status)}</span>`;}
     render();
