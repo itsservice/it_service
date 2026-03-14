@@ -1373,11 +1373,9 @@ connectSSE();
 await Promise.all([loadTickets(), loadLogs(), loadUsers()]).catch(e => console.warn('[boot] data load error:', e.message));
 document.getElementById('login-screen').style.display='none';
 document.getElementById('app').classList.add('ready');
-renderDashboard();
-// auto-run analytics filter ทันทีหลัง boot
-setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} }, 200);
 window.hideSplash?.();
-window.initAdminFab?.(); 
+window.initAdminFab?.();
+// ✅ ใช้ navTo แทน renderDashboard เพื่อให้ active class ถูกต้อง
 navTo('dashboard');
 }
 
@@ -1446,8 +1444,8 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-  if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },300); }
-  if(page==='tickets') setTimeout(()=>renderTicketsPage(), 50);
+  if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },500); }
+  if(page==='tickets') renderTicketsPage();
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
   document.getElementById('sidebar').classList.remove('mobile-open');
