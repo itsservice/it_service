@@ -1377,7 +1377,8 @@ renderDashboard();
 // auto-run analytics filter ทันทีหลัง boot
 setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} }, 200);
 window.hideSplash?.();
-window.initAdminFab?.();
+window.initAdminFab?.(); 
+navTo('dashboard');
 }
 
 let _sseTimer=null;
@@ -1445,7 +1446,7 @@ function navTo(page){
   document.getElementById('pg-'+page).classList.add('active');
   document.getElementById('mobile-title').textContent=PAGE_TITLES[page]||page;
   currentPage=page;
-  if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },50); }
+  if(page==='dashboard'){ renderDashboard(); setTimeout(()=>{ try{ applyAnalyticsFilter(); }catch(_){} },300); }
   if(page==='tickets') setTimeout(()=>renderTicketsPage(), 50);
   if(page==='log'){ loadLogs(); }
   if(page==='users'){ loadUsers(); }
