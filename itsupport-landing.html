@@ -4,44 +4,55 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>IT Support Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;
-  --fg:#111;--fg2:#444;--fg3:#888;
-  --border:#e2e2e2;--border2:#ccc;
-  --card:#fff;--card-h:#fafafa;
-  --sans:'Noto Sans Thai','Space Grotesk',sans-serif;
-  --display:'Space Grotesk','Noto Sans Thai',sans-serif;
-  --mono:'JetBrains Mono',monospace;
-  --ease:cubic-bezier(.22,.61,.36,1)
+  --bg:#fff;--bg2:#f6f6f4;--bg3:#edede9;--bg4:#e4e4df;
+  --fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;
+  --border:#e0e0db;--border2:#c8c8c2;
+  --card:#fff;--card-h:#fafaf8;
+  --display:'Syne',sans-serif;
+  --sans:'Sarabun','Helvetica Neue',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1)
 }
-[data-theme="dark"]{
-  --bg:#111;--bg2:#1a1a1a;--bg3:#222;
-  --fg:#eee;--fg2:#aaa;--fg3:#666;
-  --border:#2a2a2a;--border2:#3a3a3a;
-  --card:#1a1a1a;--card-h:#1e1e1e
+[data-t="dark"]{
+  --bg:#0a0a0a;--bg2:#141413;--bg3:#1e1e1c;--bg4:#282826;
+  --fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#7a7a75;--fg4:#4a4a46;
+  --border:#252523;--border2:#353532;
+  --card:#141413;--card-h:#1a1a18
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 ::selection{background:var(--fg);color:var(--bg)}
-@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease),transform .5s var(--ease)}.reveal.vis{opacity:1;transform:none}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes textReveal{from{opacity:0;transform:translateY(30px) skewY(2deg)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}.reveal.vis{opacity:1;transform:none}
 
-/* TOPBAR */
-.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;padding:0 20px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);transition:background .3s,border-color .3s}
+/* ═══ PARTICLE CANVAS ═══ */
+#particles{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;opacity:.4;transition:opacity .4s}
+[data-t="dark"] #particles{opacity:.25}
+
+/* ═══ TOPBAR ═══ */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 20px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);transition:all .4s}
+.topbar.scrolled{box-shadow:0 1px 20px rgba(0,0,0,.04)}
+[data-t="dark"] .topbar.scrolled{box-shadow:0 1px 20px rgba(0,0,0,.2)}
 .logo{display:flex;align-items:center;gap:8px;cursor:pointer}
-.logo-box{width:28px;height:28px;background:var(--fg);border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--bg);transition:transform .2s,background .3s,color .3s}
-.logo:hover .logo-box{transform:rotate(-4deg) scale(1.05)}
-.logo-txt{font-family:var(--display);font-size:15px;font-weight:600;color:var(--fg)}
+.logo-mark{width:30px;height:30px;background:var(--fg);border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--bg);letter-spacing:-.02em;transition:transform .2s var(--spring),background .4s,color .4s}
+.logo:hover .logo-mark{transform:rotate(-5deg) scale(1.06)}
+.logo-name{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.03em;color:var(--fg)}
 .spacer{flex:1}
-.chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg2);transition:background .3s,border-color .3s,color .3s}
-.chip-sep{width:1px;height:10px;background:var(--border2);transition:background .3s}
-.tb{height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;flex-shrink:0;padding:0 10px;font-family:var(--mono)}
-.tb:hover{background:var(--bg2);color:var(--fg)}
+.info-chip{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg2);white-space:nowrap;transition:all .4s}
+.chip-dot{width:1px;height:10px;background:var(--border2);transition:background .4s}
+.tb{height:32px;min-width:32px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;padding:0 10px;font-family:var(--mono);font-weight:500;letter-spacing:.02em}
+.tb:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
+.tb:active{transform:scale(.96)}
+.ham-btn{padding:0 9px}
 .ham{display:flex;flex-direction:column;gap:3.5px;width:14px}
 .ham span{display:block;height:1.5px;background:var(--fg);border-radius:1px;transition:all .3s var(--ease)}
 .ham span:nth-child(2){width:9px}
@@ -49,135 +60,299 @@ a{color:inherit;text-decoration:none}
 .ham-on .ham span:nth-child(2){opacity:0}
 .ham-on .ham span:nth-child(3){transform:rotate(-45deg) translate(3px,-3px)}
 
-/* MOBILE MENU */
-.mmenu{position:fixed;top:54px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);padding:20px;overflow-y:auto;transform:translateY(-100%);opacity:0;transition:all .3s var(--ease)}
+/* ═══ MOBILE MENU ═══ */
+.mmenu{position:fixed;top:56px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);padding:24px 20px;overflow-y:auto;transform:translateY(-110%);opacity:0;transition:all .35s var(--ease)}
 .mmenu.open{transform:none;opacity:1}
-.mmenu a{padding:12px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--fg);display:block;transition:all .2s}
-.mmenu a:hover{opacity:.6;transform:translateX(4px)}
-.mm-sec{font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.12em;margin-top:14px}
+.mm-link{padding:14px 0;border-bottom:1px solid var(--border);font-size:16px;font-weight:500;color:var(--fg);display:flex;align-items:center;gap:8px;transition:all .2s}
+.mm-link:hover{opacity:.6;transform:translateX(6px)}
+.mm-link .mm-tag{font-family:var(--mono);font-size:10px;color:var(--fg3);margin-left:auto;letter-spacing:.04em}
+.mm-sec{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.16em;margin-top:20px;margin-bottom:4px}
 
-/* HERO */
-.hero{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(54px + 40px) 24px 60px;text-align:center}
-.h-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg2);margin-bottom:24px;animation:up .5s var(--ease) .1s both;transition:background .3s,border-color .3s,color .3s}
-.h-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--fg);animation:pulse 2s infinite;transition:background .3s}
-.h-title{font-family:var(--display);font-size:clamp(30px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.04em;max-width:650px;margin-bottom:16px;animation:up .5s var(--ease) .2s both;color:var(--fg)}
-.h-title em{font-style:normal;opacity:.4}
-.h-sub{font-size:clamp(14px,1.8vw,16px);color:var(--fg2);max-width:460px;line-height:1.75;margin-bottom:28px;animation:up .5s var(--ease) .35s both}
-.h-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;animation:up .5s var(--ease) .5s both}
-.btn-p{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:6px;background:var(--fg);color:var(--bg);border:none;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-p:hover{opacity:.8;transform:translateY(-1px)}
-.btn-o{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:6px;background:transparent;color:var(--fg);border:1.5px solid var(--border2);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
-.btn-o:hover{border-color:var(--fg);transform:translateY(-1px)}
+/* ═══ HERO ═══ */
+.hero{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(56px + 48px) 24px 64px;text-align:center;position:relative;z-index:1}
+.h-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:100px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg2);margin-bottom:28px;animation:up .6s var(--ease) .1s both;transition:all .4s}
+.h-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--fg);animation:pulse 2.5s infinite;transition:background .4s}
+.h-title{font-family:var(--display);font-size:clamp(32px,8vw,72px);font-weight:800;line-height:1.04;letter-spacing:-.05em;max-width:700px;margin-bottom:20px}
+.h-title .line{display:block;overflow:hidden}
+.h-title .line span{display:inline-block;animation:textReveal .7s var(--ease) both}
+.h-title .line:nth-child(1) span{animation-delay:.2s}
+.h-title .line:nth-child(2) span{animation-delay:.35s;color:var(--fg3)}
+.h-sub{font-size:clamp(14px,1.8vw,16px);color:var(--fg2);max-width:440px;line-height:1.8;margin-bottom:32px;animation:up .6s var(--ease) .5s both}
+.h-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;animation:up .6s var(--ease) .65s both}
+.btn-p{display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:8px;background:var(--fg);color:var(--bg);border:none;font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.01em;cursor:pointer;transition:all .2s}
+.btn-p:hover{opacity:.8;transform:translateY(-2px)}
+.btn-p:active{transform:translateY(0)}
+.btn-o{display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:8px;background:transparent;color:var(--fg);border:1.5px solid var(--border2);font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.01em;cursor:pointer;transition:all .2s}
+.btn-o:hover{border-color:var(--fg);transform:translateY(-2px)}
 
-/* SECTIONS */
-.sec{padding:60px 24px;max-width:880px;margin:0 auto}
-.sec-label{font-size:10px;font-weight:700;color:var(--fg3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
-.sec-title{font-family:var(--display);font-size:clamp(20px,4vw,32px);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:8px;color:var(--fg)}
-.sec-desc{font-size:14px;color:var(--fg2);max-width:400px;line-height:1.7}
+/* ═══ SECTIONS ═══ */
+.sec{padding:72px 24px;max-width:920px;margin:0 auto;position:relative;z-index:1}
+.sec-label{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
+.sec-title{font-family:var(--display);font-size:clamp(22px,4vw,36px);font-weight:800;letter-spacing:-.04em;line-height:1.15;margin-bottom:10px;color:var(--fg)}
+.sec-desc{font-size:14px;color:var(--fg3);max-width:420px;line-height:1.75}
 
-/* BRAND CARDS */
-.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:28px}
-.bcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;transition:all .25s var(--ease);position:relative;overflow:hidden}
-.bcard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
-.bcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
-[data-theme="dark"] .bcard:hover{box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.bcard:hover::after{transform:scaleX(1)}
-.bcard-name{font-size:15px;font-weight:600;color:var(--fg);margin-bottom:1px}
-.bcard-slug{font-size:11px;color:var(--fg3);font-family:var(--mono);margin-bottom:12px}
-.bcard-btns{display:flex;gap:5px}
-.bcard-btn{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;text-decoration:none;display:block}
-.bcard-btn:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
-.bcard-btn.fill{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.bcard-btn.fill:hover{opacity:.8}
+/* ═══ BRANDS ═══ */
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:32px}
+.bcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;transition:all .3s var(--ease);position:relative;overflow:hidden}
+.bcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
+.bcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.05)}
+[data-t="dark"] .bcard:hover{box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.bcard:hover::before{transform:scaleX(1)}
+.bc-prefix{font-family:var(--mono);font-size:10px;color:var(--fg4);letter-spacing:.06em;margin-bottom:4px}
+.bc-name{font-family:var(--display);font-size:16px;font-weight:700;color:var(--fg);margin-bottom:2px;letter-spacing:-.02em}
+.bc-slug{font-size:11px;color:var(--fg4);font-family:var(--mono);margin-bottom:14px}
+.bc-btns{display:flex;gap:5px}
+.bc-btn{flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg2);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block}
+.bc-btn:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
+.bc-btn:active{transform:scale(.97)}
+.bc-btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.bc-btn.pri:hover{opacity:.8}
 
-/* QUICK LINKS */
+/* ═══ SYSTEM PREVIEW ═══ */
+.previews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:32px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 18px;transition:all .3s var(--ease);text-decoration:none;color:var(--fg);display:block}
+.pcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.04)}
+.pc-tag{font-family:var(--mono);font-size:10px;color:var(--fg4);letter-spacing:.06em;display:block;margin-bottom:8px}
+.pc-title{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
+.pc-desc{font-size:12px;color:var(--fg3);line-height:1.5;margin-bottom:12px}
+.pc-stat{font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--fg)}
+.pc-stat-label{font-size:11px;color:var(--fg4);margin-top:2px}
+
+/* ═══ QUICK ACCESS ═══ */
 .qlinks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:28px}
-.qcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 14px;text-align:center;transition:all .25s var(--ease);text-decoration:none;display:block;color:var(--fg)}
-.qcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.04)}
-.qcard-icon{font-size:18px;margin-bottom:6px;display:block;font-family:var(--mono);color:var(--fg3)}
-.qcard-title{font-size:14px;font-weight:600;margin-bottom:3px;color:var(--fg)}
-.qcard-desc{font-size:12px;color:var(--fg2);line-height:1.5}
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 16px;text-align:center;transition:all .3s var(--ease);text-decoration:none;display:block;color:var(--fg)}
+.qcard:hover{border-color:var(--border2);transform:translateY(-2px)}
+.qc-icon{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--fg4);width:36px;height:36px;border-radius:8px;background:var(--bg2);display:inline-grid;place-items:center;margin-bottom:10px;transition:all .4s}
+.qcard:hover .qc-icon{background:var(--fg);color:var(--bg)}
+.qc-title{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:3px;letter-spacing:-.02em}
+.qc-desc{font-size:12px;color:var(--fg3);line-height:1.5}
 
-.footer{border-top:1px solid var(--border);padding:22px;text-align:center;transition:border-color .3s}
-.footer-txt{font-size:12px;color:var(--fg3)}
+/* ═══ FOOTER ═══ */
+.footer{border-top:1px solid var(--border);padding:24px;text-align:center;position:relative;z-index:1;transition:border-color .4s}
+.footer-txt{font-size:12px;color:var(--fg4)}
 
-@media(max-width:640px){.chip{display:none}.logo-txt{display:none}.sec{padding:40px 16px}.brands{grid-template-columns:1fr}.qlinks{grid-template-columns:1fr}}
+@media(max-width:640px){
+  .info-chip{display:none}.logo-name{display:none}
+  .sec{padding:48px 16px}
+  .brands{grid-template-columns:1fr}
+  .previews{grid-template-columns:1fr}
+  .qlinks{grid-template-columns:1fr}
+}
+@media(min-width:641px) and (max-width:1023px){
+  .brands{grid-template-columns:repeat(2,1fr)}
+  .previews{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})"><div class="logo-box">IT</div><div class="logo-txt">Support Hub</div></div>
+<canvas id="particles"></canvas>
+
+<header class="topbar" id="topbar">
+  <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})"><div class="logo-mark">IT</div><div class="logo-name">Support Hub</div></div>
   <div class="spacer"></div>
-  <div class="chip"><span id="el-time">--:--</span><span class="chip-sep"></span><span id="el-date">--</span><span class="chip-sep"></span><span id="el-temp">--°C</span></div>
+  <div class="info-chip"><span id="el-time">--:--:--</span><span class="chip-dot"></span><span id="el-date">--</span><span class="chip-dot"></span><span id="el-temp">--</span></div>
   <button class="tb" id="btn-lang" onclick="togLang()">EN</button>
-  <button class="tb" onclick="togTheme()">Theme</button>
-  <button class="tb" id="btn-ham" onclick="togMenu()" style="padding:0 9px"><div class="ham"><span></span><span></span><span></span></div></button>
+  <button class="tb" id="btn-theme" onclick="togTheme()">Dark</button>
+  <button class="tb ham-btn" id="btn-ham" onclick="togMenu()"><div class="ham"><span></span><span></span><span></span></div></button>
 </header>
 
 <nav class="mmenu" id="mmenu">
   <div class="mm-sec" data-t="m_brands">BRANDS</div>
-  <a href="/report/dunkin">Dunkin'</a>
-  <a href="/report/greyhound-cafe">Greyhound Cafe</a>
-  <a href="/report/greyhound-original">Greyhound Original</a>
-  <a href="/report/au-bon-pain">Au Bon Pain</a>
-  <a href="/report/funky-fries">Funky Fries</a>
+  <a class="mm-link" href="/brands/dunkin/report">Dunkin' <span class="mm-tag">GD</span></a>
+  <a class="mm-link" href="/brands/greyhound-cafe/report">Greyhound Cafe <span class="mm-tag">GH</span></a>
+  <a class="mm-link" href="/brands/greyhound-original/report">Greyhound Original <span class="mm-tag">GO</span></a>
+  <a class="mm-link" href="/brands/au-bon-pain/report">Au Bon Pain <span class="mm-tag">ABP</span></a>
+  <a class="mm-link" href="/brands/funky-fries/report">Funky Fries <span class="mm-tag">FF</span></a>
   <div class="mm-sec" data-t="m_sys">SYSTEM</div>
-  <a href="/admin"><span data-t="n_admin">Admin Dashboard</span></a>
-  <a href="/engineer"><span data-t="n_eng">Engineer Portal</span></a>
+  <a class="mm-link" href="/admin"><span data-t="n_admin">Admin Dashboard</span></a>
+  <a class="mm-link" href="/engineer"><span data-t="n_eng">Engineer Portal</span></a>
 </nav>
 
 <section class="hero">
-  <div class="h-chip"><span data-t="h_chip">Multi-brand IT Ticket Management</span></div>
-  <h1 class="h-title"><span data-t="h_t1">Every IT issue,</span><br/><em data-t="h_t2">managed in one place.</em></h1>
-  <p class="h-sub" data-t="h_sub">Report, track, assign — all in one platform. 5 brands supported with real-time LINE notifications.</p>
-  <div class="h-btns"><a href="#brands" class="btn-p" data-t="h_b1">Select Brand</a><a href="/admin" class="btn-o" data-t="h_b2">Admin Login</a></div>
+  <div class="h-badge"><span data-t="h_chip">Multi-brand IT Ticket Management</span></div>
+  <h1 class="h-title">
+    <span class="line"><span data-t="h_t1">Every IT issue,</span></span>
+    <span class="line"><span data-t="h_t2">managed in one place.</span></span>
+  </h1>
+  <p class="h-sub" data-t="h_sub">Report, track, assign, repair — all in one platform. 5 brands, real-time LINE notifications, GPS tracking, SLA management.</p>
+  <div class="h-btns">
+    <a href="#brands" class="btn-p" data-t="h_b1">Select Brand</a>
+    <a href="/admin" class="btn-o" data-t="h_b2">Admin Login</a>
+  </div>
 </section>
 
 <section class="sec reveal" id="brands">
   <div class="sec-label" data-t="br_label">BRANDS</div>
   <h2 class="sec-title" data-t="br_title">Choose your brand</h2>
-  <p class="sec-desc" data-t="br_desc">Each brand has its own report and tracking page.</p>
+  <p class="sec-desc" data-t="br_desc">Each brand has its own dedicated report and tracking page with unique identity.</p>
   <div class="brands" id="brand-grid"></div>
 </section>
 
 <section class="sec reveal">
-  <div class="sec-label" data-t="q_label">QUICK ACCESS</div>
-  <h2 class="sec-title" data-t="q_title">System Access</h2>
-  <div class="qlinks">
-    <a href="/report" class="qcard"><span class="qcard-icon">[R]</span><div class="qcard-title" data-t="q_rep">Report Issue</div><div class="qcard-desc" data-t="q_rep_d">Submit IT repair tickets</div></a>
-    <a href="/engineer" class="qcard"><span class="qcard-icon">[E]</span><div class="qcard-title" data-t="q_eng">Engineer</div><div class="qcard-desc" data-t="q_eng_d">Accept and submit jobs</div></a>
-    <a href="/admin" class="qcard"><span class="qcard-icon">[A]</span><div class="qcard-title" data-t="q_adm">Admin</div><div class="qcard-desc" data-t="q_adm_d">Manage tickets and users</div></a>
+  <div class="sec-label" data-t="pv_label">SYSTEM PREVIEW</div>
+  <h2 class="sec-title" data-t="pv_title">Platform overview</h2>
+  <p class="sec-desc" data-t="pv_desc">Three connected systems working together end-to-end.</p>
+  <div class="previews">
+    <a href="/admin" class="pcard"><span class="pc-tag">01 / ADMIN</span><div class="pc-title" data-t="pv_admin">Dashboard</div><div class="pc-desc" data-t="pv_admin_d">Manage tickets, assign engineers, review work, track SLA compliance.</div><div class="pc-stat" id="stat-tickets">--</div><div class="pc-stat-label" data-t="pv_total">Total tickets</div></a>
+    <a href="/engineer" class="pcard"><span class="pc-tag">02 / ENGINEER</span><div class="pc-title" data-t="pv_eng">Engineer Portal</div><div class="pc-desc" data-t="pv_eng_d">Accept jobs, track GPS, upload photos, submit work reports.</div><div class="pc-stat" id="stat-engineers">--</div><div class="pc-stat-label" data-t="pv_active">Active engineers</div></a>
+    <div class="pcard"><span class="pc-tag">03 / REPORT</span><div class="pc-title" data-t="pv_rep">Report System</div><div class="pc-desc" data-t="pv_rep_d">Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.</div><div class="pc-stat">5</div><div class="pc-stat-label" data-t="pv_brands">Brands supported</div></div>
   </div>
 </section>
 
-<footer class="footer"><div class="footer-txt">IT Support Hub — <span data-t="footer">Multi-branch Restaurant IT Management</span></div></footer>
+<section class="sec reveal">
+  <div class="sec-label" data-t="q_label">QUICK ACCESS</div>
+  <h2 class="sec-title" data-t="q_title">System access</h2>
+  <div class="qlinks">
+    <a href="/report" class="qcard"><div class="qc-icon">R</div><div class="qc-title" data-t="q_rep">Report</div><div class="qc-desc" data-t="q_rep_d">Submit IT repair tickets</div></a>
+    <a href="/engineer" class="qcard"><div class="qc-icon">E</div><div class="qc-title" data-t="q_eng">Engineer</div><div class="qc-desc" data-t="q_eng_d">Accept and complete jobs</div></a>
+    <a href="/admin" class="qcard"><div class="qc-icon">A</div><div class="qc-title" data-t="q_adm">Admin</div><div class="qc-desc" data-t="q_adm_d">Manage system and users</div></a>
+  </div>
+</section>
+
+<footer class="footer"><div class="footer-txt">IT Support Hub v2.0 — <span data-t="footer">Multi-brand Restaurant IT Management</span></div></footer>
 
 <script>
-const B=[
-  {s:'dunkin',n:"Dunkin'"},
-  {s:'greyhound-cafe',n:'Greyhound Cafe'},
-  {s:'greyhound-original',n:'Greyhound Original'},
-  {s:'au-bon-pain',n:'Au Bon Pain'},
-  {s:'funky-fries',n:'Funky Fries'},
+// ═══ BRANDS ═══
+const BRANDS=[
+  {s:'dunkin',n:"Dunkin'",p:'GD'},
+  {s:'greyhound-cafe',n:'Greyhound Cafe',p:'GH'},
+  {s:'greyhound-original',n:'Greyhound Original',p:'GO'},
+  {s:'au-bon-pain',n:'Au Bon Pain',p:'ABP'},
+  {s:'funky-fries',n:'Funky Fries',p:'FF'},
 ];
+
+// ═══ I18N ═══
 let lang='en';
-const I={
-  th:{h_chip:'ระบบจัดการ IT หลายแบรนด์',h_t1:'ทุกปัญหา IT',h_t2:'จัดการได้ในที่เดียว',h_sub:'แจ้งซ่อม ติดตามงาน มอบหมายช่าง ครบในแพลตฟอร์มเดียว รองรับ 5 แบรนด์ แจ้งเตือน LINE',h_b1:'เลือกแบรนด์',h_b2:'เข้า Admin',br_label:'BRANDS',br_title:'เลือกแบรนด์ของคุณ',br_desc:'แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกกัน',br_rep:'แจ้งปัญหา',br_trk:'ติดตาม',q_label:'QUICK ACCESS',q_title:'เข้าสู่ระบบ',q_rep:'แจ้งปัญหา IT',q_rep_d:'ส่ง Ticket แจ้งซ่อม',q_eng:'หน้าช่าง',q_eng_d:'รับงาน ส่งงาน',q_adm:'Admin',q_adm_d:'จัดการ Ticket ผู้ใช้',n_admin:'Admin Dashboard',n_eng:'หน้าช่าง',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'ระบบจัดการ IT Support หลายสาขา'},
-  en:{h_chip:'Multi-brand IT Ticket Management',h_t1:'Every IT issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign — all in one platform. 5 brands supported with real-time LINE notifications.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_title:'Choose your brand',br_desc:'Each brand has its own report and tracking page.',br_rep:'Report',br_trk:'Track',q_label:'QUICK ACCESS',q_title:'System Access',q_rep:'Report Issue',q_rep_d:'Submit IT repair tickets',q_eng:'Engineer',q_eng_d:'Accept and submit jobs',q_adm:'Admin',q_adm_d:'Manage tickets and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-branch Restaurant IT Management'}
+const T={
+  th:{h_chip:'ระบบจัดการ IT หลายแบรนด์',h_t1:'ทุกปัญหา IT',h_t2:'จัดการได้ในที่เดียว',h_sub:'แจ้งซ่อม ติดตาม มอบหมาย ครบจบในแพลตฟอร์มเดียว รองรับ 5 แบรนด์ แจ้งเตือน LINE พร้อม GPS tracking',h_b1:'เลือกแบรนด์',h_b2:'เข้า Admin',br_label:'BRANDS',br_title:'เลือกแบรนด์ของคุณ',br_desc:'แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกจากกัน',br_rep:'แจ้งปัญหา',br_trk:'ติดตาม',pv_label:'SYSTEM PREVIEW',pv_title:'ภาพรวมระบบ',pv_desc:'สามระบบเชื่อมต่อทำงานร่วมกัน end-to-end',pv_admin:'Dashboard',pv_admin_d:'จัดการ Ticket มอบหมายช่าง ตรวจงาน ติดตาม SLA',pv_total:'Tickets ทั้งหมด',pv_eng:'หน้าช่าง',pv_eng_d:'รับงาน GPS tracking ถ่ายรูป ส่งรายงาน',pv_active:'ช่างที่ active',pv_rep:'ระบบแจ้งงาน',pv_rep_d:'แจ้งปัญหาแยกแบรนด์ สร้าง Ticket อัตโนมัติ ส่ง LINE',pv_brands:'แบรนด์ที่รองรับ',q_label:'QUICK ACCESS',q_title:'เข้าสู่ระบบ',q_rep:'แจ้งปัญหา',q_rep_d:'ส่ง Ticket แจ้งซ่อม',q_eng:'หน้าช่าง',q_eng_d:'รับงาน ส่งงาน',q_adm:'Admin',q_adm_d:'จัดการระบบและผู้ใช้',n_admin:'Admin Dashboard',n_eng:'หน้าช่าง',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'ระบบจัดการ IT Support หลายสาขา'},
+  en:{h_chip:'Multi-brand IT Ticket Management',h_t1:'Every IT issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign, repair — all in one platform. 5 brands, real-time LINE notifications, GPS tracking, SLA management.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_title:'Choose your brand',br_desc:'Each brand has its own dedicated report and tracking page with unique identity.',br_rep:'Report',br_trk:'Track',pv_label:'SYSTEM PREVIEW',pv_title:'Platform overview',pv_desc:'Three connected systems working together end-to-end.',pv_admin:'Dashboard',pv_admin_d:'Manage tickets, assign engineers, review work, track SLA compliance.',pv_total:'Total tickets',pv_eng:'Engineer Portal',pv_eng_d:'Accept jobs, track GPS, upload photos, submit work reports.',pv_active:'Active engineers',pv_rep:'Report System',pv_rep_d:'Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.',pv_brands:'Brands supported',q_label:'QUICK ACCESS',q_title:'System access',q_rep:'Report',q_rep_d:'Submit IT repair tickets',q_eng:'Engineer',q_eng_d:'Accept and complete jobs',q_adm:'Admin',q_adm_d:'Manage system and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-brand Restaurant IT Management'}
 };
-function applyI18n(){document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(I[lang][k])e.textContent=I[lang][k]});document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';renderBrands();}
-function togLang(){lang=lang==='th'?'en':'th';localStorage.setItem('lang',lang);applyI18n();}
-function togTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';localStorage.setItem('theme',d.dataset.theme);}
-function renderBrands(){document.getElementById('brand-grid').innerHTML=B.map((b,i)=>`<div class="bcard" style="animation:up .35s var(--ease) ${.05+i*.04}s both"><div class="bcard-name">${b.n}</div><div class="bcard-slug">${b.s}</div><div class="bcard-btns"><a href="/report/${b.s}" class="bcard-btn fill">${I[lang].br_rep}</a><a href="/track/${b.s}" class="bcard-btn">${I[lang].br_trk}</a></div></div>`).join('');}
+
+function applyI18n(){
+  document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(T[lang]?.[k])e.textContent=T[lang][k]});
+  document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
+  document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?(lang==='th'?'Light':'Light'):(lang==='th'?'Dark':'Dark');
+  renderBrands();
+}
+function togLang(){lang=lang==='th'?'en':'th';localStorage.setItem('hub_lang',lang);applyI18n();}
+function togTheme(){
+  const d=document.documentElement;
+  d.dataset.t=d.dataset.t==='dark'?'':'dark';
+  localStorage.setItem('hub_theme',d.dataset.t);
+  applyI18n();
+}
+function renderBrands(){
+  document.getElementById('brand-grid').innerHTML=BRANDS.map((b,i)=>`
+    <div class="bcard" style="animation:up .4s var(--ease) ${.05+i*.05}s both">
+      <div class="bc-prefix">${b.p}-XXXXX</div>
+      <div class="bc-name">${b.n}</div>
+      <div class="bc-slug">/brands/${b.s}</div>
+      <div class="bc-btns">
+        <a href="/brands/${b.s}/report" class="bc-btn pri">${T[lang].br_rep}</a>
+        <a href="/brands/${b.s}/track" class="bc-btn">${T[lang].br_trk}</a>
+      </div>
+    </div>`).join('');
+}
+
+// ═══ MENU ═══
 let menuOpen=false;
-function togMenu(){menuOpen=!menuOpen;document.getElementById('mmenu').classList.toggle('open',menuOpen);document.getElementById('btn-ham').classList.toggle('ham-on',menuOpen);document.body.style.overflow=menuOpen?'hidden':'';}
-setInterval(()=>{const n=new Date();document.getElementById('el-time').textContent=n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});document.getElementById('el-date').textContent=n.toLocaleDateString('th-TH',{day:'numeric',month:'short'});},1000);
-fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m').then(r=>r.json()).then(d=>{const t=Math.round(d.current?.temperature_2m);if(t)document.getElementById('el-temp').textContent=t+'°C';}).catch(()=>{});
-const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}}),{threshold:.1});
+function togMenu(){
+  menuOpen=!menuOpen;
+  document.getElementById('mmenu').classList.toggle('open',menuOpen);
+  document.getElementById('btn-ham').classList.toggle('ham-on',menuOpen);
+  document.body.style.overflow=menuOpen?'hidden':'';
+}
+
+// ═══ CLOCK / WEATHER ═══
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('el-time').textContent=n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('el-date').textContent=n.toLocaleDateString(lang==='th'?'th-TH':'en-US',{day:'numeric',month:'short'});
+},1000);
+fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m')
+  .then(r=>r.json()).then(d=>{const t=Math.round(d.current?.temperature_2m);if(t)document.getElementById('el-temp').textContent=t+'\u00B0C';}).catch(()=>{});
+
+// ═══ LIVE STATS ═══
+fetch('/api/tickets').then(r=>r.json()).then(d=>{
+  if(d.ok&&d.tickets){document.getElementById('stat-tickets').textContent=d.tickets.length;}
+}).catch(()=>{document.getElementById('stat-tickets').textContent='--';});
+fetch('/api/users').then(r=>r.json()).then(d=>{
+  if(d.ok&&d.users){document.getElementById('stat-engineers').textContent=d.users.filter(u=>u.role==='engineer').length;}
+}).catch(()=>{document.getElementById('stat-engineers').textContent='--';});
+
+// ═══ SCROLL OBSERVER ═══
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}}),{threshold:.08});
 document.querySelectorAll('.reveal').forEach(e=>obs.observe(e));
-if(localStorage.getItem('theme')==='dark')document.documentElement.dataset.theme='dark';
-if(localStorage.getItem('lang')==='th')lang='th';
+
+// ═══ TOPBAR SCROLL ═══
+window.addEventListener('scroll',()=>{document.getElementById('topbar').classList.toggle('scrolled',scrollY>20)},{passive:true});
+
+// ═══ PARTICLE SYSTEM ═══
+(function(){
+  const cvs=document.getElementById('particles'),ctx=cvs.getContext('2d');
+  let W,H,particles=[],mouse={x:0,y:0},raf;
+  function resize(){W=cvs.width=innerWidth;H=cvs.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+
+  function createParticles(){
+    particles=[];
+    const count=Math.min(Math.floor(W*H/12000),80);
+    for(let i=0;i<count;i++){
+      particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5});
+    }
+  }
+  createParticles();
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const isDark=document.documentElement.dataset.t==='dark';
+    const col=isDark?'rgba(240,240,235,':'rgba(10,10,10,';
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      // Mouse interaction (desktop)
+      const dx=mouse.x-p.x,dy=mouse.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<180){p.vx+=dx*0.00008;p.vy+=dy*0.00008;}
+      // Dampen
+      p.vx*=.998;p.vy*=.998;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=col+(0.3+p.r*.15)+')';ctx.fill();
+    });
+    // Draw connections
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+        const d=dx*dx+dy*dy;
+        if(d<14000){
+          ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=col+(0.06*(1-d/14000))+')';
+          ctx.lineWidth=.5;ctx.stroke();
+        }
+      }
+    }
+    raf=requestAnimationFrame(draw);
+  }
+  draw();
+
+  // Desktop: mouse
+  document.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+
+  // Mobile: device orientation
+  if(window.DeviceOrientationEvent){
+    window.addEventListener('deviceorientation',e=>{
+      const tx=(e.gamma||0)/90;
+      const ty=(e.beta||0)/90;
+      particles.forEach(p=>{p.vx+=tx*.006;p.vy+=ty*.006;});
+    });
+  }
+})();
+
+// ═══ INIT ═══
+if(localStorage.getItem('hub_theme')==='dark')document.documentElement.dataset.t='dark';
+if(localStorage.getItem('hub_lang')==='th')lang='th';
 applyI18n();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){menuOpen=false;document.getElementById('mmenu').classList.remove('open');document.getElementById('btn-ham').classList.remove('ham-on');document.body.style.overflow='';}});
 </script>
