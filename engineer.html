@@ -3,511 +3,157 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="mobile-web-app-capable" content="yes"/>
 <title>Engineer — IT Support</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#07070a;--bg2:#0d0d12;--bg3:#141419;--bg4:#1c1c24;
-  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
-  --fg:rgba(255,255,255,.93);--fg2:rgba(255,255,255,.5);--fg3:rgba(255,255,255,.22);
-  --accent:#00e5a0;--blue:#3b82f6;--warn:#f59e0b;--danger:#ef4444;--purple:#a855f7;
-  --r:10px;--r2:16px;--r3:20px;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-  --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
-}
-body.theme-light{
-  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
-  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
-  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
-  --accent:#00b87a;--blue:#2563eb;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;
-}
-html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--fg:#111;--fg2:#444;--fg3:#888;--border:#e2e2e2;--border2:#ccc;--card:#fff;--sans:'Noto Sans Thai','Space Grotesk',sans-serif;--display:'Space Grotesk','Noto Sans Thai',sans-serif;--mono:'JetBrains Mono',monospace;--ease:cubic-bezier(.22,.61,.36,1)}
+[data-theme="dark"]{--bg:#111;--bg2:#1a1a1a;--bg3:#222;--fg:#eee;--fg2:#aaa;--fg3:#666;--border:#2a2a2a;--border2:#3a3a3a;--card:#1a1a1a}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
 a{color:inherit;text-decoration:none}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* LOGIN */
-#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
-.login-card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--b2);border-radius:24px;padding:40px 32px;animation:fadeUp .4s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.l-logo{text-align:center;margin-bottom:32px}
-.l-icon{display:inline-flex;width:60px;height:60px;background:var(--blue);border-radius:18px;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px}
-.l-title{font-family:var(--font-h);font-size:22px;font-weight:700}
-.l-sub{font-size:13px;color:var(--fg2);margin-top:5px}
-.l-field{margin-bottom:14px}
-.l-field label{display:block;font-size:11px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px}
-.l-field input{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:13px 15px;color:var(--fg);font-family:var(--font-th);font-size:15px;outline:none;transition:border-color .2s}
-.l-field input:focus{border-color:var(--blue)}
-.l-btn{width:100%;margin-top:8px;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s}
-.l-btn:hover{opacity:.85}.l-btn:disabled{opacity:.4;cursor:default}
-.l-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
-.l-links{text-align:center;margin-top:18px;font-size:13px;color:var(--fg3)}
-.l-links a{color:var(--fg2)}
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;transition:background .3s}
+.lcard{width:100%;max-width:340px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px 22px;animation:up .35s var(--ease);transition:background .3s,border-color .3s}
+.lcard-logo{text-align:center;margin-bottom:22px}
+.lcard-icon{display:inline-flex;width:40px;height:40px;background:var(--fg);border-radius:8px;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--bg);margin-bottom:8px;transition:background .3s,color .3s}
+.lcard-t{font-family:var(--display);font-size:17px;font-weight:700;color:var(--fg)}
+.lcard-s{font-size:13px;color:var(--fg2);margin-top:2px}
+.lf{margin-bottom:10px}
+.lf label{display:block;font-size:10px;font-weight:700;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.lf input{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s,background .3s,color .3s}
+.lf input:focus{border-color:var(--fg)}.lf input::placeholder{color:var(--fg3)}
+.lbtn{width:100%;margin-top:4px;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s,background .3s,color .3s}.lbtn:hover{opacity:.8}.lbtn:disabled{opacity:.3}
+.lerr{color:#c00;font-size:12px;text-align:center;margin-top:6px;min-height:16px}
+[data-theme="dark"] .lerr{color:#f66}
+.llinks{text-align:center;margin-top:12px;font-size:12px;color:var(--fg3)}.llinks a{color:var(--fg2);margin:0 6px}
 
-/* APP */
-#app{display:none;min-height:100vh;flex-direction:column}
-#app.ready{display:flex}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 20px;padding-top:calc(var(--safe-top)+12px);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.3)}
-.tb-logo{width:34px;height:34px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
-.tb-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
-.tb-user{font-size:12px;color:var(--fg2);white-space:nowrap}
-.tb-actions{display:flex;gap:8px;align-items:center}
-.btn-icon{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:16px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
-.btn-icon:hover{background:var(--b1);color:var(--fg)}
-.main{flex:1;padding:20px;max-width:900px;margin:0 auto;width:100%;padding-bottom:80px}
+#app{display:none}#app.on{display:block}
+.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);transition:background .3s,border-color .3s}
+.top-logo{width:26px;height:26px;background:var(--fg);border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--bg);flex-shrink:0;transition:background .3s,color .3s}
+.top-t{font-family:var(--display);font-size:14px;font-weight:700;flex:1;color:var(--fg)}
+.top-clock{font-family:var(--mono);font-size:11px;color:var(--fg3)}
+.smb{padding:5px 9px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg2);font-family:var(--sans);font-size:11px;cursor:pointer;transition:all .15s}.smb:hover{background:var(--bg2);color:var(--fg)}
 
-/* STATS */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-.scard{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden}
-.scard::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--sc,var(--b1))}
-.scard-label{font-size:11.5px;color:var(--fg2);margin-bottom:6px}
-.scard-num{font-family:var(--font-h);font-size:26px;font-weight:700;color:var(--sc,var(--fg))}
+.content{max-width:660px;margin:0 auto;padding:14px}
+.eng-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.es{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;transition:background .3s,border-color .3s}
+.es-v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--fg)}.es-l{font-size:10px;color:var(--fg3);margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
 
-/* FILTER TABS */
-.filter-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
-.filter-tabs::-webkit-scrollbar{height:0}
-.ftab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--b1);background:transparent;color:var(--fg2);font-size:13px;font-weight:500;font-family:var(--font-th);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.ftab.active{font-weight:700}
-.ftab-all.active{background:rgba(255,255,255,.08);border-color:var(--fg);color:var(--fg)}
-.ftab-wait.active{background:rgba(245,158,11,.12);border-color:var(--warn);color:var(--warn)}
-.ftab-mine.active{background:rgba(59,130,246,.15);border-color:var(--blue);color:var(--blue)}
-.ftab-done.active{background:rgba(0,229,160,.12);border-color:var(--accent);color:var(--accent)}
+.tabs{display:flex;gap:3px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:5px;transition:border-color .3s}
+.tab{padding:5px 12px;border-radius:5px;border:none;background:transparent;color:var(--fg3);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--fg)}.tab.on{background:var(--bg3);color:var(--fg);font-weight:600}
+.tab .ct{background:var(--fg);color:var(--bg);border-radius:5px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:3px;transition:background .3s,color .3s}
 
-/* TICKET CARDS */
-.ticket-list{display:flex;flex-direction:column;gap:10px}
-.tcard{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 18px;cursor:pointer;transition:border-color .15s,background .12s;position:relative;overflow:hidden}
-.tcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc,var(--b1))}
-.tcard:hover{border-color:var(--b2);background:var(--bg3)}
-.tcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
-.tcard-id{font-family:var(--font-m);font-size:11.5px;color:var(--accent)}
-.tcard-status{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.tcard-title{font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.3}
-.tcard-detail{font-size:13px;color:var(--fg2);margin-bottom:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tcard-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--fg3)}
-.tcard-badge{background:var(--b1);padding:3px 8px;border-radius:6px;color:var(--fg2)}
-.tcard-assigned{background:rgba(59,130,246,.1);color:#60a5fa;padding:3px 8px;border-radius:6px;font-weight:600}
-.empty-state{text-align:center;padding:60px 20px;color:var(--fg3)}
-.empty-icon{font-size:40px;margin-bottom:12px}
-.empty-text{font-size:15px}
+.jcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:6px;transition:all .2s var(--ease);animation:up .25s var(--ease) both}
+.jcard:hover{border-color:var(--border2)}
+.jc-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px}
+.jc-id{font-family:var(--mono);font-size:10px;color:var(--fg3)}
+.jc-type{font-size:14px;font-weight:600;color:var(--fg)}
+.pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--fg2);transition:background .3s,color .3s}
+.jc-meta{font-size:12px;color:var(--fg2);display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.jc-detail{font-size:13px;color:var(--fg2);line-height:1.5;background:var(--bg2);border-radius:6px;padding:8px;margin-bottom:6px;transition:background .3s}
+.jc-btns{display:flex;gap:3px}
+.jc-b{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+.jc-b:hover{background:var(--bg2);color:var(--fg)}
+.jc-b.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}.jc-b.pri:hover{opacity:.8}
 
-/* STATUS PILLS */
-.s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
-.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
-.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
-.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
-.s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
+.empty{text-align:center;padding:28px 14px}.empty-t{font-size:14px;font-weight:600;color:var(--fg2)}.empty-d{font-size:12px;color:var(--fg3);margin-top:2px}
 
-/* DRAWER */
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;cursor:pointer;backdrop-filter:blur(2px)}
-.drawer-overlay.open{display:block}
-.drawer{position:fixed;right:0;top:0;bottom:0;width:480px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--b1);z-index:201;overflow-y:auto;padding-bottom:calc(var(--safe-bottom)+20px);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-top:var(--safe-top)}
-.drawer.open{transform:none}
-.drawer-head{padding:18px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:flex-start;gap:12px;position:sticky;top:0;background:var(--bg2);z-index:10}
-.drawer-head-info{flex:1;min-width:0}
-.drawer-id{font-family:var(--font-m);font-size:12px;color:var(--accent)}
-.drawer-title{font-size:15px;font-weight:700;margin-top:3px;line-height:1.3}
-.btn-close-dr{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
-.btn-close-dr:hover{background:var(--b1);color:var(--fg)}
-.drawer-body{padding:18px 20px 0}
-.d-section{margin-bottom:20px}
-.d-section-title{font-size:10.5px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
-.d-row{display:flex;margin-bottom:6px;font-size:13.5px;gap:8px;line-height:1.5}
-.d-label{color:var(--fg2);min-width:80px;flex-shrink:0;font-size:13px}
-.d-value{color:var(--fg);font-weight:500;flex:1;word-break:break-word}
-.d-detail-box{background:var(--bg3);border-radius:var(--r);padding:13px;font-size:13.5px;line-height:1.8}
-.d-work-box{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:var(--r);padding:13px;font-size:13px;line-height:1.8}
-.d-divider{height:1px;background:var(--b1);margin:0 0 20px}
+.mod-bg{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}.mod-bg.on{display:flex}
+[data-theme="dark"] .mod-bg.on{background:rgba(0,0,0,.6)}
+.mod{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;width:100%;max-width:400px;animation:up .2s var(--ease);max-height:90vh;overflow-y:auto;transition:background .3s,border-color .3s}
+.mod-t{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:10px;color:var(--fg)}
+.fg{margin-bottom:8px}.fg label{font-size:10px;font-weight:700;color:var(--fg3);margin-bottom:3px;display:block;text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s,background .3s,color .3s}
+.fg input:focus,.fg textarea:focus{border-color:var(--fg)}.fg input::placeholder,.fg textarea::placeholder{color:var(--fg3)}
+.fg textarea{resize:none;min-height:70px;line-height:1.5}
+.mod-f{display:flex;gap:5px;margin-top:10px}
+.bp{flex:1;padding:9px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:background .3s,color .3s}.bp:hover{opacity:.8}
+.bo2{flex:1;padding:9px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:background .3s,color .3s,border-color .3s}
 
-/* SUBMIT FORM */
-.submit-form{background:var(--bg3);border-radius:var(--r2);padding:18px;border:1px solid var(--b1)}
-.submit-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.d-form-group{margin-bottom:12px}
-.d-form-label{font-size:11.5px;font-weight:600;color:var(--fg2);margin-bottom:6px;display:block;letter-spacing:.03em}
-.d-form-input,.d-form-select,.d-form-textarea{width:100%;background:var(--bg);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none}
-.d-form-input:focus,.d-form-select:focus,.d-form-textarea:focus{border-color:var(--blue)}
-.d-form-textarea{resize:none;min-height:100px;line-height:1.7}
-.btn-submit-work{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px}
-.btn-submit-work:hover{opacity:.85}
-.btn-submit-work:disabled{opacity:.4;cursor:default}
-.btn-review{width:100%;padding:13px;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:8px}
-.btn-review:hover{opacity:.85}
-.success-msg{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--accent);text-align:center;margin-top:10px}
-.already-submitted{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:var(--r);padding:14px;font-size:13px;color:var(--accent);line-height:1.7}
-
-/* TOAST */
-.toast{position:fixed;bottom:calc(var(--safe-bottom)+20px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 20px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s cubic-bezier(.22,.61,.36,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:var(--accent);color:var(--accent)}
-.toast.error{border-color:var(--danger);color:var(--danger)}
-
-@media(max-width:600px){
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .drawer{width:100vw}
-  .main{padding:14px;padding-bottom:60px}
-  .topbar{padding:10px 14px;padding-top:calc(var(--safe-top)+10px)}
-  .tb-user{display:none}
-}
+.toast{position:fixed;top:12px;right:12px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);transition:background .3s,border-color .3s,color .3s}
 </style>
 </head>
 <body>
+<div id="login">
+<div class="lcard">
+<div class="lcard-logo"><div class="lcard-icon">EN</div><div class="lcard-t">Engineer Portal</div><div class="lcard-s">Technician Login</div></div>
+<div class="lf"><label>Username</label><input id="l-user" placeholder="username"/></div>
+<div class="lf"><label>Password</label><input type="password" id="l-pass" placeholder="password"/></div>
+<button class="lbtn" id="btn-login">Login</button>
+<div class="lerr" id="l-err"></div>
+<div class="llinks"><a href="/">Home</a><a href="/report">Report</a><a href="/admin">Admin</a></div>
+</div></div>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="l-logo">
-      <div class="l-icon">🔧</div>
-      <div class="l-title">IT Support — ช่าง</div>
-      <div class="l-sub">Engineer Portal</div>
-    </div>
-    <div class="l-field">
-      <label>Username</label>
-      <input type="text" id="l-user" placeholder="กรอก Username" autocomplete="username"/>
-    </div>
-    <div class="l-field">
-      <label>Password</label>
-      <input type="password" id="l-pass" placeholder="กรอกรหัสผ่าน" autocomplete="current-password"/>
-    </div>
-    <button class="l-btn" id="btn-login">เข้าสู่ระบบช่าง</button>
-    <div class="l-err" id="l-err"></div>
-    <div class="l-links">
-      <a href="/report">← หน้าแจ้งปัญหา</a> &nbsp;·&nbsp; <a href="/admin">Admin</a>
-    </div>
-  </div>
-</div>
-
-<!-- APP -->
 <div id="app">
-  <div class="topbar">
-    <div class="tb-logo">🔧</div>
-    <div class="tb-title">Engineer View</div>
-    <div class="tb-user" id="tb-user">—</div>
-    <div class="tb-actions">
-      <button class="btn-icon" id="btn-theme" title="สลับธีม">🌙</button>
-      <button class="btn-icon" id="btn-refresh" title="รีเฟรช">↻</button>
-      <button class="btn-icon" id="btn-logout" title="ออกจากระบบ">⏻</button>
-    </div>
-  </div>
-
-  <div class="main">
-    <!-- Stats -->
-    <div class="stats-row" id="stats-row">
-      <div class="scard" style="--sc:var(--warn)"><div class="scard-label">งานของฉัน (รอดำเนินการ)</div><div class="scard-num" id="s-mine">—</div></div>
-      <div class="scard" style="--sc:var(--blue)"><div class="scard-label">กำลังดำเนินการ</div><div class="scard-num" id="s-inprog">—</div></div>
-      <div class="scard" style="--sc:var(--purple)"><div class="scard-label">รอตรวจงาน</div><div class="scard-num" id="s-review">—</div></div>
-      <div class="scard" style="--sc:var(--accent)"><div class="scard-label">เสร็จสิ้นแล้ว</div><div class="scard-num" id="s-done">—</div></div>
-    </div>
-
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-      <button class="ftab ftab-mine active" onclick="setFilter('mine')">📋 งานของฉัน</button>
-      <button class="ftab ftab-all" onclick="setFilter('all')">🌐 ทั้งหมด</button>
-      <button class="ftab ftab-wait" onclick="setFilter('wait')">⏱️ รอดำเนินการ</button>
-      <button class="ftab ftab-done" onclick="setFilter('done')">✅ เสร็จสิ้น</button>
-    </div>
-
-    <!-- Ticket list -->
-    <div class="ticket-list" id="ticket-list">
-      <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">กำลังโหลด...</div></div>
-    </div>
-  </div>
+<div class="top">
+  <div class="top-logo">EN</div>
+  <div class="top-t" id="eng-name">Engineer</div>
+  <div class="top-clock" id="clock">--:--</div>
+  <button class="smb" onclick="togTheme()">Theme</button>
+  <button class="smb" id="btn-rf" onclick="doRefresh()">Refresh</button>
+  <button class="smb" onclick="logout()">Logout</button>
+</div>
+<div class="content">
+  <div class="eng-stats" id="eng-stats"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="job-list"></div>
+</div>
 </div>
 
-<!-- Drawer overlay -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-
-<!-- Drawer -->
-<div class="drawer" id="drawer">
-  <div class="drawer-head">
-    <div class="drawer-head-info">
-      <div class="drawer-id" id="d-id">—</div>
-      <div class="drawer-title" id="d-title">—</div>
-      <div style="margin-top:6px" id="d-status-wrap"></div>
-    </div>
-    <button class="btn-close-dr" onclick="closeDrawer()">✕</button>
-  </div>
-  <div class="drawer-body" id="drawer-body"></div>
-</div>
-
-<!-- Toast -->
+<div class="mod-bg" id="mod-bg"><div class="mod" id="mod"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '';
-let AUTH = null;
-let tickets = [];
-let currentFilter = 'mine';
-let openId = null;
-const STATUSES = ['แก้ไข','รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅','ยกเลิก ❌'];
+let AUTH=null,tickets=[],tab='active',sse=null;
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function api(p,o={}){const h={'Content-Type':'application/json',...(o.headers||{})};if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;return fetch(p,{...o,headers:h}).then(r=>r.json()).catch(e=>({ok:false,error:e.message}));}
+function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 
-// ── util ──
-function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2500);}
-function statusColor(s=''){
-  if(s.includes('รอดำเนินการ'))return '#c084fc';
-  if(s.includes('อยู่ระหว่าง'))return '#60a5fa';
-  if(s.includes('ตรวจงาน'))return '#22d3ee';
-  if(s.includes('เสร็จสิ้น'))return '#00e5a0';
-  if(s.includes('ยกเลิก'))return '#f87171';
-  if(s.includes('แก้ไข'))return '#f59e0b';
-  return '#888';
-}
-function statusKey(s=''){return s.replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();}
-
-async function api(path,opts={}){
-  const hdrs={'Content-Type':'application/json'};
-  if(AUTH?.token) hdrs['Authorization']='Bearer '+AUTH.token;
-  const r=await fetch(API+path,{...opts,headers:{...hdrs,...(opts.headers||{})}});
-  const d=await r.json();
-  if(!r.ok) throw new Error(d.message||'Error');
-  return d;
-}
-
-// ── AUTH ──
-async function tryRestoreAuth(){
-  const saved=localStorage.getItem('eng_auth');
-  if(!saved)return false;
-  try{
-    const {token}=JSON.parse(saved);
-    const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});
-    if(d.ok && d.user.role==='engineer'){AUTH={token,user:d.user};return true;}
-  }catch(_){}
-  localStorage.removeItem('eng_auth');
-  return false;
-}
+async function tryAuto(){const s=localStorage.getItem('eng_auth');if(!s)return false;try{const{token}=JSON.parse(s);const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});if(d.ok&&['engineer','admin','superadmin'].includes(d.user.role)){AUTH={token,user:d.user};return true;}}catch(_){}localStorage.removeItem('eng_auth');return false;}
 
 document.getElementById('btn-login').onclick=async()=>{
-  const uname=document.getElementById('l-user').value.trim();
-  const pass=document.getElementById('l-pass').value;
-  const err=document.getElementById('l-err');
-  const btn=document.getElementById('btn-login');
-  if(!uname||!pass){err.textContent='กรุณากรอก Username และ Password';return;}
-  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';err.textContent='';
-  try{
-    const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:uname,password:pass})});
-    if(d.user.role!=='engineer') throw new Error('บัญชีนี้ไม่ใช่ช่าง กรุณาใช้หน้า Admin');
-    AUTH={token:d.token,user:d.user};
-    localStorage.setItem('eng_auth',JSON.stringify(AUTH));
-    startApp();
-  }catch(e){err.textContent='❌ '+e.message;btn.disabled=false;btn.textContent='เข้าสู่ระบบช่าง';}
+  const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err'),btn=document.getElementById('btn-login');
+  err.textContent='';if(!u||!p){err.textContent='Enter username and password';return;}
+  btn.disabled=true;btn.textContent='Connecting...';
+  try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});if(!d.ok)throw new Error(d.error||'Login failed');AUTH={token:d.token,user:d.user};localStorage.setItem('eng_auth',JSON.stringify(AUTH));boot();}
+  catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
 };
-['l-user','l-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();}));
+['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
+function logout(){AUTH=null;localStorage.removeItem('eng_auth');location.reload();}
+function togTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';localStorage.setItem('eng_theme',d.dataset.theme);}
+if(localStorage.getItem('eng_theme')==='dark')document.documentElement.dataset.theme='dark';
 
-function logout(){
-  try{api('/api/auth/logout',{method:'POST'});}catch(_){}
-  AUTH=null;localStorage.removeItem('eng_auth');
-  document.getElementById('app').classList.remove('ready');
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-}
-document.getElementById('btn-logout').onclick=logout;
+async function boot(){document.getElementById('login').style.display='none';document.getElementById('app').classList.add('on');document.getElementById('eng-name').textContent=AUTH.user.name;startClock();connectSSE();await loadTickets();render();}
+async function loadTickets(){try{const d=await api('/api/tickets');if(d.ok){const my=AUTH.user.name;tickets=(d.tickets||[]).filter(t=>t.engineerName===my||t.assigned_to===my||AUTH.user.role==='superadmin');}}catch(e){}}
+async function doRefresh(){document.getElementById('btn-rf').textContent='...';await loadTickets();document.getElementById('btn-rf').textContent='Refresh';render();toast('Refreshed');}
+function connectSSE(){if(sse)try{sse.close();}catch(_){}sse=new EventSource('/api/events');sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});}
+function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
-// ── APP START ──
-async function startApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('ready');
-  document.getElementById('tb-user').textContent='🔧 '+AUTH.user.name;
-  await loadTickets();
-  // SSE
-  try{
-    const sse=new EventSource(API+'/api/events');
-    sse.addEventListener('ticket_created',()=>loadTickets());
-    sse.addEventListener('ticket_updated',e=>{try{const d=JSON.parse(e.data);tickets=tickets.map(t=>t._recordId===d.recordId?{...t,...d}:t);render();}catch(_){loadTickets();}});
-  }catch(_){}
-}
-
-async function loadTickets(){
-  const btn=document.getElementById('btn-refresh');
-  btn.textContent='↻';btn.style.animation='spin .7s linear infinite';
-  try{
-    const d=await api('/api/tickets');
-    tickets=d.tickets||d||[];
-    render();
-  }catch(e){toast('โหลดข้อมูลไม่สำเร็จ','error');}
-  btn.style.animation='';btn.textContent='↻';
-}
-document.getElementById('btn-refresh').onclick=loadTickets;
-
-// ── FILTER ──
-function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
-  const map={mine:'ftab-mine',all:'ftab-all',wait:'ftab-wait',done:'ftab-done'};
-  document.querySelector('.'+map[f])?.classList.add('active');
-  render();
-}
-
-// ── RENDER ──
 function render(){
-  const me=AUTH?.user?.name||'';
-  // stats
-  // ✅ isMyTicket: ตรวจทั้ง engineerName และ assignedTo
-  const isMyTicket = t => t.engineerName===me || t.assignedTo===me || t.assignedTo===AUTH?.user?.username;
-  document.getElementById('s-mine').textContent=tickets.filter(t=>isMyTicket(t)&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)).length;
-  document.getElementById('s-inprog').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='อยู่ระหว่างดำเนินการ ⚙️').length;
-  document.getElementById('s-review').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='ตรวจงาน').length;
-  document.getElementById('s-done').textContent=tickets.filter(t=>isMyTicket(t)&&t.status==='เสร็จสิ้น ✅').length;
-
-  let data=[...tickets];
-  if(currentFilter==='mine') data=data.filter(t=>isMyTicket(t));
-  else if(currentFilter==='wait') data=data.filter(t=>['แก้ไข','รอดำเนินการ ⏱️'].includes(t.status));
-  else if(currentFilter==='done') data=data.filter(t=>t.status==='เสร็จสิ้น ✅');
-
-  const list=document.getElementById('ticket-list');
-  if(!data.length){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงานในหมวดนี้</div></div>';
-    return;
-  }
-  list.innerHTML=data.map(t=>{
-    const sc=statusColor(t.status);
-    const sk=statusKey(t.status);
-    const isMe=t.engineerName===me||t.assignedTo===me||t.assignedTo===AUTH?.user?.username;
-    return `<div class="tcard" style="--tc:${sc}" onclick="openDrawer('${esc(t._recordId)}')">
-      <div class="tcard-top">
-        <div class="tcard-id">${esc(t.id||t._recordId||'—')}</div>
-        <span class="tcard-status s-${esc(sk)}">${esc(t.status||'-')}</span>
-      </div>
-      <div class="tcard-title">${esc(t.type||'—')}</div>
-      <div class="tcard-detail">${esc(t.detail||'-')}</div>
-      <div class="tcard-meta">
-        <span class="tcard-badge">🏪 ${esc(t.brand||'-')}</span>
-        <span class="tcard-badge">📍 ${esc(t.branchCode||t.branch||'-')}</span>
-        <span class="tcard-badge">📅 ${esc(t.sentDate||'-')}</span>
-        ${isMe?'<span class="tcard-assigned">👤 งานของฉัน</span>':(t.engineerName?`<span class="tcard-badge">🔧 ${esc(t.engineerName)}</span>`:'<span class="tcard-badge" style="color:var(--warn)">⚠ ยังไม่มอบหมาย</span>')}
-      </div>
-    </div>`;
-  }).join('');
+  const active=tickets.filter(t=>/ระหว่าง/.test(t.status||''));
+  const review=tickets.filter(t=>/ตรวจ/.test(t.status||''));
+  const done=tickets.filter(t=>/เสร็จ/.test(t.status||''));
+  document.getElementById('eng-stats').innerHTML=`<div class="es"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div><div class="es"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div><div class="es"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
+  document.getElementById('tabs').innerHTML=[{id:'active',lb:'Active',ct:active.length},{id:'review',lb:'Review',ct:review.length},{id:'done',lb:'Done',ct:done.length}].map(t=>`<button class="tab${tab===t.id?' on':''}" onclick="tab='${t.id}';render()">${t.lb}${t.ct?`<span class="ct">${t.ct}</span>`:''}</button>`).join('');
+  const list=tab==='active'?active:tab==='review'?review:done;
+  if(!list.length){document.getElementById('job-list').innerHTML=`<div class="empty"><div class="empty-t">${tab==='active'?'No active jobs':tab==='review'?'No jobs in review':'No completed jobs'}</div><div class="empty-d">Pull to refresh</div></div>`;return;}
+  document.getElementById('job-list').innerHTML=list.map((t,i)=>{const rid=esc(t._recordId);return`<div class="jcard" style="animation-delay:${i*.03}s"><div class="jc-top"><div style="flex:1"><div class="jc-id">${esc(t.id||'--')}</div><div class="jc-type">${esc(t.type||'-')}</div></div><span class="pill">${statusLabel(t.status)}</span></div><div class="jc-meta"><span>${esc(t.brand||'-')} / ${esc(t.branchCode||'-')}</span><span>${esc(t.reporter||'-')}</span><span>${esc(t.sentDate||'-')}</span></div>${t.detail?`<div class="jc-detail">${esc(t.detail)}</div>`:''}${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}${t.partsUsed?` | Parts: ${esc(t.partsUsed)}`:''}${t.workHours?` | ${esc(t.workHours)}h`:''}</div>`:''}<div class="jc-btns">${tab==='active'?`<button class="jc-b pri" onclick="openSubmit('${rid}')">Submit Work</button>`:''}<button class="jc-b" onclick="openDetail('${rid}')">Detail</button></div></div>`;}).join('');
 }
 
-// ── DRAWER ──
-function openDrawer(id){
-  const t=tickets.find(x=>x._recordId===id);
-  if(!t)return;
-  openId=id;
-  document.getElementById('d-id').textContent='🎫 '+(t.id||t._recordId||'—');
-  document.getElementById('d-title').textContent=t.type||'—';
-  const sk=statusKey(t.status);
-  document.getElementById('d-status-wrap').innerHTML=`<span class="tcard-status s-${esc(sk)}">${esc(t.status||'-')}</span>`;
-  renderDrawerBody(t);
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-}
+function openMod(h){document.getElementById('mod').innerHTML=h;document.getElementById('mod-bg').classList.add('on');}
+function closeMod(){document.getElementById('mod-bg').classList.remove('on');}
+document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod();};
 
-function closeDrawer(){
-  openId=null;
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.getElementById('drawer').classList.remove('open');
-}
+function openSubmit(rid){const t=tickets.find(x=>x._recordId===rid);if(!t)return;openMod(`<div class="mod-t">Submit Work Report</div><div style="font-family:var(--mono);font-size:11px;color:var(--fg3);margin-bottom:8px">${esc(t.id)} — ${esc(t.type)}</div><div class="fg"><label>Work Detail *</label><textarea id="m-wd" placeholder="Describe work done...">${esc(t.workDetail||'')}</textarea></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><div class="fg"><label>Parts Used</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="e.g. LAN cable"/></div><div class="fg"><label>Hours</label><input id="m-wh" type="number" value="${esc(t.workHours||'')}" placeholder="1.5"/></div></div><div class="mod-f"><button class="bo2" onclick="closeMod()">Cancel</button><button class="bp" onclick="doSubmit('${esc(rid)}')">Submit</button></div>`);}
+async function doSubmit(rid){const wd=(document.getElementById('m-wd')?.value||'').trim();if(!wd){toast('Enter work detail');return;}const pt=(document.getElementById('m-pt')?.value||'').trim();const wh=(document.getElementById('m-wh')?.value||'').trim();try{const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh})});if(!d.ok)throw new Error(d.error||'Failed');tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน'}:x);closeMod();render();toast('Submitted');}catch(e){toast('Error: '+e.message);}}
 
-function renderDrawerBody(t){
-  const me=AUTH?.user?.name||'';
-  const isMe=t.engineerName===me||t.assignedTo===me||t.assignedTo===AUTH?.user?.username;
-  const canSubmit=isMe&&!['เสร็จสิ้น ✅','ยกเลิก ❌','ตรวจงาน'].includes(t.status);
-  const alreadySubmitted=isMe&&t.workDetail&&['ตรวจงาน','เสร็จสิ้น ✅'].includes(t.status);
+function openDetail(rid){const t=tickets.find(x=>x._recordId===rid);if(!t)return;openMod(`<div class="mod-t">Ticket Detail</div><div style="font-family:var(--mono);font-size:11px;color:var(--fg3);margin-bottom:8px">${esc(t.id)}</div>${[['Type',t.type],['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Location',t.location]].map(([l,v])=>`<div style="display:flex;gap:4px;margin-bottom:2px;font-size:13px"><span style="color:var(--fg3);min-width:55px;font-size:11px">${l}</span><span style="color:var(--fg);font-weight:500">${esc(v||'-')}</span></div>`).join('')}${t.detail?`<div style="background:var(--bg2);border-radius:6px;padding:8px;font-size:13px;color:var(--fg);margin-top:6px;line-height:1.5;transition:background .3s">${esc(t.detail)}</div>`:''}${t.adminNote?`<div style="background:var(--bg2);border-radius:6px;padding:8px;font-size:12px;color:var(--fg2);margin-top:5px;border-left:2px solid var(--fg);transition:background .3s">Admin: ${esc(t.adminNote)}</div>`:''}<div class="mod-f"><button class="bo2" onclick="closeMod()" style="width:100%">Close</button></div>`);}
 
-  document.getElementById('drawer-body').innerHTML=`
-    <div class="d-section">
-      <div class="d-section-title">ข้อมูลงาน</div>
-      <div class="d-row"><span class="d-label">สาขา</span><span class="d-value">${esc(t.branchCode||t.branch||'-')}</span></div>
-      <div class="d-row"><span class="d-label">แบรนด์</span><span class="d-value">${esc(t.brand||'-')}</span></div>
-      <div class="d-row"><span class="d-label">ผู้แจ้ง</span><span class="d-value">${esc(t.reporter||'-')}</span></div>
-      <div class="d-row"><span class="d-label">เบอร์</span><span class="d-value">${esc(t.phone||'-')}</span></div>
-      <div class="d-row"><span class="d-label">วันที่แจ้ง</span><span class="d-value">${esc(t.sentDate||'-')}</span></div>
-    </div>
-
-    <div class="d-divider"></div>
-
-    <div class="d-section">
-      <div class="d-section-title">รายละเอียดปัญหา</div>
-      <div class="d-detail-box">${esc(t.detail||t.type||'ไม่มีรายละเอียด')}</div>
-    </div>
-
-    ${t.workDetail?`
-    <div class="d-divider"></div>
-    <div class="d-section">
-      <div class="d-section-title">สิ่งที่ช่างดำเนินการ</div>
-      <div class="d-work-box">
-        <div style="font-size:11.5px;color:var(--accent);margin-bottom:6px;font-weight:600">🔧 ${esc(t.engineerName||'-')} · ${esc(t.completedAt||'-')}</div>
-        ${esc(t.workDetail)}
-      </div>
-    </div>`:''}
-
-    ${t.adminNote?`
-    <div class="d-divider"></div>
-    <div class="d-section">
-      <div class="d-section-title">หมายเหตุจาก Admin</div>
-      <div class="d-admin-box">${esc(t.adminNote)}</div>
-    </div>`:''}
-
-    <div class="d-divider"></div>
-
-    ${canSubmit?`
-    <div class="d-section">
-      <div class="submit-form">
-        <div class="submit-title">🔧 บันทึกผลการดำเนินการ</div>
-        <div class="d-form-group">
-          <label class="d-form-label">สิ่งที่ดำเนินการ / วิธีแก้ไข *</label>
-          <textarea class="d-form-textarea" id="eng-workdetail" placeholder="อธิบายสิ่งที่ทำเพื่อแก้ปัญหา เช่น รีสตาร์ท POS, เปลี่ยนสาย LAN..."></textarea>
-        </div>
-        <div class="d-form-group">
-          <label class="d-form-label">สถานะงาน</label>
-          <select class="d-form-select" id="eng-status">
-            <option value="อยู่ระหว่างดำเนินการ ⚙️">⚙️ อยู่ระหว่างดำเนินการ</option>
-            <option value="ตรวจงาน" selected>🔍 ส่งตรวจงาน (เสร็จแล้ว รอ Admin ตรวจ)</option>
-          </select>
-        </div>
-        <button class="btn-submit-work" id="btn-submit-eng" onclick="submitWork('${esc(t._recordId)}')">📤 ส่งผลการดำเนินการ</button>
-      </div>
-    </div>`
-    :alreadySubmitted?`
-    <div class="d-section">
-      <div class="already-submitted">
-        ✅ ส่งผลการดำเนินการแล้ว รอ Admin ตรวจสอบ
-      </div>
-    </div>`
-    :!isMe&&!['เสร็จสิ้น ✅','ยกเลิก ❌'].includes(t.status)?`
-    <div class="d-section">
-      <div class="already-submitted" style="color:var(--warn);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.05)">
-        ⚠️ งานนี้ยังไม่ได้รับมอบหมายให้คุณ
-      </div>
-    </div>`:''}
-  `;
-}
-
-async function submitWork(rid){
-  const workDetail=document.getElementById('eng-workdetail').value.trim();
-  const status=document.getElementById('eng-status').value;
-  if(!workDetail){toast('กรุณากรอกสิ่งที่ดำเนินการ','error');return;}
-  const btn=document.getElementById('btn-submit-eng');
-  btn.disabled=true;btn.textContent='กำลังบันทึก...';
-  try{
-    // ✅ ส่งผ่าน Render backend → FastAPI
-    const d=await api(`/api/tickets/${rid}/engineer`,{method:'PATCH',body:JSON.stringify({workDetail,status,engineerName:AUTH.user.name})});
-    if(d && d.ok===false) throw new Error(d.error||'บันทึกไม่สำเร็จ');
-    tickets=tickets.map(t=>t._recordId===rid?{...t,workDetail,status,engineerName:AUTH.user.name,completedAt:new Date().toLocaleString('th-TH')}:t);
-    toast('✅ ส่งงานเรียบร้อย!');
-    const t=tickets.find(x=>x._recordId===rid);
-    if(t){renderDrawerBody(t);document.getElementById('d-status-wrap').innerHTML=`<span class="tcard-status s-${esc(statusKey(t.status))}">${esc(t.status)}</span>`;}
-    render();
-  }catch(e){toast('❌ '+e.message,'error');btn.disabled=false;btn.textContent='📤 ส่งผลการดำเนินการ';}
-}
-
-// ── THEME ──
-const btnTheme=document.getElementById('btn-theme');
-let dark=true;
-function applyTheme(){document.body.classList.toggle('theme-light',!dark);btnTheme.textContent=dark?'🌙':'☀️';}
-btnTheme.onclick=()=>{dark=!dark;localStorage.setItem('eng_theme',dark?'dark':'light');applyTheme();}
-const savedTheme=localStorage.getItem('eng_theme');
-if(savedTheme==='light'){dark=false;applyTheme();}
-
-// ── INIT ──
-(async()=>{
-  const ok=await tryRestoreAuth();
-  if(ok){startApp();}
-})();
+let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
+(async()=>{if(await tryAuto().catch(()=>false))boot();})();
 </script>
 </body>
 </html>
