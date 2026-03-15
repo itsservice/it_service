@@ -1,1223 +1,185 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IT Support Hub — ระบบจัดการ IT Support สำหรับร้านอาหารหลายสาขา</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>IT Support Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --green: #1BC464;
-  --green-light: #E8FAF0;
-  --green-dark: #0f9e4e;
-  --navy: #0d1b2a;
-  --text: #1a2332;
-  --muted: #6b7a8d;
-  --border: #e8edf3;
-  --bg: #ffffff;
-  --bg2: #f7f9fc;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.07);
-  --shadow-lg: 0 16px 60px rgba(0,0,0,0.12);
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;
+  --fg:#111;--fg2:#444;--fg3:#888;
+  --border:#e2e2e2;--border2:#ccc;
+  --card:#fff;--card-h:#fafafa;
+  --sans:'Noto Sans Thai','Space Grotesk',sans-serif;
+  --display:'Space Grotesk','Noto Sans Thai',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.22,.61,.36,1)
 }
+[data-theme="dark"]{
+  --bg:#111;--bg2:#1a1a1a;--bg3:#222;
+  --fg:#eee;--fg2:#aaa;--fg3:#666;
+  --border:#2a2a2a;--border2:#3a3a3a;
+  --card:#1a1a1a;--card-h:#1e1e1e
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--fg);color:var(--bg)}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease),transform .5s var(--ease)}.reveal.vis{opacity:1;transform:none}
 
-* { margin:0; padding:0; box-sizing:border-box; }
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;padding:0 20px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);transition:background .3s,border-color .3s}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo-box{width:28px;height:28px;background:var(--fg);border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--bg);transition:transform .2s,background .3s,color .3s}
+.logo:hover .logo-box{transform:rotate(-4deg) scale(1.05)}
+.logo-txt{font-family:var(--display);font-size:15px;font-weight:600;color:var(--fg)}
+.spacer{flex:1}
+.chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg2);transition:background .3s,border-color .3s,color .3s}
+.chip-sep{width:1px;height:10px;background:var(--border2);transition:background .3s}
+.tb{height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;flex-shrink:0;padding:0 10px;font-family:var(--mono)}
+.tb:hover{background:var(--bg2);color:var(--fg)}
+.ham{display:flex;flex-direction:column;gap:3.5px;width:14px}
+.ham span{display:block;height:1.5px;background:var(--fg);border-radius:1px;transition:all .3s var(--ease)}
+.ham span:nth-child(2){width:9px}
+.ham-on .ham span:nth-child(1){transform:rotate(45deg) translate(2.5px,2.5px)}
+.ham-on .ham span:nth-child(2){opacity:0}
+.ham-on .ham span:nth-child(3){transform:rotate(-45deg) translate(3px,-3px)}
 
-html { scroll-behavior: smooth; }
+/* MOBILE MENU */
+.mmenu{position:fixed;top:54px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);padding:20px;overflow-y:auto;transform:translateY(-100%);opacity:0;transition:all .3s var(--ease)}
+.mmenu.open{transform:none;opacity:1}
+.mmenu a{padding:12px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--fg);display:block;transition:all .2s}
+.mmenu a:hover{opacity:.6;transform:translateX(4px)}
+.mm-sec{font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.12em;margin-top:14px}
 
-body {
-  font-family: 'Noto Sans Thai', sans-serif;
-  color: var(--text);
-  background: var(--bg);
-  overflow-x: hidden;
-  line-height: 1.6;
-}
+/* HERO */
+.hero{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(54px + 40px) 24px 60px;text-align:center}
+.h-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg2);margin-bottom:24px;animation:up .5s var(--ease) .1s both;transition:background .3s,border-color .3s,color .3s}
+.h-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--fg);animation:pulse 2s infinite;transition:background .3s}
+.h-title{font-family:var(--display);font-size:clamp(30px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.04em;max-width:650px;margin-bottom:16px;animation:up .5s var(--ease) .2s both;color:var(--fg)}
+.h-title em{font-style:normal;opacity:.4}
+.h-sub{font-size:clamp(14px,1.8vw,16px);color:var(--fg2);max-width:460px;line-height:1.75;margin-bottom:28px;animation:up .5s var(--ease) .35s both}
+.h-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;animation:up .5s var(--ease) .5s both}
+.btn-p{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:6px;background:var(--fg);color:var(--bg);border:none;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-p:hover{opacity:.8;transform:translateY(-1px)}
+.btn-o{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:6px;background:transparent;color:var(--fg);border:1.5px solid var(--border2);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-o:hover{border-color:var(--fg);transform:translateY(-1px)}
 
-/* ─── NAVBAR ─── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
-  height: 64px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-}
-.nav-inner {
-  max-width: 1200px; margin: 0 auto; padding: 0 24px;
-  width: 100%; display: flex; align-items: center; gap: 0;
-}
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px;
-  color: var(--text); text-decoration: none; flex-shrink: 0;
-}
-.logo-box {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: var(--green); display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 14px; font-weight: 800; letter-spacing: -0.5px;
-}
-.nav-links {
-  display: flex; align-items: center; gap: 32px;
-  margin-left: auto; list-style: none;
-}
-.nav-links a {
-  font-size: 14px; color: var(--muted); text-decoration: none;
-  font-weight: 500; transition: color .2s;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-right {
-  display: flex; align-items: center; gap: 12px; margin-left: 32px;
-}
-.btn-lang {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 13px; color: var(--muted); background: none;
-  border: none; cursor: pointer; font-family: inherit; padding: 6px 10px;
-  border-radius: 8px; transition: background .2s;
-}
-.btn-lang:hover { background: var(--bg2); }
-.btn-primary {
-  background: var(--green); color: #fff;
-  border: none; border-radius: 100px; padding: 10px 20px;
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
-  transition: background .2s, transform .15s, box-shadow .2s;
-  white-space: nowrap;
-}
-.btn-primary:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,196,100,0.35); }
-.btn-outline {
-  background: none; color: var(--text);
-  border: 1.5px solid var(--border); border-radius: 100px; padding: 10px 20px;
-  font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
-  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
-  transition: border-color .2s, background .2s;
-}
-.btn-outline:hover { border-color: var(--text); background: var(--bg2); }
+/* SECTIONS */
+.sec{padding:60px 24px;max-width:880px;margin:0 auto}
+.sec-label{font-size:10px;font-weight:700;color:var(--fg3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.sec-title{font-family:var(--display);font-size:clamp(20px,4vw,32px);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:8px;color:var(--fg)}
+.sec-desc{font-size:14px;color:var(--fg2);max-width:400px;line-height:1.7}
 
-.hamburger {
-  display: none; flex-direction: column; gap: 5px; background: none;
-  border: none; cursor: pointer; padding: 6px; margin-left: auto;
-}
-.hamburger span {
-  display: block; width: 22px; height: 2px;
-  background: var(--text); border-radius: 2px;
-  transition: transform .3s, opacity .3s;
-}
+/* BRAND CARDS */
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:28px}
+.bcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;transition:all .25s var(--ease);position:relative;overflow:hidden}
+.bcard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
+.bcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+[data-theme="dark"] .bcard:hover{box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.bcard:hover::after{transform:scaleX(1)}
+.bcard-name{font-size:15px;font-weight:600;color:var(--fg);margin-bottom:1px}
+.bcard-slug{font-size:11px;color:var(--fg3);font-family:var(--mono);margin-bottom:12px}
+.bcard-btns{display:flex;gap:5px}
+.bcard-btn{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;text-decoration:none;display:block}
+.bcard-btn:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
+.bcard-btn.fill{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.bcard-btn.fill:hover{opacity:.8}
 
-/* Mobile nav drawer */
-.mobile-nav {
-  display: none; position: fixed; top: 64px; left: 0; right: 0;
-  background: #fff; border-bottom: 1px solid var(--border);
-  padding: 16px 24px 24px; z-index: 998; flex-direction: column; gap: 4px;
-}
-.mobile-nav.open { display: flex; }
-.mobile-nav a {
-  padding: 12px 0; border-bottom: 1px solid var(--border);
-  color: var(--text); text-decoration: none; font-size: 16px; font-weight: 500;
-}
-.mobile-nav .btn-primary { margin-top: 12px; justify-content: center; }
+/* QUICK LINKS */
+.qlinks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:28px}
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 14px;text-align:center;transition:all .25s var(--ease);text-decoration:none;display:block;color:var(--fg)}
+.qcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.04)}
+.qcard-icon{font-size:18px;margin-bottom:6px;display:block;font-family:var(--mono);color:var(--fg3)}
+.qcard-title{font-size:14px;font-weight:600;margin-bottom:3px;color:var(--fg)}
+.qcard-desc{font-size:12px;color:var(--fg2);line-height:1.5}
 
-/* ─── HERO ─── */
-.hero {
-  padding: 140px 24px 100px;
-  text-align: center;
-  background: linear-gradient(180deg, #f0fdf6 0%, #ffffff 60%);
-  position: relative; overflow: hidden;
-}
-.hero::before {
-  content: '';
-  position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
-  width: 800px; height: 800px;
-  background: radial-gradient(circle, rgba(27,196,100,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-.badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(27,196,100,0.1); border: 1px solid rgba(27,196,100,0.25);
-  color: var(--green-dark); border-radius: 100px; padding: 6px 14px;
-  font-size: 13px; font-weight: 600; margin-bottom: 28px;
-}
-.badge svg { width: 14px; height: 14px; }
-.hero h1 {
-  font-family: 'Syne', sans-serif; font-size: clamp(38px, 6vw, 68px);
-  font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
-  color: var(--navy); max-width: 820px; margin: 0 auto 12px;
-}
-.hero h1 .accent { color: var(--green); }
-.hero-sub {
-  font-size: clamp(15px, 2vw, 18px); color: var(--muted);
-  max-width: 560px; margin: 0 auto 40px; line-height: 1.7;
-}
-.hero-cta {
-  display: flex; align-items: center; justify-content: center;
-  gap: 12px; flex-wrap: wrap;
-}
-.hero-cta .btn-primary { padding: 14px 28px; font-size: 16px; }
-.hero-cta .btn-outline { padding: 14px 28px; font-size: 16px; }
+.footer{border-top:1px solid var(--border);padding:22px;text-align:center;transition:border-color .3s}
+.footer-txt{font-size:12px;color:var(--fg3)}
 
-/* Mock browser frame */
-.browser-wrap {
-  max-width: 960px; margin: 64px auto 0;
-  background: var(--bg); border-radius: 16px;
-  box-shadow: var(--shadow-lg); border: 1px solid var(--border);
-  overflow: hidden;
-}
-.browser-bar {
-  background: #f1f3f6; padding: 12px 16px;
-  display: flex; align-items: center; gap: 10px;
-}
-.browser-dots { display: flex; gap: 6px; }
-.browser-dots span {
-  width: 11px; height: 11px; border-radius: 50%;
-}
-.browser-dots span:nth-child(1) { background: #FF5F56; }
-.browser-dots span:nth-child(2) { background: #FFBD2E; }
-.browser-dots span:nth-child(3) { background: #27C93F; }
-.browser-url {
-  flex: 1; background: #fff; border-radius: 6px;
-  padding: 5px 12px; font-size: 12px; color: var(--muted);
-  border: 1px solid var(--border); font-family: monospace;
-}
-.browser-body {
-  background: var(--bg2); padding: 20px;
-  min-height: 380px; display: flex; gap: 16px;
-}
-/* Dashboard mockup inside browser */
-.mock-sidebar {
-  width: 180px; background: var(--navy); border-radius: 10px;
-  padding: 16px 12px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px;
-}
-.mock-logo-row {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-}
-.mock-logo-icon {
-  width: 28px; height: 28px; background: var(--green); border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 10px; font-weight: 800;
-}
-.mock-logo-text { color: #fff; font-size: 11px; font-weight: 700; }
-.mock-nav-item {
-  padding: 7px 10px; border-radius: 7px; font-size: 11px; color: rgba(255,255,255,0.55);
-  display: flex; align-items: center; gap: 7px; cursor: default;
-}
-.mock-nav-item.active { background: rgba(27,196,100,0.2); color: var(--green); }
-.mock-nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-.mock-main { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-.mock-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-.mock-stat {
-  background: #fff; border-radius: 10px; padding: 12px;
-  border: 1px solid var(--border);
-}
-.mock-stat-num { font-size: 22px; font-weight: 800; color: var(--navy); }
-.mock-stat-num.green { color: var(--green); }
-.mock-stat-num.orange { color: #f59e0b; }
-.mock-stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-.mock-table { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; flex: 1; }
-.mock-table-head {
-  display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr;
-  background: var(--bg2); padding: 8px 14px; border-bottom: 1px solid var(--border);
-}
-.mock-th { font-size: 10px; font-weight: 600; color: var(--muted); }
-.mock-row {
-  display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr;
-  padding: 8px 14px; border-bottom: 1px solid var(--border);
-  align-items: center;
-}
-.mock-row:last-child { border-bottom: none; }
-.mock-cell { font-size: 10px; color: var(--text); }
-.mock-pill {
-  display: inline-flex; padding: 2px 8px; border-radius: 100px;
-  font-size: 9px; font-weight: 600; white-space: nowrap;
-}
-.mock-pill.open { background: #fef3c7; color: #92400e; }
-.mock-pill.done { background: #d1fae5; color: #065f46; }
-.mock-pill.prog { background: #e0e7ff; color: #3730a3; }
-
-/* ─── SECTION COMMON ─── */
-section { padding: 100px 24px; }
-.section-inner { max-width: 1200px; margin: 0 auto; }
-.section-label {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
-  color: var(--green); text-transform: uppercase; margin-bottom: 12px;
-}
-.section-title {
-  font-family: 'Syne', sans-serif; font-size: clamp(28px, 4vw, 46px);
-  font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
-  color: var(--navy); margin-bottom: 16px;
-}
-.section-desc {
-  font-size: 16px; color: var(--muted); max-width: 540px; line-height: 1.7;
-}
-
-/* ─── FEATURES ─── */
-#features { background: var(--bg2); }
-.features-grid {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px;
-}
-.feature-card {
-  background: #fff; border-radius: var(--radius);
-  padding: 32px; border: 1px solid var(--border);
-  transition: transform .25s, box-shadow .25s;
-  position: relative; overflow: hidden;
-}
-.feature-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--green), #5effb1);
-  transform: scaleX(0); transform-origin: left; transition: transform .3s;
-}
-.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-.feature-card:hover::before { transform: scaleX(1); }
-.feature-icon {
-  width: 48px; height: 48px; border-radius: 12px;
-  background: var(--green-light); display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 20px;
-}
-.feature-card h3 {
-  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
-  color: var(--navy); margin-bottom: 8px;
-}
-.feature-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
-.feature-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
-.tag {
-  font-size: 11px; font-weight: 600; background: var(--bg2);
-  color: var(--muted); border-radius: 6px; padding: 4px 10px;
-}
-
-/* ─── WORKFLOW ─── */
-#workflow { background: var(--bg); }
-.workflow-steps {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 0;
-  margin-top: 56px; position: relative;
-}
-.workflow-steps::before {
-  content: ''; position: absolute; top: 32px; left: calc(16.666% + 32px);
-  right: calc(16.666% + 32px); height: 2px;
-  background: linear-gradient(90deg, var(--green), #a7f3d0);
-  z-index: 0;
-}
-.step {
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center; padding: 0 24px; position: relative; z-index: 1;
-}
-.step-num {
-  width: 64px; height: 64px; border-radius: 50%;
-  background: #fff; border: 2px solid var(--green);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
-  color: var(--green); margin-bottom: 20px;
-  box-shadow: 0 0 0 8px #fff, 0 0 0 10px rgba(27,196,100,0.15);
-}
-.step h3 {
-  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
-  color: var(--navy); margin-bottom: 8px;
-}
-.step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-.step-icon { font-size: 28px; margin-bottom: 8px; }
-
-/* ─── SCREENSHOTS ─── */
-#screenshots { background: var(--bg2); }
-.screenshots-tabs {
-  display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;
-}
-.tab-btn {
-  padding: 9px 18px; border-radius: 100px; font-size: 14px; font-weight: 500;
-  border: 1.5px solid var(--border); background: #fff; color: var(--muted);
-  cursor: pointer; font-family: inherit; transition: all .2s;
-}
-.tab-btn.active { background: var(--green); border-color: var(--green); color: #fff; }
-.tab-btn:hover:not(.active) { border-color: var(--text); color: var(--text); }
-.screenshot-frame {
-  background: #fff; border-radius: 16px;
-  box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden;
-}
-.screen-bar {
-  background: #f1f3f6; padding: 12px 16px;
-  display: flex; align-items: center; gap: 10px;
-}
-.screen-bar .dots { display: flex; gap: 6px; }
-.screen-bar .dots span { width: 10px; height: 10px; border-radius: 50%; }
-.screen-bar .dots span:nth-child(1) { background: #FF5F56; }
-.screen-bar .dots span:nth-child(2) { background: #FFBD2E; }
-.screen-bar .dots span:nth-child(3) { background: #27C93F; }
-.screen-content { display: none; }
-.screen-content.active { display: block; }
-
-/* Dashboard screen */
-.dash-screen { padding: 24px; background: var(--bg2); min-height: 420px; }
-.dash-screen .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.dash-screen h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); }
-.dash-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
-.ds-card {
-  background: #fff; border-radius: 10px; padding: 16px 18px;
-  border: 1px solid var(--border);
-}
-.ds-num { font-size: 28px; font-weight: 800; color: var(--navy); font-family: 'Syne', sans-serif; }
-.ds-num.g { color: var(--green); }
-.ds-num.o { color: #f59e0b; }
-.ds-num.r { color: #ef4444; }
-.ds-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.ds-trend { font-size: 11px; color: var(--green); margin-top: 6px; font-weight: 600; }
-.dash-lower { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
-.ds-table-wrap { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
-.ds-table-head { background: var(--bg2); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-.ds-table-title { font-size: 13px; font-weight: 600; color: var(--navy); }
-.ds-see-all { font-size: 12px; color: var(--green); cursor: pointer; font-weight: 500; }
-.ds-row { display: flex; justify-content: space-between; padding: 9px 16px; border-bottom: 1px solid var(--border); align-items: center; }
-.ds-row:last-child { border-bottom: none; }
-.ds-row-info { font-size: 12px; }
-.ds-row-title { color: var(--navy); font-weight: 500; }
-.ds-row-sub { color: var(--muted); font-size: 11px; }
-.ds-pill {
-  font-size: 10px; font-weight: 600; padding: 3px 9px;
-  border-radius: 100px;
-}
-.ds-pill.p { background: #fef3c7; color: #92400e; }
-.ds-pill.d { background: #d1fae5; color: #065f46; }
-.ds-pill.w { background: #e0e7ff; color: #3730a3; }
-.ds-pill.c { background: #fce7f3; color: #9d174d; }
-.ds-right { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px; }
-.ds-chart-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 14px; }
-.ds-bar-row { margin-bottom: 10px; }
-.ds-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.ds-bar-track { height: 8px; background: var(--bg2); border-radius: 100px; overflow: hidden; }
-.ds-bar-fill { height: 100%; border-radius: 100px; background: var(--green); }
-
-/* Ticket list screen */
-.ticket-screen { padding: 20px; background: var(--bg2); min-height: 420px; }
-.ticket-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.ticket-search {
-  flex: 1; min-width: 160px; background: #fff; border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
-  display: flex; align-items: center; gap: 8px;
-}
-.ticket-filter {
-  background: #fff; border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px 12px; font-size: 12px; color: var(--muted);
-}
-.ticket-table-wrap { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
-.t-head { display: grid; grid-template-columns: .6fr 2fr 1.2fr 1fr 1fr 1fr; background: var(--bg2); padding: 9px 14px; border-bottom: 1px solid var(--border); }
-.t-th { font-size: 10px; font-weight: 600; color: var(--muted); }
-.t-row { display: grid; grid-template-columns: .6fr 2fr 1.2fr 1fr 1fr 1fr; padding: 9px 14px; border-bottom: 1px solid var(--border); align-items: center; }
-.t-row:last-child { border-bottom: none; }
-.t-cell { font-size: 11px; color: var(--text); }
-.t-cell.muted { color: var(--muted); }
-.t-sla-ok { color: var(--green); font-size: 11px; font-weight: 600; }
-.t-sla-warn { color: #f59e0b; font-size: 11px; font-weight: 600; }
-
-/* Form screen */
-.form-screen { padding: 24px; background: var(--bg2); min-height: 420px; display: flex; gap: 20px; }
-.form-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 24px; flex: 1; }
-.form-card h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 18px; }
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 5px; display: block; }
-.form-field {
-  width: 100%; background: var(--bg2); border: 1.5px solid var(--border);
-  border-radius: 8px; padding: 9px 12px; font-size: 12px; color: var(--text);
-  font-family: inherit;
-}
-.form-field.select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
-.form-field.textarea { height: 80px; resize: none; }
-.form-submit { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; }
-.form-side { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
-.form-info-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 14px; }
-.form-info-title { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
-.form-info-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; }
-.form-info-key { color: var(--muted); }
-.form-info-val { color: var(--text); font-weight: 500; }
-.form-status-indicator { display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--green-light); border-radius: 8px; margin-top: 6px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-.status-text { font-size: 11px; color: var(--green-dark); font-weight: 600; }
-
-/* ─── INTEGRATIONS ─── */
-#integrations { background: var(--bg); }
-.integrations-center { text-align: center; margin-bottom: 56px; }
-.integrations-grid {
-  display: grid; grid-template-columns: repeat(4,1fr); gap: 20px;
-}
-.integration-card {
-  background: var(--bg2); border-radius: var(--radius);
-  padding: 28px 20px; border: 1px solid var(--border);
-  text-align: center; transition: transform .25s, box-shadow .25s;
-}
-.integration-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-.int-logo {
-  width: 56px; height: 56px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; margin: 0 auto 14px;
-}
-.integration-card h4 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-.integration-card p { font-size: 13px; color: var(--muted); }
-
-/* ─── PRICING ─── */
-#pricing { background: var(--bg2); }
-.pricing-center { text-align: center; max-width: 600px; margin: 0 auto; }
-.pricing-card {
-  max-width: 480px; margin: 48px auto 0;
-  background: var(--navy); border-radius: 24px; padding: 48px 40px;
-  text-align: center; position: relative; overflow: hidden;
-}
-.pricing-card::before {
-  content: ''; position: absolute; top: -60px; right: -60px;
-  width: 200px; height: 200px; border-radius: 50%;
-  background: rgba(27,196,100,0.1);
-}
-.pricing-card::after {
-  content: ''; position: absolute; bottom: -40px; left: -40px;
-  width: 150px; height: 150px; border-radius: 50%;
-  background: rgba(27,196,100,0.06);
-}
-.free-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--green); color: #fff; border-radius: 100px;
-  padding: 8px 20px; font-size: 14px; font-weight: 700; margin-bottom: 24px;
-}
-.price-amount {
-  font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800;
-  color: #fff; line-height: 1;
-}
-.price-currency { font-size: 24px; vertical-align: top; padding-top: 12px; }
-.price-sub { color: rgba(255,255,255,0.55); font-size: 16px; margin-top: 8px; }
-.price-features { margin: 32px 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
-.pf-item { display: flex; align-items: center; gap: 12px; }
-.pf-check {
-  width: 22px; height: 22px; border-radius: 50%; background: var(--green);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 12px; flex-shrink: 0;
-}
-.pf-text { color: rgba(255,255,255,0.85); font-size: 14px; }
-.pricing-cta { background: var(--green); color: #fff; border: none; border-radius: 14px; padding: 16px 40px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%; transition: background .2s; position: relative; z-index: 1; }
-.pricing-cta:hover { background: var(--green-dark); }
-
-/* ─── CTA SECTION ─── */
-#cta {
-  background: linear-gradient(135deg, var(--navy) 0%, #1a3a2f 100%);
-  padding: 100px 24px;
-}
-.cta-inner { max-width: 720px; margin: 0 auto; text-align: center; }
-.cta-inner h2 {
-  font-family: 'Syne', sans-serif; font-size: clamp(28px, 4vw, 48px);
-  font-weight: 800; color: #fff; margin-bottom: 16px; letter-spacing: -0.02em;
-}
-.cta-inner p { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 40px; }
-.cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.btn-white { background: #fff; color: var(--navy); border: none; border-radius: 100px; padding: 14px 28px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: transform .15s, box-shadow .2s; }
-.btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
-.btn-ghost { background: none; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 14px 28px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; transition: border-color .2s, color .2s; }
-.btn-ghost:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
-.coming-soon-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(27,196,100,0.15); border: 1px solid rgba(27,196,100,0.3);
-  color: var(--green); border-radius: 100px; padding: 8px 18px;
-  font-size: 13px; font-weight: 600; margin-bottom: 24px;
-}
-
-/* ─── FOOTER ─── */
-footer {
-  background: var(--bg); border-top: 1px solid var(--border);
-  padding: 48px 24px;
-}
-.footer-inner {
-  max-width: 1200px; margin: 0 auto;
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px;
-}
-.footer-copy { font-size: 13px; color: var(--muted); }
-.footer-links { display: flex; gap: 24px; }
-.footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
-.footer-links a:hover { color: var(--text); }
-
-/* ─── ANIMATIONS ─── */
-.fade-up {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity .55s ease, transform .55s ease;
-}
-.fade-up.visible { opacity: 1; transform: translateY(0); }
-
-/* ─── RESPONSIVE ─── */
-@media(max-width: 900px) {
-  .features-grid { grid-template-columns: 1fr 1fr; }
-  .dash-stats { grid-template-columns: repeat(2,1fr); }
-  .integrations-grid { grid-template-columns: repeat(2,1fr); }
-  .t-head, .t-row { grid-template-columns: 2fr 1.2fr 1fr 1fr; }
-  .t-head .t-th:nth-child(6), .t-row .t-cell:nth-child(6),
-  .t-head .t-th:nth-child(5), .t-row .t-cell:nth-child(5) { display: none; }
-}
-@media(max-width: 768px) {
-  nav { height: 60px; }
-  .nav-links, .nav-right { display: none; }
-  .hamburger { display: flex; }
-  .hero { padding: 100px 20px 70px; }
-  section { padding: 70px 20px; }
-  .features-grid { grid-template-columns: 1fr; }
-  .workflow-steps { grid-template-columns: 1fr; }
-  .workflow-steps::before { display: none; }
-  .step { flex-direction: row; text-align: left; gap: 16px; padding: 0 0 24px 0; }
-  .step-num { flex-shrink: 0; }
-  .mock-sidebar { display: none; }
-  .browser-body { padding: 12px; }
-  .dash-stats { grid-template-columns: repeat(2,1fr); }
-  .dash-lower { grid-template-columns: 1fr; }
-  .ds-right { display: none; }
-  .form-side { display: none; }
-  .form-screen { flex-direction: column; }
-  .integrations-grid { grid-template-columns: repeat(2,1fr); }
-  .footer-inner { flex-direction: column; text-align: center; }
-  .pricing-card { padding: 36px 24px; }
-  .price-amount { font-size: 56px; }
-  .t-head .t-th:nth-child(4), .t-row .t-cell:nth-child(4),
-  .t-head .t-th:nth-child(3), .t-row .t-cell:nth-child(3) { display: none; }
-}
+@media(max-width:640px){.chip{display:none}.logo-txt{display:none}.sec{padding:40px 16px}.brands{grid-template-columns:1fr}.qlinks{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- ═══ NAVBAR ═══ -->
-<nav>
-  <div class="nav-inner">
-    <a href="#" class="logo">
-      <div class="logo-box">IT</div>
-      <span>Support Hub</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#features">ฟีเจอร์หลัก</a></li>
-      <li><a href="#workflow">การทำงาน</a></li>
-      <li><a href="#screenshots">หน้าจอระบบ</a></li>
-      <li><a href="#pricing">ราคา</a></li>
-      <li style="height:20px;width:1px;background:var(--border);margin:0 4px"></li>
-      <li><a href="/report" style="color:var(--green);font-weight:600">📋 แจ้งปัญหา</a></li>
-      <li><a href="/engineer">🔧 ช่าง</a></li>
-      <li><a href="/admin">⚙️ Admin</a></li>
-    </ul>
-    <div class="nav-right">
-      <button class="btn-lang" onclick="toggleLang()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-        <span id="lang-btn-text">EN</span>
-      </button>
-      <a href="/report" class="btn-primary">แจ้งปัญหา IT →</a>
-    </div>
-    <button class="hamburger" onclick="toggleMobileNav()" id="hamburger">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
+<header class="topbar">
+  <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})"><div class="logo-box">IT</div><div class="logo-txt">Support Hub</div></div>
+  <div class="spacer"></div>
+  <div class="chip"><span id="el-time">--:--</span><span class="chip-sep"></span><span id="el-date">--</span><span class="chip-sep"></span><span id="el-temp">--°C</span></div>
+  <button class="tb" id="btn-lang" onclick="togLang()">EN</button>
+  <button class="tb" onclick="togTheme()">Theme</button>
+  <button class="tb" id="btn-ham" onclick="togMenu()" style="padding:0 9px"><div class="ham"><span></span><span></span><span></span></div></button>
+</header>
+
+<nav class="mmenu" id="mmenu">
+  <div class="mm-sec" data-t="m_brands">BRANDS</div>
+  <a href="/report/dunkin">Dunkin'</a>
+  <a href="/report/greyhound-cafe">Greyhound Cafe</a>
+  <a href="/report/greyhound-original">Greyhound Original</a>
+  <a href="/report/au-bon-pain">Au Bon Pain</a>
+  <a href="/report/funky-fries">Funky Fries</a>
+  <div class="mm-sec" data-t="m_sys">SYSTEM</div>
+  <a href="/admin"><span data-t="n_admin">Admin Dashboard</span></a>
+  <a href="/engineer"><span data-t="n_eng">Engineer Portal</span></a>
 </nav>
 
-<!-- Mobile Nav -->
-<div class="mobile-nav" id="mobileNav">
-  <a href="#features" onclick="closeMobileNav()">ฟีเจอร์หลัก</a>
-  <a href="#workflow" onclick="closeMobileNav()">การทำงาน</a>
-  <a href="#screenshots" onclick="closeMobileNav()">หน้าจอระบบ</a>
-  <a href="#pricing" onclick="closeMobileNav()">ราคา</a>
-  <div style="height:1px;background:var(--border);margin:4px 0"></div>
-  <a href="/report" style="color:var(--green);font-weight:600">📋 แจ้งปัญหา IT</a>
-  <a href="/engineer">🔧 หน้าช่าง</a>
-  <a href="/admin">⚙️ Admin</a>
-  <a href="/report" class="btn-primary" onclick="closeMobileNav()" style="margin-top:4px">แจ้งปัญหา IT →</a>
-</div>
+<section class="hero">
+  <div class="h-chip"><span data-t="h_chip">Multi-brand IT Ticket Management</span></div>
+  <h1 class="h-title"><span data-t="h_t1">Every IT issue,</span><br/><em data-t="h_t2">managed in one place.</em></h1>
+  <p class="h-sub" data-t="h_sub">Report, track, assign — all in one platform. 5 brands supported with real-time LINE notifications.</p>
+  <div class="h-btns"><a href="#brands" class="btn-p" data-t="h_b1">Select Brand</a><a href="/admin" class="btn-o" data-t="h_b2">Admin Login</a></div>
+</section>
 
-<!-- ═══ HERO ═══ -->
-<section class="hero" style="padding-top:140px">
-  <div class="badge">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    เตรียมเปิดตัวเร็วๆ นี้
-  </div>
-  <h1 class="fade-up">
-    ระบบจัดการ IT Support<br>
-    <span class="accent">สำหรับร้านอาหารหลายสาขา</span>
-  </h1>
-  <p class="hero-sub fade-up" style="transition-delay:.1s">
-    จัดการทุกปัญหา IT จากสาขาต่างๆ ได้อย่างเป็นระบบ ไม่ว่าจะเป็น POS, กล้องวงจรปิด
-    หรือระบบเครือข่าย แจ้งเตือนผ่าน LINE ทันที และใช้งานได้ฟรี 100%
-  </p>
-  <div class="hero-cta fade-up" style="transition-delay:.2s">
-    <a href="/report" class="btn-primary" style="font-size:16px;padding:14px 32px">📋 แจ้งปัญหา IT →</a>
-    <a href="/admin" class="btn-outline" style="font-size:16px;padding:14px 28px">⚙️ Admin Dashboard</a>
-  </div>
+<section class="sec reveal" id="brands">
+  <div class="sec-label" data-t="br_label">BRANDS</div>
+  <h2 class="sec-title" data-t="br_title">Choose your brand</h2>
+  <p class="sec-desc" data-t="br_desc">Each brand has its own report and tracking page.</p>
+  <div class="brands" id="brand-grid"></div>
+</section>
 
-  <!-- Browser mockup -->
-  <div class="browser-wrap fade-up" style="transition-delay:.35s">
-    <div class="browser-bar">
-      <div class="browser-dots">
-        <span></span><span></span><span></span>
-      </div>
-      <div class="browser-url">itsupport.yourcompany.com/admin</div>
-    </div>
-    <div class="browser-body">
-      <div class="mock-sidebar">
-        <div class="mock-logo-row">
-          <div class="mock-logo-icon">IT</div>
-          <div class="mock-logo-text">Support Hub</div>
-        </div>
-        <div class="mock-nav-item active"><div class="mock-nav-dot"></div> Dashboard</div>
-        <div class="mock-nav-item"><div class="mock-nav-dot"></div> Tickets</div>
-        <div class="mock-nav-item"><div class="mock-nav-dot"></div> Activity Log</div>
-        <div class="mock-nav-item"><div class="mock-nav-dot"></div> Users</div>
-        <div class="mock-nav-item"><div class="mock-nav-dot"></div> Settings</div>
-      </div>
-      <div class="mock-main">
-        <div class="mock-stat-row">
-          <div class="mock-stat"><div class="mock-stat-num">142</div><div class="mock-stat-label">Tickets ทั้งหมด</div></div>
-          <div class="mock-stat"><div class="mock-stat-num orange">23</div><div class="mock-stat-label">รอดำเนินการ</div></div>
-          <div class="mock-stat"><div class="mock-stat-num green">108</div><div class="mock-stat-label">เสร็จสิ้น</div></div>
-          <div class="mock-stat"><div class="mock-stat-num">98%</div><div class="mock-stat-label">SLA สำเร็จ</div></div>
-        </div>
-        <div class="mock-table">
-          <div class="mock-table-head">
-            <div class="mock-th">Ticket</div>
-            <div class="mock-th">สาขา</div>
-            <div class="mock-th">สถานะ</div>
-            <div class="mock-th">SLA</div>
-          </div>
-          <div class="mock-row">
-            <div class="mock-cell">#1042 POS ค้าง</div>
-            <div class="mock-cell">Dunkin' สยาม</div>
-            <div class="mock-cell"><span class="mock-pill prog">กำลังดำเนินการ</span></div>
-            <div class="mock-cell" style="color:var(--green);font-size:10px;font-weight:600;">✓ On Track</div>
-          </div>
-          <div class="mock-row">
-            <div class="mock-cell">#1041 กล้องออฟไลน์</div>
-            <div class="mock-cell">Au Bon Pain MBK</div>
-            <div class="mock-cell"><span class="mock-pill open">รอดำเนินการ</span></div>
-            <div class="mock-cell" style="color:#f59e0b;font-size:10px;font-weight:600;">⚠ 2h Left</div>
-          </div>
-          <div class="mock-row">
-            <div class="mock-cell">#1040 WiFi ขาด</div>
-            <div class="mock-cell">Greyhound สีลม</div>
-            <div class="mock-cell"><span class="mock-pill done">เสร็จสิ้น</span></div>
-            <div class="mock-cell" style="color:var(--green);font-size:10px;font-weight:600;">✓ 1d 2h</div>
-          </div>
-        </div>
-      </div>
-    </div>
+<section class="sec reveal">
+  <div class="sec-label" data-t="q_label">QUICK ACCESS</div>
+  <h2 class="sec-title" data-t="q_title">System Access</h2>
+  <div class="qlinks">
+    <a href="/report" class="qcard"><span class="qcard-icon">[R]</span><div class="qcard-title" data-t="q_rep">Report Issue</div><div class="qcard-desc" data-t="q_rep_d">Submit IT repair tickets</div></a>
+    <a href="/engineer" class="qcard"><span class="qcard-icon">[E]</span><div class="qcard-title" data-t="q_eng">Engineer</div><div class="qcard-desc" data-t="q_eng_d">Accept and submit jobs</div></a>
+    <a href="/admin" class="qcard"><span class="qcard-icon">[A]</span><div class="qcard-title" data-t="q_adm">Admin</div><div class="qcard-desc" data-t="q_adm_d">Manage tickets and users</div></a>
   </div>
 </section>
 
-<!-- ═══ FEATURES ═══ -->
-<section id="features">
-  <div class="section-inner">
-    <div class="fade-up">
-      <div class="section-label">Core Features / คุณสมบัติหลัก</div>
-      <h2 class="section-title">ทุกสิ่งที่ IT Team<br>ต้องการในที่เดียว</h2>
-      <p class="section-desc">ออกแบบมาเพื่อร้านอาหารหลายสาขา หลายแบรนด์ จัดการได้ง่ายผ่าน Dashboard เดียว</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card fade-up" style="transition-delay:.05s">
-        <div class="feature-icon">🎫</div>
-        <h3>Ticket Management</h3>
-        <p>ร้านแจ้งปัญหาผ่าน LINE Bot ระบบสร้าง Ticket อัตโนมัติ ติดตามสถานะแบบ Real-time ตั้งแต่รับเรื่องจนปิดงาน</p>
-        <div class="feature-tags">
-          <span class="tag">Auto-assign</span>
-          <span class="tag">SLA Tracking</span>
-          <span class="tag">Priority</span>
-        </div>
-      </div>
-      <div class="feature-card fade-up" style="transition-delay:.1s">
-        <div class="feature-icon">📊</div>
-        <h3>Centralized Dashboard</h3>
-        <p>Admin เห็นภาพรวมทุกสาขาในหน้าเดียว กรองตามแบรนด์ สถานะ และ SLA วิเคราะห์แนวโน้มปัญหาด้วย Chart</p>
-        <div class="feature-tags">
-          <span class="tag">Multi-Brand</span>
-          <span class="tag">Analytics</span>
-          <span class="tag">Reports</span>
-        </div>
-      </div>
-      <div class="feature-card fade-up" style="transition-delay:.15s">
-        <div class="feature-icon">🔗</div>
-        <h3>System Integrations</h3>
-        <p>เชื่อมต่อ Lark Base เป็นฐานข้อมูล LINE สำหรับแจ้งเตือน Deploy บน Render และ Code บน GitHub</p>
-        <div class="feature-tags">
-          <span class="tag">Lark Base</span>
-          <span class="tag">LINE Bot</span>
-          <span class="tag">GitHub</span>
-        </div>
-      </div>
-      <div class="feature-card fade-up" style="transition-delay:.2s">
-        <div class="feature-icon">🏪</div>
-        <h3>Multi-Brand Support</h3>
-        <p>รองรับหลายแบรนด์ในเครือ Dunkin', Greyhound, Au Bon Pain, Funky Fries แต่ละแบรนด์มี Profile แยกชัดเจน</p>
-        <div class="feature-tags">
-          <span class="tag">5 Brands</span>
-          <span class="tag">Branch Code</span>
-        </div>
-      </div>
-      <div class="feature-card fade-up" style="transition-delay:.25s">
-        <div class="feature-icon">🔔</div>
-        <h3>LINE Notifications</h3>
-        <p>แจ้งเตือนทันทีเมื่อมี Ticket ใหม่ อัพเดตสถานะ และ SLA ใกล้ครบกำหนด ส่งตรงถึงมือถือ IT Team</p>
-        <div class="feature-tags">
-          <span class="tag">Real-time</span>
-          <span class="tag">SSE</span>
-          <span class="tag">Push</span>
-        </div>
-      </div>
-      <div class="feature-card fade-up" style="transition-delay:.3s">
-        <div class="feature-icon">🔐</div>
-        <h3>Role-Based Access</h3>
-        <p>จัดการสิทธิ์แยกตามบทบาท Superadmin, Admin, Manager แต่ละระดับเห็นและแก้ไขข้อมูลได้ต่างกัน</p>
-        <div class="feature-tags">
-          <span class="tag">JWT Auth</span>
-          <span class="tag">3 Roles</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ WORKFLOW ═══ -->
-<section id="workflow">
-  <div class="section-inner">
-    <div style="text-align:center" class="fade-up">
-      <div class="section-label">How it Works / ขั้นตอนการทำงาน</div>
-      <h2 class="section-title">จาก Ticket ถึงปิดงาน<br>ใน 3 ขั้นตอน</h2>
-      <p class="section-desc" style="margin:0 auto">กระบวนการที่เรียบง่าย รวดเร็ว โปร่งใส ตั้งแต่ร้านแจ้งปัญหาจนช่างปิดงาน</p>
-    </div>
-    <div class="workflow-steps" style="margin-top:64px">
-      <div class="step fade-up" style="transition-delay:.05s">
-        <div>
-          <div class="step-icon">🏪</div>
-          <div class="step-num">1</div>
-        </div>
-        <div>
-          <h3>ร้านแจ้งปัญหา</h3>
-          <p>สาขาส่งปัญหาผ่าน LINE Bot หรือฟอร์มออนไลน์ ระบบสร้าง Ticket อัตโนมัติพร้อม ID และแจ้งทีม IT ทันที</p>
-        </div>
-      </div>
-      <div class="step fade-up" style="transition-delay:.12s">
-        <div>
-          <div class="step-icon">⚙️</div>
-          <div class="step-num">2</div>
-        </div>
-        <div>
-          <h3>Admin จัดการงาน</h3>
-          <p>Admin มอบหมาย Ticket ให้ช่างที่เหมาะสม ติดตาม SLA แบบ Real-time อัพเดตสถานะและสื่อสารกับสาขา</p>
-        </div>
-      </div>
-      <div class="step fade-up" style="transition-delay:.2s">
-        <div>
-          <div class="step-icon">✅</div>
-          <div class="step-num">3</div>
-        </div>
-        <div>
-          <h3>ช่างปิดงาน & วิเคราะห์</h3>
-          <p>ช่างอัพเดตผลลัพธ์และปิด Ticket ระบบบันทึกประวัติ สร้างรายงานวิเคราะห์แนวโน้มปัญหาอัตโนมัติ</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ SCREENSHOTS ═══ -->
-<section id="screenshots">
-  <div class="section-inner">
-    <div class="fade-up">
-      <div class="section-label">System Preview / หน้าจอระบบ</div>
-      <h2 class="section-title">ดีไซน์เรียบง่าย<br>ใช้งานได้จริง</h2>
-    </div>
-    <div class="screenshots-tabs fade-up" style="margin-top:32px">
-      <button class="tab-btn active" onclick="switchTab('dash')">📊 Admin Dashboard</button>
-      <button class="tab-btn" onclick="switchTab('tickets')">🎫 Ticket List</button>
-      <button class="tab-btn" onclick="switchTab('form')">📝 Report Form</button>
-      <a href="/admin" class="tab-btn" style="background:rgba(27,196,100,0.08);border-color:rgba(27,196,100,0.3);color:var(--green);text-decoration:none">🔗 เปิด Admin จริง ↗</a>
-      <a href="/report" class="tab-btn" style="background:rgba(27,196,100,0.08);border-color:rgba(27,196,100,0.3);color:var(--green);text-decoration:none">🔗 แจ้งปัญหา ↗</a>
-    </div>
-    <div class="screenshot-frame fade-up">
-      <div class="screen-bar">
-        <div class="dots"><span></span><span></span><span></span></div>
-        <div class="browser-url" style="font-size:12px;padding:5px 12px;">itsupport.yourcompany.com/admin</div>
-      </div>
-
-      <!-- Dashboard Tab -->
-      <div class="screen-content active" id="tab-dash">
-        <div class="dash-screen">
-          <div class="top-row">
-            <h2>📊 Dashboard</h2>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:12px;color:var(--muted)">เดือนนี้</span>
-              <div class="ds-pill d" style="font-size:11px;padding:4px 10px">● ระบบทำงานปกติ</div>
-            </div>
-          </div>
-          <div class="dash-stats">
-            <div class="ds-card"><div class="ds-num">248</div><div class="ds-lbl">Tickets ทั้งหมด</div><div class="ds-trend">↑ +12% จากเดือนที่แล้ว</div></div>
-            <div class="ds-card"><div class="ds-num o">31</div><div class="ds-lbl">รอดำเนินการ ⏱️</div><div class="ds-trend" style="color:#f59e0b">⚠ 5 ใกล้ครบ SLA</div></div>
-            <div class="ds-card"><div class="ds-num g">201</div><div class="ds-lbl">เสร็จสิ้น ✅</div><div class="ds-trend">↑ อัตราสำเร็จ 81%</div></div>
-            <div class="ds-card"><div class="ds-num">96%</div><div class="ds-lbl">SLA Compliance</div><div class="ds-trend">↑ +2% จากเดือนก่อน</div></div>
-          </div>
-          <div class="dash-lower">
-            <div class="ds-table-wrap">
-              <div class="ds-table-head">
-                <span class="ds-table-title">Tickets ล่าสุด</span>
-                <span class="ds-see-all">ดูทั้งหมด →</span>
-              </div>
-              <div class="ds-row">
-                <div class="ds-row-info"><div class="ds-row-title">#1048 — POS ไม่พิมพ์ใบเสร็จ</div><div class="ds-row-sub">Dunkin' MBK • 10 นาทีที่แล้ว</div></div>
-                <span class="ds-pill p">รอดำเนินการ</span>
-              </div>
-              <div class="ds-row">
-                <div class="ds-row-info"><div class="ds-row-title">#1047 — Internet ช้า / ขาดหาย</div><div class="ds-row-sub">Au Bon Pain สยาม • 1 ชม.ที่แล้ว</div></div>
-                <span class="ds-pill w">กำลังดำเนินการ</span>
-              </div>
-              <div class="ds-row">
-                <div class="ds-row-info"><div class="ds-row-title">#1046 — กล้องวงจรปิดออฟไลน์</div><div class="ds-row-sub">Greyhound สีลม • 3 ชม.ที่แล้ว</div></div>
-                <span class="ds-pill d">เสร็จสิ้น ✅</span>
-              </div>
-              <div class="ds-row">
-                <div class="ds-row-info"><div class="ds-row-title">#1045 — เครื่อง POS ค้าง Freeze</div><div class="ds-row-sub">Funky Fries ลาดพร้าว • 5 ชม.ที่แล้ว</div></div>
-                <span class="ds-pill c">ตรวจงาน</span>
-              </div>
-            </div>
-            <div class="ds-right">
-              <div class="ds-chart-title">ปัญหาตามประเภท</div>
-              <div class="ds-bar-row"><div class="ds-bar-label"><span>POS System</span><span>42%</span></div><div class="ds-bar-track"><div class="ds-bar-fill" style="width:42%"></div></div></div>
-              <div class="ds-bar-row"><div class="ds-bar-label"><span>Network</span><span>28%</span></div><div class="ds-bar-track"><div class="ds-bar-fill" style="width:28%;background:#60a5fa"></div></div></div>
-              <div class="ds-bar-row"><div class="ds-bar-label"><span>CCTV</span><span>18%</span></div><div class="ds-bar-track"><div class="ds-bar-fill" style="width:18%;background:#f59e0b"></div></div></div>
-              <div class="ds-bar-row"><div class="ds-bar-label"><span>อื่นๆ</span><span>12%</span></div><div class="ds-bar-track"><div class="ds-bar-fill" style="width:12%;background:#a78bfa"></div></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tickets Tab -->
-      <div class="screen-content" id="tab-tickets">
-        <div class="ticket-screen">
-          <div class="ticket-top">
-            <div class="ticket-search">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-              ค้นหา Ticket, สาขา, ปัญหา...
-            </div>
-            <div class="ticket-filter">สถานะ: ทั้งหมด ▾</div>
-            <div class="ticket-filter">แบรนด์: ทั้งหมด ▾</div>
-            <div class="ticket-filter">SLA: ทั้งหมด ▾</div>
-          </div>
-          <div class="ticket-table-wrap">
-            <div class="t-head">
-              <div class="t-th">Ticket ID</div>
-              <div class="t-th">หัวข้อปัญหา</div>
-              <div class="t-th">สาขา</div>
-              <div class="t-th">สถานะ</div>
-              <div class="t-th">วันที่แจ้ง</div>
-              <div class="t-th">SLA</div>
-            </div>
-            <div class="t-row">
-              <div class="t-cell" style="color:var(--green);font-weight:600">#1048</div>
-              <div class="t-cell">POS ไม่พิมพ์ใบเสร็จ</div>
-              <div class="t-cell muted">Dunkin' MBK</div>
-              <div class="t-cell"><span class="ds-pill p" style="font-size:10px">รอดำเนินการ ⏱️</span></div>
-              <div class="t-cell muted">10/03/68</div>
-              <div class="t-cell t-sla-ok">✓ OK</div>
-            </div>
-            <div class="t-row">
-              <div class="t-cell" style="color:var(--green);font-weight:600">#1047</div>
-              <div class="t-cell">Internet ช้า / ขาดหาย</div>
-              <div class="t-cell muted">Au Bon Pain สยาม</div>
-              <div class="t-cell"><span class="ds-pill w" style="font-size:10px">อยู่ระหว่างดำเนินการ ⚙️</span></div>
-              <div class="t-cell muted">10/03/68</div>
-              <div class="t-cell t-sla-warn">⚠ 2h</div>
-            </div>
-            <div class="t-row">
-              <div class="t-cell" style="color:var(--green);font-weight:600">#1046</div>
-              <div class="t-cell">กล้องวงจรปิดออฟไลน์</div>
-              <div class="t-cell muted">Greyhound สีลม</div>
-              <div class="t-cell"><span class="ds-pill d" style="font-size:10px">เสร็จสิ้น ✅</span></div>
-              <div class="t-cell muted">09/03/68</div>
-              <div class="t-cell t-sla-ok">✓ 1d 4h</div>
-            </div>
-            <div class="t-row">
-              <div class="t-cell" style="color:var(--green);font-weight:600">#1045</div>
-              <div class="t-cell">เครื่อง POS ค้าง Freeze</div>
-              <div class="t-cell muted">Funky Fries ลาดพร้าว</div>
-              <div class="t-cell"><span class="ds-pill c" style="font-size:10px">ตรวจงาน</span></div>
-              <div class="t-cell muted">09/03/68</div>
-              <div class="t-cell t-sla-ok">✓ OK</div>
-            </div>
-            <div class="t-row">
-              <div class="t-cell" style="color:var(--green);font-weight:600">#1044</div>
-              <div class="t-cell">Printer บาร์โค้ดไม่ทำงาน</div>
-              <div class="t-cell muted">Greyhound Original</div>
-              <div class="t-cell"><span class="ds-pill d" style="font-size:10px">เสร็จสิ้น ✅</span></div>
-              <div class="t-cell muted">08/03/68</div>
-              <div class="t-cell t-sla-ok">✓ 6h</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form Tab -->
-      <div class="screen-content" id="tab-form">
-        <div class="form-screen">
-          <div class="form-card">
-            <h3>📝 แจ้งปัญหา IT Support</h3>
-            <div class="form-group">
-              <label class="form-label">ชื่อสาขา *</label>
-              <select class="form-field select"><option>Dunkin' MBK Floor 4</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">ประเภทปัญหา *</label>
-              <select class="form-field select"><option>POS System</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">หัวข้อปัญหา *</label>
-              <input class="form-field" type="text" placeholder="เช่น เครื่อง POS ค้าง ไม่ยอม Print">
-            </div>
-            <div class="form-group">
-              <label class="form-label">รายละเอียดเพิ่มเติม</label>
-              <textarea class="form-field textarea" placeholder="อธิบายปัญหาที่พบ..."></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">ความเร่งด่วน</label>
-              <select class="form-field select"><option>🔴 สูง — กระทบการขาย</option></select>
-            </div>
-            <button class="form-submit">ส่งแจ้งปัญหา →</button>
-          </div>
-          <div class="form-side">
-            <div class="form-info-card">
-              <div class="form-info-title">ข้อมูลสาขา</div>
-              <div class="form-info-row"><span class="form-info-key">แบรนด์</span><span class="form-info-val">Dunkin'</span></div>
-              <div class="form-info-row"><span class="form-info-key">รหัสสาขา</span><span class="form-info-val">DK-MBK-04</span></div>
-              <div class="form-info-row"><span class="form-info-key">ภูมิภาค</span><span class="form-info-val">กรุงเทพฯ</span></div>
-              <div class="form-status-indicator">
-                <div class="status-dot"></div>
-                <span class="status-text">ระบบออนไลน์</span>
-              </div>
-            </div>
-            <div class="form-info-card">
-              <div class="form-info-title">SLA ที่กำหนด</div>
-              <div class="form-info-row"><span class="form-info-key">POS</span><span class="form-info-val">4 ชม.</span></div>
-              <div class="form-info-row"><span class="form-info-key">เครือข่าย</span><span class="form-info-val">6 ชม.</span></div>
-              <div class="form-info-row"><span class="form-info-key">กล้อง</span><span class="form-info-val">24 ชม.</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ INTEGRATIONS ═══ -->
-<section id="integrations">
-  <div class="section-inner">
-    <div class="integrations-center fade-up">
-      <div class="section-label">Tech Stack / เทคโนโลยีที่ใช้</div>
-      <h2 class="section-title">เชื่อมต่อกับ<br>เครื่องมือที่คุณใช้อยู่</h2>
-      <p class="section-desc" style="margin:0 auto">ระบบทำงานร่วมกับ Platform ชั้นนำได้ทันที ไม่ต้องตั้งค่าซับซ้อน</p>
-    </div>
-    <div class="integrations-grid fade-up" style="transition-delay:.1s">
-      <div class="integration-card">
-        <div class="int-logo" style="background:#e8f4fd">
-          <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="10" fill="#1456f0"/><text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="14" font-weight="bold">L</text></svg>
-        </div>
-        <h4>Lark Base</h4>
-        <p>ฐานข้อมูลหลักสำหรับจัดเก็บ Ticket และ User Data</p>
-      </div>
-      <div class="integration-card">
-        <div class="int-logo" style="background:#e8fdf0">
-          <svg width="32" height="32" viewBox="0 0 40 40"><rect width="40" height="40" rx="20" fill="#06c755"/><text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="22" font-weight="bold">L</text></svg>
-        </div>
-        <h4>LINE Messaging</h4>
-        <p>แจ้งเตือน Ticket ใหม่ อัพเดตสถานะ และ SLA Alert ผ่าน LINE</p>
-      </div>
-      <div class="integration-card">
-        <div class="int-logo" style="background:#f0eaff">
-          <svg width="32" height="32" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="#6b46c1"/><text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="13" font-weight="bold">▲</text></svg>
-        </div>
-        <h4>Render</h4>
-        <p>Cloud Hosting สำหรับ Deploy API Server ที่เสถียรและรวดเร็ว</p>
-      </div>
-      <div class="integration-card">
-        <div class="int-logo" style="background:#f0f0f0">
-          <svg width="32" height="32" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="#24292e"/><text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="22">🐙</text></svg>
-        </div>
-        <h4>GitHub</h4>
-        <p>Version Control, CI/CD Pipeline และ Code Repository</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ QUICK ACCESS ═══ -->
-<section style="background:var(--bg);padding:80px 24px">
-  <div class="section-inner">
-    <div style="text-align:center" class="fade-up">
-      <div class="section-label">Quick Access / เข้าสู่ระบบ</div>
-      <h2 class="section-title">เลือกหน้าที่ต้องการ</h2>
-      <p class="section-desc" style="margin:0 auto">แต่ละบทบาทมีหน้าของตัวเอง เข้าถึงได้ทันที</p>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px" class="fade-up">
-      <!-- Report -->
-      <a href="/report" style="text-decoration:none">
-        <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;padding:32px 24px;text-align:center;transition:transform .25s,box-shadow .25s,border-color .2s;cursor:pointer" onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 48px rgba(0,0,0,0.1)';this.style.borderColor='#1BC464'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--border)'">
-          <div style="width:64px;height:64px;background:#e8faf0;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px">📋</div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">แจ้งปัญหา IT</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">สำหรับพนักงานสาขา<br>ส่ง Ticket และตรวจสอบสถานะ</div>
-          <div style="background:#1BC464;color:#fff;border-radius:100px;padding:8px 20px;font-size:13px;font-weight:700;display:inline-block">เปิดหน้าแจ้งปัญหา →</div>
-        </div>
-      </a>
-      <!-- Engineer -->
-      <a href="/engineer" style="text-decoration:none">
-        <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;padding:32px 24px;text-align:center;transition:transform .25s,box-shadow .25s,border-color .2s;cursor:pointer" onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 48px rgba(0,0,0,0.1)';this.style.borderColor='#3b82f6'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--border)'">
-          <div style="width:64px;height:64px;background:#eff6ff;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px">🔧</div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">หน้าช่าง</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">สำหรับ Engineer / ช่าง IT<br>รับงานและบันทึกผลการดำเนินการ</div>
-          <div style="background:#3b82f6;color:#fff;border-radius:100px;padding:8px 20px;font-size:13px;font-weight:700;display:inline-block">เปิดหน้าช่าง →</div>
-        </div>
-      </a>
-      <!-- Admin -->
-      <a href="/admin" style="text-decoration:none">
-        <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;padding:32px 24px;text-align:center;transition:transform .25s,box-shadow .25s,border-color .2s;cursor:pointer" onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 48px rgba(0,0,0,0.1)';this.style.borderColor='#0d1b2a'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--border)'">
-          <div style="width:64px;height:64px;background:#f1f3f6;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px">⚙️</div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">Admin Dashboard</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">สำหรับ Admin / Manager<br>จัดการ Ticket มอบหมายงาน Analytics</div>
-          <div style="background:var(--navy);color:#fff;border-radius:100px;padding:8px 20px;font-size:13px;font-weight:700;display:inline-block">เปิด Admin Dashboard →</div>
-        </div>
-      </a>
-    </div>
-    <style>@media(max-width:768px){.qa-grid{grid-template-columns:1fr!important}}</style>
-  </div>
-</section>
-
-<!-- ═══ PRICING ═══ -->
-<section id="pricing">
-  <div class="section-inner">
-    <div class="pricing-center fade-up">
-      <div class="section-label">Pricing / ราคา</div>
-      <h2 class="section-title">ฟรี 100%<br>ไม่มีค่าใช้จ่ายซ่อน</h2>
-      <p class="section-desc" style="margin:0 auto">ออกแบบมาเพื่อทีม IT ร้านอาหาร ใช้งานได้ทันที ไม่ต้องรูดบัตร</p>
-    </div>
-    <div class="pricing-card fade-up" style="transition-delay:.1s">
-      <div class="free-badge">🎉 ALWAYS FREE</div>
-      <div class="price-amount"><span class="price-currency">฿</span>0</div>
-      <div class="price-sub">ต่อเดือน / Per Month</div>
-      <div class="price-features">
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">Unlimited Tickets ไม่จำกัดจำนวน</span></div>
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">Multi-Brand Dashboard รองรับทุกแบรนด์</span></div>
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">LINE Bot Notifications แจ้งเตือนทันที</span></div>
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">Lark Base Integration ฐานข้อมูลฟรี</span></div>
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">Analytics & Reports วิเคราะห์ข้อมูลได้</span></div>
-        <div class="pf-item"><div class="pf-check">✓</div><span class="pf-text">SLA Tracking ติดตาม SLA Real-time</span></div>
-      </div>
-      <a href="/report" class="pricing-cta" style="display:block;text-align:center;text-decoration:none">เริ่มใช้งานฟรีเลย →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ CTA ═══ -->
-<section id="cta">
-  <div class="cta-inner fade-up">
-    <div class="coming-soon-badge">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      เร็วๆ นี้จะเปิดตัว / Coming Soon
-    </div>
-    <h2>พร้อมยกระดับ<br>IT Support ของคุณหรือยัง?</h2>
-    <p>ลงทะเบียนเพื่อรับสิทธิ์ใช้งานก่อนใคร พร้อม Onboarding Support จากทีมงาน</p>
-    <div class="cta-btns">
-      <a href="/report" class="btn-white" style="text-decoration:none">🚀 แจ้งปัญหา IT / Report Issue</a>
-      <a href="/engineer" class="btn-ghost" style="text-decoration:none">🔧 หน้าช่าง →</a>
-      <a href="/admin" class="btn-ghost" style="text-decoration:none">⚙️ Admin →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ FOOTER ═══ -->
-<footer>
-  <div class="footer-inner">
-    <div>
-      <a href="#" class="logo" style="margin-bottom:8px;display:inline-flex">
-        <div class="logo-box">IT</div>
-        <span>Support Hub</span>
-      </a>
-      <div class="footer-copy" style="margin-top:8px">ระบบจัดการ IT Support สำหรับร้านอาหารหลายสาขา</div>
-      <div class="footer-copy">© 2568 IT Support Hub · Built with ❤️ for Thai F&B</div>
-    </div>
-    <div class="footer-links">
-      <a href="#features">ฟีเจอร์</a>
-      <a href="#workflow">การทำงาน</a>
-      <a href="#pricing">ราคา</a>
-      <a href="/report" style="color:var(--green);font-weight:600">📋 แจ้งปัญหา</a>
-      <a href="/engineer">🔧 ช่าง</a>
-      <a href="/admin">⚙️ Admin</a>
-    </div>
-  </div>
-</footer>
+<footer class="footer"><div class="footer-txt">IT Support Hub — <span data-t="footer">Multi-branch Restaurant IT Management</span></div></footer>
 
 <script>
-// ── Language toggle ──
-let isEng = false;
-const translations = {
-  th: {
-    navLinks: ['ฟีเจอร์หลัก','การทำงาน','หน้าจอระบบ','ราคา'],
-    ctaBtn: 'เริ่มใช้งานฟรี →',
-    badge: 'เตรียมเปิดตัวเร็วๆ นี้',
-    h1: 'ระบบจัดการ IT Support<br><span class="accent">สำหรับร้านอาหารหลายสาขา</span>',
-    sub: 'จัดการทุกปัญหา IT จากสาขาต่างๆ ได้อย่างเป็นระบบ ไม่ว่าจะเป็น POS, กล้องวงจรปิด หรือระบบเครือข่าย แจ้งเตือนผ่าน LINE ทันที และใช้งานได้ฟรี 100%',
-    langBtn: 'EN'
-  },
-  en: {
-    navLinks: ['Features','How It Works','Screenshots','Pricing'],
-    ctaBtn: 'Get Started Free →',
-    badge: 'Coming Soon',
-    h1: 'IT Support Management<br><span class="accent">for Multi-Branch Restaurants</span>',
-    sub: 'Manage all IT issues from every branch systematically — POS, CCTV, Network. Real-time alerts via LINE. Always 100% free.',
-    langBtn: 'TH'
-  }
+const B=[
+  {s:'dunkin',n:"Dunkin'"},
+  {s:'greyhound-cafe',n:'Greyhound Cafe'},
+  {s:'greyhound-original',n:'Greyhound Original'},
+  {s:'au-bon-pain',n:'Au Bon Pain'},
+  {s:'funky-fries',n:'Funky Fries'},
+];
+let lang='en';
+const I={
+  th:{h_chip:'ระบบจัดการ IT หลายแบรนด์',h_t1:'ทุกปัญหา IT',h_t2:'จัดการได้ในที่เดียว',h_sub:'แจ้งซ่อม ติดตามงาน มอบหมายช่าง ครบในแพลตฟอร์มเดียว รองรับ 5 แบรนด์ แจ้งเตือน LINE',h_b1:'เลือกแบรนด์',h_b2:'เข้า Admin',br_label:'BRANDS',br_title:'เลือกแบรนด์ของคุณ',br_desc:'แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกกัน',br_rep:'แจ้งปัญหา',br_trk:'ติดตาม',q_label:'QUICK ACCESS',q_title:'เข้าสู่ระบบ',q_rep:'แจ้งปัญหา IT',q_rep_d:'ส่ง Ticket แจ้งซ่อม',q_eng:'หน้าช่าง',q_eng_d:'รับงาน ส่งงาน',q_adm:'Admin',q_adm_d:'จัดการ Ticket ผู้ใช้',n_admin:'Admin Dashboard',n_eng:'หน้าช่าง',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'ระบบจัดการ IT Support หลายสาขา'},
+  en:{h_chip:'Multi-brand IT Ticket Management',h_t1:'Every IT issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign — all in one platform. 5 brands supported with real-time LINE notifications.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_title:'Choose your brand',br_desc:'Each brand has its own report and tracking page.',br_rep:'Report',br_trk:'Track',q_label:'QUICK ACCESS',q_title:'System Access',q_rep:'Report Issue',q_rep_d:'Submit IT repair tickets',q_eng:'Engineer',q_eng_d:'Accept and submit jobs',q_adm:'Admin',q_adm_d:'Manage tickets and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-branch Restaurant IT Management'}
 };
-
-function toggleLang() {
-  isEng = !isEng;
-  const lang = isEng ? 'en' : 'th';
-  const t = translations[lang];
-  document.getElementById('lang-btn-text').textContent = t.langBtn;
-  // Update CTA buttons
-  document.querySelectorAll('.btn-primary').forEach(b => {
-    if (b.textContent.includes('ฟรี') || b.textContent.includes('Free')) {
-      b.innerHTML = t.ctaBtn;
-    }
-  });
-  // Update badge
-  const badge = document.querySelector('.hero .badge');
-  if (badge) badge.lastChild.textContent = ' ' + t.badge;
-  // Update hero h1
-  const h1 = document.querySelector('.hero h1');
-  if (h1) h1.innerHTML = t.h1;
-  // Update hero sub
-  const sub = document.querySelector('.hero-sub');
-  if (sub) sub.textContent = t.sub;
-}
-
-// ── Mobile nav ──
-function toggleMobileNav() {
-  const nav = document.getElementById('mobileNav');
-  nav.classList.toggle('open');
-}
-function closeMobileNav() {
-  document.getElementById('mobileNav').classList.remove('open');
-}
-
-// ── Screenshot tabs ──
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.screen-content').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-}
-
-// ── Fade-up on scroll ──
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      observer.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-// ── Navbar shadow on scroll ──
-window.addEventListener('scroll', () => {
-  const nav = document.querySelector('nav');
-  nav.style.boxShadow = window.scrollY > 10 ? '0 2px 20px rgba(0,0,0,0.08)' : 'none';
-});
+function applyI18n(){document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(I[lang][k])e.textContent=I[lang][k]});document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';renderBrands();}
+function togLang(){lang=lang==='th'?'en':'th';localStorage.setItem('lang',lang);applyI18n();}
+function togTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';localStorage.setItem('theme',d.dataset.theme);}
+function renderBrands(){document.getElementById('brand-grid').innerHTML=B.map((b,i)=>`<div class="bcard" style="animation:up .35s var(--ease) ${.05+i*.04}s both"><div class="bcard-name">${b.n}</div><div class="bcard-slug">${b.s}</div><div class="bcard-btns"><a href="/report/${b.s}" class="bcard-btn fill">${I[lang].br_rep}</a><a href="/track/${b.s}" class="bcard-btn">${I[lang].br_trk}</a></div></div>`).join('');}
+let menuOpen=false;
+function togMenu(){menuOpen=!menuOpen;document.getElementById('mmenu').classList.toggle('open',menuOpen);document.getElementById('btn-ham').classList.toggle('ham-on',menuOpen);document.body.style.overflow=menuOpen?'hidden':'';}
+setInterval(()=>{const n=new Date();document.getElementById('el-time').textContent=n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});document.getElementById('el-date').textContent=n.toLocaleDateString('th-TH',{day:'numeric',month:'short'});},1000);
+fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m').then(r=>r.json()).then(d=>{const t=Math.round(d.current?.temperature_2m);if(t)document.getElementById('el-temp').textContent=t+'°C';}).catch(()=>{});
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(e=>obs.observe(e));
+if(localStorage.getItem('theme')==='dark')document.documentElement.dataset.theme='dark';
+if(localStorage.getItem('lang')==='th')lang='th';
+applyI18n();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){menuOpen=false;document.getElementById('mmenu').classList.remove('open');document.getElementById('btn-ham').classList.remove('ham-on');document.body.style.overflow='';}});
 </script>
 </body>
 </html>
