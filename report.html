@@ -3,426 +3,166 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<title>แจ้งปัญหา IT — IT Support</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<title>Report — IT Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#07070a;--bg2:#0d0d12;--bg3:#141419;--bg4:#1c1c24;
-  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
-  --fg:rgba(255,255,255,.93);--fg2:rgba(255,255,255,.5);--fg3:rgba(255,255,255,.22);
-  --accent:#00e5a0;--blue:#3b82f6;--warn:#f59e0b;--danger:#ef4444;
-  --r:10px;--r2:16px;--r3:20px;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-  --font-th:'Noto Sans Thai',sans-serif;--font-h:'Syne',sans-serif;--font-m:'JetBrains Mono',monospace;
-}
-body.theme-light{
-  --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f8fc;--bg4:#eef0f6;
-  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.13);--b3:rgba(0,0,0,.22);
-  --fg:rgba(0,0,0,.88);--fg2:rgba(0,0,0,.5);--fg3:rgba(0,0,0,.28);
-  --accent:#00b87a;--blue:#2563eb;--warn:#d97706;--danger:#dc2626;
-}
-html,body{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-th);font-size:14px;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--fg:#111;--fg2:#444;--fg3:#888;--border:#e2e2e2;--border2:#ccc;--card:#fff;--sans:'Noto Sans Thai','Space Grotesk',sans-serif;--display:'Space Grotesk','Noto Sans Thai',sans-serif;--mono:'JetBrains Mono',monospace;--ease:cubic-bezier(.22,.61,.36,1)}
+[data-theme="dark"]{--bg:#111;--bg2:#1a1a1a;--bg3:#222;--fg:#eee;--fg2:#aaa;--fg3:#666;--border:#2a2a2a;--border2:#3a3a3a;--card:#1a1a1a}
+html,body{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
 a{color:inherit;text-decoration:none}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* TOPBAR */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:12px 20px;padding-top:calc(var(--safe-top)+12px);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.3)}
-.tb-logo{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:800;color:#000;flex-shrink:0}
-.tb-title{font-family:var(--font-h);font-size:16px;font-weight:700;flex:1}
-.btn-icon{background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--fg2);font-size:16px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
-.btn-icon:hover{background:var(--b1);color:var(--fg)}
+.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);transition:background .3s,border-color .3s}
+.top-logo{width:26px;height:26px;background:var(--fg);border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--bg);flex-shrink:0;transition:background .3s,color .3s}
+.top-t{font-family:var(--display);font-size:14px;font-weight:700;flex:1;color:var(--fg)}
+.smb{padding:5px 9px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg2);font-family:var(--sans);font-size:11px;cursor:pointer;transition:all .15s}.smb:hover{background:var(--bg2);color:var(--fg)}
 
-/* LAYOUT */
-.page-wrap{max-width:680px;margin:0 auto;padding:28px 20px;padding-bottom:calc(var(--safe-bottom)+40px)}
+.wrap{max-width:520px;margin:0 auto;padding:16px 14px 50px}
 
-/* SECTION HEADERS */
-.section-header{margin-bottom:24px}
-.section-title{font-family:var(--font-h);font-size:20px;font-weight:700;margin-bottom:4px}
-.section-sub{font-size:14px;color:var(--fg2)}
+.rtabs{display:flex;gap:3px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:5px;transition:border-color .3s}
+.rtab{padding:6px 14px;border-radius:6px;border:none;background:transparent;color:var(--fg3);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.rtab:hover{color:var(--fg)}.rtab.on{background:var(--bg3);color:var(--fg);font-weight:600}
 
-/* CARD */
-.card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r3);padding:24px;margin-bottom:16px}
-.card-title{font-size:13px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;animation:up .35s var(--ease);transition:background .3s,border-color .3s}
+.fcard-h{font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:3px;color:var(--fg)}
+.fcard-s{font-size:13px;color:var(--fg2);margin-bottom:14px}
+.fg{margin-bottom:8px}.fg label{display:block;font-size:10px;font-weight:700;color:var(--fg3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.fg label .req{color:#c00;margin-left:1px}
+[data-theme="dark"] .fg label .req{color:#f66}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s,background .3s,color .3s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--fg)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--fg3)}
+.fg textarea{resize:none;min-height:90px;line-height:1.6}
+.fg select{appearance:none;cursor:pointer}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 
-/* BRAND PICKER */
-.brand-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
-.brand-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:12px 10px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500}
-.brand-opt:hover{border-color:var(--b2)}
-.brand-opt.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
-.brand-opt .brand-icon{font-size:20px;margin-bottom:4px}
+.sub-btn{width:100%;padding:11px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s,background .3s,color .3s;margin-top:4px}
+.sub-btn:hover{opacity:.8}.sub-btn:disabled{opacity:.3}
 
-/* FORM */
-.form-group{margin-bottom:16px}
-.form-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--fg2);margin-bottom:7px;letter-spacing:.03em}
-.form-label .req{color:var(--danger);font-size:14px}
-.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:12px 14px;color:var(--fg);font-family:var(--font-th);font-size:14px;outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
-.form-input::placeholder,.form-textarea::placeholder{color:var(--fg3)}
-.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
-body.theme-light .form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
-.form-textarea{resize:none;min-height:120px;line-height:1.7}
-.form-hint{font-size:11.5px;color:var(--fg3);margin-top:5px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.success{text-align:center;padding:36px 14px;animation:up .35s var(--ease)}
+.suc-t{font-family:var(--display);font-size:18px;font-weight:700;color:var(--fg);margin-bottom:6px}
+.suc-id{font-family:var(--mono);font-size:13px;color:var(--fg);background:var(--bg3);padding:5px 12px;border-radius:6px;display:inline-block;margin-bottom:10px;transition:background .3s}
+.suc-d{font-size:14px;color:var(--fg2);margin-bottom:14px;line-height:1.6}
+.suc-btn{display:inline-flex;padding:9px 16px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;margin:0 3px;transition:all .15s}
+.suc-btn:hover{background:var(--bg2)}.suc-btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}.suc-btn.pri:hover{opacity:.8}
 
-/* TYPE PILLS */
-.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.type-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:500}
-.type-opt:hover{border-color:var(--b2)}
-.type-opt.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
-.type-opt .type-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;animation:up .35s var(--ease);transition:background .3s,border-color .3s}
+.tcard-h{font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:10px;color:var(--fg)}
+.tsrch{display:flex;gap:5px;margin-bottom:14px}
+.tsrch input{flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;transition:background .3s,border-color .3s,color .3s}
+.tsrch input:focus{border-color:var(--fg)}.tsrch input::placeholder{color:var(--fg3)}
+.tsrch button{padding:9px 14px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:background .3s,color .3s}
 
-/* PRIORITY */
-.priority-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.prio-opt{background:var(--bg3);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 12px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500}
-.prio-opt:hover{border-color:var(--b2)}
-.prio-opt.selected{font-weight:700}
-.prio-low.selected{border-color:var(--accent);background:rgba(0,229,160,.08);color:var(--accent)}
-.prio-med.selected{border-color:var(--warn);background:rgba(245,158,11,.08);color:var(--warn)}
-.prio-high.selected{border-color:var(--danger);background:rgba(239,68,68,.08);color:var(--danger)}
-.prio-icon{font-size:18px;margin-bottom:3px}
+.tres{background:var(--bg2);border-radius:8px;padding:12px;animation:up .25s var(--ease);transition:background .3s}
+.tres-id{font-family:var(--mono);font-size:11px;color:var(--fg3);margin-bottom:3px}
+.tres-type{font-size:14px;font-weight:600;color:var(--fg);margin-bottom:6px}
+.tres-row{display:flex;gap:4px;margin-bottom:2px;font-size:13px}
+.tres-l{color:var(--fg3);min-width:65px;font-size:11px}.tres-v{color:var(--fg);font-weight:500;flex:1}
+.pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--fg2);transition:background .3s,color .3s}
 
-/* SUBMIT */
-.btn-submit{width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s}
-.btn-submit:hover{opacity:.88;transform:translateY(-1px)}
-.btn-submit:active{transform:translateY(0)}
-.btn-submit:disabled{opacity:.4;cursor:default;transform:none}
+.bpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-bottom:14px}
+.bpick-c{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+.bpick-c:hover{border-color:var(--border2)}
+.bpick-c.sel{border-color:var(--fg);background:var(--bg2)}
+.bpick-n{font-size:13px;font-weight:600;color:var(--fg)}
 
-/* SUCCESS SCREEN */
-#success-screen{display:none;text-align:center;padding:60px 20px}
-.success-circle{width:80px;height:80px;border-radius:50%;background:rgba(0,229,160,.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 24px}
-.success-title{font-family:var(--font-h);font-size:24px;font-weight:700;margin-bottom:8px}
-.success-sub{font-size:15px;color:var(--fg2);margin-bottom:8px}
-.success-id{font-family:var(--font-m);font-size:20px;color:var(--accent);font-weight:600;margin:16px 0}
-.success-note{font-size:13px;color:var(--fg3);max-width:360px;margin:0 auto 32px;line-height:1.7}
-.btn-new{padding:12px 28px;background:var(--bg2);color:var(--fg);border:1.5px solid var(--b2);border-radius:var(--r2);font-family:var(--font-th);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 6px}
-.btn-new:hover{border-color:var(--fg)}
-.btn-track{padding:12px 28px;background:var(--accent);color:#000;border:none;border-radius:var(--r2);font-family:var(--font-th);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin:0 6px}
-.btn-track:hover{opacity:.85}
-
-/* TRACK SECTION */
-.track-wrap{background:var(--bg3);border-radius:var(--r2);padding:16px;margin-top:12px}
-.track-title{font-size:13px;font-weight:700;color:var(--fg2);margin-bottom:12px}
-.track-input-row{display:flex;gap:8px}
-.track-input{flex:1;background:var(--bg);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--fg);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s}
-.track-input:focus{border-color:var(--accent)}
-.btn-track-go{padding:11px 16px;background:var(--bg2);border:1.5px solid var(--b2);border-radius:var(--r);color:var(--fg);font-family:var(--font-th);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
-.btn-track-go:hover{border-color:var(--accent);color:var(--accent)}
-.track-result{margin-top:12px;display:none}
-.track-card{background:var(--bg);border:1px solid var(--b1);border-radius:var(--r);padding:14px}
-.track-status{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:8px}
-.track-type{font-size:15px;font-weight:600;margin-bottom:4px}
-.track-meta{font-size:12.5px;color:var(--fg2)}
-.s-แก้ไข{background:rgba(245,158,11,.15);color:#f59e0b}
-.s-ตรวจงาน{background:rgba(34,211,238,.15);color:#22d3ee}
-.s-อยู่ระหว่างดำเนินการ{background:rgba(59,130,246,.15);color:#60a5fa}
-.s-รอดำเนินการ{background:rgba(168,85,247,.15);color:#c084fc}
-.s-เสร็จสิ้น{background:rgba(0,229,160,.15);color:#00e5a0}
-.s-ยกเลิก{background:rgba(239,68,68,.15);color:#f87171}
-.track-err{font-size:13px;color:var(--danger);margin-top:8px;display:none}
-
-/* VALIDATION */
-.field-err{font-size:12px;color:var(--danger);margin-top:5px;display:none}
-.form-input.err,.form-select.err,.form-textarea.err{border-color:var(--danger)!important}
-
-/* TOAST */
-.toast{position:fixed;bottom:calc(var(--safe-bottom)+20px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 20px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:var(--accent);color:var(--accent)}
-.toast.error{border-color:var(--danger);color:var(--danger)}
-
-@media(max-width:600px){
-  .brand-grid{grid-template-columns:repeat(2,1fr)}
-  .type-grid{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
-  .page-wrap{padding:16px 14px;padding-bottom:40px}
-}
+.empty{text-align:center;padding:20px;color:var(--fg3);font-size:13px}
+.toast{position:fixed;top:12px;right:12px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);transition:background .3s,border-color .3s,color .3s}
+@media(max-width:640px){.g2{grid-template-columns:1fr}.wrap{padding:10px 10px 40px}}
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="tb-logo">IT</div>
-  <div class="tb-title">แจ้งปัญหา IT Support</div>
-  <button class="btn-icon" id="btn-theme" title="สลับธีม">🌙</button>
-  <a href="/admin" class="btn-icon" title="Admin">⚙️</a>
+<div class="top">
+  <div class="top-logo" id="top-icon">RP</div>
+  <div class="top-t" id="top-t">Report IT Issue</div>
+  <button class="smb" onclick="togTheme()">Theme</button>
+  <a href="/" class="smb">Home</a>
 </div>
 
-<!-- MAIN FORM -->
-<div class="page-wrap" id="form-wrap">
-  <div class="section-header">
-    <div class="section-title">แจ้งปัญหา IT 🛠️</div>
-    <div class="section-sub">กรอกข้อมูลให้ครบถ้วน ทีม IT จะรับงานและแจ้งกลับทาง LINE</div>
-  </div>
-
-  <!-- BRAND -->
-  <div class="card">
-    <div class="card-title">🏪 เลือกแบรนด์ <span style="color:var(--danger)">*</span></div>
-    <div class="brand-grid" id="brand-grid">
-      <div class="brand-opt" onclick="selectBrand(this,&quot;Dunkin'&quot;)"><div class="brand-icon">🍩</div>Dunkin'</div>
-      <div class="brand-opt" onclick="selectBrand(this,'Greyhound Cafe')"><div class="brand-icon">☕</div>Greyhound Cafe</div>
-      <div class="brand-opt" onclick="selectBrand(this,'Greyhound Original')"><div class="brand-icon">🐕</div>Greyhound Original</div>
-      <div class="brand-opt" onclick="selectBrand(this,'Au Bon Pain')"><div class="brand-icon">🥐</div>Au Bon Pain</div>
-      <div class="brand-opt" onclick="selectBrand(this,'Funky Fries')"><div class="brand-icon">🍟</div>Funky Fries</div>
-    </div>
-    <div class="field-err" id="err-brand">กรุณาเลือกแบรนด์</div>
-  </div>
-
-  <!-- BRANCH INFO -->
-  <div class="card">
-    <div class="card-title">📍 ข้อมูลสาขา</div>
-    <div class="form-row">
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">รหัสสาขา / Branch Code <span class="req">*</span></label>
-        <input class="form-input" id="f-branch" type="text" placeholder="เช่น DK-MBK-04, ABP-SIAM-01" autocomplete="off"/>
-        <div class="field-err" id="err-branch">กรุณากรอกรหัสสาขา</div>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">ชื่อสาขา (ถ้ามี)</label>
-        <input class="form-input" id="f-branchname" type="text" placeholder="เช่น MBK Floor 4, สยาม Paragon"/>
-      </div>
-    </div>
-  </div>
-
-  <!-- REPORTER -->
-  <div class="card">
-    <div class="card-title">👤 ข้อมูลผู้แจ้ง</div>
-    <div class="form-row">
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">ชื่อ-สกุล <span class="req">*</span></label>
-        <input class="form-input" id="f-reporter" type="text" placeholder="ชื่อพนักงานที่แจ้ง"/>
-        <div class="field-err" id="err-reporter">กรุณากรอกชื่อผู้แจ้ง</div>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">เบอร์โทรศัพท์ <span class="req">*</span></label>
-        <input class="form-input" id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/>
-        <div class="field-err" id="err-phone">กรุณากรอกเบอร์โทรศัพท์</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PROBLEM TYPE -->
-  <div class="card">
-    <div class="card-title">🔍 ประเภทปัญหา <span style="color:var(--danger)">*</span></div>
-    <div class="type-grid" id="type-grid">
-      <div class="type-opt" onclick="selectType(this,'POS System')"><div class="type-icon">🖥️</div>POS System</div>
-      <div class="type-opt" onclick="selectType(this,'กล้องวงจรปิด (CCTV)')"><div class="type-icon">📷</div>กล้องวงจรปิด (CCTV)</div>
-      <div class="type-opt" onclick="selectType(this,'ระบบเครือข่าย / Internet')"><div class="type-icon">📡</div>ระบบเครือข่าย / Internet</div>
-      <div class="type-opt" onclick="selectType(this,'Printer / Barcode')"><div class="type-icon">🖨️</div>Printer / Barcode</div>
-      <div class="type-opt" onclick="selectType(this,'คอมพิวเตอร์ / อุปกรณ์ IT')"><div class="type-icon">💻</div>คอมพิวเตอร์ / อุปกรณ์ IT</div>
-      <div class="type-opt" onclick="selectType(this,'อื่นๆ')"><div class="type-icon">📋</div>อื่นๆ</div>
-    </div>
-    <div class="field-err" id="err-type" style="margin-top:8px">กรุณาเลือกประเภทปัญหา</div>
-  </div>
-
-  <!-- DETAIL -->
-  <div class="card">
-    <div class="card-title">📝 รายละเอียดปัญหา</div>
-    <div class="form-group">
-      <label class="form-label">หัวข้อสั้นๆ <span class="req">*</span></label>
-      <input class="form-input" id="f-subject" type="text" placeholder="เช่น เครื่อง POS ค้าง ไม่ยอม Print ใบเสร็จ"/>
-      <div class="field-err" id="err-subject">กรุณากรอกหัวข้อปัญหา</div>
-    </div>
-    <div class="form-group" style="margin-bottom:0">
-      <label class="form-label">รายละเอียดเพิ่มเติม</label>
-      <textarea class="form-textarea" id="f-detail" placeholder="อธิบายปัญหาที่พบ เช่น เกิดขึ้นตอนไหน มี Error message อะไร ลองทำอะไรไปแล้วบ้าง..."></textarea>
-      <div class="form-hint">ยิ่งละเอียดมาก ช่าง IT แก้ได้เร็วขึ้น 🚀</div>
-    </div>
-  </div>
-
-  <!-- PRIORITY -->
-  <div class="card">
-    <div class="card-title">⚡ ระดับความเร่งด่วน</div>
-    <div class="priority-row">
-      <div class="prio-opt prio-low selected" id="prio-low" onclick="selectPriority('low')">
-        <div class="prio-icon">🟢</div>
-        <div style="font-weight:700">ปกติ</div>
-        <div style="font-size:11px;color:var(--fg2);margin-top:2px">SLA 24 ชม.</div>
-      </div>
-      <div class="prio-opt prio-med" id="prio-med" onclick="selectPriority('med')">
-        <div class="prio-icon">🟡</div>
-        <div style="font-weight:700">เร่งด่วน</div>
-        <div style="font-size:11px;color:var(--fg2);margin-top:2px">SLA 8 ชม.</div>
-      </div>
-      <div class="prio-opt prio-high" id="prio-high" onclick="selectPriority('high')">
-        <div class="prio-icon">🔴</div>
-        <div style="font-weight:700">ฉุกเฉิน</div>
-        <div style="font-size:11px;color:var(--fg2);margin-top:2px">กระทบการขาย</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SUBMIT -->
-  <button class="btn-submit" id="btn-submit" onclick="submitForm()">
-    📤 ส่งแจ้งปัญหา
-  </button>
-
-  <!-- TRACK -->
-  <div style="margin-top:24px">
-    <div class="track-wrap">
-      <div class="track-title">🔍 ตรวจสอบสถานะ Ticket</div>
-      <div class="track-input-row">
-        <input class="track-input" id="track-id" placeholder="กรอก Ticket ID เช่น IT-1042" autocomplete="off"/>
-        <button class="btn-track-go" onclick="trackTicket()">ค้นหา</button>
-      </div>
-      <div class="track-result" id="track-result"></div>
-      <div class="track-err" id="track-err">ไม่พบ Ticket นี้ กรุณาตรวจสอบ ID อีกครั้ง</div>
-    </div>
-  </div>
+<div class="wrap">
+  <div class="rtabs"><button class="rtab on" id="tab-report" onclick="showTab('report')">Report</button><button class="rtab" id="tab-track" onclick="showTab('track')">Track</button></div>
+  <div id="view-report"></div>
+  <div id="view-track" style="display:none"></div>
 </div>
-
-<!-- SUCCESS SCREEN -->
-<div id="success-screen" class="page-wrap">
-  <div class="success-circle">✅</div>
-  <div class="success-title">ส่งแจ้งปัญหาเรียบร้อย!</div>
-  <div class="success-sub">ทีม IT ได้รับแจ้งแล้ว และจะดำเนินการโดยเร็วที่สุด</div>
-  <div class="success-id" id="success-ticket-id">—</div>
-  <div class="success-note">เก็บ Ticket ID ไว้เพื่อติดตามสถานะ<br>ทีม IT จะแจ้งความคืบหน้าผ่าน LINE</div>
-  <div>
-    <button class="btn-new" onclick="resetForm()">📋 แจ้งปัญหาใหม่</button>
-    <button class="btn-track" onclick="goTrack()">🔍 ติดตามสถานะ</button>
-  </div>
-</div>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-const API='';
-let selectedBrand='';
-let selectedType='';
-let selectedPriority='low';
-let lastTicketId='';
+const BRANDS=[{s:'dunkin',n:"Dunkin'"},{s:'greyhound-cafe',n:'Greyhound Cafe'},{s:'greyhound-original',n:'Greyhound Original'},{s:'au-bon-pain',n:'Au Bon Pain'},{s:'funky-fries',n:'Funky Fries'}];
+const CATS=['POS / ระบบขาย','เครือข่าย / Internet','เครื่องพิมพ์','คอมพิวเตอร์ / โน้ตบุ๊ก','กล้องวงจรปิด / CCTV','ระบบไฟฟ้า','อื่นๆ'];
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 
-function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2800);}
+let brand=null,curTab='report';
 
-function selectBrand(el,val){
-  document.querySelectorAll('.brand-opt').forEach(x=>x.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedBrand=val;
-  document.getElementById('err-brand').style.display='none';
-}
-function selectType(el,val){
-  document.querySelectorAll('.type-opt').forEach(x=>x.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedType=val;
-  document.getElementById('err-type').style.display='none';
-}
-function selectPriority(p){
-  selectedPriority=p;
-  document.querySelectorAll('.prio-opt').forEach(x=>x.classList.remove('selected'));
-  document.getElementById('prio-'+p).classList.add('selected');
-}
+function detectBrand(){const p=location.pathname.toLowerCase();for(const b of BRANDS)if(p.includes(b.s))return b;return null;}
+function setBrand(b){brand=b;document.getElementById('top-t').textContent=b.n+' — Report';renderForm();}
+function showTab(t){curTab=t;document.getElementById('tab-report').classList.toggle('on',t==='report');document.getElementById('tab-track').classList.toggle('on',t==='track');document.getElementById('view-report').style.display=t==='report'?'':'none';document.getElementById('view-track').style.display=t==='track'?'':'none';if(t==='track')renderTrack();}
 
-function validate(){
-  let ok=true;
-  if(!selectedBrand){document.getElementById('err-brand').style.display='block';ok=false;}
-  ['branch','reporter','phone','subject'].forEach(id=>{
-    const el=document.getElementById('f-'+id);
-    const err=document.getElementById('err-'+id);
-    if(!el.value.trim()){el.classList.add('err');err.style.display='block';ok=false;}
-    else{el.classList.remove('err');err.style.display='none';}
-  });
-  if(!selectedType){document.getElementById('err-type').style.display='block';ok=false;}
-  return ok;
-}
-
-async function submitForm(){
-  if(!validate()){toast('กรุณากรอกข้อมูลให้ครบ','error');return;}
-  const btn=document.getElementById('btn-submit');
-  btn.disabled=true;btn.textContent='⏳ กำลังส่ง...';
-  const payload={
-    brand:selectedBrand,
-    branchCode:document.getElementById('f-branch').value.trim(),
-    branch:document.getElementById('f-branchname').value.trim()||document.getElementById('f-branch').value.trim(),
-    reporter:document.getElementById('f-reporter').value.trim(),
-    phone:document.getElementById('f-phone').value.trim(),
-    type:selectedType,
-    detail:document.getElementById('f-subject').value.trim()+(document.getElementById('f-detail').value.trim()?'\n\n'+document.getElementById('f-detail').value.trim():''),
-    priority:selectedPriority,
-    status:'รอดำเนินการ ⏱️',
-    sentDate:new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit'})
-  };
-  try{
-    const r=await fetch(API+'/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const d=await r.json();
-    if(!r.ok) throw new Error(d.message||'ส่งไม่สำเร็จ');
-    const tid=d.ticket?.id||d.id||d.recordId||('IT-'+Date.now().toString().slice(-4));
-    lastTicketId=tid;
-    document.getElementById('success-ticket-id').textContent='Ticket ID: '+tid;
-    document.getElementById('form-wrap').style.display='none';
-    document.getElementById('success-screen').style.display='block';
-    window.scrollTo(0,0);
-  }catch(e){
-    toast('❌ '+e.message,'error');
-    btn.disabled=false;btn.textContent='📤 ส่งแจ้งปัญหา';
-  }
-}
-
-function resetForm(){
-  selectedBrand='';selectedType='';selectedPriority='low';lastTicketId='';
-  document.querySelectorAll('.brand-opt,.type-opt').forEach(x=>x.classList.remove('selected'));
-  document.querySelectorAll('.prio-opt').forEach(x=>x.classList.remove('selected'));
-  document.getElementById('prio-low').classList.add('selected');
-  ['branch','branchname','reporter','phone','subject','detail'].forEach(id=>{
-    const el=document.getElementById('f-'+id);
-    if(el){el.value='';el.classList.remove('err');}
-  });
-  document.querySelectorAll('.field-err').forEach(e=>e.style.display='none');
-  const btn=document.getElementById('btn-submit');
-  btn.disabled=false;btn.textContent='📤 ส่งแจ้งปัญหา';
-  document.getElementById('success-screen').style.display='none';
-  document.getElementById('form-wrap').style.display='block';
-  window.scrollTo(0,0);
-}
-
-function goTrack(){
-  document.getElementById('success-screen').style.display='none';
-  document.getElementById('form-wrap').style.display='block';
-  document.getElementById('track-id').value=lastTicketId;
-  setTimeout(()=>{
-    document.getElementById('track-id').scrollIntoView({behavior:'smooth',block:'center'});
-    trackTicket();
-  },300);
-}
-
-async function trackTicket(){
-  const tid=document.getElementById('track-id').value.trim();
-  const resultEl=document.getElementById('track-result');
-  const errEl=document.getElementById('track-err');
-  resultEl.style.display='none';errEl.style.display='none';
-  if(!tid){toast('กรุณากรอก Ticket ID','error');return;}
-  try{
-    const r=await fetch(API+'/api/tickets?id='+encodeURIComponent(tid));
-    const d=await r.json();
-    const tickets=(d.tickets||d||[]);
-    const t=tickets.find(x=>x.id===tid||x._recordId===tid);
-    if(!t){errEl.style.display='block';return;}
-    const sk=(t.status||'').replace(/[✅⚙️⏱️❌🔍✏️]/g,'').trim();
-    resultEl.innerHTML=`<div class="track-card">
-      <span class="track-status s-${esc(sk)}">${esc(t.status||'-')}</span>
-      <div class="track-type">${esc(t.type||'—')}</div>
-      <div class="track-meta">🏪 ${esc(t.brand||'-')} · 📍 ${esc(t.branchCode||'-')} · 📅 ${esc(t.sentDate||'-')}</div>
-      ${t.engineerName?`<div class="track-meta" style="margin-top:6px">🔧 ช่าง: ${esc(t.engineerName)}</div>`:''}
-      ${t.workDetail?`<div class="track-meta" style="margin-top:6px;color:var(--accent)">✅ ${esc(t.workDetail.substring(0,80))}${t.workDetail.length>80?'...':''}</div>`:''}
+function renderForm(){
+  if(!brand){document.getElementById('view-report').innerHTML=`<div class="fcard"><div style="text-align:center;margin-bottom:8px;font-size:13px;color:var(--fg2)">Select your brand</div><div class="bpick">${BRANDS.map(b=>`<div class="bpick-c" onclick="setBrand(BRANDS.find(x=>x.s==='${b.s}'))"><div class="bpick-n">${b.n}</div></div>`).join('')}</div></div>`;return;}
+  document.getElementById('view-report').innerHTML=`
+    <div class="fcard">
+      <div class="fcard-h">${brand.n}</div>
+      <div class="fcard-s">Fill in the form to report an IT issue</div>
+      <div class="g2">
+        <div class="fg"><label>Name <span class="req">*</span></label><input id="f-name" placeholder="Full name"/></div>
+        <div class="fg"><label>Phone <span class="req">*</span></label><input id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label>Branch Code <span class="req">*</span></label><input id="f-branch" placeholder="e.g. DK001"/></div>
+        <div class="fg"><label>Location</label><input id="f-loc" placeholder="e.g. Floor 1"/></div>
+      </div>
+      <div class="fg"><label>Category <span class="req">*</span></label><select id="f-cat"><option value="">-- Select --</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label>Detail <span class="req">*</span></label><textarea id="f-detail" placeholder="Describe the issue..."></textarea></div>
+      <div class="fg"><label>LINE User ID (optional)</label><input id="f-line" placeholder="For LINE notifications"/></div>
+      <button class="sub-btn" id="btn-sub" onclick="doSubmit()">Submit Report</button>
     </div>`;
-    resultEl.style.display='block';
-  }catch(e){errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่';errEl.style.display='block';}
 }
-document.getElementById('track-id').addEventListener('keydown',e=>{if(e.key==='Enter')trackTicket();});
 
-// THEME
-const btnTheme=document.getElementById('btn-theme');
-let dark=true;
-function applyTheme(){document.body.classList.toggle('theme-light',!dark);btnTheme.textContent=dark?'🌙':'☀️';}
-btnTheme.onclick=()=>{dark=!dark;localStorage.setItem('report_theme',dark?'dark':'light');applyTheme();}
-const saved=localStorage.getItem('report_theme');
-if(saved==='light'){dark=false;applyTheme();}
+async function doSubmit(){
+  const name=(document.getElementById('f-name')?.value||'').trim();
+  const phone=(document.getElementById('f-phone')?.value||'').trim();
+  const branch=(document.getElementById('f-branch')?.value||'').trim();
+  const loc=(document.getElementById('f-loc')?.value||'').trim();
+  const cat=document.getElementById('f-cat')?.value||'';
+  const detail=(document.getElementById('f-detail')?.value||'').trim();
+  const line=(document.getElementById('f-line')?.value||'').trim();
+  if(!name||!phone||!branch||!cat||!detail){toast('Fill in all required fields (*)');return;}
+  const btn=document.getElementById('btn-sub');btn.disabled=true;btn.textContent='Submitting...';
+  try{
+    const body={reporter:name,phone,branchCode:branch,location:loc,type:cat,detail,brand:brand.n,lineUserId:line};
+    const d=await fetch('/api/public/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+    if(!d.ok)throw new Error(d.error||'Failed');
+    showSuccess(d.ticket?.id||d.ticketId||'--');
+  }catch(e){toast('Error: '+e.message);btn.disabled=false;btn.textContent='Submit Report';}
+}
+
+function showSuccess(tid){
+  document.getElementById('view-report').innerHTML=`<div class="success"><div class="suc-t">Report Submitted</div><div class="suc-id">${esc(tid)}</div><div class="suc-d">The team has been notified via LINE.<br/>Use the ticket ID to track status.</div><button class="suc-btn" onclick="showTab('track')">Track Status</button><button class="suc-btn pri" onclick="renderForm()">New Report</button></div>`;
+}
+
+function renderTrack(){
+  document.getElementById('view-track').innerHTML=`<div class="tcard"><div class="tcard-h">Track Ticket</div><div class="tsrch"><input id="trk-id" placeholder="Ticket ID e.g. DK-00042"/><button onclick="doTrack()">Search</button></div><div id="trk-result"></div></div>`;
+}
+
+async function doTrack(){
+  const id=(document.getElementById('trk-id')?.value||'').trim();
+  if(!id){toast('Enter ticket ID');return;}
+  const out=document.getElementById('trk-result');out.innerHTML='<div class="empty">Searching...</div>';
+  try{
+    const d=await fetch('/api/public/tickets/'+encodeURIComponent(id)).then(r=>r.json());
+    if(!d.ok)throw new Error(d.error||'Not found');
+    const t=d.ticket;
+    out.innerHTML=`<div class="tres"><div class="tres-id">${esc(t.id)}</div><div class="tres-type">${esc(t.type||'-')}</div><div style="margin-bottom:6px"><span class="pill">${statusLabel(t.status)}</span></div>${[['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Date',t.sentDate],['Engineer',t.engineerName]].map(([l,v])=>v?`<div class="tres-row"><span class="tres-l">${l}</span><span class="tres-v">${esc(v)}</span></div>`:'').join('')}${t.detail?`<div style="background:var(--bg);border-radius:6px;padding:7px;font-size:12px;color:var(--fg2);margin-top:5px;line-height:1.5;transition:background .3s">${esc(t.detail)}</div>`:''}${t.workDetail?`<div style="background:var(--bg);border-radius:6px;padding:7px;font-size:12px;color:var(--fg2);margin-top:4px;border-left:2px solid var(--fg);transition:background .3s"><strong>Engineer:</strong> ${esc(t.workDetail)}</div>`:''}</div>`;
+  }catch(e){out.innerHTML=`<div class="empty">${esc(e.message)}</div>`;}
+}
+
+function togTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';localStorage.setItem('rep_theme',d.dataset.theme);}
+if(localStorage.getItem('rep_theme')==='dark')document.documentElement.dataset.theme='dark';
+let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
+const detected=detectBrand();if(detected)setBrand(detected);else renderForm();renderTrack();
 </script>
 </body>
 </html>
