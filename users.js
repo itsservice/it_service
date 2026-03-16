@@ -1,60 +1,66 @@
-// users.js — User management: MySQL + memory cache
-// getAllUsers() และ getUserByUsername() ยังเป็น SYNC เหมือนเดิม
-// แต่ข้อมูลจะ sync จาก MySQL ทุก 30 วินาที + หลังทุก create/update/delete
+// users.js — User management: MySQL (table ที่มีอยู่แล้ว) + memory cache
+// columns ใน DB: id, username, password, role, brand, display_name, created_at
+// columns ใหม่ (ต้อง run migration): line_user_id, phone, email, active, updated_at
+//
+// getAllUsers(), getUserByUsername() = SYNC (อ่านจาก memory)
+// createUser(), updateUser(), deleteUser() = SYNC (เขียน memory ทันที + async เขียน DB)
+
 const { hashPwd } = require('./auth');
 
 let db = null;
 let useDB = false;
 
-// ── Default users (seed ถ้า DB ว่าง) ────────────────
+// ── Default users (ใช้ถ้า DB ไม่ได้) ───────────────
 const DEFAULTS = [
-  { id:'u1', name:'Super Admin',  username:'superadmin', pwd:'super1234', role:'superadmin', brand:'ALL' },
-  { id:'u2', name:'Admin System', username:'admin',      pwd:'admin1234', role:'admin',      brand:'ALL' },
-  { id:'u3', name:'Manager',      username:'manager',    pwd:'mgr1234',   role:'manager',    brand:'ALL' },
-  { id:'e1', name:'ช่าง 1', username:'eng1', pwd:'eng1234', role:'engineer', brand:"Dunkin'" },
-  { id:'e2', name:'ช่าง 2', username:'eng2', pwd:'eng2345', role:'engineer', brand:"Dunkin'" },
-  { id:'e3', name:'ช่าง 3', username:'eng3', pwd:'eng3456', role:'engineer', brand:"Dunkin'" },
-  { id:'e4', name:'ช่าง 4', username:'eng4', pwd:'eng4567', role:'engineer', brand:"Dunkin'" },
-  { id:'e5', name:'ช่าง 5', username:'eng5', pwd:'eng5678', role:'engineer', brand:"Dunkin'" },
+  { id:'1', name:'IT Admin',           username:'admin',     pwd:'admin1234',  role:'admin',    brand:null },
+  { id:'2', name:'Engineer Dunkin',     username:'eng_dunkin', pwd:'eng1234',   role:'engineer', brand:'Dunkin' },
+  { id:'3', name:'Engineer Greyhound',  username:'eng_grey',   pwd:'eng1234',   role:'engineer', brand:'Greyhound Cafe' },
+  { id:'4', name:'Engineer Au Bon Pain',username:'eng_abp',    pwd:'eng1234',   role:'engineer', brand:'Au Bon Pain' },
+  { id:'5', name:'Engineer Funky Fries',username:'eng_funky',  pwd:'eng1234',   role:'engineer', brand:'Funky Fries' },
 ];
 
-// ── Memory cache (ใช้ตอบ sync calls) ────────────────
+// ── Memory cache ────────────────────────────────────
 let USERS = DEFAULTS.map(u => ({
-  id: u.id, name: u.name, username: u.username,
+  id: String(u.id),
+  name: u.name,
+  username: u.username,
   password: hashPwd(u.pwd),
-  role: u.role, brand: u.brand, active: true,
-  line_user_id: '', phone: '', email: '',
+  role: u.role,
+  brand: u.brand || 'ALL',
+  active: 1,
+  line_user_id: '',
+  phone: '',
+  email: '',
 }));
 
-// ── Init DB + sync ──────────────────────────────────
+// ── DB row → memory format ──────────────────────────
+function rowToUser(row) {
+  return {
+    id:           String(row.id),
+    name:         row.display_name || row.name || '',
+    username:     row.username || '',
+    password:     row.password || '',
+    role:         row.role || 'engineer',
+    brand:        row.brand || 'ALL',
+    active:       row.active !== undefined ? row.active : 1,
+    line_user_id: row.line_user_id || '',
+    phone:        row.phone || '',
+    email:        row.email || '',
+  };
+}
+
+// ── Init DB ─────────────────────────────────────────
 async function initDB() {
   try {
     db = require('./db');
     await db.query('SELECT 1');
     useDB = true;
     console.log('[Users] MySQL connected');
-
-    // Check if empty → seed
-    const [rows] = await db.query('SELECT COUNT(*) as cnt FROM users');
-    if (rows[0].cnt === 0) {
-      console.log('[Users] DB empty — seeding defaults...');
-      for (const u of DEFAULTS) {
-        await db.query(
-          'INSERT INTO users (id,name,username,password,role,brand,active,line_user_id,phone,email) VALUES (?,?,?,?,?,?,1,?,?,?)',
-          [u.id, u.name, u.username, hashPwd(u.pwd), u.role, u.brand, '', '', '']
-        );
-      }
-      console.log('[Users] Seeded', DEFAULTS.length, 'users');
-    }
-
-    // Load to memory
     await syncFromDB();
-
     // Auto-sync ทุก 30 วินาที
     setInterval(() => syncFromDB().catch(() => {}), 30000);
-
   } catch (e) {
-    console.warn('[Users] MySQL not available:', e.message, '— using memory only');
+    console.warn('[Users] MySQL not available:', e.message, '— memory only');
     useDB = false;
   }
 }
@@ -62,9 +68,11 @@ async function initDB() {
 async function syncFromDB() {
   if (!useDB || !db) return;
   try {
-    const [rows] = await db.query('SELECT * FROM users WHERE active=1 ORDER BY name');
+    const [rows] = await db.query(
+      'SELECT * FROM users WHERE active=1 OR active IS NULL ORDER BY id'
+    );
     if (rows.length) {
-      USERS = rows;
+      USERS = rows.map(rowToUser);
       console.log('[Users] Synced from DB:', rows.length, 'users');
     }
   } catch (e) {
@@ -72,84 +80,102 @@ async function syncFromDB() {
   }
 }
 
-// Start init
 initDB();
 
-// ═══ SYNC FUNCTIONS (เหมือนเดิมทุกประการ) ═══
+// ═══ READ (SYNC) ═══
 
 function getAllUsers() {
-  return USERS.filter(u => u.active !== false && u.active !== 0).map(u => ({
-    id: u.id,
-    name: u.name,
-    username: u.username,
-    role: u.role,
-    brand: u.brand,
-    active: u.active,
+  return USERS.filter(u => u.active === 1 || u.active === true).map(u => ({
+    id:           u.id,
+    name:         u.name,
+    username:     u.username,
+    role:         u.role,
+    brand:        u.brand,
+    active:       u.active,
     line_user_id: u.line_user_id || '',
-    phone: u.phone || '',
-    email: u.email || '',
-    // password ไม่ส่งออก
+    phone:        u.phone || '',
+    email:        u.email || '',
   }));
 }
 
 function getUserById(id) {
-  return USERS.find(u => u.id === id) || null;
+  return USERS.find(u => String(u.id) === String(id)) || null;
 }
 
 function getUserByUsername(username) {
   return USERS.find(u => u.username === username) || null;
 }
 
-// ═══ WRITE FUNCTIONS (เขียน DB + update memory) ═══
+// ═══ WRITE (SYNC memory + ASYNC DB) ═══
 
 function createUser(data) {
   const { name, username, password, role, brand, line_user_id, phone, email } = data;
-  if (!name || !username || !password || !role) throw new Error('Missing fields (name, username, password, role)');
+  if (!name || !username || !password || !role) throw new Error('Missing fields');
   if (USERS.find(u => u.username === username)) throw new Error('Username already exists');
 
-  const id = 'u' + Date.now();
   const hashed = hashPwd(password);
   const user = {
-    id, name, username, password: hashed,
-    role, brand: brand || 'ALL', active: true,
+    id: String(Date.now()),
+    name, username, password: hashed,
+    role, brand: brand || 'ALL', active: 1,
     line_user_id: line_user_id || '', phone: phone || '', email: email || '',
   };
 
-  // Memory
   USERS.push(user);
 
-  // DB (async, ไม่ block)
+  // Async write to DB
   if (useDB && db) {
     db.query(
-      'INSERT INTO users (id,name,username,password,role,brand,active,line_user_id,phone,email) VALUES (?,?,?,?,?,?,1,?,?,?)',
-      [id, name, username, hashed, role, brand || 'ALL', line_user_id || '', phone || '', email || '']
-    ).then(() => console.log('[Users] DB INSERT OK:', username))
-     .catch(e => console.error('[Users] DB INSERT error:', e.message));
+      `INSERT INTO users (username, password, role, brand, display_name, line_user_id, phone, email, active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [username, hashed, role, brand || null, name, line_user_id || null, phone || null, email || null]
+    ).then(([result]) => {
+      // Update memory id กับ DB auto-increment id
+      const dbId = String(result.insertId);
+      user.id = dbId;
+      console.log('[Users] DB INSERT OK:', username, 'id=', dbId);
+    }).catch(e => console.error('[Users] DB INSERT error:', e.message));
   }
 
   return { ...user, password: undefined };
 }
 
 function updateUser(id, data) {
-  const i = USERS.findIndex(u => u.id === id);
+  const i = USERS.findIndex(u => String(u.id) === String(id));
   if (i < 0) throw new Error('User not found');
 
   if (data.password) data.password = hashPwd(data.password);
 
-  // Memory
+  // Map name → display_name สำหรับ DB
+  const dbData = { ...data };
+  if (data.name) dbData.display_name = data.name;
+
+  // Memory update
   USERS[i] = { ...USERS[i], ...data, id: USERS[i].id, username: USERS[i].username };
 
-  // DB (async)
+  // Async DB update
   if (useDB && db) {
-    const allowed = ['name', 'password', 'role', 'brand', 'active', 'line_user_id', 'phone', 'email'];
+    const allowed = {
+      name:         'display_name',
+      password:     'password',
+      role:         'role',
+      brand:        'brand',
+      active:       'active',
+      line_user_id: 'line_user_id',
+      phone:        'phone',
+      email:        'email',
+    };
     const sets = [], vals = [];
-    for (const key of allowed) {
-      if (data[key] !== undefined) { sets.push(`${key}=?`); vals.push(data[key]); }
+    for (const [jsKey, dbCol] of Object.entries(allowed)) {
+      if (data[jsKey] !== undefined) {
+        sets.push(`${dbCol}=?`);
+        vals.push(data[jsKey]);
+      }
     }
     if (sets.length) {
       vals.push(id);
       db.query(`UPDATE users SET ${sets.join(',')} WHERE id=?`, vals)
-        .then(() => console.log('[Users] DB UPDATE OK:', USERS[i].username))
+        .then(() => console.log('[Users] DB UPDATE OK:', USERS[i].username, '→', Object.keys(data).join(',')))
         .catch(e => console.error('[Users] DB UPDATE error:', e.message));
     }
   }
@@ -158,13 +184,11 @@ function updateUser(id, data) {
 }
 
 function deleteUser(id) {
-  const i = USERS.findIndex(u => u.id === id);
+  const i = USERS.findIndex(u => String(u.id) === String(id));
   if (i < 0) throw new Error('User not found');
 
-  // Memory: soft delete
   USERS.splice(i, 1);
 
-  // DB: soft delete
   if (useDB && db) {
     db.query('UPDATE users SET active=0 WHERE id=?', [id])
       .then(() => console.log('[Users] DB soft-delete OK:', id))
