@@ -1,5 +1,5 @@
-// lineNotify.js — Centralized LINE Flex Message sender for all workflow events
-// Sends directly via LINE Push API — does NOT depend on Lark webhook
+// lineNotify.js — LINE Flex Message sender for all workflow events
+// ส่งโดยตรงผ่าน LINE Push API — ไม่ต้องพึ่ง Lark webhook
 const axios = require('axios');
 
 const AT = () => process.env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -8,19 +8,26 @@ const APP_URL = () => process.env.APP_URL || 'https://it-service-56im.onrender.c
 // ═══ CORE PUSH ═══
 async function push(to, messages) {
   const token = AT();
-  if (!token) { console.warn('[LINE] No LINE_CHANNEL_ACCESS_TOKEN'); return { ok: false, error: 'no token' }; }
-  if (!to) { console.warn('[LINE] No recipient'); return { ok: false, error: 'no recipient' }; }
+  if (!token) {
+    console.warn('[LINE] SKIP — LINE_CHANNEL_ACCESS_TOKEN not set');
+    return { ok: false, error: 'no token' };
+  }
+  if (!to) {
+    console.warn('[LINE] SKIP — no recipient (to is empty)');
+    return { ok: false, error: 'no recipient' };
+  }
   try {
+    console.log(`[LINE] Pushing to ${to.slice(0, 12)}... (${messages.length} msg)`);
     const r = await axios.post(
       'https://api.line.me/v2/bot/message/push',
       { to, messages },
       { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 10000 }
     );
-    console.log('[LINE] Pushed to', to.slice(0, 10) + '...', 'status:', r.status);
+    console.log(`[LINE] OK -> ${to.slice(0, 12)}... status:${r.status}`);
     return { ok: true };
   } catch (err) {
     const errData = err.response?.data || err.message;
-    console.error('[LINE push error]', errData);
+    console.error(`[LINE] FAIL -> ${to.slice(0, 12)}...`, JSON.stringify(errData));
     return { ok: false, error: errData };
   }
 }
@@ -48,7 +55,7 @@ function makeFlex(title, subtitle, color, ticket, buttonLabel, buttonUrl) {
   ];
   if (ticket.engineerName) rows.push(infoRow('Engineer', ticket.engineerName));
   if (ticket.status) rows.push(infoRow('Status', cleanStatus(ticket.status)));
-  if (ticket.workDetail) rows.push(infoRow('Work', (ticket.workDetail || '').slice(0, 60)));
+  if (ticket.workDetail) rows.push(infoRow('Work', (ticket.workDetail || '').slice(0, 80)));
 
   const bubble = {
     type: 'bubble', size: 'mega',
@@ -76,60 +83,90 @@ function makeFlex(title, subtitle, color, ticket, buttonLabel, buttonUrl) {
     };
   }
 
-  return { type: 'flex', altText: `${title}: ${ticket.id || ''} — ${ticket.type || ''}`, contents: bubble };
+  return { type: 'flex', altText: `${title}: ${ticket.id || ''} - ${ticket.type || ''}`, contents: bubble };
 }
 
 function cleanStatus(s) {
   return (s || '').replace(/[⏱️⚙️✅❌🔍✏️]/g, '').trim();
 }
 
-// ═══ EVENT-SPECIFIC NOTIFICATIONS ═══
+// ═══ EVENT NOTIFICATIONS ═══
 
-// STEP 2: New ticket created → send to brand LINE group
+// STEP 2: Ticket ใหม่ -> Admin Group + Brand Group
 async function notifyNewTicket(ticket) {
+  console.log(`[LINE] notifyNewTicket: ${ticket.id} brand=${ticket.brand}`);
   const targets = getTargets(ticket);
   const flex = makeFlex(
     'TICKET NEW', ticket.type || 'New Issue', '#00e5a0', ticket,
     'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`
   );
   const results = [];
-  for (const to of targets.groups) {
-    results.push(await push(to, [flex]));
-  }
-  // Also always send to admin group
+
+  // Admin group (ส่งเสมอ)
   const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
-  if (adminGroup && !targets.groups.includes(adminGroup)) {
+  if (adminGroup) {
+    console.log(`[LINE] -> Admin Group: ${adminGroup.slice(0,12)}...`);
     results.push(await push(adminGroup, [flex]));
+  } else {
+    console.warn('[LINE] LINE_ADMIN_GROUP_ID not set — skip admin group');
   }
+
+  // Brand groups
+  for (const to of targets.groups) {
+    if (to !== adminGroup) {
+      console.log(`[LINE] -> Brand Group: ${to.slice(0,12)}...`);
+      results.push(await push(to, [flex]));
+    }
+  }
+
+  console.log(`[LINE] notifyNewTicket done: ${results.length} sent, ok=${results.filter(r=>r.ok).length}`);
   return results;
 }
 
-// STEP 4: Assigned to engineer → send to engineer personal LINE
+// STEP 4: มอบหมายช่าง -> ช่าง (ส่วนตัว) + Admin Group
 async function notifyAssigned(ticket, engineerLineId) {
+  console.log(`[LINE] notifyAssigned: ${ticket.id} eng=${ticket.engineerName} lineId=${engineerLineId || 'NONE'}`);
   const flex = makeFlex(
     'JOB ASSIGNED', `${ticket.type || 'Job'} assigned to you`, '#60a5fa', ticket,
     'Open Job', `${APP_URL()}/engineer?ticket=${ticket.id}`
   );
   const results = [];
-  if (engineerLineId) results.push(await push(engineerLineId, [flex]));
-  // Also notify admin group
+
+  // ช่าง (ส่วนตัว)
+  if (engineerLineId) {
+    console.log(`[LINE] -> Engineer personal: ${engineerLineId.slice(0,12)}...`);
+    results.push(await push(engineerLineId, [flex]));
+  } else {
+    console.warn(`[LINE] Engineer "${ticket.engineerName}" has no LINE User ID — skip personal notification`);
+    console.warn('[LINE] Fix: Admin > Edit User > fill LINE User ID (user types !userid in LINE chat with bot)');
+  }
+
+  // Admin group (ส่งเสมอเมื่อมอบหมาย)
   const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
-  if (adminGroup) results.push(await push(adminGroup, [flex]));
+  if (adminGroup) {
+    const adminFlex = makeFlex(
+      'ASSIGNED', `${ticket.id} -> ${ticket.engineerName}`, '#60a5fa', ticket,
+      'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`
+    );
+    results.push(await push(adminGroup, [adminFlex]));
+  }
+
+  console.log(`[LINE] notifyAssigned done: ${results.filter(r=>r.ok).length}/${results.length} ok`);
   return results;
 }
 
-// STEP 5: Reassigned — notify old engineer and new engineer
+// STEP 5: เปลี่ยนช่าง -> ช่างเก่า + ช่างใหม่ + Admin Group
 async function notifyReassigned(ticket, oldEngineerLineId, newEngineerLineId) {
+  console.log(`[LINE] notifyReassigned: ${ticket.id} old=${oldEngineerLineId||'NONE'} new=${newEngineerLineId||'NONE'}`);
   const results = [];
-  // Old engineer: "Job reassigned"
+
   if (oldEngineerLineId) {
     const oldFlex = makeFlex(
-      'JOB REASSIGNED', `${ticket.id} has been reassigned to another engineer`, '#fb923c', ticket,
-      null, null
+      'JOB REASSIGNED', `${ticket.id} has been reassigned`, '#fb923c', ticket, null, null
     );
     results.push(await push(oldEngineerLineId, [oldFlex]));
   }
-  // New engineer: "New job"
+
   if (newEngineerLineId) {
     const newFlex = makeFlex(
       'NEW JOB', `${ticket.type || 'Job'} assigned to you`, '#60a5fa', ticket,
@@ -137,82 +174,86 @@ async function notifyReassigned(ticket, oldEngineerLineId, newEngineerLineId) {
     );
     results.push(await push(newEngineerLineId, [newFlex]));
   }
-  // Admin group
+
   const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
   if (adminGroup) {
     const adminFlex = makeFlex(
-      'REASSIGNED', `${ticket.id} reassigned: ${ticket.engineerName}`, '#fb923c', ticket,
+      'REASSIGNED', `${ticket.id} -> ${ticket.engineerName}`, '#fb923c', ticket,
       'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`
     );
     results.push(await push(adminGroup, [adminFlex]));
   }
+
   return results;
 }
 
-// STEP 9: Engineer submits work → notify admin + brand group
+// STEP 9: ช่างส่งงาน -> Admin Group + Brand Group
 async function notifyWorkSubmitted(ticket) {
+  console.log(`[LINE] notifyWorkSubmitted: ${ticket.id} eng=${ticket.engineerName}`);
   const targets = getTargets(ticket);
   const flex = makeFlex(
     'WORK SUBMITTED', `${ticket.engineerName || 'Engineer'} submitted work`, '#22d3ee', ticket,
     'Review Now', `${APP_URL()}/admin?ticket=${ticket.id}`
   );
   const results = [];
-  // Admin group
+
   const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
   if (adminGroup) results.push(await push(adminGroup, [flex]));
-  // Brand groups
+
   for (const to of targets.groups) {
     if (to !== adminGroup) results.push(await push(to, [flex]));
   }
+
+  console.log(`[LINE] notifyWorkSubmitted done: ${results.filter(r=>r.ok).length}/${results.length} ok`);
   return results;
 }
 
-// STEP 11: Ticket closed → notify brand group + reporter
+// STEP 11: ปิดงาน -> Admin Group + Brand Group + ผู้แจ้ง
 async function notifyTicketClosed(ticket) {
+  console.log(`[LINE] notifyTicketClosed: ${ticket.id}`);
   const targets = getTargets(ticket);
   const flex = makeFlex(
     'TICKET CLOSED', `${ticket.id} completed`, '#4ade80', ticket,
     'View Summary', `${APP_URL()}/admin?ticket=${ticket.id}`
   );
   const results = [];
-  // Admin group
+
   const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
   if (adminGroup) results.push(await push(adminGroup, [flex]));
-  // Brand groups
+
   for (const to of targets.groups) {
     if (to !== adminGroup) results.push(await push(to, [flex]));
   }
-  // Reporter (if has LINE ID)
-  if (ticket.line_user_id || ticket.reporter_line_id || ticket.lineUserId) {
-    const reporterLine = ticket.line_user_id || ticket.reporter_line_id || ticket.lineUserId;
+
+  const reporterLine = ticket.line_user_id || ticket.reporter_line_id || ticket.lineUserId;
+  if (reporterLine) {
     const reporterFlex = makeFlex(
       'COMPLETED', `Your ticket ${ticket.id} is done`, '#4ade80', ticket,
-      'View Ticket', `${APP_URL()}/brands/${(ticket.brand||'').toLowerCase().replace(/ /g,'-').replace(/'/g,'')}/track?id=${ticket.id}`
+      'View Ticket', `${APP_URL()}/report`
     );
     results.push(await push(reporterLine, [reporterFlex]));
   }
+
+  console.log(`[LINE] notifyTicketClosed done: ${results.filter(r=>r.ok).length}/${results.length} ok`);
   return results;
 }
 
-// STEP: Send back for revision
+// ส่งกลับแก้ไข -> ช่าง
 async function notifyRevision(ticket, engineerLineId) {
+  console.log(`[LINE] notifyRevision: ${ticket.id} eng=${engineerLineId||'NONE'}`);
   const flex = makeFlex(
     'REVISION REQUIRED', `${ticket.id} needs revision`, '#f87171', ticket,
     'Fix Now', `${APP_URL()}/engineer?ticket=${ticket.id}`
   );
-  const results = [];
-  if (engineerLineId) results.push(await push(engineerLineId, [flex]));
-  return results;
+  if (engineerLineId) return [await push(engineerLineId, [flex])];
+  console.warn('[LINE] No engineer LINE ID for revision notification');
+  return [];
 }
 
 // ═══ HELPERS ═══
 
-// Get LINE targets for a ticket's brand
 function getTargets(ticket) {
   const groups = [];
-  const adminGroup = process.env.LINE_ADMIN_GROUP_ID;
-
-  // Brand-specific group IDs from env
   const brand = (ticket.brand || '').toLowerCase().replace(/[^a-z]/g, '');
   const brandGroupEnv = {
     dunkin: 'LINE_GROUP_DUNKIN',
@@ -225,6 +266,8 @@ function getTargets(ticket) {
   const envKey = brandGroupEnv[brand];
   if (envKey && process.env[envKey]) {
     groups.push(process.env[envKey]);
+  } else {
+    console.log(`[LINE] No brand-specific group for "${ticket.brand}" (env: ${envKey || 'unknown'} = not set)`);
   }
 
   return { groups };
