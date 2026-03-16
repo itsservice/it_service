@@ -7,6 +7,7 @@ const { getAllUsers, getUserByUsername, createUser, updateUser, deleteUser } = r
 const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, invalidateCache } = require('./larkService');
 const larkRouter = require('./larkWebhook');
 const lineRouter = require('./lineWebhook');
+const lineNotify = require('./lineNotify');
 
 const app = express();
 app.use(express.json({ limit:'10mb', verify:(req,_,buf)=>{ req.rawBody=buf; } }));
@@ -274,6 +275,10 @@ app.post('/api/tickets', async (req, res) => {
     });
 
     broadcast('ticket_created', { ticket:t });
+
+    // ── LINE: แจ้ง Admin Group + Brand Group ว่ามี Ticket ใหม่ ──
+    lineNotify.notifyNewTicket(t).catch(e => console.error('[LINE notifyNewTicket]', e.message));
+
     res.json({ ok:true, ticket:t, log });
   } catch(e) {
     console.error('[POST /api/tickets] Error:', e.message);
@@ -294,6 +299,13 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
     const t = await updateTicket(req.params.rid, { status, brand });
     const log = addLog({ user:req.user, action:'update_status', ticketId:req.params.rid, detail:`เปลี่ยนสถานะเป็น ${status}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status, ts:new Date().toISOString(), log });
+
+    // ── LINE: ถ้าส่งกลับแก้ไข → แจ้งช่าง ──
+    if (status.includes('แก้ไข') || status.includes('revision')) {
+      const engUser = getAllUsers().find(u => u.name === t.engineerName);
+      lineNotify.notifyRevision(t, engUser?.line_user_id).catch(e => console.error('[LINE notifyRevision]', e.message));
+    }
+
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -309,6 +321,48 @@ app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager
     });
     const log = addLog({ user:req.user, action:'assign', ticketId:req.params.rid, detail:`มอบหมายให้ ${engineerName}` });
     broadcast('ticket_updated', { recordId:req.params.rid, engineerName, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString(), log });
+
+    // ── LINE: แจ้งช่างที่ได้รับมอบหมาย (ส่วนตัว) + Admin Group ──
+    const engUser = getAllUsers().find(u => u.name === engineerName);
+    lineNotify.notifyAssigned(t, engUser?.line_user_id).catch(e => console.error('[LINE notifyAssigned]', e.message));
+
+    res.json({ ok:true, ticket:t });
+  } catch(e) { res.json({ ok:false, error:e.message }); }
+});
+
+// ── Reassign (เปลี่ยนช่าง) ─────────────────────────────────────
+app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const { newEngineerName } = req.body || {};
+    if (!newEngineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่างใหม่' });
+
+    // ดึงข้อมูลช่างเก่าก่อน update
+    const oldTicket = await getTicket(req.params.rid);
+    const oldEngineerName = oldTicket?.engineerName;
+
+    const brand = getBrand(req.params.rid, req.body);
+    const t = await updateTicket(req.params.rid, {
+      engineerName: newEngineerName,
+      assignedTo: newEngineerName,
+      status: 'อยู่ระหว่างดำเนินการ ⚙️',
+      brand
+    });
+
+    const log = addLog({
+      user: req.user,
+      action: 'reassign',
+      ticketId: req.params.rid,
+      detail: `เปลี่ยนช่าง ${oldEngineerName || '-'} → ${newEngineerName}`
+    });
+
+    broadcast('ticket_updated', { recordId: req.params.rid, engineerName: newEngineerName, status: 'อยู่ระหว่างดำเนินการ ⚙️', ts: new Date().toISOString(), log });
+
+    // ── LINE: แจ้งช่างเก่า "งานถูกเปลี่ยน" + ช่างใหม่ "มีงานใหม่" ──
+    const allUsers = getAllUsers();
+    const oldEng = allUsers.find(u => u.name === oldEngineerName);
+    const newEng = allUsers.find(u => u.name === newEngineerName);
+    lineNotify.notifyReassigned(t, oldEng?.line_user_id, newEng?.line_user_id).catch(e => console.error('[LINE notifyReassigned]', e.message));
+
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -326,6 +380,10 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
     });
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString(), log });
+
+    // ── LINE: แจ้ง Admin + Brand Group ว่าช่างส่งงานแล้ว ──
+    lineNotify.notifyWorkSubmitted(t).catch(e => console.error('[LINE notifyWorkSubmitted]', e.message));
+
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -346,6 +404,10 @@ app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','admin','superad
     });
     const log = addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ช่างส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status: status || 'ตรวจงาน', ts:new Date().toISOString(), log });
+
+    // ── LINE: แจ้ง Admin + Brand Group ว่าช่างส่งงานแล้ว ──
+    lineNotify.notifyWorkSubmitted(t).catch(e => console.error('[LINE notifyWorkSubmitted]', e.message));
+
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -360,6 +422,10 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
     });
     const log = addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:'ปิดงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', closedBy:req.user.name, ts:new Date().toISOString(), log });
+
+    // ── LINE: แจ้ง Brand Group + Admin Group + ผู้แจ้ง (ถ้ามี LINE ID) ──
+    lineNotify.notifyTicketClosed(t).catch(e => console.error('[LINE notifyTicketClosed]', e.message));
+
     res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -420,6 +486,10 @@ app.get('/debug/env', (_, res) => {
     hasLineToken:              !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
     hasLineSecret:             !!process.env.LINE_CHANNEL_SECRET,
     hasLineAdminGroup:         !!process.env.LINE_ADMIN_GROUP_ID,
+    hasLineGroupDunkin:        !!process.env.LINE_GROUP_DUNKIN,
+    hasLineGroupGreyhound:     !!process.env.LINE_GROUP_GREYHOUND_CAFE,
+    hasLineGroupAuBonPain:     !!process.env.LINE_GROUP_AU_BON_PAIN,
+    hasLineGroupFunkyFries:    !!process.env.LINE_GROUP_FUNKY_FRIES,
     nodeEnv:                   process.env.NODE_ENV || 'development',
     appUrl:                    process.env.APP_URL || '(not set)',
   });
@@ -520,7 +590,7 @@ app.get('/debug/test-line', async (_, res) => {
   if (!group) return res.json({ ok:false, error:'LINE_ADMIN_GROUP_ID not set' });
   try {
     await axios.post('https://api.line.me/v2/bot/message/push',
-      { to: group, messages:[{ type:'text', text:'✅ Test จาก IT Ticket System' }] },
+      { to: group, messages:[{ type:'text', text:'Test from IT Ticket System — LINE notifications active' }] },
       { headers:{ Authorization:'Bearer '+AT }, timeout:8000 }
     );
     res.json({ ok:true, msg:'LINE sent to group: '+group.slice(0,8)+'...' });
@@ -550,7 +620,7 @@ app.use('/line', lineRouter);
 setTimeout(async () => {
   try {
     await ensureFieldMap();
-    console.log('[App] ✅ fieldMap ready on startup');
+    console.log('[App] fieldMap ready on startup');
   } catch(e) {
     console.warn('[App] fieldMap preload failed:', e.message);
   }
