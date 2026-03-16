@@ -335,7 +335,7 @@ function rTickets(){
   document.getElementById('pg-tickets').innerHTML=`
     <div class="filters">
       <div class="srch"><span class="si">Q</span><input placeholder="Search..." value="${esc(tF.q)}" oninput="tF.q=this.value;tF.p=1;rTickets()"/></div>
-      <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()"><option value="">All Status</option><option>pending</option><option>assigned</option><option>in_progress</option><option>review</option><option>completed</option><option>cancelled</option></select>
+      <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()"><option value="">All Status</option><option>รอดำเนินการ</option><option>อยู่ระหว่างดำเนินการ</option><option>ตรวจงาน</option><option>เสร็จสิ้น</option><option>ยกเลิก</option><option>แก้ไข</option></select>
       <select class="sel" onchange="tF.brand=this.value;tF.p=1;rTickets()"><option value="">All Brands</option>${brands.map(b=>`<option ${tF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select>
     </div>
     ${paged.length?`<table class="tbl"><thead><tr><th>Ticket</th><th>Type</th><th>Brand</th><th>Status</th><th>Date</th></tr></thead><tbody>${paged.map(x=>`<tr class="tr" onclick="openDrw('${esc(x._recordId)}')"><td><span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(x.id||'--')}</span><div style="font-size:11px;color:var(--fg4);margin-top:1px">${esc(x.reporter||'')}</div></td><td><div style="font-weight:600">${esc(x.type||'-')}</div></td><td style="font-size:12px">${esc(x.brand||'-')}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td style="font-size:12px;color:var(--fg3)">${esc(x.sentDate||'-')}</td></tr>`).join('')}</tbody></table>
