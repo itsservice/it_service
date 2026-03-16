@@ -104,6 +104,7 @@ a{color:inherit;text-decoration:none}
 .srch input::placeholder{color:var(--fg4)}
 .srch .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--fg4)}
 .sel{background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;appearance:none;cursor:pointer;transition:all .3s}
+input[type=date].sel{appearance:auto;color-scheme:light dark}
 
 .tbl{width:100%;border-collapse:separate;border-spacing:0 3px}
 .tbl th{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;text-align:left}
@@ -217,6 +218,7 @@ a{color:inherit;text-decoration:none}
     <div class="page" id="pg-users"></div>
     <div class="page" id="pg-log"></div>
     <div class="page" id="pg-gps"></div>
+    <div class="page" id="pg-line"></div>
     <div class="page" id="pg-system"></div>
     <div class="page" id="pg-server"></div>
   </div>
@@ -230,13 +232,14 @@ a{color:inherit;text-decoration:none}
 
 <script>
 let AUTH=null,tickets=[],logs=[],users=[],pg='dash',sse=null;
-const PG={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',system:'System Settings',server:'Server Logs'};
+const PG={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs'};
 const NAV_ALL=[
   {id:'dash',ic:'D',lb:'Overview',min:40},
   {id:'tickets',ic:'T',lb:'Tickets',min:40},
   {id:'users',ic:'U',lb:'Users',min:80},
   {id:'log',ic:'L',lb:'Activity Log',min:60},
   {id:'gps',ic:'G',lb:'GPS Map',min:60},
+  {id:'line',ic:'L',lb:'LINE Groups',min:100},
   {id:'system',ic:'S',lb:'System',min:100},
   {id:'server',ic:'V',lb:'Server Logs',min:100}
 ];
@@ -296,7 +299,7 @@ function connectSSE(){if(sse)try{sse.close();}catch(_){}sse=new EventSource('/ap
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
-function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
+function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
 
 function rDash(){
   const t=tickets.length,w=tickets.filter(x=>/รอ|pending/.test(x.status||'')).length,p=tickets.filter(x=>/ระหว่าง|progress/.test(x.status||'')).length,rv=tickets.filter(x=>/ตรวจ|review/.test(x.status||'')).length,dn=tickets.filter(x=>/เสร็จ|completed/.test(x.status||'')).length;
@@ -318,25 +321,74 @@ function rDash(){
       <div class="crd"><div class="crd-h">Recent Tickets</div><div style="padding:4px 10px">${recent.length?recent.map(x=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:border-color .4s" onclick="openDrw('${esc(x._recordId)}')"><span style="font-family:var(--mono);font-size:10px;color:var(--fg4);flex-shrink:0">${esc(x.id||'--')}</span><span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)">${esc(x.type||'-')}</span><span class="pill">${statusLabel(x.status)}</span></div>`).join(''):'<div class="empty"><div class="empty-t">No tickets yet</div></div>'}</div></div>
     </div>
     <div class="g2">
-      <div class="chart-area">Bar chart — tickets per brand<br/><span style="font-size:11px">Connect Chart.js for interactive charts</span></div>
-      <div class="chart-area">Line chart — daily trend<br/><span style="font-size:11px">Click data points for drill-down</span></div>
+      <div class="crd" style="cursor:pointer" onclick="navTo('tickets')">
+        <div class="crd-h">📊 Ticket ตามแบรนด์ (คลิกเพื่อดูทั้งหมด)</div>
+        <div style="padding:12px 14px">
+          ${Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([b,n])=>`
+          <div class="bb" onclick="event.stopPropagation();tF.brand=decodeURIComponent('${encodeURIComponent(b)}');tF.p=1;navTo('tickets')" style="cursor:pointer;padding:3px 0;border-radius:5px;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+            <div class="bb-n" style="min-width:110px">${esc(b)}</div>
+            <div class="bb-bar"><div class="bb-fill" style="width:${Math.round(n/maxB*100)}%"></div></div>
+            <div class="bb-c">${n}</div>
+          </div>`).join('')}
+          ${Object.keys(bc).length===0?'<div style="color:var(--fg4);text-align:center;padding:14px;font-size:13px">ยังไม่มีข้อมูล</div>':''}
+        </div>
+      </div>
+      <div class="crd">
+        <div class="crd-h">📅 แนวโน้มรายวัน (7 วันล่าสุด)</div>
+        <div style="padding:12px 14px">
+          ${(()=>{
+            const days=[];
+            for(let i=6;i>=0;i--){
+              const d=new Date();d.setDate(d.getDate()-i);
+              const key=d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit'});
+              const iso=d.toISOString().slice(0,10);
+              const cnt=tickets.filter(t=>{
+                const raw=t.sentDate||t.createdAt||t.created_at||'';
+                if(!raw)return false;
+                return String(raw).startsWith(iso)||(String(raw).includes(key));
+              }).length;
+              days.push({key,cnt});
+            }
+            const maxD=Math.max(1,...days.map(d=>d.cnt));
+            return days.map(d=>`
+            <div class="bb" style="margin-bottom:6px">
+              <div style="font-size:11px;min-width:45px;color:var(--fg3)">${d.key}</div>
+              <div class="bb-bar"><div class="bb-fill" style="width:${Math.round(d.cnt/maxD*100)}%;background:var(--blue)"></div></div>
+              <div class="bb-c" style="color:var(--blue)">${d.cnt}</div>
+            </div>`).join('');
+          })()}
+        </div>
+      </div>
     </div>`;
 }
 
-let tF={status:'',brand:'',q:'',p:1};const PP=15;
+let tF={status:'',brand:'',q:'',dateFrom:'',dateTo:'',p:1};const PP=15;
 function rTickets(){
   const brands=[...new Set(tickets.map(x=>x.brand).filter(Boolean))].sort();
   let data=[...tickets];
   if(tF.status)data=data.filter(x=>(x.status||'').includes(tF.status));
   if(tF.brand)data=data.filter(x=>x.brand===tF.brand);
   if(tF.q){const q=tF.q.toLowerCase();data=data.filter(x=>`${x.id} ${x.reporter} ${x.phone} ${x.type} ${x.detail} ${x.branchCode}`.toLowerCase().includes(q));}
+  if(tF.dateFrom||tF.dateTo){data=data.filter(x=>{const raw=x.sentDate||x.createdAt||x.sent_date||'';if(!raw)return true;const d=new Date(raw.replace(/\/([0-9]{4})/g,(m,y)=>parseInt(y)>2400?'/'+(y-543):m));if(isNaN(d))return true;if(tF.dateFrom&&d<new Date(tF.dateFrom+'T00:00:00'))return false;if(tF.dateTo&&d>new Date(tF.dateTo+'T23:59:59'))return false;return true;});}
   const tp=Math.max(1,Math.ceil(data.length/PP));tF.p=Math.min(tF.p,tp);
   const paged=data.slice((tF.p-1)*PP,tF.p*PP);
   document.getElementById('pg-tickets').innerHTML=`
     <div class="filters">
       <div class="srch"><span class="si">Q</span><input placeholder="Search..." value="${esc(tF.q)}" oninput="tF.q=this.value;tF.p=1;rTickets()"/></div>
-      <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()"><option value="">All Status</option><option>รอดำเนินการ</option><option>อยู่ระหว่างดำเนินการ</option><option>ตรวจงาน</option><option>เสร็จสิ้น</option><option>ยกเลิก</option><option>แก้ไข</option></select>
+      <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()">
+        <option value="">ทุกสถานะ</option>
+        <option value="รอดำเนินการ">รอดำเนินการ ⏱️</option>
+        <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ ⚙️</option>
+        <option value="ตรวจงาน">ตรวจงาน 🔍</option>
+        <option value="เสร็จสิ้น">เสร็จสิ้น ✅</option>
+        <option value="ยกเลิก">ยกเลิก ❌</option>
+        <option value="แก้ไข">แก้ไข ✏️</option>
+      </select>
       <select class="sel" onchange="tF.brand=this.value;tF.p=1;rTickets()"><option value="">All Brands</option>${brands.map(b=>`<option ${tF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select>
+      <input type="date" class="sel" value="${esc(tF.dateFrom)}" onchange="tF.dateFrom=this.value;tF.p=1;rTickets()" title="จากวันที่" style="max-width:140px"/>
+      <span style="font-size:12px;color:var(--fg3);align-self:center">ถึง</span>
+      <input type="date" class="sel" value="${esc(tF.dateTo)}" onchange="tF.dateTo=this.value;tF.p=1;rTickets()" title="ถึงวันที่" style="max-width:140px"/>
+      ${(tF.dateFrom||tF.dateTo)?`<button class="smb" onclick="tF.dateFrom='';tF.dateTo='';tF.p=1;rTickets()" style="color:var(--red)">✕ ล้างวัน</button>`:''}
     </div>
     ${paged.length?`<table class="tbl"><thead><tr><th>Ticket</th><th>Type</th><th>Brand</th><th>Status</th><th>Date</th></tr></thead><tbody>${paged.map(x=>`<tr class="tr" onclick="openDrw('${esc(x._recordId)}')"><td><span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(x.id||'--')}</span><div style="font-size:11px;color:var(--fg4);margin-top:1px">${esc(x.reporter||'')}</div></td><td><div style="font-weight:600">${esc(x.type||'-')}</div></td><td style="font-size:12px">${esc(x.brand||'-')}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td style="font-size:12px;color:var(--fg3)">${esc(x.sentDate||'-')}</td></tr>`).join('')}</tbody></table>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--fg4)"><span>${data.length} items | page ${tF.p}/${tp}</span><div style="display:flex;gap:3px">${tF.p>1?`<button class="smb" onclick="tF.p--;rTickets()">Prev</button>`:''} ${tF.p<tp?`<button class="smb" onclick="tF.p++;rTickets()">Next</button>`:''}</div></div>`
@@ -358,25 +410,217 @@ function rLog(){
   el.innerHTML=`<div style="margin-bottom:10px"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">Activity Log (${logs.length})</div></div>`+logs.map(l=>`<div class="log-i"><div class="log-dot"></div><div class="log-b"><div class="log-a">${esc(aL(l.action))} ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:3px">${esc(l.ticketLabel)}</span>`:''}</div><div class="log-m"><span>${esc(l.user?.name||'System')}</span><span>${esc(l.displayTs||'')}</span></div>${l.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:1px">${esc(l.detail)}</div>`:''}</div></div>`).join('');
 }
 
+
+function rLine(){
+  document.getElementById('pg-line').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📱 LINE Groups</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:3px">ตั้งค่า LINE Group ID สำหรับแต่ละแบรนด์</div>
+    </div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">วิธีหา LINE Group ID</div>
+      <div style="padding:14px;font-size:13px;color:var(--fg2);line-height:1.9">
+        1. เพิ่ม LINE Bot เข้ากลุ่ม<br>
+        2. พิมพ์ <code style="background:var(--bg3);padding:2px 7px;border-radius:5px;font-family:var(--mono)">&nbsp;!groupid&nbsp;</code> ในกลุ่ม<br>
+        3. Bot จะตอบกลับด้วย Group ID (ขึ้นต้นด้วย C...)<br>
+        4. วาง ID ลงในช่องด้านล่าง แล้วกด บันทึก
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
+      <div style="padding:16px">
+        ${[
+          {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
+          {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
+          {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
+          {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
+          {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
+          {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
+        ].map(({label,key,ph})=>`
+        <div style="margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--fg2);margin-bottom:5px">${label}</div>
+          <div style="display:flex;gap:6px">
+            <input id="lg-${key}" class="sel" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono)"
+              placeholder="${ph}" value=""/>
+            <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง">🧪 Test</button>
+          </div>
+        </div>`).join('')}
+        <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);padding:9px 18px" onclick="saveLineGroups()">💾 บันทึกทั้งหมด</button>
+          <button class="smb" onclick="loadLineGroups()">🔄 โหลด</button>
+        </div>
+        <div id="line-msg" style="margin-top:8px;font-size:12.5px;min-height:18px"></div>
+      </div>
+    </div>`;
+  loadLineGroups();
+}
+async function loadLineGroups(){
+  try{
+    const d=await api('/api/line-config');
+    if(!d.ok)return;
+    const cfg=d.config||{};
+    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el&&val)el.value=val;};
+    setVal('adminGroupId',cfg.adminGroupId||'');
+    const bg=cfg.brandGroups||{};
+    setVal('dunkin',bg["Dunkin'"]||'');
+    setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
+    setVal('greyhoundOriginal',bg['Greyhound Original']||'');
+    setVal('auBonPain',bg['Au Bon Pain']||'');
+    setVal('funkyFries',bg['Funky Fries']||'');
+  }catch(_){}
+}
+async function saveLineGroups(){
+  const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
+  const payload={
+    adminGroupId:g('adminGroupId'),
+    brandGroups:{"Dunkin'":g('dunkin'),'Greyhound Cafe':g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries')}
+  };
+  try{
+    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
+    const msg=document.getElementById('line-msg');
+    if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';
+    setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);
+  }catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
+async function testLineGroup(key){
+  const val=document.getElementById('lg-'+key)?.value?.trim();
+  if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
+  try{
+    const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});
+    toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));
+  }catch(e){toast('❌ '+e.message);}
+}
 function rGPS(){document.getElementById('pg-gps').innerHTML='<div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">GPS Map</div><div class="chart-area" style="min-height:400px">Leaflet.js map placeholder<br/><span style="font-size:11px">Real-time engineer locations will appear here</span></div>';}
-function rSystem(){document.getElementById('pg-system').innerHTML='<div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">System Settings</div><div class="chart-area">LINE notification targets, system configuration<br/><span style="font-size:11px">Super Admin only</span></div>';}
-function rServer(){document.getElementById('pg-server').innerHTML='<div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">Server Logs</div><div class="chart-area">Server health, API logs, error tracking<br/><span style="font-size:11px">Super Admin only</span></div>';}
+function rSystem(){
+  const cfg=window._lineCfg||{};
+  document.getElementById('pg-system').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">⚙️ System Settings</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:3px">LINE Notification Groups — Super Admin only</div>
+    </div>
+    <div class="crd" style="max-width:600px">
+      <div class="crd-h">LINE Group IDs</div>
+      <div style="padding:16px">
+        ${[
+          {label:'🔔 Admin Group (ทุก Ticket)',key:'adminGroupId'},
+          {label:"🍩 Dunkin'",key:'dunkin'},
+          {label:'☕ Greyhound Cafe',key:'greyhoundCafe'},
+          {label:'🐕 Greyhound Original',key:'greyhoundOriginal'},
+          {label:'🥐 Au Bon Pain',key:'auBonPain'},
+          {label:'🍟 Funky Fries',key:'funkyFries'},
+        ].map(({label,key})=>`
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">${label}</div>
+          <div style="display:flex;gap:6px">
+            <input id="line-${key}" class="sel" style="flex:1;border-radius:7px;padding:8px 10px" 
+              value="${esc(cfg[key]||cfg.brandGroups?.[label.replace(/^[^\s]+\s/,'')]||'')}" 
+              placeholder="C... หรือ U... (LINE ID)"/>
+            <button class="smb" onclick="testLine('${key}')">Test</button>
+          </div>
+        </div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="saveLineConfig()">💾 บันทึก</button>
+          <button class="smb" onclick="loadLineConfig()">🔄 โหลด</button>
+        </div>
+        <div id="system-msg" style="margin-top:8px;font-size:12px;color:var(--green);min-height:16px"></div>
+      </div>
+    </div>`;
+  loadLineConfig();
+}
+async function loadLineConfig(){
+  try{
+    const d=await api('/api/line-config');
+    if(d.ok){window._lineCfg=d.config||{};rSystem();}
+  }catch(_){}
+}
+async function saveLineConfig(){
+  const keys=['adminGroupId','dunkin','greyhoundCafe','greyhoundOriginal','auBonPain','funkyFries'];
+  const payload={adminGroupId:'',brandGroups:{}};
+  const el=id=>document.getElementById('line-'+id)?.value?.trim()||'';
+  payload.adminGroupId=el('adminGroupId');
+  payload.brandGroups={"Dunkin'":el('dunkin'),'Greyhound Cafe':el('greyhoundCafe'),'Greyhound Original':el('greyhoundOriginal'),'Au Bon Pain':el('auBonPain'),'Funky Fries':el('funkyFries')};
+  try{
+    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
+    const msg=document.getElementById('system-msg');
+    if(msg)msg.textContent=d.ok?'✅ บันทึกแล้ว':'❌ '+(d.error||'error');
+  }catch(e){const msg=document.getElementById('system-msg');if(msg)msg.textContent='❌ '+e.message;}
+}
+async function testLine(key){
+  const val=document.getElementById('line-'+key)?.value?.trim();
+  if(!val){toast('กรุณากรอก LINE ID ก่อน');return;}
+  try{
+    const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});
+    toast(d.ok?'✅ ส่ง Test สำเร็จ':'❌ '+(d.error||'ส่งไม่สำเร็จ'));
+  }catch(e){toast('❌ '+e.message);}
+}
+function rServer(){
+  document.getElementById('pg-server').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">🖥️ Server Logs</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:3px">Health check, memory, uptime — Super Admin only</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px" id="srv-stats">
+      <div class="stat" style="cursor:pointer" onclick="loadServerHealth()"><div class="stat-l">⏱️ Uptime</div><div class="stat-v" id="srv-uptime" style="font-size:22px">—</div></div>
+      <div class="stat"><div class="stat-l">🧠 Memory</div><div class="stat-v" id="srv-mem" style="font-size:22px">—</div></div>
+      <div class="stat"><div class="stat-l">📡 Status</div><div class="stat-v" id="srv-status" style="font-size:22px">—</div></div>
+      <div class="stat"><div class="stat-l">🎫 Tickets (RAM)</div><div class="stat-v" id="srv-tickets" style="font-size:22px">—</div></div>
+    </div>
+    <div class="crd" style="max-width:600px">
+      <div class="crd-h" style="display:flex;align-items:center;justify-content:space-between">
+        Activity Log (ล่าสุด)
+        <button class="smb" onclick="loadServerHealth()">🔄 รีเฟรช</button>
+      </div>
+      <div id="srv-log-list" style="padding:10px 14px;max-height:400px;overflow-y:auto">
+        <div style="color:var(--fg4);text-align:center;padding:20px">กดรีเฟรชเพื่อโหลด...</div>
+      </div>
+    </div>`;
+  loadServerHealth();
+}
+async function loadServerHealth(){
+  try{
+    const d=await api('/health');
+    if(d.ok){
+      const fmt=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h?`${h}h ${m}m`:`${m}m`};
+      const upEl=document.getElementById('srv-uptime');if(upEl)upEl.textContent=fmt(d.uptime||0);
+      const memEl=document.getElementById('srv-mem');if(memEl)memEl.textContent=d.memory||'—';
+      const stEl=document.getElementById('srv-status');if(stEl){stEl.textContent='Online';stEl.style.color='var(--green)';}
+    }
+  }catch(_){}
+  try{
+    const tEl=document.getElementById('srv-tickets');if(tEl)tEl.textContent=tickets.length;
+    const d=await api('/api/logs?limit=50');
+    const logEl=document.getElementById('srv-log-list');
+    if(logEl&&d.ok&&d.logs?.length){
+      logEl.innerHTML=d.logs.map(l=>`<div class="log-i">
+        <div class="log-dot" style="background:${l.action==='login'?'var(--green)':l.action?.includes('delete')?'var(--red)':'var(--fg3)'}"></div>
+        <div class="log-b">
+          <div class="log-a" style="font-size:13px">${esc(l.action||'-')} ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(l.ticketLabel)}</span>`:''}</div>
+          <div class="log-m"><span>👤 ${esc(l.user?.name||'System')}</span><span>🕐 ${esc(l.displayTs||l.ts||'')}</span></div>
+          ${l.detail?`<div style="font-size:12px;color:var(--fg3)">${esc(l.detail)}</div>`:''}
+        </div>
+      </div>`).join('');
+    }else if(logEl){logEl.innerHTML='<div style="color:var(--fg4);text-align:center;padding:20px">ยังไม่มี log</div>';}
+  }catch(_){}
+}
 
 // ═══ DRAWER ═══
 function openDrw(rid){
-  const t=tickets.find(x=>x._recordId===rid);if(!t)return;
+  const t=tickets.find(x=>x._recordId===rid||x.id===rid||x.ticket_id===rid||String(x.id)===String(rid));
+  if(!t){toast('ไม่พบ Ticket: '+rid);return;}
+  const realRid=t._recordId||t.id||t.ticket_id||rid;
   document.getElementById('drw-bg').classList.add('on');document.getElementById('drw').classList.add('on');
-  const ST=['pending','assigned','accepted','in_progress','review','revision','completed','cancelled'];
+  const ST=['รอดำเนินการ ⏱️','อยู่ระหว่างดำเนินการ ⚙️','ตรวจงาน','เสร็จสิ้น ✅','ยกเลิก ❌','แก้ไข ✏️'];
   document.getElementById('drw').innerHTML=`<div class="drw-head"><div style="flex:1"><div style="font-family:var(--mono);font-size:11px;color:var(--fg4)">${esc(t.id||t._recordId)}</div><div style="font-family:var(--display);font-size:15px;font-weight:800;margin-top:2px;color:var(--fg);letter-spacing:-.02em">${esc(t.type||'--')}</div><div style="margin-top:4px"><span class="pill">${statusLabel(t.status)}</span></div></div><button class="smb" onclick="closeDrw()">Close</button></div>
   <div class="drw-body">
     <div class="dsec">Actions</div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
-      <button class="smb" onclick="openAssign('${esc(rid)}')">Assign</button>
-      ${!/completed|cancelled/.test(t.status)?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openClose('${esc(rid)}')">Close Ticket</button>`:''}
-      <button class="smb" onclick="openNote('${esc(rid)}')">Note</button>
+      <button class="smb" onclick="openAssign('${esc(realRid)}')">Assign</button>
+      ${!/(เสร็จสิ้น|ยกเลิก)/.test(t.status||'')?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openClose('${esc(realRid)}')">Close Ticket</button>`:''}
+      <button class="smb" onclick="openNote('${esc(realRid)}')">Note</button>
     </div>
     <div class="dsec">Status</div>
-    <select class="sel" style="width:100%;margin-bottom:10px" onchange="qStatus('${esc(rid)}',this.value)">${ST.map(s=>`<option${(t.status||'').includes(s)?' selected':''}>${s}</option>`).join('')}</select>
+    <select class="sel" style="width:100%;margin-bottom:10px" onchange="qStatus('${esc(realRid)}',this.value)">${ST.map(s=>`<option${(t.status||'').includes(s)?' selected':''}>${s}</option>`).join('')}</select>
     <div class="dsec">Reporter</div>
     ${[['Name',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Brand',t.brand],['Branch',t.branchCode],['Location',t.location]].map(([l,v])=>`<div class="drow"><span class="dlbl">${l}</span><span class="dval">${esc(v||'-')}</span></div>`).join('')}
     <div class="dsec">Detail</div><div class="dbox">${esc(t.detail||'-')}</div>
