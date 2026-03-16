@@ -1,18 +1,22 @@
-// users.js — MySQL-first user management
-// อ่าน/เขียน MySQL ตรงๆ — memory cache แค่สำหรับ sync reads
-// DB columns: id(INT AI), username, password, role, brand, line_user_id, phone, email, active, display_name, created_at, updated_at
+// users.js — User management via FastAPI (repair.mobile1234.site)
+// Render (cloud) → FastAPI (office server) → MySQL
+// Sync reads from memory cache, async writes to FastAPI → DB
 
+const axios = require('axios');
 const { hashPwd } = require('./auth');
 
-let db = null;
-let useDB = false;
-let USERS = []; // memory cache สำหรับ sync reads
+const API = process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
+const KEY = process.env.FASTAPI_KEY || 'repair123';
+const hdr = { 'X-API-Key': KEY, 'Content-Type': 'application/json' };
 
-// ── DB row → app format ─────────────────────────────
+let USERS = [];   // memory cache
+let dbOK = false;  // FastAPI reachable?
+
+// ── FastAPI row → app format ────────────────────────
 function toUser(row) {
   return {
     id:           String(row.id),
-    name:         row.display_name || row.name || '',
+    name:         row.display_name || '',
     username:     row.username || '',
     password:     row.password || '',
     role:         row.role || 'engineer',
@@ -24,34 +28,58 @@ function toUser(row) {
   };
 }
 
-// ── Init ─────────────────────────────────────────────
-async function initDB() {
+// ── Load from FastAPI → memory ──────────────────────
+async function refreshCache() {
   try {
-    db = require('./db');
-    const [test] = await db.query('SELECT 1');
-    useDB = true;
-    console.log('[Users] MySQL OK');
-    await refreshCache();
-    setInterval(() => refreshCache().catch(()=>{}), 30000);
-  } catch(e) {
-    console.warn('[Users] MySQL FAIL:', e.message, '— memory only');
-    useDB = false;
-    // Fallback defaults
+    const r = await axios.get(`${API}/api/users`, { headers: hdr, timeout: 8000 });
+    const rows = r.data.users || r.data || [];
+    if (Array.isArray(rows) && rows.length) {
+      USERS = rows.map(toUser);
+      dbOK = true;
+      console.log('[Users] Loaded from FastAPI:', USERS.length, 'users');
+    }
+  } catch (e) {
+    console.error('[Users] FastAPI load FAIL:', e.message);
+    dbOK = false;
+  }
+}
+
+// ── Load password (for auth) from FastAPI ───────────
+async function loadPasswords() {
+  try {
+    // FastAPI /api/users returns all fields including password
+    // ถ้า FastAPI ไม่ส่ง password → ใช้จาก memory (hash ตอน create)
+    for (const u of USERS) {
+      if (u.password) continue; // already have
+      try {
+        const r = await axios.get(`${API}/api/users/by-username/${u.username}`, { headers: hdr, timeout: 5000 });
+        if (r.data && r.data.password) u.password = r.data.password;
+      } catch (_) {}
+    }
+  } catch (e) { console.error('[Users] loadPasswords:', e.message); }
+}
+
+// ── Init ─────────────────────────────────────────────
+async function init() {
+  await refreshCache();
+  if (USERS.length) await loadPasswords();
+  
+  // Fallback ถ้า FastAPI ไม่ได้
+  if (!USERS.length) {
+    console.warn('[Users] No data from FastAPI — using default admin');
     USERS = [
       { id:'1', name:'IT Admin', username:'admin', password:hashPwd('admin1234'), role:'admin', brand:'ALL', active:1, line_user_id:'', phone:'', email:'' },
     ];
   }
+
+  // Auto-refresh ทุก 30 วินาที
+  setInterval(async () => {
+    await refreshCache();
+    if (dbOK) await loadPasswords();
+  }, 30000);
 }
 
-async function refreshCache() {
-  if (!useDB) return;
-  try {
-    const [rows] = await db.query('SELECT * FROM users WHERE active=1 OR active IS NULL ORDER BY id');
-    USERS = rows.map(toUser);
-  } catch(e) { console.error('[Users] refreshCache:', e.message); }
-}
-
-initDB();
+init();
 
 // ═══════════════════════════════════════════════════
 // READ — SYNC (จาก memory cache)
@@ -74,7 +102,7 @@ function getUserByUsername(username) {
 }
 
 // ═══════════════════════════════════════════════════
-// WRITE — เขียน DB ก่อน แล้ว refresh cache
+// WRITE — memory + FastAPI (async)
 // ═══════════════════════════════════════════════════
 
 function createUser(data) {
@@ -84,23 +112,32 @@ function createUser(data) {
 
   const hashed = hashPwd(password);
 
-  if (useDB && db) {
-    // เขียน DB แบบ fire-and-forget แต่ refresh cache ทันที
-    db.query(
-      'INSERT INTO users (username, password, role, brand, display_name, line_user_id, phone, email, active) VALUES (?,?,?,?,?,?,?,?,1)',
-      [username, hashed, role, brand||null, name, line_user_id||null, phone||null, email||null]
-    ).then(async ([result]) => {
-      console.log('[Users] INSERT OK id=' + result.insertId, username);
-      await refreshCache(); // refresh ทันทีหลัง insert
-    }).catch(e => console.error('[Users] INSERT FAIL:', e.message));
-  }
-
-  // Memory: ใส่ทันทีเพื่อให้ response ตอบได้เลย
-  const tempId = 'tmp_' + Date.now();
-  const user = { id:tempId, name, username, password:hashed, role, brand:brand||'ALL', active:1, line_user_id:line_user_id||'', phone:phone||'', email:email||'' };
+  // Memory ก่อน (ให้ UI ตอบได้เลย)
+  const tmpId = 'tmp_' + Date.now();
+  const user = {
+    id: tmpId, name, username, password: hashed,
+    role, brand: brand || 'ALL', active: 1,
+    line_user_id: line_user_id || '', phone: phone || '', email: email || '',
+  };
   USERS.push(user);
 
-  return { id:tempId, name, username, role, brand:brand||'ALL', active:1, line_user_id:line_user_id||'', phone:phone||'', email:email||'' };
+  // FastAPI → MySQL (async)
+  if (dbOK) {
+    axios.post(`${API}/api/users`, {
+      username, password: hashed, role, brand: brand || null,
+      display_name: name, line_user_id: line_user_id || null,
+      phone: phone || null, email: email || null,
+    }, { headers: hdr, timeout: 8000 })
+    .then(r => {
+      if (r.data.id) {
+        user.id = String(r.data.id); // update ด้วย DB id จริง
+        console.log('[Users] CREATE OK → DB id=' + r.data.id, username);
+      }
+    })
+    .catch(e => console.error('[Users] CREATE FAIL:', e.response?.data || e.message));
+  }
+
+  return { ...user, password: undefined };
 }
 
 function updateUser(id, data) {
@@ -109,31 +146,29 @@ function updateUser(id, data) {
 
   if (data.password) data.password = hashPwd(data.password);
 
-  // Memory update ก่อน
-  USERS[i] = { ...USERS[i], ...data, id:USERS[i].id, username:USERS[i].username };
+  // Memory
+  USERS[i] = { ...USERS[i], ...data, id: USERS[i].id, username: USERS[i].username };
 
-  if (useDB && db) {
-    // Map js field → db column
-    const MAP = {
-      name:'display_name', password:'password', role:'role', brand:'brand',
-      active:'active', line_user_id:'line_user_id', phone:'phone', email:'email'
-    };
-    const sets=[], vals=[];
-    for (const [js, col] of Object.entries(MAP)) {
-      if (data[js] !== undefined) { sets.push(col+'=?'); vals.push(data[js]); }
-    }
-    if (sets.length) {
-      vals.push(id);
-      db.query('UPDATE users SET '+sets.join(',')+' WHERE id=?', vals)
-        .then(async ([result]) => {
-          console.log('[Users] UPDATE OK id='+id, 'affected='+result.affectedRows, Object.keys(data).filter(k=>k!=='password').join(','));
-          await refreshCache();
-        })
-        .catch(e => console.error('[Users] UPDATE FAIL id='+id+':', e.message));
+  // FastAPI → MySQL (async)
+  if (dbOK) {
+    const payload = {};
+    if (data.name)         payload.display_name = data.name;
+    if (data.password)     payload.password = data.password;
+    if (data.role)         payload.role = data.role;
+    if (data.brand !== undefined) payload.brand = data.brand;
+    if (data.line_user_id !== undefined) payload.line_user_id = data.line_user_id;
+    if (data.phone !== undefined) payload.phone = data.phone;
+    if (data.email !== undefined) payload.email = data.email;
+    if (data.active !== undefined) payload.active = data.active;
+
+    if (Object.keys(payload).length) {
+      axios.patch(`${API}/api/users/${id}`, payload, { headers: hdr, timeout: 8000 })
+        .then(r => console.log('[Users] UPDATE OK id=' + id, 'affected=' + r.data.affected, Object.keys(payload).join(',')))
+        .catch(e => console.error('[Users] UPDATE FAIL id=' + id + ':', e.response?.data || e.message));
     }
   }
 
-  return { ...USERS[i], password:undefined };
+  return { ...USERS[i], password: undefined };
 }
 
 function deleteUser(id) {
@@ -141,10 +176,10 @@ function deleteUser(id) {
   if (i < 0) throw new Error('User not found');
   USERS.splice(i, 1);
 
-  if (useDB && db) {
-    db.query('UPDATE users SET active=0 WHERE id=?', [id])
-      .then(([r]) => { console.log('[Users] DELETE OK id='+id, 'affected='+r.affectedRows); refreshCache(); })
-      .catch(e => console.error('[Users] DELETE FAIL:', e.message));
+  if (dbOK) {
+    axios.delete(`${API}/api/users/${id}`, { headers: hdr, timeout: 8000 })
+      .then(r => console.log('[Users] DELETE OK id=' + id))
+      .catch(e => console.error('[Users] DELETE FAIL:', e.response?.data || e.message));
   }
 }
 
