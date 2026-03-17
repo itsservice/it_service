@@ -47,10 +47,8 @@ async function refreshCache() {
 // ── Load password (for auth) from FastAPI ───────────
 async function loadPasswords() {
   try {
-    // FastAPI /api/users returns all fields including password
-    // ถ้า FastAPI ไม่ส่ง password → ใช้จาก memory (hash ตอน create)
     for (const u of USERS) {
-      if (u.password) continue; // already have
+      if (u.password) continue;
       try {
         const r = await axios.get(`${API}/api/users/by-username/${u.username}`, { headers: hdr, timeout: 5000 });
         if (r.data && r.data.password) u.password = r.data.password;
@@ -63,7 +61,7 @@ async function loadPasswords() {
 async function init() {
   await refreshCache();
   if (USERS.length) await loadPasswords();
-  
+
   // Fallback ถ้า FastAPI ไม่ได้
   if (!USERS.length) {
     console.warn('[Users] No data from FastAPI — using default admin');
@@ -121,18 +119,21 @@ function createUser(data) {
   };
   USERS.push(user);
 
-  // FastAPI → MySQL (async)
+  // FastAPI → MySQL (async) แล้ว refresh cache
   if (dbOK) {
     axios.post(`${API}/api/users`, {
       username, password: hashed, role, brand: brand || null,
       display_name: name, line_user_id: line_user_id || null,
       phone: phone || null, email: email || null,
     }, { headers: hdr, timeout: 8000 })
-    .then(r => {
+    .then(async r => {
       if (r.data.id) {
-        user.id = String(r.data.id); // update ด้วย DB id จริง
+        user.id = String(r.data.id);
         console.log('[Users] CREATE OK → DB id=' + r.data.id, username);
       }
+      // Refresh cache เพื่อให้ได้ DB id จริง
+      await refreshCache();
+      if (dbOK) await loadPasswords();
     })
     .catch(e => console.error('[Users] CREATE FAIL:', e.response?.data || e.message));
   }
@@ -146,24 +147,29 @@ function updateUser(id, data) {
 
   if (data.password) data.password = hashPwd(data.password);
 
-  // Memory
+  // Memory update ก่อน
   USERS[i] = { ...USERS[i], ...data, id: USERS[i].id, username: USERS[i].username };
 
-  // FastAPI → MySQL (async)
+  // FastAPI → MySQL (async) แล้ว refresh cache
   if (dbOK) {
     const payload = {};
-    if (data.name)         payload.display_name = data.name;
-    if (data.password)     payload.password = data.password;
-    if (data.role)         payload.role = data.role;
-    if (data.brand !== undefined) payload.brand = data.brand;
-    if (data.line_user_id !== undefined) payload.line_user_id = data.line_user_id;
-    if (data.phone !== undefined) payload.phone = data.phone;
-    if (data.email !== undefined) payload.email = data.email;
-    if (data.active !== undefined) payload.active = data.active;
+    if (data.name)                       payload.display_name  = data.name;
+    if (data.password)                   payload.password      = data.password;
+    if (data.role)                       payload.role          = data.role;
+    if (data.brand !== undefined)        payload.brand         = data.brand;
+    if (data.line_user_id !== undefined) payload.line_user_id  = data.line_user_id;
+    if (data.phone !== undefined)        payload.phone         = data.phone;
+    if (data.email !== undefined)        payload.email         = data.email;
+    if (data.active !== undefined)       payload.active        = data.active;
 
     if (Object.keys(payload).length) {
       axios.patch(`${API}/api/users/${id}`, payload, { headers: hdr, timeout: 8000 })
-        .then(r => console.log('[Users] UPDATE OK id=' + id, 'affected=' + r.data.affected, Object.keys(payload).join(',')))
+        .then(async r => {
+          console.log('[Users] UPDATE OK id=' + id, 'affected=' + r.data.affected, Object.keys(payload).join(','));
+          // Refresh cache เพื่อให้ข้อมูลตรงกับ DB
+          await refreshCache();
+          if (dbOK) await loadPasswords();
+        })
         .catch(e => console.error('[Users] UPDATE FAIL id=' + id + ':', e.response?.data || e.message));
     }
   }
@@ -178,7 +184,12 @@ function deleteUser(id) {
 
   if (dbOK) {
     axios.delete(`${API}/api/users/${id}`, { headers: hdr, timeout: 8000 })
-      .then(r => console.log('[Users] DELETE OK id=' + id))
+      .then(async r => {
+        console.log('[Users] DELETE OK id=' + id);
+        // Refresh cache หลัง delete
+        await refreshCache();
+        if (dbOK) await loadPasswords();
+      })
       .catch(e => console.error('[Users] DELETE FAIL:', e.response?.data || e.message));
   }
 }
