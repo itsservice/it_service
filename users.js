@@ -12,7 +12,7 @@ let dbOK = false;
 function toUser(row) {
   return {
     id:             String(row.id),
-    name:           row.display_name || '',
+    name:           row.name || row.display_name || '',
     username:       row.username || '',
     password:       row.password || '',
     password_plain: row.password_plain || '',
