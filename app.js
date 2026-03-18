@@ -383,9 +383,11 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // ═══════════════════════════════════════════════════════════
 app.get('/debug/gps', async (_, res) => {
   try {
-    const db = require('./Db');
-    const [rows] = await db.execute(GPS_SELECT);
-    res.json({ ok:true, count:rows.length, rows });
+    const axios = require('axios');
+    const r = await axios.get('https://repair.mobile1234.site/api/gps', {
+      headers: { 'X-API-Key': 'repair123' }, timeout: 8000
+    });
+    res.json({ ok:true, count:r.data.locations?.length||0, rows:r.data.locations });
   } catch(e) {
     res.json({ ok:false, error:e.message });
   }
