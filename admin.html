@@ -507,6 +507,7 @@ function rLog(){
 
 // ═══ GPS MAP ═══
 function rGPS(){
+  window._gpsMapInit=false;
   document.getElementById('pg-gps').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
       <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">📍 GPS Map</div>
@@ -606,7 +607,10 @@ async function initGPSMap(){
     bounds.push([loc.latitude,loc.longitude]);
   });
 
-  if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
+  if(bounds.length && !window._gpsMapInit){
+    map.fitBounds(bounds,{padding:[40,40]});
+    window._gpsMapInit=true;
+  }
 
   // รายการช่างด้านล่าง
   if(list)list.innerHTML=`
