@@ -541,9 +541,12 @@ async function testLineGroup(key){
 }
 function rGPS(){
   document.getElementById('pg-gps').innerHTML=`
-    <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">GPS Map</div>
-      <button class="smb" onclick="loadGPSMap()">🔄 รีเฟรช</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">📍 GPS Map</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <span id="gps-last-update" style="font-size:11px;color:var(--fg4)"></span>
+        <button class="smb" onclick="loadGPSMap()">🔄 รีเฟรช</button>
+      </div>
     </div>
     <div id="gps-map" style="height:460px;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--bg2)"></div>
     <div id="gps-list" style="margin-top:10px"></div>`;
@@ -551,7 +554,6 @@ function rGPS(){
 }
 
 function loadGPSMap(){
-  // โหลด Leaflet CSS + JS ถ้ายังไม่มี
   if(!document.getElementById('leaflet-css')){
     const css=document.createElement('link');
     css.id='leaflet-css';css.rel='stylesheet';
@@ -563,52 +565,100 @@ function loadGPSMap(){
     js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
     js.onload=()=>initGPSMap();
     document.head.appendChild(js);
-  } else {
+  }else{
     initGPSMap();
   }
 }
 
-function initGPSMap(){
+async function initGPSMap(){
   const mapEl=document.getElementById('gps-map');
   if(!mapEl)return;
-
-  // ล้าง map เดิมก่อน
   if(window._gpsMap){window._gpsMap.remove();window._gpsMap=null;}
   mapEl.innerHTML='';
 
-  // สร้าง map ตรงกลางกรุงเทพ
   const map=L.map('gps-map').setView([13.7563,100.5018],11);
   window._gpsMap=map;
-
-  // Tile layer (OpenStreetMap)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors',
-    maxZoom:19
+    attribution:'© OpenStreetMap contributors',maxZoom:19
   }).addTo(map);
 
   // ดึงข้อมูล GPS จาก API
-  api('/api/gps').then(d=>{
-    const list=document.getElementById('gps-list');
-    if(!d.ok||!d.locations?.length){
-      if(list)list.innerHTML='<div style="text-align:center;padding:14px;font-size:13px;color:var(--fg4)">ยังไม่มีข้อมูล GPS จากช่าง</div>';
+  const d=await api('/api/gps');
+  const list=document.getElementById('gps-list');
+  const upEl=document.getElementById('gps-last-update');
+  if(upEl)upEl.textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH');
 
-      // แสดง engineer markers จาก users แทน (ถ้าไม่มี GPS)
-      const engs=users.filter(u=>['engineer','lead_engineer'].includes(u.role));
-      if(list)list.innerHTML=`
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">
-    <div style="font-family:var(--display);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">👷 รายชื่อช่าง</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">
-      ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>`
-      <div style="background:var(--bg2);border-radius:7px;padding:10px;font-size:13px">
-        <div style="font-weight:700">${esc(u.name)}</div>
-        <div style="font-size:11px;color:var(--fg4);margin-top:2px">${esc(u.brand||'-')}</div>
-        <div style="font-size:10px;color:var(--fg3);margin-top:4px">📍 ยังไม่มีข้อมูล GPS</div>
-      </div>`).join('')}
+  if(!d.ok||!d.locations?.length){
+    // ไม่มีข้อมูล GPS
+    if(list)list.innerHTML=`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-family:var(--display);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">👷 รายชื่อช่าง</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">
+          ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>`
+          <div style="background:var(--bg2);border-radius:7px;padding:10px;font-size:13px">
+            <div style="font-weight:700">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--fg4);margin-top:2px">${esc(u.brand||'-')}</div>
+            <div style="font-size:10px;color:var(--fg3);margin-top:4px">📍 ยังไม่มีข้อมูล GPS</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:12px;color:var(--fg4);margin-top:10px">⚠️ GPS จะแสดงเมื่อช่าง Login ผ่าน Engineer Portal และเปิดอนุญาต Location</div>
+      </div>`;
+    return;
+  }
+
+  // มีข้อมูล GPS — แสดง markers
+  const bounds=[];
+  d.locations.forEach(loc=>{
+    const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name);
+    const name=loc.engineer_name||eng?.name||'?';
+    const updatedTime=loc.updated_at?new Date(loc.updated_at).toLocaleTimeString('th-TH'):'';
+
+    const icon=L.divIcon({
+      html:`<div style="background:#2b5ea8;color:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)">${name.charAt(0).toUpperCase()}</div>`,
+      iconSize:[38,38],iconAnchor:[19,19],className:''
+    });
+
+    L.marker([loc.latitude,loc.longitude],{icon})
+      .addTo(map)
+      .bindPopup(`
+        <div style="font-family:sans-serif;min-width:150px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:3px">${name}</div>
+          <div style="font-size:12px;color:#666;margin-bottom:3px">${loc.brand||eng?.brand||'-'}</div>
+          ${loc.ticket_id?`<div style="font-size:12px;color:#2b5ea8;margin-bottom:3px">🎫 ${loc.ticket_id}</div>`:''}
+          <div style="font-size:11px;color:#999">🕐 ${updatedTime}</div>
+          <div style="font-size:10px;color:#bbb;margin-top:2px">${parseFloat(loc.latitude).toFixed(5)}, ${parseFloat(loc.longitude).toFixed(5)}</div>
+        </div>`);
+
+    bounds.push([loc.latitude,loc.longitude]);
+  });
+
+  if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
+
+  // แสดงรายการด้านล่าง
+  if(list)list.innerHTML=`
+    <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+      ช่างที่ online (${d.locations.length})
     </div>
-    <div style="font-size:12px;color:var(--fg4);margin-top:10px">⚠️ ข้อมูล GPS จะแสดงเมื่อช่างเริ่มงานผ่าน Engineer Portal</div>
-  </div>`;
-      return;
-    }
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
+      ${d.locations.map(loc=>{
+        const updatedTime=loc.updated_at?new Date(loc.updated_at).toLocaleTimeString('th-TH'):'';
+        return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer"
+          onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],16)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div style="width:28px;height:28px;background:#2b5ea8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0">
+              ${(loc.engineer_name||'?').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:13px">${esc(loc.engineer_name||'-')}</div>
+              <div style="font-size:10px;color:var(--fg4)">${esc(loc.brand||'-')}</div>
+            </div>
+          </div>
+          ${loc.ticket_id?`<div style="font-size:11px;color:var(--blue);margin-bottom:2px">🎫 ${esc(loc.ticket_id)}</div>`:''}
+          <div style="font-size:10px;color:var(--fg4)">🕐 ${updatedTime}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
 
     // แสดง markers จาก GPS จริง
     const bounds=[];
