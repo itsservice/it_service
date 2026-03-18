@@ -280,10 +280,9 @@ function logout(){
 function togTheme(){
   const d=document.documentElement;
   d.dataset.t=d.dataset.t==='dark'?'':'dark';
-  localStorage.setItem('eng_theme',d.dataset.t);
   document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';
 }
-if(localStorage.getItem('eng_theme')==='dark')document.documentElement.dataset.t='dark';
+// Default always light — no localStorage persistence
 
 // ═══ BOOT ═══
 async function boot(){
@@ -359,7 +358,10 @@ function render(){
 
   view.innerHTML=list.map((t,i)=>{
     const rid=esc(t._recordId);
+    const isAssigned=/assigned|มอบหมาย/.test(t.status||'');
+    const isAccepted=/accepted|รับงาน/.test(t.status||'');
     const isWorking=/in_progress|ระหว่าง/.test(t.status||'');
+    const needStart=isWorking&&!t.workDetail;
     return`<div class="jcard" style="animation-delay:${i*.03}s">
       ${isWorking?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">Working — GPS Tracking Active</div></div>`:''}
       <div class="jc-top">
@@ -377,8 +379,15 @@ function render(){
       ${t.detail?`<div class="jc-detail">${esc(t.detail)}</div>`:''}
       ${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}</div>`:''}
       <div class="jc-btns">
-        ${/assigned|มอบหมาย/.test(t.status)?`<button class="jc-b pri" onclick="doAccept('${rid}')">Accept Job</button>`:''}
-        ${/accepted|รับงาน/.test(t.status)?`<button class="jc-b pri" onclick="doStartWork('${rid}')">Start Work</button>`:''}
+        ${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
+        ${isAccepted?(_gpsActive
+          ?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`
+          :`<button class="jc-b" disabled title="เปิด GPS ก่อน" style="opacity:.4;cursor:not-allowed">🔒 เริ่มงาน (ต้องการ GPS)</button>`
+        ):''}
+        ${needStart?(_gpsActive
+          ?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`
+          :`<button class="jc-b" disabled title="เปิด GPS ก่อน" style="opacity:.4;cursor:not-allowed">🔒 เริ่มงาน (ต้องการ GPS)</button>`
+        ):''}
         ${isWorking?`<button class="jc-b pri" onclick="openSubmit('${rid}')">Complete</button><button class="jc-b" onclick="openUpload('${rid}')">Photo</button>`:''}
         <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
       </div>
