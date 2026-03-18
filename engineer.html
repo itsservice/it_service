@@ -67,7 +67,10 @@ a{color:inherit;text-decoration:none}
 .jcard:hover{border-color:var(--border2)}
 @keyframes stampIn{0%{opacity:0;transform:rotate(-12deg) scale(2.5)}60%{opacity:1;transform:rotate(-12deg) scale(0.9)}80%{transform:rotate(-12deg) scale(1.05)}100%{transform:rotate(-12deg) scale(1)}}
 .stamp-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg) scale(1);pointer-events:none;z-index:10;animation:stampIn .35s cubic-bezier(.22,.61,.36,1) both;display:flex;align-items:center;justify-content:center}
-.stamp-badge{border:4px solid #e67e22;border-radius:8px;padding:6px 16px;color:#e67e22;font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.85;box-shadow:0 0 0 2px #e67e22;background:rgba(230,126,34,.08);white-space:nowrap}
+.stamp-badge{border:5px solid currentColor;border-radius:8px;padding:6px 18px;font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8;white-space:nowrap}
+.stamp-working{color:#e67e22;background:rgba(230,126,34,.06);box-shadow:0 0 0 2px #e67e22}
+.stamp-review{color:#2b5ea8;background:rgba(43,94,168,.06);box-shadow:0 0 0 2px #2b5ea8}
+.stamp-done{color:#2d7a4f;background:rgba(45,122,79,.06);box-shadow:0 0 0 2px #2d7a4f}
 .jc-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px}
 .jc-id{font-family:var(--mono);font-size:10px;color:var(--fg4)}
 .jc-type{font-family:var(--display);font-size:14px;font-weight:700;color:var(--fg);letter-spacing:-.02em}
@@ -432,9 +435,17 @@ function render(){
     const isAssigned=/assigned|มอบหมาย/.test(t.status||'');
     const isAccepted=/accepted|รับงาน/.test(t.status||'');
     const isWorking=/in_progress|ระหว่าง/.test(t.status||'');
-    const needStart=isWorking&&!t.workDetail;
+    const isReview=/ตรวจ|review/.test(t.status||'');
+    const isDone=/เสร็จ|completed/.test(t.status||'');
+
+    // stamp ตามสถานะ
+    let stamp='';
+    if(isWorking) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
+    else if(isReview) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
+    else if(isDone) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
+
     return`<div class="jcard" style="animation-delay:${i*.03}s">
-      ${isWorking?`<div class="stamp-overlay"><div class="stamp-badge">⚙️ กำลังทำ</div></div>`:''}
+      ${stamp}
       ${isWorking?`<div class="timer-bar">
         <div class="gps-dot"></div>
         <div class="timer-label">กำลังทำงาน</div>
@@ -457,8 +468,7 @@ function render(){
       <div class="jc-btns">
         ${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
         ${isAccepted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
-        ${needStart?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
-        ${isWorking?`<button class="jc-b pri" onclick="openSubmit('${rid}')">Complete</button><button class="jc-b" onclick="openUpload('${rid}')">Photo</button>`:''}
+        ${isWorking?`<button class="jc-b" style="opacity:.6;cursor:default">⏱️ กำลังทำอยู่</button><button class="jc-b pri" onclick="openSubmit('${rid}')">✅ Complete</button><button class="jc-b" onclick="openUpload('${rid}')">📷 Photo</button>`:''}
         <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
       </div>
     </div>`;
