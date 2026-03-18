@@ -186,16 +186,18 @@ async function autoRelogin(){
 async function api(p,o={}){
   const h={'Content-Type':'application/json',...(o.headers||{})};
   if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;
-  let r=await fetch(p,{...o,headers:h}).then(res=>res.json()).catch(e=>({ok:false,error:e.message}));
+  let res=await fetch(p,{...o,headers:h}).catch(e=>null);
+  if(!res)return{ok:false,error:'Network error'};
   // ถ้า 401 → re-login อัตโนมัติ แล้วลองใหม่
-  if(r?.error?.includes?.('401')||r?.error?.includes?.('Unauthorized')||r?.error?.includes?.('กรุณาเข้าสู่ระบบ')||(!r?.ok&&r?.error?.includes?.('token'))){
+  if(res.status===401){
     const ok=await autoRelogin();
     if(ok){
       h['Authorization']='Bearer '+AUTH.token;
-      r=await fetch(p,{...o,headers:h}).then(res=>res.json()).catch(e=>({ok:false,error:e.message}));
+      res=await fetch(p,{...o,headers:h}).catch(e=>null);
+      if(!res)return{ok:false,error:'Network error'};
     }
   }
-  return r;
+  return res.json().catch(()=>({ok:false,error:'Invalid response'}));
 }
 
 // ═══ EMERGENCY DATA ═══
