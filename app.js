@@ -345,19 +345,20 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// GPS — single-line SQL (ไม่ใช้ multi-line backtick)
+// GPS — ผ่าน FastAPI (repair.mobile1234.site)
 // ═══════════════════════════════════════════════════════════
-const GPS_CREATE = 'CREATE TABLE IF NOT EXISTS engineer_gps (id INT AUTO_INCREMENT PRIMARY KEY, user_id VARCHAR(50), engineer_name VARCHAR(100), brand VARCHAR(100), latitude DOUBLE, longitude DOUBLE, accuracy DOUBLE, ticket_id VARCHAR(50), updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_user (user_id))';
-const GPS_UPSERT = 'INSERT INTO engineer_gps (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE engineer_name=VALUES(engineer_name), brand=VALUES(brand), latitude=VALUES(latitude), longitude=VALUES(longitude), accuracy=VALUES(accuracy), ticket_id=VALUES(ticket_id), updated_at=NOW()';
-const GPS_SELECT = 'SELECT * FROM engineer_gps ORDER BY updated_at DESC';
+const FASTAPI_URL = 'https://repair.mobile1234.site';
+const FASTAPI_KEY = 'repair123';
 
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
     const { latitude, longitude, accuracy, ticket_id } = req.body || {};
     if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
-    const db = require('./Db');
-    await db.execute(GPS_CREATE);
-    await db.execute(GPS_UPSERT, [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]);
+    const axios = require('axios');
+    await axios.post(`${FASTAPI_URL}/api/gps`, {
+      user_id: req.user.id, engineer_name: req.user.name, brand: req.user.brand,
+      latitude, longitude, accuracy: accuracy||null, ticket_id: ticket_id||null
+    }, { headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000 });
     broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
     res.json({ ok:true });
   } catch(e) {
@@ -368,10 +369,11 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
 
 app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
-    const db = require('./Db');
-    await db.execute(GPS_CREATE);
-    const [rows] = await db.execute(GPS_SELECT);
-    res.json({ ok:true, locations:rows });
+    const axios = require('axios');
+    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
+    });
+    res.json(r.data);
   } catch(e) {
     console.error('[GPS GET]', e.message);
     res.json({ ok:true, locations:[] });
@@ -383,11 +385,9 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // ═══════════════════════════════════════════════════════════
 app.get('/debug/gps', async (_, res) => {
   try {
-    const axios = require('axios');
-    const r = await axios.get('https://repair.mobile1234.site/api/gps', {
-      headers: { 'X-API-Key': 'repair123' }, timeout: 8000
-    });
-    res.json({ ok:true, count:r.data.locations?.length||0, rows:r.data.locations });
+    const db = require('./Db');
+    const [rows] = await db.execute(GPS_SELECT);
+    res.json({ ok:true, count:rows.length, rows });
   } catch(e) {
     res.json({ ok:false, error:e.message });
   }
