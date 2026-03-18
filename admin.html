@@ -539,7 +539,104 @@ async function testLineGroup(key){
     toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));
   }catch(e){toast('❌ '+e.message);}
 }
-function rGPS(){document.getElementById('pg-gps').innerHTML='<div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">GPS Map</div><div class="chart-area" style="min-height:400px">Leaflet.js map placeholder<br/><span style="font-size:11px">Real-time engineer locations will appear here</span></div>';}
+function rGPS(){
+  document.getElementById('pg-gps').innerHTML=`
+    <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">GPS Map</div>
+      <button class="smb" onclick="loadGPSMap()">🔄 รีเฟรช</button>
+    </div>
+    <div id="gps-map" style="height:460px;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--bg2)"></div>
+    <div id="gps-list" style="margin-top:10px"></div>`;
+  loadGPSMap();
+}
+
+function loadGPSMap(){
+  // โหลด Leaflet CSS + JS ถ้ายังไม่มี
+  if(!document.getElementById('leaflet-css')){
+    const css=document.createElement('link');
+    css.id='leaflet-css';css.rel='stylesheet';
+    css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+  }
+  if(!window.L){
+    const js=document.createElement('script');
+    js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload=()=>initGPSMap();
+    document.head.appendChild(js);
+  } else {
+    initGPSMap();
+  }
+}
+
+function initGPSMap(){
+  const mapEl=document.getElementById('gps-map');
+  if(!mapEl)return;
+
+  // ล้าง map เดิมก่อน
+  if(window._gpsMap){window._gpsMap.remove();window._gpsMap=null;}
+  mapEl.innerHTML='';
+
+  // สร้าง map ตรงกลางกรุงเทพ
+  const map=L.map('gps-map').setView([13.7563,100.5018],11);
+  window._gpsMap=map;
+
+  // Tile layer (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',
+    maxZoom:19
+  }).addTo(map);
+
+  // ดึงข้อมูล GPS จาก API
+  api('/api/gps').then(d=>{
+    const list=document.getElementById('gps-list');
+    if(!d.ok||!d.locations?.length){
+      if(list)list.innerHTML='<div style="text-align:center;padding:14px;font-size:13px;color:var(--fg4)">ยังไม่มีข้อมูล GPS จากช่าง</div>';
+
+      // แสดง engineer markers จาก users แทน (ถ้าไม่มี GPS)
+      const engs=users.filter(u=>['engineer','lead_engineer'].includes(u.role));
+      engs.forEach(u=>{
+        L.marker([13.7563+(Math.random()-.5)*.1,100.5018+(Math.random()-.5)*.1])
+          .addTo(map)
+          .bindPopup(`<b>${u.name}</b><br>${u.brand||'-'}<br><span style="color:gray;font-size:11px">ไม่มีข้อมูล GPS</span>`);
+      });
+      return;
+    }
+
+    // แสดง markers จาก GPS จริง
+    const bounds=[];
+    d.locations.forEach(loc=>{
+      const eng=users.find(u=>u.id===loc.user_id||u.name===loc.engineer_name);
+      const icon=L.divIcon({
+        html:`<div style="background:var(--blue,#2b5ea8);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${(eng?.name||'?').charAt(0)}</div>`,
+        iconSize:[32,32],iconAnchor:[16,16],className:''
+      });
+      const m=L.marker([loc.latitude,loc.longitude],{icon}).addTo(map);
+      m.bindPopup(`<b>${eng?.name||loc.engineer_name||'ช่าง'}</b><br>${eng?.brand||'-'}<br><span style="font-size:11px;color:gray">${loc.updated_at||''}</span>`);
+      bounds.push([loc.latitude,loc.longitude]);
+    });
+
+    if(bounds.length)map.fitBounds(bounds,{padding:[30,30]});
+
+    // แสดงรายการด้านล่าง
+    if(list)list.innerHTML=`
+      <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">ตำแหน่งช่าง (${d.locations.length})</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
+        ${d.locations.map(loc=>{
+          const eng=users.find(u=>u.id===loc.user_id||u.name===loc.engineer_name);
+          return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px">
+            <div style="font-weight:700;margin-bottom:2px">${eng?.name||loc.engineer_name||'-'}</div>
+            <div style="font-size:11px;color:var(--fg4)">${eng?.brand||'-'}</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--fg3);margin-top:4px">${loc.latitude?.toFixed(5)}, ${loc.longitude?.toFixed(5)}</div>
+            <div style="font-size:10px;color:var(--fg4);margin-top:2px">${loc.updated_at||''}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }).catch(()=>{
+    const list=document.getElementById('gps-list');
+    if(list)list.innerHTML='<div style="text-align:center;padding:14px;font-size:13px;color:var(--red)">โหลด GPS ไม่สำเร็จ</div>';
+  });
+}
+  
 function rSystem(){
   const cfg=window._lineCfg||{};
   document.getElementById('pg-system').innerHTML=`
