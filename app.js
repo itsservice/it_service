@@ -353,16 +353,20 @@ const FASTAPI_KEY = 'repair123';
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
     const { latitude, longitude, accuracy, ticket_id } = req.body || {};
-const lat = parseFloat(latitude);
-const lng = parseFloat(longitude);
-if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Invalid coordinates' });
-    if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Missing coordinates' });
     const axios = require('axios');
     await axios.post(`${FASTAPI_URL}/api/gps`, {
-      user_id: req.user.id, engineer_name: req.user.name, brand: req.user.brand,
-      latitude: lat, longitude: lng, accuracy: accuracy ? parseFloat(accuracy) : null, ticket_id: ticket_id||null
+      user_id: String(req.user.id),
+      engineer_name: req.user.name,
+      brand: req.user.brand || null,
+      latitude: lat,
+      longitude: lng,
+      accuracy: accuracy ? parseFloat(accuracy) : null,
+      ticket_id: ticket_id || null
     }, { headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000 });
-    broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
+    broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude:lat, longitude:lng });
     res.json({ ok:true });
   } catch(e) {
     console.error('[GPS POST]', e.message);
@@ -388,9 +392,11 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // ═══════════════════════════════════════════════════════════
 app.get('/debug/gps', async (_, res) => {
   try {
-    const db = require('./Db');
-    const [rows] = await db.execute(GPS_SELECT);
-    res.json({ ok:true, count:rows.length, rows });
+    const axios = require('axios');
+    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
+    });
+    res.json({ ok:true, count:r.data.locations?.length||0, rows:r.data.locations });
   } catch(e) {
     res.json({ ok:false, error:e.message });
   }
