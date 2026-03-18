@@ -476,5 +476,18 @@ app.use('/line', lineRouter);
 setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); } catch(e) { console.warn('[App]',e.message); }
 }, 3000);
+app.get('/debug/gps', async (_, res) => {
+  try {
+    const db = require('./Db');
+    const [rows] = await db.execute('SELECT * FROM engineer_gps ORDER BY updated_at DESC');
+    res.json({ ok:true, count:rows.length, rows });
+  } catch(e) {
+    res.json({ ok:false, error:e.message });
+  }
+});
+```
 
+แล้วเปิด:
+```
+https://it-service-56im.onrender.com/debug/gps
 module.exports = app;
