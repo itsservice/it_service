@@ -420,3 +420,34 @@ setTimeout(async () => {
 }, 3000);
 
 module.exports = app;
+
+// GPS endpoint
+app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const db = require('./Db');
+    const [rows] = await db.execute(
+      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
+    );
+    res.json({ ok: true, locations: rows });
+  } catch(e) {
+    res.json({ ok: true, locations: [] });
+  }
+});
+
+app.post('/api/gps', requireAuth(), async (req, res) => {
+  try {
+    const { latitude, longitude, accuracy, ticket_id } = req.body || {};
+    if (!latitude || !longitude) return res.json({ ok: false, error: 'Missing coordinates' });
+    const db = require('./Db');
+    await db.execute(
+      `INSERT INTO engineer_gps (user_id, engineer_name, latitude, longitude, accuracy, ticket_id, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE latitude=?, longitude=?, accuracy=?, ticket_id=?, updated_at=NOW()`,
+      [req.user.id, req.user.name, latitude, longitude, accuracy||null, ticket_id||null,
+       latitude, longitude, accuracy||null, ticket_id||null]
+    );
+    res.json({ ok: true });
+  } catch(e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
