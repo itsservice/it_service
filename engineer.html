@@ -370,7 +370,7 @@ function startClock(){
   t();setInterval(t,1000);
 }
 
-// นับเวลาทำงานแบบ realtime
+// นับเวลาทำงานแบบ realtime เฉพาะ ticket ที่กดเริ่มงานแล้ว
 function startWorkTimers(){
   if(window._workTimerInterval)clearInterval(window._workTimerInterval);
   window._workTimerInterval=setInterval(()=>{
@@ -378,7 +378,6 @@ function startWorkTimers(){
     working.forEach(t=>{
       const el=document.getElementById('timer-'+t._recordId);
       if(!el)return;
-      // อ่าน startedAt จาก ticket หรือ localStorage
       let startedAt=t.started_at||t.startedAt||null;
       if(!startedAt){
         try{
@@ -386,9 +385,9 @@ function startWorkTimers(){
           if(saved[t._recordId])startedAt=saved[t._recordId];
         }catch(_){}
       }
-      if(!startedAt){el.textContent='--:--:--';return;}
+      if(!startedAt)return; // ไม่มี startedAt → ไม่นับ
       const ms=Date.now()-new Date(startedAt).getTime();
-      if(ms<0){el.textContent='00:00:00';return;}
+      if(ms<0)return;
       const h=Math.floor(ms/3600000);
       const m=Math.floor((ms%3600000)/60000);
       const s=Math.floor((ms%60000)/1000);
@@ -438,15 +437,25 @@ function render(){
     const isReview=/ตรวจ|review/.test(t.status||'');
     const isDone=/เสร็จ|completed/.test(t.status||'');
 
-    // stamp ตามสถานะ
+    // เช็คว่ากดเริ่มงานในเซสชันนี้แล้วหรือยัง (ต้องมี started_at)
+    let startedAt=t.started_at||t.startedAt||null;
+    if(!startedAt){
+      try{
+        const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
+        if(saved[t._recordId])startedAt=saved[t._recordId];
+      }catch(_){}
+    }
+    const hasStarted=isWorking&&!!startedAt;
+
+    // stamp เฉพาะที่กดเริ่มงานแล้ว หรือ review/done
     let stamp='';
-    if(isWorking) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
+    if(hasStarted) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
     else if(isReview) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
     else if(isDone) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
 
     return`<div class="jcard" style="animation-delay:${i*.03}s">
       ${stamp}
-      ${isWorking?`<div class="timer-bar">
+      ${hasStarted?`<div class="timer-bar">
         <div class="gps-dot"></div>
         <div class="timer-label">กำลังทำงาน</div>
         <div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div>
@@ -468,7 +477,8 @@ function render(){
       <div class="jc-btns">
         ${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
         ${isAccepted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
-        ${isWorking?`<button class="jc-b" style="opacity:.6;cursor:default">⏱️ กำลังทำอยู่</button><button class="jc-b pri" onclick="openSubmit('${rid}')">✅ Complete</button><button class="jc-b" onclick="openUpload('${rid}')">📷 Photo</button>`:''}
+        ${isWorking&&!hasStarted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
+        ${hasStarted?`<button class="jc-b" style="opacity:.6;cursor:default">⏱️ กำลังทำอยู่</button><button class="jc-b pri" onclick="openSubmit('${rid}')">✅ Complete</button><button class="jc-b" onclick="openUpload('${rid}')">📷 Photo</button>`:''}
         <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
       </div>
     </div>`;
