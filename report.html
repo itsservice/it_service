@@ -120,7 +120,7 @@ function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim
 
 let brand=null;
 
-function detectBrand(){const p=location.pathname.toLowerCase();for(const b of BRANDS)if(p.includes(b.s))return b;return null;}
+function detectBrand(){   const p=location.pathname;   const parts=p.split('/');   const raw=parts[parts.length-1];   if(!raw||raw==='report')return null;   const decoded=decodeURIComponent(raw).toLowerCase().trim();   for(const b of BRANDS){     if(decoded===b.s||decoded===b.n.toLowerCase()||decoded.includes(b.s)||b.n.toLowerCase().includes(decoded))return b;   }   return null; }
 function setBrand(b){brand=b;document.getElementById('top-t').textContent=b.n+' — Report';renderForm();}
 function showTab(t){
   document.getElementById('tab-report').classList.toggle('on',t==='report');
