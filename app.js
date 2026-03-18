@@ -360,7 +360,7 @@ if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Invalid coordin
     const axios = require('axios');
     await axios.post(`${FASTAPI_URL}/api/gps`, {
       user_id: req.user.id, engineer_name: req.user.name, brand: req.user.brand,
-      latitude, longitude, accuracy: accuracy||null, ticket_id: ticket_id||null
+      latitude: lat, longitude: lng, accuracy: accuracy ? parseFloat(accuracy) : null, ticket_id: ticket_id||null
     }, { headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000 });
     broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
     res.json({ ok:true });
