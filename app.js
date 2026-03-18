@@ -451,3 +451,36 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
     res.json({ ok: false, error: e.message });
   }
 });
+// GPS — POST (Engineer ส่งตำแหน่ง)
+app.post('/api/gps', requireAuth(), async (req, res) => {
+  try {
+    const { latitude, longitude, accuracy, ticket_id, engineer_name, brand, user_id } = req.body || {};
+    if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
+    const db = require('./Db');
+    await db.execute(
+      `INSERT INTO engineer_gps (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE engineer_name=VALUES(engineer_name), brand=VALUES(brand),
+       latitude=VALUES(latitude), longitude=VALUES(longitude),
+       accuracy=VALUES(accuracy), ticket_id=VALUES(ticket_id), updated_at=NOW()`,
+      [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]
+    );
+    broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
+    res.json({ ok:true });
+  } catch(e) {
+    res.json({ ok:false, error:e.message });
+  }
+});
+
+// GPS — GET (Admin ดูตำแหน่งทั้งหมด)
+app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const db = require('./Db');
+    const [rows] = await db.execute(
+      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
+    );
+    res.json({ ok:true, locations:rows });
+  } catch(e) {
+    res.json({ ok:true, locations:[] });
+  }
+});
