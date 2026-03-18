@@ -367,6 +367,33 @@ function startClock(){
   t();setInterval(t,1000);
 }
 
+// นับเวลาทำงานแบบ realtime
+function startWorkTimers(){
+  if(window._workTimerInterval)clearInterval(window._workTimerInterval);
+  window._workTimerInterval=setInterval(()=>{
+    const working=tickets.filter(x=>/ระหว่าง/.test(x.status||''));
+    working.forEach(t=>{
+      const el=document.getElementById('timer-'+t._recordId);
+      if(!el)return;
+      // อ่าน startedAt จาก ticket หรือ localStorage
+      let startedAt=t.started_at||t.startedAt||null;
+      if(!startedAt){
+        try{
+          const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
+          if(saved[t._recordId])startedAt=saved[t._recordId];
+        }catch(_){}
+      }
+      if(!startedAt){el.textContent='--:--:--';return;}
+      const ms=Date.now()-new Date(startedAt).getTime();
+      if(ms<0){el.textContent='00:00:00';return;}
+      const h=Math.floor(ms/3600000);
+      const m=Math.floor((ms%3600000)/60000);
+      const s=Math.floor((ms%60000)/1000);
+      el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    });
+  },1000);
+}
+
 // ═══ RENDER ═══
 function render(){
   const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
@@ -408,7 +435,11 @@ function render(){
     const needStart=isWorking&&!t.workDetail;
     return`<div class="jcard" style="animation-delay:${i*.03}s">
       ${isWorking?`<div class="stamp-overlay"><div class="stamp-badge">⚙️ กำลังทำ</div></div>`:''}
-      ${isWorking?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">Working — GPS Tracking Active</div></div>`:''}
+      ${isWorking?`<div class="timer-bar">
+        <div class="gps-dot"></div>
+        <div class="timer-label">กำลังทำงาน</div>
+        <div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div>
+      </div>`:''}
       <div class="jc-top">
         <div style="flex:1">
           <div class="jc-id">${esc(t.id||'--')}</div>
@@ -432,6 +463,8 @@ function render(){
       </div>
     </div>`;
   }).join('');
+  // เริ่มนับเวลาทำงาน
+  startWorkTimers();
 }
 
 // ═══ MY MAP ═══
