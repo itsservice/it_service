@@ -247,10 +247,10 @@ function renderBrands(){
     <div class="bcard" style="animation:up .4s var(--ease) ${.05+i*.05}s both">
       <div class="bc-prefix">${b.p}-XXXXX</div>
       <div class="bc-name">${b.n}</div>
-      <div class="bc-slug">/brands/${b.s}</div>
+      <div class="bc-slug">${b.r}</div>
       <div class="bc-btns">
-        <a href="/brands/${b.s}/report" class="bc-btn pri">${T[lang].br_rep}</a>
-        <a href="/brands/${b.s}/track" class="bc-btn">${T[lang].br_trk}</a>
+        <a href="${b.r}" class="bc-btn pri">${T[lang].br_rep}</a>
+        <a href="${b.r}#track" class="bc-btn">${T[lang].br_trk}</a>
       </div>
     </div>`).join('');
 }
