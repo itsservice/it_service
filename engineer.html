@@ -491,6 +491,10 @@ async function doAccept(rid){
 
 async function doStartWork(rid){
   try{
+    // เก็บเวลาเริ่มงาน
+    if(!window._startTimes) window._startTimes={};
+    window._startTimes[rid]=Date.now();
+
     // ส่ง GPS ปัจจุบันพร้อม ticket
     if(_gpsActive){
       navigator.geolocation.getCurrentPosition(pos=>{
@@ -501,9 +505,8 @@ async function doStartWork(rid){
         })});
       },()=>{},{enableHighAccuracy:true,timeout:5000});
     }
-    await api(`/api/tickets/${rid}/start-work`,{method:'POST'});
-    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'in_progress',work_started_at:new Date().toISOString()}:x);
-    render();toast('Work started — GPS tracking active');
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',work_started_at:new Date().toISOString()}:x);
+    render();toast('เริ่มงานแล้ว — GPS tracking active');
   }catch(e){toast('Error: '+e.message);}
 }
 
@@ -514,12 +517,18 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
+  // คำนวณชั่วโมงอัตโนมัติ
+  let autoHours='';
+  if(window._startTimes?.[rid]){
+    const ms=Date.now()-window._startTimes[rid];
+    autoHours=(ms/3600000).toFixed(2);
+  }
   openMod(`<div class="mod-t">Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
     <div class="fg"><label>Work Detail *</label><textarea id="m-wd" placeholder="Describe work done...">${esc(t.workDetail||'')}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
       <div class="fg"><label>Parts Used</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="e.g. LAN cable"/></div>
-      <div class="fg"><label>Hours</label><input id="m-wh" type="number" value="${esc(t.workHours||'')}" placeholder="1.5"/></div>
+      <div class="fg"><label>Hours ${autoHours?'(นับอัตโนมัติ)':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
     </div>
     <div class="fg"><label>Photo (camera)</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
     <div class="mod-f">
