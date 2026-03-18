@@ -17,8 +17,8 @@ function invalidateCache() { _cache = null; _cacheExp = 0; }
 // ── mapTicket: FastAPI → frontend format ──────────────────────
 function mapTicket(t) {
   return {
-    _recordId:    t.ticket_id,
-    id:           t.ticket_id,
+    _recordId:    t.ticket_id || t._recordId || t.id,
+    id:           t.ticket_id || t.id || t._recordId,
     status:       mapStatus(t.status),
     brand:        t.brand         || t.brand || '',
     branchCode:   t.branch_code   || t.branch_code || '',
