@@ -269,12 +269,40 @@ if(localStorage.getItem('adm_theme')==='dark'){document.documentElement.dataset.
 
 // ═══ BOOT ═══
 async function boot(){
-  document.getElementById('login').style.display='none';document.getElementById('app').classList.add('on');
+  document.getElementById('login').style.display='none';
+  // แสดง Loading
+  const loadEl=document.createElement('div');
+  loadEl.id='loading-screen';
+  loadEl.style.cssText='position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:background .4s';
+  loadEl.innerHTML=`
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <div id="batt-icon" class="fa" style="font-size:52px;color:var(--fg);transition:color .4s"></div>
+    <div style="margin-top:16px;font-family:var(--display);font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.02em">กำลังโหลดข้อมูล</div>
+    <div style="margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--fg4)">IT Support Management System</div>`;
+  document.body.appendChild(loadEl);
+
+  // Battery animation
+  const icons=['&#xf244;','&#xf243;','&#xf242;','&#xf241;','&#xf240;'];
+  let bi=0;
+  const battTimer=setInterval(()=>{
+    const el=document.getElementById('batt-icon');
+    if(el){el.innerHTML=icons[bi%icons.length];bi++;}
+  },400);
+
+  document.getElementById('app').classList.add('on');
   document.getElementById('s-name').textContent=AUTH.user.name;
   const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager'};
   document.getElementById('s-role').textContent=rl[AUTH.user.role]||AUTH.user.role;
   buildNav();startClock();connectSSE();
-  await Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]);navTo('dash');
+  await Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]);
+
+  // ซ่อน Loading
+  clearInterval(battTimer);
+  loadEl.style.opacity='0';
+  loadEl.style.transition='opacity .4s';
+  setTimeout(()=>loadEl.remove(),400);
+
+  navTo('dash');
   document.getElementById('theme-btn').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
 }
 
