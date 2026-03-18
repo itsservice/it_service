@@ -381,14 +381,8 @@ function render(){
       ${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}</div>`:''}
       <div class="jc-btns">
         ${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
-        ${isAccepted?(_gpsActive
-          ?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`
-          :`<button class="jc-b" disabled title="เปิด GPS ก่อน" style="opacity:.4;cursor:not-allowed">🔒 เริ่มงาน (ต้องการ GPS)</button>`
-        ):''}
-        ${needStart?(_gpsActive
-          ?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`
-          :`<button class="jc-b" disabled title="เปิด GPS ก่อน" style="opacity:.4;cursor:not-allowed">🔒 เริ่มงาน (ต้องการ GPS)</button>`
-        ):''}
+        ${isAccepted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
+        ${needStart?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
         ${isWorking?`<button class="jc-b pri" onclick="openSubmit('${rid}')">Complete</button><button class="jc-b" onclick="openUpload('${rid}')">Photo</button>`:''}
         <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
       </div>
@@ -644,7 +638,7 @@ async function doSubmit(rid){
       localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(saved));
     }catch(_){}
 
-    tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน'}:x);
+    tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน '}:x);
     closeMod();render();toast('ส่งงานสำเร็จ ✅');
   }catch(e){toast('Error: '+e.message);}
 }
