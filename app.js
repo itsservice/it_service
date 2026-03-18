@@ -229,10 +229,14 @@ app.post('/api/tickets', async (req, res) => {
 
 app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
   try {
-    const { status } = req.body || {};
+    const { status, started_at, completed_lat, completed_lng } = req.body || {};
     if (!status) return res.json({ ok:false, error:'Missing status' });
     const brand = getBrand(req.params.rid, req.body);
-    const t = await updateTicket(req.params.rid, { status, brand });
+    const updates = { status, brand };
+    if (started_at) updates.started_at = started_at;
+    if (completed_lat) updates.completed_lat = completed_lat;
+    if (completed_lng) updates.completed_lng = completed_lng;
+    const t = await updateTicket(req.params.rid, updates);
     addLog({ user:req.user, action:'update_status', ticketId:req.params.rid, detail:`สถานะ -> ${status}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status, ts:new Date().toISOString() });
     if (status.includes('แก้ไข')||status.includes('revision')) {
@@ -274,11 +278,14 @@ app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manag
 
 app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
   try {
-    const { workDetail, partsUsed, workHours } = req.body || {};
+    const { workDetail, partsUsed, workHours, completed_lat, completed_lng } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
     const brand = getBrand(req.params.rid, req.body);
     const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const t = await updateTicket(req.params.rid, { workDetail, partsUsed:partsUsed||'', workHours:workHours||'', engineerName:req.user.name, completedAt:now, status:'ตรวจงาน', brand });
+    const updates = { workDetail, partsUsed:partsUsed||'', workHours:workHours||'', engineerName:req.user.name, completedAt:now, status:'ตรวจงาน', brand };
+    if (completed_lat) updates.completed_lat = completed_lat;
+    if (completed_lng) updates.completed_lng = completed_lng;
+    const t = await updateTicket(req.params.rid, updates);
     addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString() });
     lineNotify.notifyWorkSubmitted(t).catch(e=>console.error('[LINE]',e.message));
