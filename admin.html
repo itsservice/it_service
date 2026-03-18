@@ -28,6 +28,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--san
 a{color:inherit;text-decoration:none}
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ═══ LOGIN ═══ */
 #login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;transition:background .4s}
@@ -169,7 +170,6 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 .bb-fill{height:100%;border-radius:2px;background:var(--fg);transition:width .5s var(--ease),background .4s}
 .bb-c{font-family:var(--mono);font-size:11px;color:var(--fg3);min-width:20px;text-align:right}
 
-/* CHART PLACEHOLDER */
 .chart-area{background:var(--bg2);border-radius:8px;padding:24px;text-align:center;color:var(--fg4);font-size:13px;min-height:180px;display:grid;place-items:center;transition:background .4s}
 
 .toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
@@ -271,7 +271,6 @@ if(localStorage.getItem('adm_theme')==='dark'){document.documentElement.dataset.
 async function boot(){
   document.getElementById('login').style.display='none';
 
-  // แสดง Loading
   const loadEl=document.createElement('div');
   loadEl.id='loading-screen';
   loadEl.style.cssText='position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:background .4s';
@@ -282,7 +281,6 @@ async function boot(){
     <div style="margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--fg4)" id="load-status">กรุณารอสักครู่...</div>`;
   document.body.appendChild(loadEl);
 
-  // Battery animation
   const icons=['&#xf244;','&#xf243;','&#xf242;','&#xf241;','&#xf240;'];
   let bi=0;
   const battTimer=setInterval(()=>{
@@ -290,33 +288,29 @@ async function boot(){
     if(el){el.innerHTML=icons[bi%icons.length];bi++;}
   },400);
 
-  // โหลดข้อมูลพร้อมกัน
   document.getElementById('app').classList.add('on');
   document.getElementById('s-name').textContent=AUTH.user.name;
   const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager'};
   document.getElementById('s-role').textContent=rl[AUTH.user.role]||AUTH.user.role;
   buildNav();startClock();connectSSE();
 
-  // โหลดข้อมูล + รอให้ animation ครบ 1 รอบ (5 วินาที) พร้อมกัน
   await Promise.all([
     Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]),
     new Promise(res=>{
-      // รอให้ครบ 1 รอบ animation (5 steps x 400ms = 2000ms) แล้วค่อย resolve
       const checkDone=setInterval(()=>{
         const st=document.getElementById('load-status');
         if(bi>=5){
           clearInterval(checkDone);
           if(st)st.textContent='โหลดเสร็จแล้ว ✓';
-          setTimeout(res,600); // รอให้เห็น "โหลดเสร็จแล้ว" นิดนึง
+          setTimeout(res,600);
         }
       },100);
     })
   ]);
 
-  // ซ่อน Loading หลังทุกอย่างเสร็จ
   clearInterval(battTimer);
   const el=document.getElementById('batt-icon');
-  if(el)el.innerHTML='&#xf240;'; // แสดง full battery ก่อนจบ
+  if(el)el.innerHTML='&#xf240;';
   await new Promise(res=>setTimeout(res,400));
   loadEl.style.opacity='0';
   loadEl.style.transition='opacity .5s';
@@ -343,7 +337,20 @@ async function loadLogs(){try{const d=await api('/api/logs?limit=200');if(d.ok)l
 async function loadUsers(){try{const d=await api('/api/users');if(d.ok)users=d.users||[];}catch(e){}}
 function updateBdg(){const n=tickets.filter(t=>/รอ|pending/.test(t.status||'')).length;const b=document.getElementById('nav-bdg');if(b){b.textContent=n;b.style.display=n?'':'none';}}
 async function doRefresh(){const b=document.getElementById('btn-rf');b.textContent='...';document.getElementById('dot').className='status-dot loading';await Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]);b.textContent='Refresh';document.getElementById('dot').className='status-dot online';render();toast('Refreshed');}
-function connectSSE(){if(sse)try{sse.close();}catch(_){}sse=new EventSource('/api/events');sse.onopen=()=>{document.getElementById('dot').className='status-dot online';};sse.onerror=()=>{document.getElementById('dot').className='status-dot offline';setTimeout(connectSSE,5000);};sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});}
+
+function connectSSE(){
+  if(sse)try{sse.close();}catch(_){}
+  sse=new EventSource('/api/events');
+  sse.onopen=()=>{document.getElementById('dot').className='status-dot online';};
+  sse.onerror=()=>{document.getElementById('dot').className='status-dot offline';setTimeout(connectSSE,5000);};
+  sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});
+  sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});
+  // ─── GPS: refresh แผนที่อัตโนมัติเมื่อช่างส่ง GPS มา ───
+  sse.addEventListener('gps_updated',()=>{
+    if(pg==='gps')initGPSMap();
+  });
+}
+
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
@@ -458,87 +465,7 @@ function rLog(){
   el.innerHTML=`<div style="margin-bottom:10px"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">Activity Log (${logs.length})</div></div>`+logs.map(l=>`<div class="log-i"><div class="log-dot"></div><div class="log-b"><div class="log-a">${esc(aL(l.action))} ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:3px">${esc(l.ticketLabel)}</span>`:''}</div><div class="log-m"><span>${esc(l.user?.name||'System')}</span><span>${esc(l.displayTs||'')}</span></div>${l.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:1px">${esc(l.detail)}</div>`:''}</div></div>`).join('');
 }
 
-
-function rLine(){
-  document.getElementById('pg-line').innerHTML=`
-    <div style="margin-bottom:16px">
-      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📱 LINE Groups</div>
-      <div style="font-size:13px;color:var(--fg3);margin-top:3px">ตั้งค่า LINE Group ID สำหรับแต่ละแบรนด์</div>
-    </div>
-    <div class="crd" style="max-width:580px">
-      <div class="crd-h">วิธีหา LINE Group ID</div>
-      <div style="padding:14px;font-size:13px;color:var(--fg2);line-height:1.9">
-        1. เพิ่ม LINE Bot เข้ากลุ่ม<br>
-        2. พิมพ์ <code style="background:var(--bg3);padding:2px 7px;border-radius:5px;font-family:var(--mono)">&nbsp;!groupid&nbsp;</code> ในกลุ่ม<br>
-        3. Bot จะตอบกลับด้วย Group ID (ขึ้นต้นด้วย C...)<br>
-        4. วาง ID ลงในช่องด้านล่าง แล้วกด บันทึก
-      </div>
-    </div>
-    <div style="height:12px"></div>
-    <div class="crd" style="max-width:580px">
-      <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
-      <div style="padding:16px">
-        ${[
-          {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
-          {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
-          {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
-          {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
-          {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
-          {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
-        ].map(({label,key,ph})=>`
-        <div style="margin-bottom:14px">
-          <div style="font-size:11.5px;font-weight:700;color:var(--fg2);margin-bottom:5px">${label}</div>
-          <div style="display:flex;gap:6px">
-            <input id="lg-${key}" class="sel" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono)"
-              placeholder="${ph}" value=""/>
-            <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง">🧪 Test</button>
-          </div>
-        </div>`).join('')}
-        <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);padding:9px 18px" onclick="saveLineGroups()">💾 บันทึกทั้งหมด</button>
-          <button class="smb" onclick="loadLineGroups()">🔄 โหลด</button>
-        </div>
-        <div id="line-msg" style="margin-top:8px;font-size:12.5px;min-height:18px"></div>
-      </div>
-    </div>`;
-  loadLineGroups();
-}
-async function loadLineGroups(){
-  try{
-    const d=await api('/api/line-config');
-    if(!d.ok)return;
-    const cfg=d.config||{};
-    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el&&val)el.value=val;};
-    setVal('adminGroupId',cfg.adminGroupId||'');
-    const bg=cfg.brandGroups||{};
-    setVal('dunkin',bg["Dunkin'"]||'');
-    setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
-    setVal('greyhoundOriginal',bg['Greyhound Original']||'');
-    setVal('auBonPain',bg['Au Bon Pain']||'');
-    setVal('funkyFries',bg['Funky Fries']||'');
-  }catch(_){}
-}
-async function saveLineGroups(){
-  const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
-  const payload={
-    adminGroupId:g('adminGroupId'),
-    brandGroups:{"Dunkin'":g('dunkin'),'Greyhound Cafe':g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries')}
-  };
-  try{
-    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
-    const msg=document.getElementById('line-msg');
-    if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';
-    setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);
-  }catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
-}
-async function testLineGroup(key){
-  const val=document.getElementById('lg-'+key)?.value?.trim();
-  if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
-  try{
-    const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});
-    toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));
-  }catch(e){toast('❌ '+e.message);}
-}
+// ═══ GPS MAP ═══
 function rGPS(){
   document.getElementById('pg-gps').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -573,23 +500,30 @@ function loadGPSMap(){
 async function initGPSMap(){
   const mapEl=document.getElementById('gps-map');
   if(!mapEl)return;
+
+  // ล้าง map เดิม
   if(window._gpsMap){window._gpsMap.remove();window._gpsMap=null;}
   mapEl.innerHTML='';
 
+  // สร้าง map
   const map=L.map('gps-map').setView([13.7563,100.5018],11);
   window._gpsMap=map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© OpenStreetMap contributors',maxZoom:19
   }).addTo(map);
 
-  // ดึงข้อมูล GPS จาก API
-  const d=await api('/api/gps');
-  const list=document.getElementById('gps-list');
+  // อัปเดตเวลา
   const upEl=document.getElementById('gps-last-update');
   if(upEl)upEl.textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH');
 
+  // ดึงข้อมูล GPS จาก API
+  let d;
+  try{ d=await api('/api/gps'); }catch(e){ d={ok:false}; }
+
+  const list=document.getElementById('gps-list');
+
   if(!d.ok||!d.locations?.length){
-    // ไม่มีข้อมูล GPS
+    // ไม่มี GPS — แสดงรายชื่อช่างแทน
     if(list)list.innerHTML=`
       <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
         <div style="font-family:var(--display);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">👷 รายชื่อช่าง</div>
@@ -606,7 +540,7 @@ async function initGPSMap(){
     return;
   }
 
-  // มีข้อมูล GPS — แสดง markers
+  // มีข้อมูล GPS — วาง markers
   const bounds=[];
   d.locations.forEach(loc=>{
     const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name);
@@ -634,7 +568,7 @@ async function initGPSMap(){
 
   if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
 
-  // แสดงรายการด้านล่าง
+  // รายการช่างด้านล่าง
   if(list)list.innerHTML=`
     <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
       ช่างที่ online (${d.locations.length})
@@ -645,7 +579,7 @@ async function initGPSMap(){
         return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer"
           onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],16)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <div style="width:28px;height:28px;background:#2b5ea8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0">
+            <div style="width:30px;height:30px;background:#2b5ea8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">
               ${(loc.engineer_name||'?').charAt(0).toUpperCase()}
             </div>
             <div>
@@ -660,41 +594,78 @@ async function initGPSMap(){
     </div>`;
 }
 
-    // แสดง markers จาก GPS จริง
-    const bounds=[];
-    d.locations.forEach(loc=>{
-      const eng=users.find(u=>u.id===loc.user_id||u.name===loc.engineer_name);
-      const icon=L.divIcon({
-        html:`<div style="background:var(--blue,#2b5ea8);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${(eng?.name||'?').charAt(0)}</div>`,
-        iconSize:[32,32],iconAnchor:[16,16],className:''
-      });
-      const m=L.marker([loc.latitude,loc.longitude],{icon}).addTo(map);
-      m.bindPopup(`<b>${eng?.name||loc.engineer_name||'ช่าง'}</b><br>${eng?.brand||'-'}<br><span style="font-size:11px;color:gray">${loc.updated_at||''}</span>`);
-      bounds.push([loc.latitude,loc.longitude]);
-    });
-
-    if(bounds.length)map.fitBounds(bounds,{padding:[30,30]});
-
-    // แสดงรายการด้านล่าง
-    if(list)list.innerHTML=`
-      <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">ตำแหน่งช่าง (${d.locations.length})</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
-        ${d.locations.map(loc=>{
-          const eng=users.find(u=>u.id===loc.user_id||u.name===loc.engineer_name);
-          return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px">
-            <div style="font-weight:700;margin-bottom:2px">${eng?.name||loc.engineer_name||'-'}</div>
-            <div style="font-size:11px;color:var(--fg4)">${eng?.brand||'-'}</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--fg3);margin-top:4px">${loc.latitude?.toFixed(5)}, ${loc.longitude?.toFixed(5)}</div>
-            <div style="font-size:10px;color:var(--fg4);margin-top:2px">${loc.updated_at||''}</div>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }).catch(()=>{
-    const list=document.getElementById('gps-list');
-    if(list)list.innerHTML='<div style="text-align:center;padding:14px;font-size:13px;color:var(--red)">โหลด GPS ไม่สำเร็จ</div>';
-  });
+function rLine(){
+  document.getElementById('pg-line').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📱 LINE Groups</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:3px">ตั้งค่า LINE Group ID สำหรับแต่ละแบรนด์</div>
+    </div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">วิธีหา LINE Group ID</div>
+      <div style="padding:14px;font-size:13px;color:var(--fg2);line-height:1.9">
+        1. เพิ่ม LINE Bot เข้ากลุ่ม<br>
+        2. พิมพ์ <code style="background:var(--bg3);padding:2px 7px;border-radius:5px;font-family:var(--mono)">&nbsp;!groupid&nbsp;</code> ในกลุ่ม<br>
+        3. Bot จะตอบกลับด้วย Group ID (ขึ้นต้นด้วย C...)<br>
+        4. วาง ID ลงในช่องด้านล่าง แล้วกด บันทึก
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
+      <div style="padding:16px">
+        ${[
+          {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
+          {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
+          {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
+          {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
+          {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
+          {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
+        ].map(({label,key,ph})=>`
+        <div style="margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--fg2);margin-bottom:5px">${label}</div>
+          <div style="display:flex;gap:6px">
+            <input id="lg-${key}" class="sel" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono)" placeholder="${ph}" value=""/>
+            <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง">🧪 Test</button>
+          </div>
+        </div>`).join('')}
+        <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);padding:9px 18px" onclick="saveLineGroups()">💾 บันทึกทั้งหมด</button>
+          <button class="smb" onclick="loadLineGroups()">🔄 โหลด</button>
+        </div>
+        <div id="line-msg" style="margin-top:8px;font-size:12.5px;min-height:18px"></div>
+      </div>
+    </div>`;
+  loadLineGroups();
 }
-  
+async function loadLineGroups(){
+  try{
+    const d=await api('/api/line-config');if(!d.ok)return;
+    const cfg=d.config||{};
+    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el&&val)el.value=val;};
+    setVal('adminGroupId',cfg.adminGroupId||'');
+    const bg=cfg.brandGroups||{};
+    setVal('dunkin',bg["Dunkin'"]||'');setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
+    setVal('greyhoundOriginal',bg['Greyhound Original']||'');setVal('auBonPain',bg['Au Bon Pain']||'');
+    setVal('funkyFries',bg['Funky Fries']||'');
+  }catch(_){}
+}
+async function saveLineGroups(){
+  const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
+  const payload={adminGroupId:g('adminGroupId'),brandGroups:{"Dunkin'":g('dunkin'),'Greyhound Cafe':g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries')}};
+  try{
+    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
+    const msg=document.getElementById('line-msg');
+    if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';
+    setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);
+  }catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
+async function testLineGroup(key){
+  const val=document.getElementById('lg-'+key)?.value?.trim();
+  if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
+  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}
+  catch(e){toast('❌ '+e.message);}
+}
+
 function rSystem(){
   const cfg=window._lineCfg||{};
   document.getElementById('pg-system').innerHTML=`
@@ -707,18 +678,14 @@ function rSystem(){
       <div style="padding:16px">
         ${[
           {label:'🔔 Admin Group (ทุก Ticket)',key:'adminGroupId'},
-          {label:"🍩 Dunkin'",key:'dunkin'},
-          {label:'☕ Greyhound Cafe',key:'greyhoundCafe'},
-          {label:'🐕 Greyhound Original',key:'greyhoundOriginal'},
-          {label:'🥐 Au Bon Pain',key:'auBonPain'},
+          {label:"🍩 Dunkin'",key:'dunkin'},{label:'☕ Greyhound Cafe',key:'greyhoundCafe'},
+          {label:'🐕 Greyhound Original',key:'greyhoundOriginal'},{label:'🥐 Au Bon Pain',key:'auBonPain'},
           {label:'🍟 Funky Fries',key:'funkyFries'},
         ].map(({label,key})=>`
         <div style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">${label}</div>
           <div style="display:flex;gap:6px">
-            <input id="line-${key}" class="sel" style="flex:1;border-radius:7px;padding:8px 10px" 
-              value="${esc(cfg[key]||cfg.brandGroups?.[label.replace(/^[^\s]+\s/,'')]||'')}" 
-              placeholder="C... หรือ U... (LINE ID)"/>
+            <input id="line-${key}" class="sel" style="flex:1;border-radius:7px;padding:8px 10px" value="${esc(cfg[key]||cfg.brandGroups?.[label.replace(/^[^\s]+\s/,'')]||'')}" placeholder="C... หรือ U... (LINE ID)"/>
             <button class="smb" onclick="testLine('${key}')">Test</button>
           </div>
         </div>`).join('')}
@@ -731,32 +698,21 @@ function rSystem(){
     </div>`;
   loadLineConfig();
 }
-async function loadLineConfig(){
-  try{
-    const d=await api('/api/line-config');
-    if(d.ok){window._lineCfg=d.config||{};rSystem();}
-  }catch(_){}
-}
+async function loadLineConfig(){try{const d=await api('/api/line-config');if(d.ok){window._lineCfg=d.config||{};rSystem();}}catch(_){}}
 async function saveLineConfig(){
-  const keys=['adminGroupId','dunkin','greyhoundCafe','greyhoundOriginal','auBonPain','funkyFries'];
-  const payload={adminGroupId:'',brandGroups:{}};
   const el=id=>document.getElementById('line-'+id)?.value?.trim()||'';
-  payload.adminGroupId=el('adminGroupId');
-  payload.brandGroups={"Dunkin'":el('dunkin'),'Greyhound Cafe':el('greyhoundCafe'),'Greyhound Original':el('greyhoundOriginal'),'Au Bon Pain':el('auBonPain'),'Funky Fries':el('funkyFries')};
-  try{
-    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
-    const msg=document.getElementById('system-msg');
-    if(msg)msg.textContent=d.ok?'✅ บันทึกแล้ว':'❌ '+(d.error||'error');
-  }catch(e){const msg=document.getElementById('system-msg');if(msg)msg.textContent='❌ '+e.message;}
+  const payload={adminGroupId:el('adminGroupId'),brandGroups:{"Dunkin'":el('dunkin'),'Greyhound Cafe':el('greyhoundCafe'),'Greyhound Original':el('greyhoundOriginal'),'Au Bon Pain':el('auBonPain'),'Funky Fries':el('funkyFries')}};
+  try{const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});const msg=document.getElementById('system-msg');if(msg)msg.textContent=d.ok?'✅ บันทึกแล้ว':'❌ '+(d.error||'error');}
+  catch(e){const msg=document.getElementById('system-msg');if(msg)msg.textContent='❌ '+e.message;}
 }
 async function testLine(key){
-  const val=document.getElementById('line-'+key)?.value?.trim();
-  if(!val){toast('กรุณากรอก LINE ID ก่อน');return;}
-  try{
-    const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});
-    toast(d.ok?'✅ ส่ง Test สำเร็จ':'❌ '+(d.error||'ส่งไม่สำเร็จ'));
-  }catch(e){toast('❌ '+e.message);}
+  const val=document.getElementById('line-'+key)?.value?.trim();if(!val){toast('กรุณากรอก LINE ID ก่อน');return;}
+  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}
+  catch(e){toast('❌ '+e.message);}
 }
+
+function rGPS2(){} // alias ไว้ป้องกัน error (ไม่ใช้)
+
 function rServer(){
   document.getElementById('pg-server').innerHTML=`
     <div style="margin-bottom:16px">
@@ -854,8 +810,9 @@ function uForm(u){const BR=["ALL","Dunkin'","Greyhound Cafe","Greyhound Original
 async function doAddUser(){const n=document.getElementById('uf-n').value.trim(),u=document.getElementById('uf-u').value.trim(),p=document.getElementById('uf-p').value;if(!n||!u||!p)return toast('Fill all required fields');try{const d=await api('/api/users',{method:'POST',body:JSON.stringify({name:n,username:u,password:p,role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()})});if(!d.ok)throw new Error(d.error);users.push(d.user);closeMod();render();toast('User added');}catch(e){toast('Error: '+e.message);}}
 async function doEditUser(id){const data={name:document.getElementById('uf-n').value.trim(),role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()};const p=document.getElementById('uf-p').value;if(p)data.password=p;try{const d=await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify(data)});if(!d.ok)throw new Error(d.error);users=users.map(u=>u.id===id?{...u,...d.user}:u);closeMod();render();toast('Saved');}catch(e){toast('Error: '+e.message);}}
 async function delUser(id,name){if(!confirm('Delete user '+name+'?'))return;try{const d=await api('/api/users/'+id,{method:'DELETE'});if(!d.ok)throw new Error(d.error);users=users.filter(u=>u.id!==id);render();toast('Deleted');}catch(e){toast('Error: '+e.message);}}
+
 let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
-  
+
 (async()=>{if(await tryAuto().catch(()=>false))boot();})();
 </script>
 </body>
