@@ -12,6 +12,7 @@
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
 a{color:inherit;text-decoration:none}
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* LOGIN */
 #login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;transition:background .4s}
@@ -38,6 +39,16 @@ a{color:inherit;text-decoration:none}
 .top-clock{font-family:var(--mono);font-size:11px;color:var(--fg4)}
 .smb{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}.smb:hover{background:var(--bg2);color:var(--fg)}
 
+/* GPS STATUS BAR */
+#gps-status-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 16px;font-size:12px;font-weight:500;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  transition:all .4s;min-height:32px;
+}
+.gps-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
+.gps-pulse.off{background:var(--red);animation:none}
+
 .content{max-width:680px;margin:0 auto;padding:14px}
 
 /* NAV TABS */
@@ -60,8 +71,8 @@ a{color:inherit;text-decoration:none}
 .pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--fg2);font-family:var(--mono);transition:all .4s}
 .jc-meta{font-size:12px;color:var(--fg3);display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
 .jc-detail{font-size:13px;color:var(--fg2);line-height:1.5;background:var(--bg2);border-radius:6px;padding:8px 10px;margin-bottom:8px;transition:background .4s}
-.jc-btns{display:flex;gap:4px}
-.jc-b{flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg3);font-family:var(--display);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
+.jc-btns{display:flex;gap:4px;flex-wrap:wrap}
+.jc-b{flex:1;min-width:80px;padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg3);font-family:var(--display);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
 .jc-b:hover{background:var(--bg2);color:var(--fg)}
 .jc-b.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}.jc-b.pri:hover{opacity:.8}
 .jc-b.danger{color:var(--red);border-color:var(--red)}.jc-b.danger:hover{background:var(--red);color:var(--bg)}
@@ -106,13 +117,14 @@ a{color:inherit;text-decoration:none}
 .bp{flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--display);font-size:13px;font-weight:700;cursor:pointer;transition:all .3s}.bp:hover{opacity:.8}
 .bo2{flex:1;padding:10px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .3s}
 
-.chart-area{background:var(--bg2);border-radius:8px;padding:24px;text-align:center;color:var(--fg4);font-size:13px;min-height:300px;display:grid;place-items:center;transition:background .4s}
+/* MY MAP */
+#eng-map{height:400px;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--bg2)}
 
 .toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
+
 <div id="login">
 <div class="lcard">
 <div class="lcard-logo"><div class="lcard-icon">EN</div><div class="lcard-t">Engineer Portal</div><div class="lcard-s">Technician Access</div></div>
@@ -124,87 +136,244 @@ a{color:inherit;text-decoration:none}
 </div></div>
 
 <div id="app">
-<div class="top">
-  <div class="top-logo">EN</div>
-  <div class="top-t" id="eng-name">Engineer</div>
-  <div class="top-clock" id="clock">--:--:--</div>
-  <button class="smb" id="btn-theme" onclick="togTheme()">Dark</button>
-  <button class="smb" onclick="doRefresh()">Refresh</button>
-  <button class="smb" onclick="logout()">Logout</button>
-</div>
-<div class="content">
-  <div class="eng-stats" id="eng-stats"></div>
-  <div class="nav-tabs" id="nav-tabs"></div>
-  <div id="view"></div>
-</div>
+  <!-- TOP BAR -->
+  <div class="top">
+    <div class="top-logo">EN</div>
+    <div class="top-t" id="eng-name">Engineer</div>
+    <div class="top-clock" id="clock">--:--:--</div>
+    <button class="smb" id="btn-theme" onclick="togTheme()">Dark</button>
+    <button class="smb" onclick="doRefresh()">Refresh</button>
+    <button class="smb" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- GPS STATUS BAR -->
+  <div id="gps-status-bar">
+    <div class="gps-pulse off" id="gps-dot"></div>
+    <span id="gps-text" style="color:var(--fg4)">กำลังหา GPS...</span>
+  </div>
+
+  <div class="content">
+    <div class="eng-stats" id="eng-stats"></div>
+    <div class="nav-tabs" id="nav-tabs"></div>
+    <div id="view"></div>
+  </div>
 </div>
 
 <div class="mod-bg" id="mod-bg"><div class="mod" id="mod"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-let AUTH=null,tickets=[],tab='active',sse=null,workTimer=null,workStart=null,gpsWatch=null;
+let AUTH=null,tickets=[],tab='active',sse=null,gpsWatch=null,_gpsActive=false;
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 function api(p,o={}){const h={'Content-Type':'application/json',...(o.headers||{})};if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;return fetch(p,{...o,headers:h}).then(r=>r.json()).catch(e=>({ok:false,error:e.message}));}
 
-// EMERGENCY DATA
+// ═══ EMERGENCY DATA ═══
 const EMERG=[
-{cat:'emergency',catTh:'เหตุด่วนเหตุร้าย',catEn:'Emergency',items:[
-{n:'ตำรวจ / Police',p:'191'},{n:'ดับเพลิง / Fire',p:'199'},{n:'รถหาย / Stolen Vehicle',p:'1192'},{n:'กองปราบ / Crime Suppression',p:'1195'},{n:'แจ้งคนหาย / Missing Person',p:'1300'},{n:'ร่วมด้วยช่วยกัน / Ruam Duay',p:'1677'},{n:'ศูนย์เตือนภัยพิบัติ / Disaster Warning',p:'192'},{n:'อุบัติเหตุทางน้ำ / Water Accident',p:'1196'}]},
-{cat:'medical',catTh:'การแพทย์และโรงพยาบาล',catEn:'Medical',items:[
-{n:'แพทย์ฉุกเฉิน / Emergency Medical',p:'1669'},{n:'หน่วยแพทย์ กทม. / BMA Emergency',p:'1646'},{n:'วชิรพยาบาล / Vajira Hospital',p:'1554'},{n:'รพ.ตำรวจ / Police Hospital',p:'1691'},{n:'กรมสุขภาพจิต / Mental Health',p:'1667'},{n:'ปภ. / DDPM',p:'1784'}]},
-{cat:'utility',catTh:'สาธารณูปโภค',catEn:'Utilities',items:[
-{n:'การไฟฟ้าภูมิภาค / PEA',p:'1129'},{n:'การไฟฟ้านครหลวง / MEA',p:'1130'},{n:'ประปานครหลวง / MWA',p:'1125'},{n:'ประปาภูมิภาค / PWA',p:'1162'},{n:'ประกันสังคม / Social Security',p:'1506'},{n:'ประกันภัย / Insurance',p:'1186'}]},
-{cat:'travel',catTh:'ระหว่างเดินทาง',catEn:'Travel',items:[
-{n:'ทางพิเศษ / Expressway',p:'1543'},{n:'ตำรวจทางหลวง / Highway Police',p:'1193'},{n:'ตำรวจท่องเที่ยว / Tourist Police',p:'1155'},{n:'FM91 Traffic',p:'1644'},{n:'การรถไฟ / State Railway',p:'1690'},{n:'กรมทางหลวงชนบท / Rural Roads',p:'1146'},{n:'TAC',p:'02-134-4077'}]}
+  {cat:'emergency',catTh:'เหตุด่วนเหตุร้าย',catEn:'Emergency',items:[
+    {n:'ตำรวจ / Police',p:'191'},{n:'ดับเพลิง / Fire',p:'199'},{n:'รถหาย / Stolen Vehicle',p:'1192'},
+    {n:'กองปราบ / Crime Suppression',p:'1195'},{n:'แจ้งคนหาย / Missing Person',p:'1300'},
+    {n:'ร่วมด้วยช่วยกัน / Ruam Duay',p:'1677'},{n:'ศูนย์เตือนภัยพิบัติ / Disaster Warning',p:'192'},
+    {n:'อุบัติเหตุทางน้ำ / Water Accident',p:'1196'}]},
+  {cat:'medical',catTh:'การแพทย์และโรงพยาบาล',catEn:'Medical',items:[
+    {n:'แพทย์ฉุกเฉิน / Emergency Medical',p:'1669'},{n:'หน่วยแพทย์ กทม. / BMA Emergency',p:'1646'},
+    {n:'วชิรพยาบาล / Vajira Hospital',p:'1554'},{n:'รพ.ตำรวจ / Police Hospital',p:'1691'},
+    {n:'กรมสุขภาพจิต / Mental Health',p:'1667'},{n:'ปภ. / DDPM',p:'1784'}]},
+  {cat:'utility',catTh:'สาธารณูปโภค',catEn:'Utilities',items:[
+    {n:'การไฟฟ้าภูมิภาค / PEA',p:'1129'},{n:'การไฟฟ้านครหลวง / MEA',p:'1130'},
+    {n:'ประปานครหลวง / MWA',p:'1125'},{n:'ประปาภูมิภาค / PWA',p:'1162'},
+    {n:'ประกันสังคม / Social Security',p:'1506'},{n:'ประกันภัย / Insurance',p:'1186'}]},
+  {cat:'travel',catTh:'ระหว่างเดินทาง',catEn:'Travel',items:[
+    {n:'ทางพิเศษ / Expressway',p:'1543'},{n:'ตำรวจทางหลวง / Highway Police',p:'1193'},
+    {n:'ตำรวจท่องเที่ยว / Tourist Police',p:'1155'},{n:'FM91 Traffic',p:'1644'},
+    {n:'การรถไฟ / State Railway',p:'1690'},{n:'กรมทางหลวงชนบท / Rural Roads',p:'1146'},
+    {n:'TAC',p:'02-134-4077'}]}
 ];
 
-async function tryAuto(){const s=localStorage.getItem('eng_auth');if(!s)return false;try{const{token}=JSON.parse(s);const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});if(d.ok&&['engineer','lead_engineer','admin','superadmin'].includes(d.user.role)){AUTH={token,user:d.user};return true;}}catch(_){}localStorage.removeItem('eng_auth');return false;}
+// ═══ GPS TRACKING ═══
+function startGPSTracking(){
+  if(!('geolocation' in navigator)){
+    updateGPSBar(false,'GPS ไม่รองรับบนอุปกรณ์นี้');return;
+  }
+  if(gpsWatch!==null)navigator.geolocation.clearWatch(gpsWatch);
+
+  gpsWatch=navigator.geolocation.watchPosition(
+    pos=>{
+      _gpsActive=true;
+      const {latitude,longitude,accuracy}=pos.coords;
+      // ส่ง GPS ไป server
+      api('/api/gps',{method:'POST',body:JSON.stringify({
+        latitude,longitude,accuracy,
+        engineer_name:AUTH.user.name,
+        user_id:AUTH.user.id,
+        brand:AUTH.user.brand
+      })});
+      updateGPSBar(true,`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+    },
+    err=>{
+      _gpsActive=false;
+      const msgs={1:'ไม่ได้รับอนุญาต GPS',2:'ไม่พบตำแหน่ง',3:'หมดเวลา GPS'};
+      updateGPSBar(false,msgs[err.code]||'GPS ไม่พร้อมใช้งาน');
+    },
+    {enableHighAccuracy:true,maximumAge:30000,timeout:15000}
+  );
+}
+
+function updateGPSBar(ok,msg){
+  const dot=document.getElementById('gps-dot');
+  const text=document.getElementById('gps-text');
+  const bar=document.getElementById('gps-status-bar');
+  if(!dot||!text||!bar)return;
+  if(ok){
+    dot.className='gps-pulse';
+    text.style.color='var(--green)';
+    text.textContent='📍 GPS Active — '+msg;
+    bar.style.background='rgba(45,122,79,.08)';
+    bar.style.borderBottomColor='rgba(45,122,79,.2)';
+  }else{
+    dot.className='gps-pulse off';
+    text.style.color='var(--red)';
+    text.textContent='⚠️ '+msg;
+    bar.style.background='rgba(184,50,50,.06)';
+    bar.style.borderBottomColor='rgba(184,50,50,.15)';
+  }
+}
+
+function stopGPSTracking(){
+  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
+  _gpsActive=false;
+  updateGPSBar(false,'GPS หยุดทำงาน');
+}
+
+// ═══ AUTH ═══
+async function tryAuto(){
+  const s=localStorage.getItem('eng_auth');if(!s)return false;
+  try{
+    const{token}=JSON.parse(s);
+    const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});
+    if(d.ok&&['engineer','lead_engineer','admin','superadmin'].includes(d.user.role)){AUTH={token,user:d.user};return true;}
+  }catch(_){}
+  localStorage.removeItem('eng_auth');return false;
+}
 
 document.getElementById('btn-login').onclick=async()=>{
   const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
   const err=document.getElementById('l-err'),btn=document.getElementById('btn-login');
   err.textContent='';if(!u||!p){err.textContent='Enter username and password';return;}
   btn.disabled=true;btn.textContent='Connecting...';
-  try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});if(!d.ok)throw new Error(d.error||'Login failed');AUTH={token:d.token,user:d.user};localStorage.setItem('eng_auth',JSON.stringify(AUTH));boot();}
-  catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
+  try{
+    const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
+    if(!d.ok)throw new Error(d.error||'Login failed');
+    AUTH={token:d.token,user:d.user};
+    localStorage.setItem('eng_auth',JSON.stringify(AUTH));
+    boot();
+  }catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
 };
+
 ['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
-function logout(){AUTH=null;localStorage.removeItem('eng_auth');location.reload();}
-function togTheme(){const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';localStorage.setItem('eng_theme',d.dataset.t);document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';}
+
+function logout(){
+  stopGPSTracking();
+  AUTH=null;localStorage.removeItem('eng_auth');location.reload();
+}
+
+function togTheme(){
+  const d=document.documentElement;
+  d.dataset.t=d.dataset.t==='dark'?'':'dark';
+  localStorage.setItem('eng_theme',d.dataset.t);
+  document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';
+}
 if(localStorage.getItem('eng_theme')==='dark')document.documentElement.dataset.t='dark';
 
-async function boot(){document.getElementById('login').style.display='none';document.getElementById('app').classList.add('on');document.getElementById('eng-name').textContent=AUTH.user.name;document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';startClock();connectSSE();await loadTickets();render();}
-async function loadTickets(){try{const d=await api('/api/tickets');if(d.ok){const my=AUTH.user.name;const isLead=['lead_engineer','admin','superadmin'].includes(AUTH.user.role);tickets=(d.tickets||[]).filter(t=>isLead||t.engineerName===my||t.assigned_to===my);}}catch(e){}}
-async function doRefresh(){await loadTickets();render();toast('Refreshed');}
-function connectSSE(){if(sse)try{sse.close();}catch(_){}sse=new EventSource('/api/events');sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});}
-function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
+// ═══ BOOT ═══
+async function boot(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').classList.add('on');
+  document.getElementById('eng-name').textContent=AUTH.user.name;
+  document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
+  startClock();
+  connectSSE();
+  await loadTickets();
+  startGPSTracking(); // เริ่ม GPS หลัง login ทันที
+  render();
+}
 
+// ═══ DATA ═══
+async function loadTickets(){
+  try{
+    const d=await api('/api/tickets');
+    if(d.ok){
+      const my=AUTH.user.name;
+      const isLead=['lead_engineer','admin','superadmin'].includes(AUTH.user.role);
+      tickets=(d.tickets||[]).filter(t=>isLead||t.engineerName===my||t.assigned_to===my);
+    }
+  }catch(e){}
+}
+
+async function doRefresh(){await loadTickets();render();toast('Refreshed');}
+
+function connectSSE(){
+  if(sse)try{sse.close();}catch(_){}
+  sse=new EventSource('/api/events');
+  sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});
+  sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});
+}
+
+function startClock(){
+  const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};
+  t();setInterval(t,1000);
+}
+
+// ═══ RENDER ═══
 function render(){
   const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
   const review=tickets.filter(t=>/review|revision|ตรวจ/.test(t.status||''));
   const done=tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
 
-  document.getElementById('eng-stats').innerHTML=`<div class="es"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div><div class="es"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div><div class="es"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
+  document.getElementById('eng-stats').innerHTML=`
+    <div class="es"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div>
+    <div class="es"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div>
+    <div class="es"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
 
-  const tabs=[{id:'active',lb:'Jobs',ct:active.length},{id:'review',lb:'Review',ct:review.length},{id:'done',lb:'Done',ct:done.length},{id:'emergency',lb:'Emergency',ct:0},{id:'map',lb:'My Map',ct:0}];
-  document.getElementById('nav-tabs').innerHTML=tabs.map(t=>`<button class="ntab${tab===t.id?' on':''}" onclick="tab='${t.id}';render()">${t.lb}${t.ct?`<span class="ct">${t.ct}</span>`:''}</button>`).join('');
+  const tabs=[
+    {id:'active',lb:'Jobs',ct:active.length},
+    {id:'review',lb:'Review',ct:review.length},
+    {id:'done',lb:'Done',ct:done.length},
+    {id:'emergency',lb:'Emergency',ct:0},
+    {id:'map',lb:'My Map',ct:0}
+  ];
+  document.getElementById('nav-tabs').innerHTML=tabs.map(t=>`
+    <button class="ntab${tab===t.id?' on':''}" onclick="tab='${t.id}';render()">
+      ${t.lb}${t.ct?`<span class="ct">${t.ct}</span>`:''}
+    </button>`).join('');
 
   const view=document.getElementById('view');
   if(tab==='emergency'){renderEmergency(view);return;}
-  if(tab==='map'){view.innerHTML='<div class="chart-area" style="min-height:400px">Leaflet.js map — your current position and GPS path<br/><span style="font-size:11px">Requires GPS permission</span></div>';return;}
+  if(tab==='map'){renderMyMap(view);return;}
 
   const list=tab==='active'?active:tab==='review'?review:done;
-  if(!list.length){view.innerHTML=`<div class="empty"><div class="empty-t">${{active:'No active jobs',review:'No jobs in review',done:'No completed jobs'}[tab]||'Empty'}</div></div>`;return;}
+  if(!list.length){
+    view.innerHTML=`<div class="empty"><div class="empty-t">${{active:'No active jobs',review:'No jobs in review',done:'No completed jobs'}[tab]||'Empty'}</div></div>`;
+    return;
+  }
 
   view.innerHTML=list.map((t,i)=>{
     const rid=esc(t._recordId);
     const isWorking=/in_progress|ระหว่าง/.test(t.status||'');
     return`<div class="jcard" style="animation-delay:${i*.03}s">
-      ${isWorking?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">Working — GPS active</div><div class="timer-val" id="timer-${rid}">00:00:00</div></div>`:''}
-      <div class="jc-top"><div style="flex:1"><div class="jc-id">${esc(t.id||'--')}</div><div class="jc-type">${esc(t.type||'-')}</div></div><span class="pill">${statusLabel(t.status)}</span></div>
-      <div class="jc-meta"><span>${esc(t.brand||'-')} / ${esc(t.branchCode||'-')}</span><span>${esc(t.reporter||'-')}</span><span>${esc(t.sentDate||'-')}</span></div>
+      ${isWorking?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">Working — GPS Tracking Active</div></div>`:''}
+      <div class="jc-top">
+        <div style="flex:1">
+          <div class="jc-id">${esc(t.id||'--')}</div>
+          <div class="jc-type">${esc(t.type||'-')}</div>
+        </div>
+        <span class="pill">${statusLabel(t.status)}</span>
+      </div>
+      <div class="jc-meta">
+        <span>${esc(t.brand||'-')} / ${esc(t.branchCode||'-')}</span>
+        <span>${esc(t.reporter||'-')}</span>
+        <span>${esc(t.sentDate||'-')}</span>
+      </div>
       ${t.detail?`<div class="jc-detail">${esc(t.detail)}</div>`:''}
       ${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}</div>`:''}
       <div class="jc-btns">
@@ -217,6 +386,82 @@ function render(){
   }).join('');
 }
 
+// ═══ MY MAP ═══
+function renderMyMap(el){
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-family:var(--display);font-size:14px;font-weight:800;letter-spacing:-.02em">📍 ตำแหน่งของฉัน</div>
+      <div style="display:flex;gap:5px">
+        <button class="smb" onclick="centerMyMap()">🎯 ตำแหน่งปัจจุบัน</button>
+        <button class="smb" onclick="renderMyMap(document.getElementById('view'))">🔄 รีเฟรช</button>
+      </div>
+    </div>
+    <div id="eng-map"></div>
+    <div id="eng-map-info" style="margin-top:8px;font-size:12px;color:var(--fg4);text-align:center">
+      ${_gpsActive?'GPS กำลังทำงาน — แผนที่จะอัปเดตอัตโนมัติ':'GPS ไม่ได้ใช้งาน — กรุณาเปิด Location'}
+    </div>`;
+  loadLeaflet(()=>initMyMap());
+}
+
+let _myMap=null,_myMarker=null;
+
+function loadLeaflet(cb){
+  if(!document.getElementById('leaflet-css')){
+    const css=document.createElement('link');
+    css.id='leaflet-css';css.rel='stylesheet';
+    css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+  }
+  if(window.L){cb();return;}
+  const js=document.createElement('script');
+  js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+  js.onload=cb;
+  document.head.appendChild(js);
+}
+
+function initMyMap(){
+  const mapEl=document.getElementById('eng-map');
+  if(!mapEl)return;
+  if(_myMap){_myMap.remove();_myMap=null;_myMarker=null;}
+
+  _myMap=L.map('eng-map').setView([13.7563,100.5018],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:19
+  }).addTo(_myMap);
+
+  // ถ้ามี GPS แล้วให้แสดงทันที
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    placeMyMarker(latitude,longitude);
+    _myMap.setView([latitude,longitude],15);
+    const info=document.getElementById('eng-map-info');
+    if(info)info.textContent=`📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+  },()=>{
+    const info=document.getElementById('eng-map-info');
+    if(info)info.textContent='⚠️ ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด Location';
+  },{enableHighAccuracy:true,timeout:10000});
+}
+
+function placeMyMarker(lat,lng){
+  if(!_myMap)return;
+  const icon=L.divIcon({
+    html:`<div style="background:#2b5ea8;color:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)">${(AUTH?.user?.name||'?').charAt(0).toUpperCase()}</div>`,
+    iconSize:[38,38],iconAnchor:[19,19],className:''
+  });
+  if(_myMarker){_myMarker.setLatLng([lat,lng]);}
+  else{_myMarker=L.marker([lat,lng],{icon}).addTo(_myMap).bindPopup(`<b>${AUTH?.user?.name||'ฉัน'}</b><br>${AUTH?.user?.brand||'-'}<br><small>${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`);}
+}
+
+function centerMyMap(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    if(_myMap){_myMap.setView([latitude,longitude],16);placeMyMarker(latitude,longitude);}
+    const info=document.getElementById('eng-map-info');
+    if(info)info.textContent=`📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+  },()=>toast('ไม่สามารถดึงตำแหน่งได้'),{enableHighAccuracy:true,timeout:10000});
+}
+
+// ═══ EMERGENCY ═══
 function renderEmergency(el){
   el.innerHTML=`<div class="em-search"><input placeholder="Search emergency numbers..." oninput="filterEmerg(this.value)"/></div><div id="em-list">${EMERG.map((c,ci)=>`<div class="em-cat" id="em-cat-${ci}"><div class="em-cat-h" onclick="document.getElementById('em-cat-${ci}').classList.toggle('open')">${c.catTh} / ${c.catEn}<span class="arrow">></span></div><div class="em-list">${c.items.map(it=>`<div class="em-item" data-kw="${(it.n+' '+it.p).toLowerCase()}"><div class="em-name">${it.n}</div><a href="tel:${it.p}" class="em-phone">${it.p}</a></div>`).join('')}</div></div>`).join('')}</div>`;
 }
@@ -226,22 +471,34 @@ function filterEmerg(q){
   if(q)document.querySelectorAll('.em-cat').forEach(el=>el.classList.add('open'));
 }
 
-// ACTIONS
-async function doAccept(rid){try{await api(`/api/tickets/${rid}/accept`,{method:'POST'});tickets=tickets.map(x=>x._recordId===rid?{...x,status:'accepted'}:x);render();toast('Job accepted');}catch(e){toast('Error: '+e.message);}}
-async function doStartWork(rid){
-  // Request GPS
-  if('geolocation' in navigator){
-    try{
-      const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true}));
-      api('/api/gps',{method:'POST',body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,ticket_id:rid})});
-      gpsWatch=navigator.geolocation.watchPosition(p=>{
-        api('/api/gps',{method:'POST',body:JSON.stringify({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy,ticket_id:rid})});
-      },()=>{},{enableHighAccuracy:true,maximumAge:30000});
-    }catch(e){toast('GPS not available');}
-  }
-  try{await api(`/api/tickets/${rid}/start-work`,{method:'POST'});tickets=tickets.map(x=>x._recordId===rid?{...x,status:'in_progress',work_started_at:new Date().toISOString()}:x);workStart=Date.now();render();toast('Work started — GPS tracking active');}catch(e){toast('Error: '+e.message);}
+// ═══ ACTIONS ═══
+async function doAccept(rid){
+  try{
+    await api(`/api/tickets/${rid}/accept`,{method:'POST'});
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'accepted'}:x);
+    render();toast('Job accepted');
+  }catch(e){toast('Error: '+e.message);}
 }
 
+async function doStartWork(rid){
+  try{
+    // ส่ง GPS ปัจจุบันพร้อม ticket
+    if(_gpsActive){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        api('/api/gps',{method:'POST',body:JSON.stringify({
+          latitude:pos.coords.latitude,longitude:pos.coords.longitude,
+          accuracy:pos.coords.accuracy,ticket_id:rid,
+          engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand
+        })});
+      },()=>{},{enableHighAccuracy:true,timeout:5000});
+    }
+    await api(`/api/tickets/${rid}/start-work`,{method:'POST'});
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'in_progress',work_started_at:new Date().toISOString()}:x);
+    render();toast('Work started — GPS tracking active');
+  }catch(e){toast('Error: '+e.message);}
+}
+
+// ═══ MODALS ═══
 function openMod(h){document.getElementById('mod').innerHTML=h;document.getElementById('mod-bg').classList.add('on');}
 function closeMod(){document.getElementById('mod-bg').classList.remove('on');}
 document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod();};
@@ -255,24 +512,53 @@ function openSubmit(rid){
       <div class="fg"><label>Parts Used</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="e.g. LAN cable"/></div>
       <div class="fg"><label>Hours</label><input id="m-wh" type="number" value="${esc(t.workHours||'')}" placeholder="1.5"/></div>
     </div>
-    <div class="fg"><label>Photo (camera) *</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
-    <div class="mod-f"><button class="bo2" onclick="closeMod()">Cancel</button><button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button></div>`);
+    <div class="fg"><label>Photo (camera)</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
+    <div class="mod-f">
+      <button class="bo2" onclick="closeMod()">Cancel</button>
+      <button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button>
+    </div>`);
 }
+
 async function doSubmit(rid){
   const wd=(document.getElementById('m-wd')?.value||'').trim();
   if(!wd){toast('Enter work detail');return;}
-  // Stop GPS
-  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
   const pt=(document.getElementById('m-pt')?.value||'').trim();
   const wh=(document.getElementById('m-wh')?.value||'').trim();
-  try{const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh})});if(!d.ok)throw new Error(d.error||'Failed');tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'review'}:x);closeMod();render();toast('Work submitted — GPS stopped');}catch(e){toast('Error: '+e.message);}
+  try{
+    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh})});
+    if(!d.ok)throw new Error(d.error||'Failed');
+    tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'review'}:x);
+    closeMod();render();toast('Work submitted');
+  }catch(e){toast('Error: '+e.message);}
 }
 
-function openUpload(rid){openMod(`<div class="mod-t">Upload Photo</div><div class="fg"><label>Camera (live photo)</label><input type="file" accept="image/*" capture="camera"/></div><div class="fg"><label>Additional from gallery</label><input type="file" accept="image/*" multiple/></div><div class="mod-f"><button class="bo2" onclick="closeMod()">Close</button></div>`);}
+function openUpload(rid){
+  openMod(`<div class="mod-t">Upload Photo</div>
+    <div class="fg"><label>Camera (live photo)</label><input type="file" accept="image/*" capture="camera"/></div>
+    <div class="fg"><label>Additional from gallery</label><input type="file" accept="image/*" multiple/></div>
+    <div class="mod-f"><button class="bo2" onclick="closeMod()">Close</button></div>`);
+}
 
-function openDetail(rid){const t=tickets.find(x=>x._recordId===rid);if(!t)return;openMod(`<div class="mod-t">Ticket Detail</div><div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:8px">${esc(t.id)}</div>${[['Type',t.type],['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Location',t.location]].map(([l,v])=>`<div style="display:flex;gap:4px;margin-bottom:2px;font-size:13px"><span style="color:var(--fg4);min-width:60px;font-size:11px;font-weight:600">${l}</span><span style="color:var(--fg);font-weight:500">${esc(v||'-')}</span></div>`).join('')}${t.detail?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--fg);margin-top:8px;line-height:1.5;transition:background .4s">${esc(t.detail)}</div>`:''}${t.adminNote?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg3);margin-top:5px;border-left:2px solid var(--fg);transition:background .4s">Admin: ${esc(t.adminNote)}</div>`:''}<div class="mod-f"><button class="bo2" onclick="closeMod()" style="width:100%">Close</button></div>`);}
+function openDetail(rid){
+  const t=tickets.find(x=>x._recordId===rid);if(!t)return;
+  openMod(`<div class="mod-t">Ticket Detail</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:8px">${esc(t.id)}</div>
+    ${[['Type',t.type],['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Location',t.location]]
+      .map(([l,v])=>`<div style="display:flex;gap:4px;margin-bottom:2px;font-size:13px"><span style="color:var(--fg4);min-width:60px;font-size:11px;font-weight:600">${l}</span><span style="color:var(--fg);font-weight:500">${esc(v||'-')}</span></div>`).join('')}
+    ${t.detail?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--fg);margin-top:8px;line-height:1.5">${esc(t.detail)}</div>`:''}
+    ${t.adminNote?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg3);margin-top:5px;border-left:2px solid var(--fg)">Admin: ${esc(t.adminNote)}</div>`:''}
+    <div class="mod-f"><button class="bo2" onclick="closeMod()" style="width:100%">Close</button></div>`);
+}
 
-let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
+let toastT;
+function toast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.style.display='block';el.style.animation='none';
+  el.offsetHeight;el.style.animation='';
+  clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);
+}
+
+// ═══ INIT ═══
 (async()=>{if(await tryAuto().catch(()=>false))boot();})();
 </script>
 </body>
