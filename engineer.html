@@ -514,8 +514,10 @@ async function doStartWork(rid){
     })});
     if(!d.ok)throw new Error(d.error||'Failed');
 
-    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',work_started_at:new Date().toISOString()}:x);
-    render();toast('เริ่มงานแล้ว — GPS tracking active');
+    // reload จาก server
+    await loadTickets();
+    render();
+    toast('เริ่มงานแล้ว — GPS tracking active');
   }catch(e){toast('Error: '+e.message);}
 }
 
