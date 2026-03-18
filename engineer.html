@@ -505,6 +505,15 @@ async function doStartWork(rid){
         })});
       },()=>{},{enableHighAccuracy:true,timeout:5000});
     }
+
+    // อัปเดตสถานะผ่าน API
+    const t=tickets.find(x=>x._recordId===rid);
+    const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({
+      status:'อยู่ระหว่างดำเนินการ ⚙️',
+      brand:t?.brand||''
+    })});
+    if(!d.ok)throw new Error(d.error||'Failed');
+
     tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',work_started_at:new Date().toISOString()}:x);
     render();toast('เริ่มงานแล้ว — GPS tracking active');
   }catch(e){toast('Error: '+e.message);}
