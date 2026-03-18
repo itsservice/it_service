@@ -417,38 +417,78 @@ function rDash(){
     </div>`;
 }
 
-let tF={status:'',brand:'',q:'',dateFrom:'',dateTo:'',p:1};const PP=15;
+let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'',sortDir:'asc',p:1};const PP=15;
 function rTickets(){
   const brands=[...new Set(tickets.map(x=>x.brand).filter(Boolean))].sort();
+  const engineers=[...new Set(tickets.map(x=>x.engineerName).filter(Boolean))].sort();
   let data=[...tickets];
   if(tF.status)data=data.filter(x=>(x.status||'').includes(tF.status));
   if(tF.brand)data=data.filter(x=>x.brand===tF.brand);
-  if(tF.q){const q=tF.q.toLowerCase();data=data.filter(x=>`${x.id} ${x.reporter} ${x.phone} ${x.type} ${x.detail} ${x.branchCode}`.toLowerCase().includes(q));}
+  if(tF.engineer)data=data.filter(x=>x.engineerName===tF.engineer);
+  if(tF.q){const q=tF.q.toLowerCase();data=data.filter(x=>`${x.id} ${x.reporter} ${x.phone} ${x.type} ${x.detail} ${x.branchCode} ${x.engineerName}`.toLowerCase().includes(q));}
   if(tF.dateFrom||tF.dateTo){data=data.filter(x=>{const raw=x.sentDate||x.createdAt||x.sent_date||'';if(!raw)return true;const d=new Date(raw.replace(/\/([0-9]{4})/g,(m,y)=>parseInt(y)>2400?'/'+(y-543):m));if(isNaN(d))return true;if(tF.dateFrom&&d<new Date(tF.dateFrom+'T00:00:00'))return false;if(tF.dateTo&&d>new Date(tF.dateTo+'T23:59:59'))return false;return true;});}
+  // Sort
+  if(tF.sortCol){
+    data.sort((a,b)=>{
+      let av=a[tF.sortCol]||'',bv=b[tF.sortCol]||'';
+      if(typeof av==='string')av=av.toLowerCase();
+      if(typeof bv==='string')bv=bv.toLowerCase();
+      return tF.sortDir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);
+    });
+  }
   const tp=Math.max(1,Math.ceil(data.length/PP));tF.p=Math.min(tF.p,tp);
   const paged=data.slice((tF.p-1)*PP,tF.p*PP);
+  const sortIcon=col=>tF.sortCol===col?(tF.sortDir==='asc'?' ↑':' ↓'):'';
+  const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
   document.getElementById('pg-tickets').innerHTML=`
-    <div class="filters">
-      <div class="srch"><span class="si">Q</span><input placeholder="Search..." value="${esc(tF.q)}" oninput="tF.q=this.value;tF.p=1;rTickets()"/></div>
+    <div class="filters" style="flex-wrap:wrap;gap:6px">
+      <div class="srch" style="flex:1;min-width:160px;max-width:340px">
+        <span class="si">🔍</span>
+        <input style="transition:width .4s ease;width:160px" onfocus="this.style.width='100%'" onblur="this.style.width=this.value?'100%':'160px'"
+          placeholder="Search..." value="${esc(tF.q)}" oninput="tF.q=this.value;tF.p=1;rTickets()"/>
+      </div>
       <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()">
-        <option value="">ทุกสถานะ</option>
-        <option value="รอดำเนินการ">รอดำเนินการ ⏱️</option>
-        <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ ⚙️</option>
-        <option value="ตรวจงาน">ตรวจงาน 🔍</option>
-        <option value="เสร็จสิ้น">เสร็จสิ้น ✅</option>
-        <option value="ยกเลิก">ยกเลิก ❌</option>
-        <option value="แก้ไข">แก้ไข ✏️</option>
+        <option value="" ${!tF.status?'selected':''}>ทุกสถานะ</option>
+        <option value="รอดำเนินการ" ${tF.status==='รอดำเนินการ'?'selected':''}>รอดำเนินการ ⏱️</option>
+        <option value="อยู่ระหว่างดำเนินการ" ${tF.status==='อยู่ระหว่างดำเนินการ'?'selected':''}>อยู่ระหว่างดำเนินการ ⚙️</option>
+        <option value="ตรวจงาน" ${tF.status==='ตรวจงาน'?'selected':''}>ตรวจงาน 🔍</option>
+        <option value="เสร็จสิ้น" ${tF.status==='เสร็จสิ้น'?'selected':''}>เสร็จสิ้น ✅</option>
+        <option value="ยกเลิก" ${tF.status==='ยกเลิก'?'selected':''}>ยกเลิก ❌</option>
+        <option value="แก้ไข" ${tF.status==='แก้ไข'?'selected':''}>แก้ไข ✏️</option>
       </select>
-      <select class="sel" onchange="tF.brand=this.value;tF.p=1;rTickets()"><option value="">All Brands</option>${brands.map(b=>`<option ${tF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select>
+      <select class="sel" onchange="tF.brand=this.value;tF.p=1;rTickets()">
+        <option value="">All Brands</option>${brands.map(b=>`<option ${tF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}
+      </select>
+      <select class="sel" onchange="tF.engineer=this.value;tF.p=1;rTickets()">
+        <option value="">ทุกช่าง</option>${engineers.map(e=>`<option ${tF.engineer===e?'selected':''}>${esc(e)}</option>`).join('')}
+      </select>
       <input type="date" class="sel" value="${esc(tF.dateFrom)}" onchange="tF.dateFrom=this.value;tF.p=1;rTickets()" title="จากวันที่" style="max-width:140px"/>
       <span style="font-size:12px;color:var(--fg3);align-self:center">ถึง</span>
       <input type="date" class="sel" value="${esc(tF.dateTo)}" onchange="tF.dateTo=this.value;tF.p=1;rTickets()" title="ถึงวันที่" style="max-width:140px"/>
-      ${(tF.dateFrom||tF.dateTo)?`<button class="smb" onclick="tF.dateFrom='';tF.dateTo='';tF.p=1;rTickets()" style="color:var(--red)">✕ ล้างวัน</button>`:''}
+      ${(tF.dateFrom||tF.dateTo||tF.status||tF.brand||tF.engineer||tF.q)?`<button class="smb" onclick="tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:tF.sortCol,sortDir:tF.sortDir,p:1};rTickets()" style="color:var(--red)">✕ ล้างทั้งหมด</button>`:''}
     </div>
-    ${paged.length?`<table class="tbl"><thead><tr><th>Ticket</th><th>Type</th><th>Brand</th><th>Status</th><th>Date</th></tr></thead><tbody>${paged.map(x=>`<tr class="tr" onclick="openDrw('${esc(x._recordId)}')"><td><span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(x.id||'--')}</span><div style="font-size:11px;color:var(--fg4);margin-top:1px">${esc(x.reporter||'')}</div></td><td><div style="font-weight:600">${esc(x.type||'-')}</div></td><td style="font-size:12px">${esc(x.brand||'-')}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td style="font-size:12px;color:var(--fg3)">${esc(x.sentDate||'-')}</td></tr>`).join('')}</tbody></table>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--fg4)"><span>${data.length} items | page ${tF.p}/${tp}</span><div style="display:flex;gap:3px">${tF.p>1?`<button class="smb" onclick="tF.p--;rTickets()">Prev</button>`:''} ${tF.p<tp?`<button class="smb" onclick="tF.p++;rTickets()">Next</button>`:''}</div></div>`
+    ${paged.length?`<table class="tbl"><thead><tr>
+      <th style="${thStyle}" onclick="tSort('id')">Ticket${sortIcon('id')}</th>
+      <th style="${thStyle}" onclick="tSort('type')">Type${sortIcon('type')}</th>
+      <th style="${thStyle}" onclick="tSort('brand')">Brand${sortIcon('brand')}</th>
+      <th style="${thStyle}" onclick="tSort('engineerName')">ช่าง${sortIcon('engineerName')}</th>
+      <th style="${thStyle}" onclick="tSort('status')">Status${sortIcon('status')}</th>
+      <th style="${thStyle}" onclick="tSort('sentDate')">Date${sortIcon('sentDate')}</th>
+    </tr></thead><tbody>${paged.map(x=>`<tr class="tr" onclick="openDrw('${esc(x._recordId)}')">
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(x.id||'--')}</span><div style="font-size:11px;color:var(--fg4);margin-top:1px">${esc(x.reporter||'')}</div></td>
+      <td><div style="font-weight:600">${esc(x.type||'-')}</div></td>
+      <td style="font-size:12px">${esc(x.brand||'-')}</td>
+      <td style="font-size:12px;color:var(--blue)">${esc(x.engineerName||'-')}</td>
+      <td><span class="pill">${statusLabel(x.status)}</span></td>
+      <td style="font-size:12px;color:var(--fg3)">${esc(x.sentDate||'-')}</td>
+    </tr>`).join('')}</tbody></table>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--fg4)">
+      <span>${data.length} items | page ${tF.p}/${tp}</span>
+      <div style="display:flex;gap:3px">${tF.p>1?`<button class="smb" onclick="tF.p--;rTickets()">Prev</button>`:''} ${tF.p<tp?`<button class="smb" onclick="tF.p++;rTickets()">Next</button>`:''}</div>
+    </div>`
     :'<div class="empty"><div class="empty-t">No tickets found</div><div class="empty-d">Adjust filters or wait for new tickets</div></div>'}`;
 }
+function tSort(col){if(tF.sortCol===col){tF.sortDir=tF.sortDir==='asc'?'desc':'asc';}else{tF.sortCol=col;tF.sortDir='asc';}tF.p=1;rTickets();}
 
 function rUsers(){
   const el=document.getElementById('pg-users');
@@ -467,7 +507,6 @@ function rLog(){
 
 // ═══ GPS MAP ═══
 function rGPS(){
-  window._gpsMapInit=false;
   document.getElementById('pg-gps').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
       <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">📍 GPS Map</div>
@@ -567,10 +606,7 @@ async function initGPSMap(){
     bounds.push([loc.latitude,loc.longitude]);
   });
 
-  if(bounds.length && !window._gpsMapInit){
-  map.fitBounds(bounds,{padding:[40,40]});
-  window._gpsMapInit=true;
-}
+  if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
 
   // รายการช่างด้านล่าง
   if(list)list.innerHTML=`
