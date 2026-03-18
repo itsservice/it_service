@@ -91,10 +91,8 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// LINE SETTINGS API — ตั้งค่า LINE ID ผ่านหน้า Admin
+// LINE SETTINGS API
 // ═══════════════════════════════════════════════════════════
-
-// GET — ดูค่าปัจจุบัน
 app.get('/api/line-config', requireAuth(['superadmin','admin']), (req, res) => {
   res.json({
     ok: true,
@@ -104,7 +102,6 @@ app.get('/api/line-config', requireAuth(['superadmin','admin']), (req, res) => {
   });
 });
 
-// PATCH — อัปเดตค่า
 app.patch('/api/line-config', requireAuth(['superadmin','admin']), (req, res) => {
   try {
     const updated = lineConfig.updateConfig(req.body);
@@ -113,7 +110,6 @@ app.patch('/api/line-config', requireAuth(['superadmin','admin']), (req, res) =>
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-// POST — ทดสอบส่ง LINE ไปที่ target
 app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (req, res) => {
   try {
     const { to } = req.body || {};
@@ -349,6 +345,68 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
+// GPS — Engineer ส่งตำแหน่ง / Admin ดูแผนที่
+// ═══════════════════════════════════════════════════════════
+const GPS_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS engineer_gps (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    user_id      VARCHAR(50),
+    engineer_name VARCHAR(100),
+    brand        VARCHAR(100),
+    latitude     DOUBLE,
+    longitude    DOUBLE,
+    accuracy     DOUBLE,
+    ticket_id    VARCHAR(50),
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user (user_id)
+  )
+`;
+
+// POST — Engineer ส่ง GPS
+app.post('/api/gps', requireAuth(), async (req, res) => {
+  try {
+    const { latitude, longitude, accuracy, ticket_id } = req.body || {};
+    if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
+    const db = require('./Db');
+    await db.execute(GPS_TABLE_SQL);
+    await db.execute(
+      `INSERT INTO engineer_gps
+         (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE
+         engineer_name = VALUES(engineer_name),
+         brand         = VALUES(brand),
+         latitude      = VALUES(latitude),
+         longitude     = VALUES(longitude),
+         accuracy      = VALUES(accuracy),
+         ticket_id     = VALUES(ticket_id),
+         updated_at    = NOW()`,
+      [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]
+    );
+    broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
+    res.json({ ok:true });
+  } catch(e) {
+    console.error('[GPS POST]', e.message);
+    res.json({ ok:false, error:e.message });
+  }
+});
+
+// GET — Admin ดูตำแหน่งช่างทั้งหมด
+app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const db = require('./Db');
+    await db.execute(GPS_TABLE_SQL);
+    const [rows] = await db.execute(
+      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
+    );
+    res.json({ ok:true, locations:rows });
+  } catch(e) {
+    console.error('[GPS GET]', e.message);
+    res.json({ ok:true, locations:[] });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
 // DEBUG
 // ═══════════════════════════════════════════════════════════
 app.get('/debug/env', (_, res) => {
@@ -420,67 +478,3 @@ setTimeout(async () => {
 }, 3000);
 
 module.exports = app;
-
-// GPS endpoint
-app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
-  try {
-    const db = require('./Db');
-    const [rows] = await db.execute(
-      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
-    );
-    res.json({ ok: true, locations: rows });
-  } catch(e) {
-    res.json({ ok: true, locations: [] });
-  }
-});
-
-app.post('/api/gps', requireAuth(), async (req, res) => {
-  try {
-    const { latitude, longitude, accuracy, ticket_id } = req.body || {};
-    if (!latitude || !longitude) return res.json({ ok: false, error: 'Missing coordinates' });
-    const db = require('./Db');
-    await db.execute(
-      `INSERT INTO engineer_gps (user_id, engineer_name, latitude, longitude, accuracy, ticket_id, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE latitude=?, longitude=?, accuracy=?, ticket_id=?, updated_at=NOW()`,
-      [req.user.id, req.user.name, latitude, longitude, accuracy||null, ticket_id||null,
-       latitude, longitude, accuracy||null, ticket_id||null]
-    );
-    res.json({ ok: true });
-  } catch(e) {
-    res.json({ ok: false, error: e.message });
-  }
-});
-// GPS — POST (Engineer ส่งตำแหน่ง)
-app.post('/api/gps', requireAuth(), async (req, res) => {
-  try {
-    const { latitude, longitude, accuracy, ticket_id, engineer_name, brand, user_id } = req.body || {};
-    if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
-    const db = require('./Db');
-    await db.execute(
-      `INSERT INTO engineer_gps (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE engineer_name=VALUES(engineer_name), brand=VALUES(brand),
-       latitude=VALUES(latitude), longitude=VALUES(longitude),
-       accuracy=VALUES(accuracy), ticket_id=VALUES(ticket_id), updated_at=NOW()`,
-      [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]
-    );
-    broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
-    res.json({ ok:true });
-  } catch(e) {
-    res.json({ ok:false, error:e.message });
-  }
-});
-
-// GPS — GET (Admin ดูตำแหน่งทั้งหมด)
-app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
-  try {
-    const db = require('./Db');
-    const [rows] = await db.execute(
-      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
-    );
-    res.json({ ok:true, locations:rows });
-  } catch(e) {
-    res.json({ ok:true, locations:[] });
-  }
-});
