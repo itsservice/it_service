@@ -345,44 +345,19 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// GPS — Engineer ส่งตำแหน่ง / Admin ดูแผนที่
+// GPS — single-line SQL (ไม่ใช้ multi-line backtick)
 // ═══════════════════════════════════════════════════════════
-const GPS_TABLE_SQL = `
-  CREATE TABLE IF NOT EXISTS engineer_gps (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    user_id      VARCHAR(50),
-    engineer_name VARCHAR(100),
-    brand        VARCHAR(100),
-    latitude     DOUBLE,
-    longitude    DOUBLE,
-    accuracy     DOUBLE,
-    ticket_id    VARCHAR(50),
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_user (user_id)
-  )
-`;
+const GPS_CREATE = 'CREATE TABLE IF NOT EXISTS engineer_gps (id INT AUTO_INCREMENT PRIMARY KEY, user_id VARCHAR(50), engineer_name VARCHAR(100), brand VARCHAR(100), latitude DOUBLE, longitude DOUBLE, accuracy DOUBLE, ticket_id VARCHAR(50), updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_user (user_id))';
+const GPS_UPSERT = 'INSERT INTO engineer_gps (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE engineer_name=VALUES(engineer_name), brand=VALUES(brand), latitude=VALUES(latitude), longitude=VALUES(longitude), accuracy=VALUES(accuracy), ticket_id=VALUES(ticket_id), updated_at=NOW()';
+const GPS_SELECT = 'SELECT * FROM engineer_gps ORDER BY updated_at DESC';
 
-// POST — Engineer ส่ง GPS
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
     const { latitude, longitude, accuracy, ticket_id } = req.body || {};
     if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
     const db = require('./Db');
-    await db.execute(GPS_TABLE_SQL);
-    await db.execute(
-      `INSERT INTO engineer_gps
-         (user_id, engineer_name, brand, latitude, longitude, accuracy, ticket_id, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE
-         engineer_name = VALUES(engineer_name),
-         brand         = VALUES(brand),
-         latitude      = VALUES(latitude),
-         longitude     = VALUES(longitude),
-         accuracy      = VALUES(accuracy),
-         ticket_id     = VALUES(ticket_id),
-         updated_at    = NOW()`,
-      [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]
-    );
+    await db.execute(GPS_CREATE);
+    await db.execute(GPS_UPSERT, [req.user.id, req.user.name, req.user.brand, latitude, longitude, accuracy||null, ticket_id||null]);
     broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude, longitude });
     res.json({ ok:true });
   } catch(e) {
@@ -391,14 +366,11 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
   }
 });
 
-// GET — Admin ดูตำแหน่งช่างทั้งหมด
 app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const db = require('./Db');
-    await db.execute(GPS_TABLE_SQL);
-    const [rows] = await db.execute(
-      'SELECT * FROM engineer_gps ORDER BY updated_at DESC'
-    );
+    await db.execute(GPS_CREATE);
+    const [rows] = await db.execute(GPS_SELECT);
     res.json({ ok:true, locations:rows });
   } catch(e) {
     console.error('[GPS GET]', e.message);
@@ -409,6 +381,16 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // ═══════════════════════════════════════════════════════════
 // DEBUG
 // ═══════════════════════════════════════════════════════════
+app.get('/debug/gps', async (_, res) => {
+  try {
+    const db = require('./Db');
+    const [rows] = await db.execute(GPS_SELECT);
+    res.json({ ok:true, count:rows.length, rows });
+  } catch(e) {
+    res.json({ ok:false, error:e.message });
+  }
+});
+
 app.get('/debug/env', (_, res) => {
   res.json({
     hasLarkAppId:!!process.env.LARK_APP_ID, hasLarkSecret:!!process.env.LARK_APP_SECRET,
@@ -476,18 +458,5 @@ app.use('/line', lineRouter);
 setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); } catch(e) { console.warn('[App]',e.message); }
 }, 3000);
-app.get('/debug/gps', async (_, res) => {
-  try {
-    const db = require('./Db');
-    const [rows] = await db.execute('SELECT * FROM engineer_gps ORDER BY updated_at DESC');
-    res.json({ ok:true, count:rows.length, rows });
-  } catch(e) {
-    res.json({ ok:false, error:e.message });
-  }
-});
-```
 
-แล้วเปิด:
-```
-https://it-service-56im.onrender.com/debug/gps
 module.exports = app;
