@@ -274,6 +274,7 @@ document.getElementById('btn-login').onclick=async()=>{
 
 function logout(){
   stopGPSTracking();
+  localStorage.removeItem('eng_st_'+(AUTH?.user?.id||'x')); // ล้างเวลาเริ่มงานตอน logout
   AUTH=null;localStorage.removeItem('eng_auth');location.reload();
 }
 
@@ -489,33 +490,82 @@ async function doAccept(rid){
   }catch(e){toast('Error: '+e.message);}
 }
 
+// ── GPS Permission Popup ──
+function showGPSPermissionPopup(onGranted){
+  openMod(`
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:36px;margin-bottom:12px">📍</div>
+      <div class="mod-t" style="text-align:center">ต้องการเปิด GPS</div>
+      <div style="font-size:13px;color:var(--fg3);line-height:1.6;margin-bottom:16px">
+        กรุณาอนุญาตให้เว็บไซต์เข้าถึงตำแหน่งของคุณ<br>
+        เพื่อบันทึกตำแหน่งเริ่มงาน
+      </div>
+      <button class="bp" style="width:100%;margin-bottom:8px" onclick="requestGPSPermission()">
+        🔓 อนุญาตให้เข้าถึง GPS
+      </button>
+      <div style="font-size:11px;color:var(--fg4);line-height:1.7;background:var(--bg2);border-radius:7px;padding:10px;text-align:left;margin-bottom:8px">
+        <b>ถ้าปุ่มไม่ขึ้น popup:</b><br>
+        iOS: Settings → Safari → Location → Allow<br>
+        Android: Settings → Apps → Browser → Permissions → Location
+      </div>
+      <button class="bo2" style="width:100%" onclick="closeMod()">ยกเลิก</button>
+    </div>`);
+  window._gpsGrantedCallback=onGranted;
+}
+
+function requestGPSPermission(){
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      _gpsActive=true;
+      updateGPSBar(true,`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
+      closeMod();
+      if(window._gpsGrantedCallback){window._gpsGrantedCallback();window._gpsGrantedCallback=null;}
+    },
+    err=>{
+      const msgs={1:'กด Allow ในป๊อปอัพของ browser',2:'ไม่พบสัญญาณ GPS',3:'หมดเวลา ลองใหม่อีกครั้ง'};
+      document.getElementById('mod').querySelector('.bp').textContent='🔄 ลองอีกครั้ง';
+      toast('⚠️ '+(msgs[err.code]||'ไม่สามารถเข้าถึง GPS'));
+    },
+    {enableHighAccuracy:true,timeout:15000}
+  );
+}
+
 async function doStartWork(rid){
+  // Feature 3: ถ้า GPS ไม่ active → แสดง popup ขอสิทธิ์ก่อน
+  if(!_gpsActive){
+    showGPSPermissionPopup(()=>doStartWork(rid));
+    return;
+  }
+
   try{
-    // เก็บเวลาเริ่มงาน
-    if(!window._startTimes) window._startTimes={};
-    window._startTimes[rid]=Date.now();
-
-    // ส่ง GPS ปัจจุบันพร้อม ticket
-    if(_gpsActive){
-      navigator.geolocation.getCurrentPosition(pos=>{
-        api('/api/gps',{method:'POST',body:JSON.stringify({
-          latitude:pos.coords.latitude,longitude:pos.coords.longitude,
-          accuracy:pos.coords.accuracy,ticket_id:rid,
-          engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand
-        })});
-      },()=>{},{enableHighAccuracy:true,timeout:5000});
-    }
-
-    // อัปเดตสถานะผ่าน API
+    const startedAt=new Date().toISOString();
     const t=tickets.find(x=>x._recordId===rid);
+
+    // Feature 1: บันทึก started_at ลง DB ผ่าน API
     const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({
       status:'อยู่ระหว่างดำเนินการ ⚙️',
-      brand:t?.brand||''
+      brand:t?.brand||'',
+      started_at:startedAt
     })});
     if(!d.ok)throw new Error(d.error||'Failed');
 
-    // reload จาก server
-    await loadTickets();
+    // เก็บ started_at ใน localStorage สำรองไว้ด้วย
+    try{
+      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
+      saved[rid]=startedAt;
+      localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(saved));
+    }catch(_){}
+
+    // ส่ง GPS พร้อม ticket_id
+    navigator.geolocation.getCurrentPosition(pos=>{
+      api('/api/gps',{method:'POST',body:JSON.stringify({
+        latitude:pos.coords.latitude,longitude:pos.coords.longitude,
+        accuracy:pos.coords.accuracy,ticket_id:rid,
+        engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand
+      })});
+    },()=>{},{enableHighAccuracy:true,timeout:5000});
+
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',started_at:startedAt}:x);
     render();
     toast('เริ่มงานแล้ว — GPS tracking active');
   }catch(e){toast('Error: '+e.message);}
@@ -528,36 +578,74 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
-  // คำนวณชั่วโมงอัตโนมัติ
+
+  // Feature 1: คำนวณชั่วโมงจาก started_at ใน ticket (DB) หรือ localStorage สำรอง
   let autoHours='';
-  if(window._startTimes?.[rid]){
-    const ms=Date.now()-window._startTimes[rid];
-    autoHours=(ms/3600000).toFixed(2);
+  let startedAt=t.started_at||t.startedAt||null;
+  if(!startedAt){
+    try{
+      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
+      if(saved[rid])startedAt=saved[rid];
+    }catch(_){}
   }
+  if(startedAt){
+    const ms=Date.now()-new Date(startedAt).getTime();
+    if(ms>0)autoHours=(ms/3600000).toFixed(2);
+  }
+
   openMod(`<div class="mod-t">Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
     <div class="fg"><label>Work Detail *</label><textarea id="m-wd" placeholder="Describe work done...">${esc(t.workDetail||'')}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
       <div class="fg"><label>Parts Used</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="e.g. LAN cable"/></div>
-      <div class="fg"><label>Hours ${autoHours?'(นับอัตโนมัติ)':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
+      <div class="fg"><label>Hours ${autoHours?'⏱️ อัตโนมัติ':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
     </div>
     <div class="fg"><label>Photo (camera)</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
+    <div id="m-loc" style="font-size:11px;color:var(--fg4);margin-bottom:8px;text-align:center">📍 กำลังดึงตำแหน่งปัจจุบัน...</div>
     <div class="mod-f">
       <button class="bo2" onclick="closeMod()">Cancel</button>
       <button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button>
     </div>`);
+
+  // Feature 2: ดึง GPS ตำแหน่งจบงานทันทีที่เปิด modal
+  window._completeLat=null;window._completeLng=null;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    window._completeLat=pos.coords.latitude;
+    window._completeLng=pos.coords.longitude;
+    const locEl=document.getElementById('m-loc');
+    if(locEl)locEl.innerHTML=`📍 ตำแหน่งจบงาน: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+  },()=>{
+    const locEl=document.getElementById('m-loc');
+    if(locEl)locEl.innerHTML='⚠️ ไม่สามารถดึงตำแหน่งได้';
+  },{enableHighAccuracy:true,timeout:10000});
 }
 
 async function doSubmit(rid){
   const wd=(document.getElementById('m-wd')?.value||'').trim();
-  if(!wd){toast('Enter work detail');return;}
+  if(!wd){toast('กรุณากรอกรายละเอียดงาน');return;}
   const pt=(document.getElementById('m-pt')?.value||'').trim();
   const wh=(document.getElementById('m-wh')?.value||'').trim();
+
+  // Feature 2: รวม GPS จบงาน
+  const payload={
+    workDetail:wd,partsUsed:pt,workHours:wh,
+    completed_lat:window._completeLat||null,
+    completed_lng:window._completeLng||null
+  };
+
   try{
-    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh})});
+    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify(payload)});
     if(!d.ok)throw new Error(d.error||'Failed');
-    tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'review'}:x);
-    closeMod();render();toast('Work submitted');
+
+    // ล้าง localStorage startTime
+    try{
+      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
+      delete saved[rid];
+      localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(saved));
+    }catch(_){}
+
+    tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน'}:x);
+    closeMod();render();toast('ส่งงานสำเร็จ ✅');
   }catch(e){toast('Error: '+e.message);}
 }
 
