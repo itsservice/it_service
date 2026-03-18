@@ -272,7 +272,7 @@ app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manag
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
   try {
     const { workDetail, partsUsed, workHours } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
@@ -286,7 +286,7 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','admin','
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','admin','superadmin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
   try {
     const { workDetail, status, engineerName } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
