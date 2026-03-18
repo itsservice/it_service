@@ -353,6 +353,9 @@ const FASTAPI_KEY = 'repair123';
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
     const { latitude, longitude, accuracy, ticket_id } = req.body || {};
+const lat = parseFloat(latitude);
+const lng = parseFloat(longitude);
+if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Invalid coordinates' });
     if (!latitude || !longitude) return res.json({ ok:false, error:'Missing coordinates' });
     const axios = require('axios');
     await axios.post(`${FASTAPI_URL}/api/gps`, {
