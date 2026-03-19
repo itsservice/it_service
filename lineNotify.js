@@ -1,148 +1,193 @@
-// lineNotify.js — LINE Flex Message sender
-// ดึงค่า Group ID จาก lineConfig.js (ตั้งผ่านหน้า Admin ได้)
-const axios = require('axios');
-const lineConfig = require('./lineConfig');
+// lineNotify.js — ส่ง LINE notification
+const axios  = require('axios');
+const lc     = require('./lineConfig');
 
-const AT = () => process.env.LINE_CHANNEL_ACCESS_TOKEN;
-const APP_URL = () => process.env.APP_URL || 'https://it-service-56im.onrender.com';
+const LINE_PUSH = 'https://api.line.me/v2/bot/message/push';
 
+function getToken() {
+  return process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
+}
+
+// ── push raw ─────────────────────────────────────────────────
 async function push(to, messages) {
-  const token = AT();
-  if (!token) { console.warn('[LINE] SKIP — no LINE_CHANNEL_ACCESS_TOKEN'); return { ok:false, error:'no token' }; }
-  if (!to)    { console.warn('[LINE] SKIP — no recipient'); return { ok:false, error:'no recipient' }; }
+  const token = getToken();
+  if (!token) { console.warn('[LINE] No LINE_CHANNEL_ACCESS_TOKEN'); return { ok:false, error:'no token' }; }
+  if (!to)    { console.warn('[LINE] No recipient');                 return { ok:false, error:'no recipient' }; }
   try {
-    console.log(`[LINE] Push -> ${to.slice(0,12)}...`);
-    const r = await axios.post('https://api.line.me/v2/bot/message/push',
-      { to, messages },
-      { headers: { Authorization:'Bearer '+token, 'Content-Type':'application/json' }, timeout:10000 }
-    );
-    console.log(`[LINE] OK -> ${to.slice(0,12)}... (${r.status})`);
+    await axios.post(LINE_PUSH, { to, messages }, {
+      headers: { Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      timeout: 10_000,
+    });
+    console.log(`[LINE] pushed to ${to.slice(0,8)}...`);
     return { ok:true };
-  } catch(err) {
-    console.error(`[LINE] FAIL -> ${to.slice(0,12)}...`, err.response?.data || err.message);
-    return { ok:false, error: err.response?.data || err.message };
+  } catch (e) {
+    console.error('[LINE push]', e.response?.data || e.message);
+    return { ok:false, error: String(e.response?.data?.message || e.message) };
   }
 }
 
-function infoRow(label, value) {
-  return { type:'box', layout:'horizontal', spacing:'sm', contents:[
-    { type:'text', text:label, size:'sm', color:'#888888', flex:3, weight:'bold' },
-    { type:'text', text:String(value||'-'), size:'sm', color:'#111111', flex:5, wrap:true }
-  ]};
+// ── Flex helpers ──────────────────────────────────────────────
+function textMsg(text) {
+  return [{ type:'text', text }];
 }
 
-function makeFlex(title, subtitle, color, ticket, buttonLabel, buttonUrl) {
-  const rows = [
-    infoRow('Ticket', ticket.id||'-'),
-    infoRow('Date', ticket.sentDate || new Date().toLocaleString('th-TH')),
-    infoRow('Type', ticket.type||'-'),
-    infoRow('Brand', ticket.brand||'-'),
-    infoRow('Branch', ticket.branchCode||'-'),
-    infoRow('Reporter', ticket.reporter||'-'),
-    infoRow('Phone', ticket.phone||'-'),
+function statusColor(s='') {
+  if (s.includes('เสร็จสิ้น')) return '#00b87a';
+  if (s.includes('ระหว่าง'))  return '#3b82f6';
+  if (s.includes('ตรวจ'))     return '#f59e0b';
+  return '#888888';
+}
+
+function flex(title, subtitle, rows=[], footer=null, headerColor='#0d0d12') {
+  const contents = [
+    { type:'text', text:title,    weight:'bold', size:'md', color:'#ffffff' },
+    { type:'text', text:subtitle, size:'xs',     color:'#aaaaaa', margin:'xs' },
+    { type:'separator', margin:'md', color:'#333333' },
+    ...rows.map(([l,v]) => ({
+      type:'box', layout:'horizontal', margin:'sm',
+      contents:[
+        { type:'text', text:l, size:'xs', color:'#888888', flex:2 },
+        { type:'text', text:String(v||'-'), size:'xs', color:'#dddddd', flex:3, align:'end', wrap:true },
+      ]
+    })),
   ];
-  if (ticket.engineerName) rows.push(infoRow('Engineer', ticket.engineerName));
-  if (ticket.status) rows.push(infoRow('Status', (ticket.status||'').replace(/[⏱️⚙️✅❌🔍✏️]/g,'').trim()));
-  if (ticket.workDetail) rows.push(infoRow('Work', (ticket.workDetail||'').slice(0,80)));
-
-  const bubble = { type:'bubble', size:'mega',
-    header:{ type:'box', layout:'vertical', backgroundColor:'#000000', paddingAll:'16px', contents:[
-      { type:'text', text:title, size:'sm', color:color||'#ffffff', weight:'bold' },
-      { type:'text', text:subtitle, size:'lg', weight:'bold', color:'#ffffff', margin:'sm', wrap:true },
-      { type:'text', text:`${ticket.brand||'-'} / ${ticket.branchCode||'-'}`, size:'xs', color:'#888888', margin:'xs' },
-    ]},
-    body:{ type:'box', layout:'vertical', backgroundColor:'#111111', paddingAll:'16px', spacing:'sm', contents:rows }
+  return {
+    type: 'flex',
+    altText: title,
+    contents: {
+      type: 'bubble', size: 'kilo',
+      header: {
+        type:'box', layout:'vertical',
+        backgroundColor: headerColor, paddingAll:'14px',
+        contents: contents,
+      },
+      ...(footer ? {
+        footer: {
+          type:'box', layout:'vertical', backgroundColor:'#0a0a0f', paddingAll:'10px',
+          contents: [{ type:'text', text:footer, size:'xs', color:'#666666', wrap:true }]
+        }
+      } : {}),
+    },
   };
-  if (buttonLabel && buttonUrl) {
-    bubble.footer = { type:'box', layout:'vertical', backgroundColor:'#111111', paddingAll:'12px', contents:[
-      { type:'button', style:'primary', color:'#ffffff', action:{ type:'uri', label:buttonLabel, uri:buttonUrl } }
-    ]};
-  }
-  return { type:'flex', altText:`${title}: ${ticket.id||''} - ${ticket.type||''}`, contents:bubble };
 }
 
-// ═══ NOTIFICATIONS ═══
-
-async function notifyNewTicket(ticket) {
-  console.log(`[LINE] notifyNewTicket: ${ticket.id} brand=${ticket.brand}`);
-  const flex = makeFlex('TICKET NEW', ticket.type||'New Issue', '#00e5a0', ticket,
-    'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`);
-  const results = [];
-
-  const adminGroup = lineConfig.getAdminGroupId();
-  if (adminGroup) results.push(await push(adminGroup, [flex]));
-  else console.warn('[LINE] No Admin Group ID set (go to Admin > LINE Settings)');
-
-  const brandGroup = lineConfig.getBrandGroupId(ticket.brand);
-  if (brandGroup && brandGroup !== adminGroup) results.push(await push(brandGroup, [flex]));
-
-  console.log(`[LINE] notifyNewTicket: ${results.filter(r=>r.ok).length}/${results.length} sent`);
-  return results;
-}
-
-async function notifyAssigned(ticket, engineerLineId) {
-  console.log(`[LINE] notifyAssigned: ${ticket.id} -> ${ticket.engineerName} lineId=${engineerLineId||'NONE'}`);
-  const results = [];
-
-  if (engineerLineId) {
-    const flex = makeFlex('JOB ASSIGNED', `${ticket.type||'Job'} assigned to you`, '#60a5fa', ticket,
-      'Open Job', `${APP_URL()}/engineer?ticket=${ticket.id}`);
-    results.push(await push(engineerLineId, [flex]));
-  } else {
-    console.warn(`[LINE] Engineer "${ticket.engineerName}" has no LINE User ID — skip personal msg`);
-    console.warn('[LINE] Fix: Admin > Edit User > LINE User ID (get via !userid in LINE chat)');
-  }
-
-  const adminGroup = lineConfig.getAdminGroupId();
-  if (adminGroup) {
-    const adminFlex = makeFlex('ASSIGNED', `${ticket.id} -> ${ticket.engineerName}`, '#60a5fa', ticket,
-      'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`);
-    results.push(await push(adminGroup, [adminFlex]));
-  }
-
-  return results;
-}
-
-async function notifyReassigned(ticket, oldLineId, newLineId) {
-  console.log(`[LINE] notifyReassigned: ${ticket.id}`);
-  const results = [];
-  if (oldLineId) results.push(await push(oldLineId, [makeFlex('JOB REASSIGNED', `${ticket.id} reassigned`, '#fb923c', ticket, null, null)]));
-  if (newLineId) results.push(await push(newLineId, [makeFlex('NEW JOB', `${ticket.type||'Job'} assigned`, '#60a5fa', ticket, 'Open Job', `${APP_URL()}/engineer?ticket=${ticket.id}`)]));
-  const adminGroup = lineConfig.getAdminGroupId();
-  if (adminGroup) results.push(await push(adminGroup, [makeFlex('REASSIGNED', `${ticket.id} -> ${ticket.engineerName}`, '#fb923c', ticket, 'View Ticket', `${APP_URL()}/admin?ticket=${ticket.id}`)]));
-  return results;
-}
-
+// ── 1. ช่างส่งงาน → แจ้ง Admin (LINE ส่วนตัว) ────────────────
 async function notifyWorkSubmitted(ticket) {
-  console.log(`[LINE] notifyWorkSubmitted: ${ticket.id}`);
-  const flex = makeFlex('WORK SUBMITTED', `${ticket.engineerName||'Engineer'} submitted`, '#22d3ee', ticket,
-    'Review Now', `${APP_URL()}/admin?ticket=${ticket.id}`);
-  const results = [];
-  const adminGroup = lineConfig.getAdminGroupId();
-  if (adminGroup) results.push(await push(adminGroup, [flex]));
-  const brandGroup = lineConfig.getBrandGroupId(ticket.brand);
-  if (brandGroup && brandGroup !== adminGroup) results.push(await push(brandGroup, [flex]));
-  return results;
+  const adminIds = await lc.getAdminUserIds();
+  if (!adminIds.length) {
+    console.warn('[LINE] notifyWorkSubmitted: no admin_user_id configured');
+    return;
+  }
+
+  const msg = flex(
+    '🔧 ช่างส่งงานแล้ว — รอตรวจรับ',
+    `Ticket: ${ticket.id || ticket._recordId || '-'}`,
+    [
+      ['แบรนด์',   ticket.brand     || '-'],
+      ['สาขา',     ticket.branchCode|| '-'],
+      ['ประเภท',   ticket.type      || '-'],
+      ['ช่าง',     ticket.engineerName || '-'],
+      ['รายละเอียดงาน', (ticket.workDetail||'-').slice(0,60)],
+      ['อะไหล่',   ticket.partsUsed || '-'],
+    ],
+    'กรุณาตรวจรับงานใน Admin Dashboard',
+    '#071a10'
+  );
+
+  await Promise.all(adminIds.map(id => push(id, [msg])));
 }
 
+// ── 2. Admin ปิดงาน → แจ้งกลุ่ม Brand ────────────────────────
 async function notifyTicketClosed(ticket) {
-  console.log(`[LINE] notifyTicketClosed: ${ticket.id}`);
-  const flex = makeFlex('TICKET CLOSED', `${ticket.id} completed`, '#4ade80', ticket,
-    'View Summary', `${APP_URL()}/admin?ticket=${ticket.id}`);
-  const results = [];
-  const adminGroup = lineConfig.getAdminGroupId();
-  if (adminGroup) results.push(await push(adminGroup, [flex]));
-  const brandGroup = lineConfig.getBrandGroupId(ticket.brand);
-  if (brandGroup && brandGroup !== adminGroup) results.push(await push(brandGroup, [flex]));
-  const reporterLine = ticket.line_user_id || ticket.reporter_line_id || ticket.lineUserId;
-  if (reporterLine) results.push(await push(reporterLine, [makeFlex('COMPLETED', `Ticket ${ticket.id} done`, '#4ade80', ticket, 'View', `${APP_URL()}/report`)]));
-  return results;
+  const brand = ticket.brand || '';
+  const groupId = await lc.getBrandGroupId(brand);
+  if (!groupId) {
+    console.warn(`[LINE] notifyTicketClosed: no brand group for "${brand}"`);
+    // fallback: แจ้ง admin group แทน
+    const adminGroup = await lc.getAdminGroupId();
+    if (!adminGroup) return;
+    const msg = textMsg(`✅ Ticket ${ticket.id||'-'} [${brand}] ปิดงานแล้ว\nโดย: ${ticket.closedBy||'-'}`);
+    await push(adminGroup, msg);
+    return;
+  }
+
+  const msg = flex(
+    '✅ งานเสร็จสิ้น',
+    `Ticket: ${ticket.id || ticket._recordId || '-'}`,
+    [
+      ['แบรนด์',   ticket.brand     || '-'],
+      ['สาขา',     ticket.branchCode|| '-'],
+      ['ประเภท',   ticket.type      || '-'],
+      ['ช่าง',     ticket.engineerName || '-'],
+      ['ปิดโดย',   ticket.closedBy  || '-'],
+      ['วันที่ปิด', ticket.closedAt  || '-'],
+      ...(ticket.adminNote ? [['หมายเหตุ', ticket.adminNote]] : []),
+    ],
+    null,
+    '#07120d'
+  );
+
+  await push(groupId, [msg]);
 }
 
+// ── 3. Ticket ใหม่ → แจ้ง Admin group ────────────────────────
+async function notifyNewTicket(ticket) {
+  const groupId = await lc.getAdminGroupId();
+  if (!groupId) return;
+
+  const msg = flex(
+    '🎫 Ticket ใหม่',
+    `${ticket.type || 'แจ้งปัญหา'} — ${ticket.brand || ''}`,
+    [
+      ['สาขา',   ticket.branchCode || '-'],
+      ['ผู้แจ้ง', ticket.reporter   || '-'],
+      ['เบอร์',  ticket.phone      || '-'],
+      ['รายละเอียด', (ticket.detail||'-').slice(0,80)],
+    ],
+    'เปิด Admin Dashboard เพื่อมอบหมายช่าง',
+    '#0d0d12'
+  );
+
+  await push(groupId, [msg]);
+}
+
+// ── 4. มอบหมายช่าง → แจ้ง LINE ส่วนตัวช่าง ──────────────────
+async function notifyAssigned(ticket, engineerLineId) {
+  if (!engineerLineId) return;
+
+  const msg = flex(
+    '🔔 มีงานมอบหมายให้คุณ',
+    `Ticket: ${ticket.id || '-'}`,
+    [
+      ['แบรนด์',    ticket.brand     || '-'],
+      ['สาขา',      ticket.branchCode|| '-'],
+      ['ประเภท',    ticket.type      || '-'],
+      ['รายละเอียด',(ticket.detail||'-').slice(0,80)],
+    ],
+    'เปิดหน้าช่างเพื่อรับงาน',
+    '#0a1428'
+  );
+
+  await push(engineerLineId, [msg]);
+}
+
+// ── 5. แก้ไข/reassign ─────────────────────────────────────────
 async function notifyRevision(ticket, engineerLineId) {
-  console.log(`[LINE] notifyRevision: ${ticket.id}`);
-  if (engineerLineId) return [await push(engineerLineId, [makeFlex('REVISION', `${ticket.id} needs fix`, '#f87171', ticket, 'Fix Now', `${APP_URL()}/engineer?ticket=${ticket.id}`)])];
-  return [];
+  if (!engineerLineId) return;
+  await push(engineerLineId, textMsg(`✏️ Ticket ${ticket.id||'-'} มีการแก้ไข กรุณาตรวจสอบ`));
 }
 
-module.exports = { push, notifyNewTicket, notifyAssigned, notifyReassigned, notifyWorkSubmitted, notifyTicketClosed, notifyRevision };
+async function notifyReassigned(ticket, oldEngLineId, newEngLineId) {
+  if (oldEngLineId) await push(oldEngLineId, textMsg(`🔄 Ticket ${ticket.id||'-'} ถูกโอนให้ช่างคนอื่น`));
+  if (newEngLineId) await notifyAssigned(ticket, newEngLineId);
+}
+
+module.exports = {
+  push,
+  notifyNewTicket,
+  notifyWorkSubmitted,
+  notifyTicketClosed,
+  notifyAssigned,
+  notifyRevision,
+  notifyReassigned,
+};
