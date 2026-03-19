@@ -656,7 +656,8 @@ async function doStartWork(rid){
       })});
     },()=>{},{enableHighAccuracy:true,timeout:5000});
 
-    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',started_at:startedAt}:x);
+    // reload จาก server ให้ sync ทุกอุปกรณ์
+    await loadTickets();
     render();
     toast('🚀 เริ่มงานแล้ว!');
   }catch(e){toast('Error: '+e.message);}
