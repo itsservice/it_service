@@ -7,9 +7,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fff;--bg2:#f6f6f4;--bg3:#edede9;--bg4:#e4e4df;--fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;--border:#e0e0db;--border2:#c8c8c2;--card:#fff;--green:#2d7a4f;--red:#b83232;--display:'Syne',sans-serif;--sans:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;--ease:cubic-bezier(.22,.61,.36,1)}
-[data-t="dark"]{--bg:#0a0a0a;--bg2:#141413;--bg3:#1e1e1c;--bg4:#282826;--fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#7a7a75;--fg4:#4a4a46;--border:#252523;--border2:#353532;--card:#141413;--green:#4ade80;--red:#f87171}
-html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
+:root{
+  --bg:#fff;--bg2:#f6f6f4;--bg3:#edede9;--bg4:#e4e4df;
+  --fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;
+  --border:#e0e0db;--border2:#c8c8c2;--card:#fff;
+  --green:#2d7a4f;--red:#b83232;--blue:#1e5fa8;
+  --display:'Syne',sans-serif;--sans:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --sb-w:240px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-t="dark"]{
+  --bg:#0a0a0a;--bg2:#141413;--bg3:#1e1e1c;--bg4:#282826;
+  --fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#7a7a75;--fg4:#4a4a46;
+  --border:#252523;--border2:#353532;--card:#141413;
+  --green:#4ade80;--red:#f87171;--blue:#60a5fa;
+}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s;overflow:hidden}
 a{color:inherit;text-decoration:none}
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -32,35 +47,113 @@ a{color:inherit;text-decoration:none}
 .llinks{text-align:center;margin-top:14px;font-size:12px;color:var(--fg4)}.llinks a{color:var(--fg3);margin:0 6px}
 
 /* APP */
-#app{display:none}#app.on{display:block}
-.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);transition:all .4s}
-.top-logo{width:28px;height:28px;background:var(--fg);border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--bg);flex-shrink:0;transition:all .4s}
-.top-t{font-family:var(--display);font-size:14px;font-weight:800;flex:1;color:var(--fg);letter-spacing:-.02em}
-.top-clock{font-family:var(--mono);font-size:11px;color:var(--fg4)}
-.smb{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}.smb:hover{background:var(--bg2);color:var(--fg)}
+#app{display:none;height:100vh;overflow:hidden}
+#app.on{display:flex}
+
+/* SIDEBAR OVERLAY */
+.sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:140;display:none;backdrop-filter:blur(1px)}
+.sb-overlay.open{display:block}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;left:0;top:0;height:100%;width:var(--sb-w);
+  background:var(--card);border-right:1px solid var(--border);
+  z-index:150;display:flex;flex-direction:column;
+  transform:translateX(-100%);
+  transition:transform .32s var(--ease);
+  padding-top:var(--safe-top);
+}
+.sidebar.open{transform:translateX(0)}
+.sb-head{padding:16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sb-logo{width:32px;height:32px;background:var(--fg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--bg);flex-shrink:0;transition:all .4s}
+.sb-title{font-family:var(--display);font-size:14px;font-weight:800;flex:1;letter-spacing:-.02em}
+.sb-close{background:transparent;border:none;color:var(--fg3);cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .2s}
+.sb-close:hover{background:var(--bg2);color:var(--fg)}
+.sb-user{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-uname{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-urole{font-size:11px;color:var(--fg3);margin-top:1px}
+.sb-nav{flex:1;padding:8px;overflow-y:auto;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:none;background:transparent;color:var(--fg3);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;width:100%;text-align:left;transition:all .15s;white-space:nowrap}
+.nav-item:hover{background:var(--bg2);color:var(--fg)}
+.nav-item.on{background:var(--bg3);color:var(--fg);font-weight:600}
+.nav-item .ni{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-item .nb{margin-left:auto;background:var(--fg);color:var(--bg);border-radius:5px;font-size:9px;font-weight:700;padding:1px 5px;flex-shrink:0;transition:all .4s}
+.sb-foot{padding:10px;border-top:1px solid var(--border);flex-shrink:0;position:relative;padding-bottom:calc(10px + var(--safe-bottom))}
+
+/* PREVIEW ROLE — DROPDOWN (upward) */
+.pv-drop{
+  position:absolute;bottom:calc(100% + 4px);left:8px;right:8px;
+  background:var(--card);border:1.5px solid var(--border2);
+  border-radius:10px;box-shadow:0 -8px 24px rgba(0,0,0,.15);
+  padding:8px;display:flex;flex-direction:column;gap:2px;
+  opacity:0;transform:translateY(6px);pointer-events:none;
+  transition:opacity .2s,transform .2s var(--ease);z-index:200;overflow:hidden;
+}
+.pv-drop.open{opacity:1;transform:translateY(0);pointer-events:all}
+.pv-ropt{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--fg2);border:none;background:transparent;width:100%;text-align:left;transition:background .12s;font-family:var(--sans)}
+.pv-ropt:hover{background:var(--bg2)}
+.pv-ropt.active{background:var(--fg);color:var(--bg)}
+.pv-rdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.pv-rbadge{font-size:9px;margin-left:auto;padding:2px 6px;border-radius:99px;font-weight:700}
+.rb-super{background:#fef3c7;color:#92400e}.rb-manager{background:#ede9fe;color:#5b21b6}
+.rb-admin{background:#dbeafe;color:#1e40af}.rb-lead{background:#d1fae5;color:#065f46}
+.rb-eng{background:#e0f2fe;color:#0c4a6e}.rb-guest{background:#f1f5f9;color:#475569}
+.pv-confirm{display:flex;align-items:center;gap:6px;padding:8px 8px 2px;border-top:1px solid var(--border);margin-top:4px}
+.pv-hint{font-size:11px;color:var(--fg4);flex:1;font-family:var(--sans)}
+.pv-ok{background:var(--fg);border:none;border-radius:7px;padding:6px 11px;color:var(--bg);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--display);transition:all .2s;display:flex;align-items:center;gap:4px}
+.pv-ok:hover{opacity:.8}.pv-ok.go{background:var(--green)}
+.pv-timer{position:absolute;bottom:0;left:0;height:2px;background:var(--fg);border-radius:2px;width:100%;transition:width linear}
+
+/* PREVIEW TRIGGER */
+.pv-trigger{display:none;align-items:center;gap:7px;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;user-select:none;margin-bottom:6px}
+.pv-trigger.show{display:flex}
+.pv-trigger:hover{background:var(--bg3);border-color:var(--border2)}
+.pv-trigger.open{background:var(--fg);border-color:var(--fg)}
+.pv-trigger.open .pv-t-icon,.pv-trigger.open .pv-t-label,.pv-trigger.open .pv-t-arrow{color:var(--bg)}
+[data-t="dark"] .pv-trigger.open .pv-t-icon{filter:none}
+.pv-t-icon{font-size:13px;flex-shrink:0}
+.pv-t-label{font-size:11.5px;font-weight:600;color:var(--fg2);flex:1;font-family:var(--display);white-space:nowrap}
+.pv-t-role{font-size:10px;background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap;transition:all .2s}
+.pv-trigger.open .pv-t-role{background:var(--bg);color:var(--fg)}
+.pv-t-arrow{font-size:10px;color:var(--fg4);transition:transform .25s}
+.pv-trigger.open .pv-t-arrow{transform:rotate(180deg)}
+
+/* FOOTER BUTTONS */
+.sb-foot-row{display:flex;gap:4px}
+.sb-fbt{flex:1;padding:8px 6px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--fg3);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all .15s;text-align:center}
+.sb-fbt:hover{background:var(--bg2);color:var(--fg)}
+.sb-fbt.danger:hover{background:rgba(184,50,50,.08);border-color:var(--red);color:var(--red)}
+.sb-home{display:block;text-align:center;font-size:12px;color:var(--fg3);padding:7px;border-radius:7px;transition:all .15s;margin-bottom:6px}
+.sb-home:hover{background:var(--bg2);color:var(--fg)}
+
+/* MAIN AREA */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:10px 16px;padding-top:calc(var(--safe-top) + 10px);background:var(--bg);border-bottom:1px solid var(--border);transition:all .4s;flex-shrink:0}
+.btn-hamburger{background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--fg3);font-size:15px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-hamburger:hover{background:var(--bg2);color:var(--fg)}
+.top-t{font-family:var(--display);font-size:14px;font-weight:800;flex:1;color:var(--fg);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-clock{font-family:var(--mono);font-size:11px;color:var(--fg4);flex-shrink:0}
+.smb{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.smb:hover{background:var(--bg2);color:var(--fg)}
 
 /* GPS STATUS BAR */
-#gps-status-bar{
-  display:flex;align-items:center;gap:8px;
-  padding:6px 16px;font-size:12px;font-weight:500;
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  transition:all .4s;min-height:32px;
-}
-.gps-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
+#gps-status-bar{display:flex;align-items:center;gap:8px;padding:5px 16px;font-size:12px;font-weight:500;background:var(--bg2);border-bottom:1px solid var(--border);transition:all .4s;flex-shrink:0}
+.gps-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
 .gps-pulse.off{background:var(--red);animation:none}
 
-.content{max-width:680px;margin:0 auto;padding:14px}
-
-/* NAV TABS */
-.nav-tabs{display:flex;gap:3px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
-.ntab{padding:6px 12px;border-radius:6px;border:none;background:transparent;color:var(--fg4);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
-.ntab:hover{color:var(--fg)}.ntab.on{background:var(--bg3);color:var(--fg)}
-.ntab .ct{background:var(--fg);color:var(--bg);border-radius:5px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:3px;transition:all .4s}
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(14px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
+.content-inner{max-width:680px;margin:0 auto}
 
 /* STATS */
 .eng-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-.es{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:all .4s}
-.es-v{font-family:var(--display);font-size:24px;font-weight:800;color:var(--fg);letter-spacing:-.03em}.es-l{font-size:10px;color:var(--fg4);margin-top:1px;font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.es{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:all .4s;cursor:pointer}
+.es:hover{border-color:var(--border2)}
+.es-v{font-family:var(--display);font-size:24px;font-weight:800;color:var(--fg);letter-spacing:-.03em}
+.es-l{font-size:10px;color:var(--fg4);margin-top:1px;font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 
 /* JOB CARDS */
 .jcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:6px;transition:all .25s var(--ease);animation:up .3s var(--ease) both;position:relative;overflow:hidden}
@@ -84,11 +177,7 @@ a{color:inherit;text-decoration:none}
 .jc-b.pri{background:var(--fg);color:var(--bg);border-color:var(--fg);box-shadow:0 4px 0 rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.15)}
 .jc-b.pri:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 0 rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.15)}
 .jc-b.pri:active{transform:translateY(3px) scale(.97);box-shadow:0 1px 0 rgba(0,0,0,.2);opacity:1}
-@keyframes btnPop{0%{transform:scale(.95)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
-.jc-b.pri.popping{animation:btnPop .2s var(--ease)}
 .jc-b.danger{color:var(--red);border-color:var(--red)}.jc-b.danger:hover{background:var(--red);color:var(--bg)}
-
-/* TIMER */
 .timer-bar{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;transition:all .4s}
 .timer-val{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--fg);letter-spacing:.02em}
 .timer-label{font-size:11px;color:var(--fg4);flex:1}
@@ -112,62 +201,144 @@ a{color:inherit;text-decoration:none}
 .em-name{flex:1;font-size:13px;color:var(--fg);font-weight:500}
 .em-phone{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;transition:all .2s}
 .em-phone:hover{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-
-.empty{text-align:center;padding:32px 14px}.empty-t{font-family:var(--display);font-size:15px;font-weight:700;color:var(--fg3)}.empty-d{font-size:12px;color:var(--fg4);margin-top:2px}
+.empty{text-align:center;padding:32px 14px}
+.empty-t{font-family:var(--display);font-size:15px;font-weight:700;color:var(--fg3)}
+.empty-d{font-size:12px;color:var(--fg4);margin-top:2px}
 
 /* MODAL */
-.mod-bg{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}.mod-bg.on{display:flex}
+.mod-bg{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+.mod-bg.on{display:flex}
 [data-t="dark"] .mod-bg.on{background:rgba(0,0,0,.6)}
 .mod{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;width:100%;max-width:420px;animation:up .2s var(--ease);max-height:90vh;overflow-y:auto;transition:all .4s}
 .mod-t{font-family:var(--display);font-size:16px;font-weight:800;margin-bottom:12px;color:var(--fg);letter-spacing:-.02em}
-.fg{margin-bottom:8px}.fg label{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);margin-bottom:3px;display:block;text-transform:uppercase;letter-spacing:.06em}
+.fg{margin-bottom:8px}
+.fg label{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);margin-bottom:3px;display:block;text-transform:uppercase;letter-spacing:.06em}
 .fg input,.fg textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:all .3s}
-.fg input:focus,.fg textarea:focus{border-color:var(--fg)}.fg input::placeholder,.fg textarea::placeholder{color:var(--fg4)}
+.fg input:focus,.fg textarea:focus{border-color:var(--fg)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--fg4)}
 .fg textarea{resize:none;min-height:80px;line-height:1.5}
 .mod-f{display:flex;gap:5px;margin-top:12px}
 .bp{flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:7px;font-family:var(--display);font-size:13px;font-weight:700;cursor:pointer;transition:all .3s}.bp:hover{opacity:.8}
 .bo2{flex:1;padding:10px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .3s}
+.toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.08);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
 
-/* MY MAP */
-#eng-map{height:400px;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--bg2)}
-
-.toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
+/* PREVIEW ROLE LOADING OVERLAY */
+#pv-overlay{position:fixed;inset:0;background:#fff;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center}
+[data-t="dark"] #pv-overlay{background:#0a0a0a}
+.pvo-line1{font-size:11px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#bbb;margin-bottom:36px}
+.pvo-slot{position:relative;height:56px;display:flex;align-items:center;justify-content:center;min-width:240px;margin-bottom:14px;perspective:600px}
+.pvo-box{background:#111;color:#fff;font-size:24px;font-weight:800;padding:7px 24px;border-radius:10px;position:absolute;backface-visibility:hidden;transform-origin:center bottom}
+[data-t="dark"] .pvo-box{background:#f0f0eb;color:#0a0a0a}
+.pvo-box.pvo-new{transform:rotateX(90deg);opacity:0}
+.pvo-slot.do-flip .pvo-box.pvo-old{animation:foldOut .32s cubic-bezier(.55,0,1,.45) forwards}
+.pvo-slot.do-flip .pvo-box.pvo-new{animation:foldIn .32s cubic-bezier(0,.55,.45,1) .28s forwards}
+@keyframes foldOut{0%{transform:rotateX(0deg);opacity:1}100%{transform:rotateX(-80deg);opacity:0}}
+@keyframes foldIn{0%{transform:rotateX(80deg);opacity:0}100%{transform:rotateX(0deg);opacity:1}}
+.pvo-static{font-size:14px;color:#bbb;font-weight:700;letter-spacing:.05em;margin-bottom:14px;min-height:20px;text-align:center}
+.pvo-dots{display:flex;gap:8px;margin-top:36px}
+.pvo-dot{width:8px;height:8px;border-radius:50%;background:#eee}
+[data-t="dark"] .pvo-dot{background:#333}
+.pvo-dot:nth-child(1){animation:dotP 1.2s 0s infinite}
+.pvo-dot:nth-child(2){animation:dotP 1.2s .2s infinite}
+.pvo-dot:nth-child(3){animation:dotP 1.2s .4s infinite}
+@keyframes dotP{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes pvOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.03)}}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login">
 <div class="lcard">
 <div class="lcard-logo"><div class="lcard-icon">EN</div><div class="lcard-t">Engineer Portal</div><div class="lcard-s">Technician Access</div></div>
-<div class="lf"><label>Username</label><div class="iw"><input id="l-user" placeholder="username"/></div></div>
-<div class="lf"><label>Password</label><div class="iw"><input type="password" id="l-pass" placeholder="password"/><button class="eye" onclick="const i=document.getElementById('l-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'SHOW':'HIDE'">SHOW</button></div></div>
+<div class="lf"><label>Username</label><div class="iw"><input id="l-user" placeholder="username" autocomplete="username"/></div></div>
+<div class="lf"><label>Password</label><div class="iw"><input type="password" id="l-pass" placeholder="password" autocomplete="current-password"/><button class="eye" onclick="const i=document.getElementById('l-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'SHOW':'HIDE'">SHOW</button></div></div>
 <button class="lbtn" id="btn-login">Login</button>
 <div class="lerr" id="l-err"></div>
 <div class="llinks"><a href="/">Home</a><a href="/report">Report</a><a href="/admin">Admin</a></div>
 </div></div>
 
+<!-- APP -->
 <div id="app">
-  <!-- TOP BAR -->
-  <div class="top">
-    <div class="top-logo">EN</div>
-    <div class="top-t" id="eng-name">Engineer</div>
-    <div class="top-clock" id="clock">--:--:--</div>
-    <button class="smb" id="btn-theme" onclick="togTheme()">Dark</button>
-    <button class="smb" onclick="doRefresh()">Refresh</button>
-    <button class="smb" onclick="logout()">Logout</button>
-  </div>
+  <!-- Sidebar Overlay -->
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 
-  <!-- GPS STATUS BAR -->
-  <div id="gps-status-bar">
-    <div class="gps-pulse off" id="gps-dot"></div>
-    <span id="gps-text" style="color:var(--fg4)">กำลังหา GPS...</span>
-  </div>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">EN</div>
+      <div class="sb-title">Engineer</div>
+      <button class="sb-close" onclick="closeSidebar()">✕</button>
+    </div>
+    <div class="sb-user">
+      <div class="sb-uname" id="sb-name">—</div>
+      <div class="sb-urole" id="sb-role">—</div>
+    </div>
+    <nav class="sb-nav" id="sb-nav"></nav>
+    <div class="sb-foot">
+      <!-- Preview Role dropdown (upward) -->
+      <div class="pv-drop" id="pv-drop">
+        <button class="pv-ropt active" onclick="pvPickRole(this,'superadmin','Engineer')"><div class="pv-rdot" style="background:#f59e0b"></div>superadmin<span class="pv-rbadge rb-super">Dev</span></button>
+        <button class="pv-ropt" onclick="pvPickRole(this,'manager','Admin')"><div class="pv-rdot" style="background:#8b5cf6"></div>manager<span class="pv-rbadge rb-manager">Mgr</span></button>
+        <button class="pv-ropt" onclick="pvPickRole(this,'admin','Admin')"><div class="pv-rdot" style="background:#3b82f6"></div>admin<span class="pv-rbadge rb-admin">Admin</span></button>
+        <button class="pv-ropt" onclick="pvPickRole(this,'lead_engineer','Engineer')"><div class="pv-rdot" style="background:#10b981"></div>lead_engineer<span class="pv-rbadge rb-lead">Lead</span></button>
+        <button class="pv-ropt" onclick="pvPickRole(this,'engineer','Engineer')"><div class="pv-rdot" style="background:#0ea5e9"></div>engineer<span class="pv-rbadge rb-eng">Eng</span></button>
+        <button class="pv-ropt" onclick="pvPickRole(this,'guest','Admin')"><div class="pv-rdot" style="background:#94a3b8"></div>guest<span class="pv-rbadge rb-guest">Demo</span></button>
+        <div class="pv-confirm">
+          <span class="pv-hint" id="pv-hint">เลือก role แล้วกด ✓</span>
+          <button class="pv-ok" id="pv-ok-btn" onclick="pvConfirm()">🔏 ยืนยัน</button>
+        </div>
+        <div class="pv-timer" id="pv-timer"></div>
+      </div>
+      <!-- Preview Trigger -->
+      <div class="pv-trigger" id="pv-trigger" onclick="pvToggle()">
+        <span class="pv-t-icon">👁</span>
+        <span class="pv-t-label">Preview Role</span>
+        <span class="pv-t-role" id="pv-t-role">—</span>
+        <span class="pv-t-arrow">▾</span>
+      </div>
+      <a class="sb-home" href="/">🏠 หน้าหลัก</a>
+      <div class="sb-foot-row">
+        <button class="sb-fbt" id="btn-theme-sb" onclick="togTheme()">🌙 Dark</button>
+        <button class="sb-fbt danger" onclick="logout()">⏻ Logout</button>
+      </div>
+    </div>
+  </aside>
 
-  <div class="content">
-    <div class="eng-stats" id="eng-stats"></div>
-    <div class="nav-tabs" id="nav-tabs"></div>
-    <div id="view"></div>
+  <!-- Main area -->
+  <div class="main-area">
+    <div class="topbar">
+      <button class="btn-hamburger" onclick="openSidebar()">☰</button>
+      <div class="top-t" id="top-title">งานของฉัน</div>
+      <div class="top-clock" id="clock">--:--:--</div>
+      <button class="smb" onclick="doRefresh()">↻</button>
+    </div>
+    <div id="gps-status-bar">
+      <div class="gps-pulse off" id="gps-dot"></div>
+      <span id="gps-text" style="color:var(--fg4)">กำลังหา GPS...</span>
+    </div>
+    <div class="content">
+      <div class="content-inner">
+        <div class="eng-stats" id="eng-stats"></div>
+        <div id="view"></div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- Preview Role Loading -->
+<div id="pv-overlay">
+  <div class="pvo-line1">Switching View</div>
+  <div class="pvo-slot" id="pvo-sl-role">
+    <div class="pvo-box pvo-old" id="pvo-r-old">superadmin</div>
+    <div class="pvo-box pvo-new" id="pvo-r-new">engineer</div>
+  </div>
+  <div class="pvo-slot" id="pvo-sl-page" style="display:none">
+    <div class="pvo-box pvo-old" id="pvo-p-old" style="font-size:16px">Engineer Portal</div>
+    <div class="pvo-box pvo-new" id="pvo-p-new" style="font-size:16px">Admin Portal</div>
+  </div>
+  <div class="pvo-static" id="pvo-p-static"></div>
+  <div class="pvo-dots"><div class="pvo-dot"></div><div class="pvo-dot"></div><div class="pvo-dot"></div></div>
 </div>
 
 <div class="mod-bg" id="mod-bg"><div class="mod" id="mod"></div></div>
@@ -177,41 +348,71 @@ a{color:inherit;text-decoration:none}
 let AUTH=null,tickets=[],tab='active',sse=null,gpsWatch=null,_gpsActive=false;
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
-// ── Auto re-login ──
+
+/* ═══ SIDEBAR ═══════════════════════════════════════════════ */
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+  pvClose();
+}
+
+const TAB_DEFS=[
+  {id:'active',   icon:'🔧',label:'งานของฉัน'},
+  {id:'review',   icon:'🔍',label:'ตรวจงาน'},
+  {id:'done',     icon:'✅',label:'เสร็จสิ้น'},
+  {id:'emergency',icon:'🚨',label:'ฉุกเฉิน'},
+];
+const TAB_LABELS={active:'งานของฉัน',review:'ตรวจงาน',done:'เสร็จสิ้น',emergency:'ฉุกเฉิน'};
+
+function updateSidebarNav(){
+  const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
+  const review=tickets.filter(t=>/review|revision|ตรวจ/.test(t.status||''));
+  const done=tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
+  const counts={active:active.length,review:review.length,done:done.length,emergency:0};
+  document.getElementById('sb-nav').innerHTML=TAB_DEFS.map(d=>`
+    <button class="nav-item${tab===d.id?' on':''}" onclick="switchTab('${d.id}')">
+      <span class="ni">${d.icon}</span><span>${d.label}</span>
+      ${counts[d.id]?`<span class="nb">${counts[d.id]}</span>`:''}
+    </button>`).join('');
+}
+
+function switchTab(t){
+  tab=t;closeSidebar();
+  const el=document.getElementById('top-title');
+  if(el)el.textContent=TAB_LABELS[t]||t;
+  render();
+}
+
+/* ═══ AUTO RE-LOGIN ══════════════════════════════════════════ */
 let _relogging=false;
 async function autoRelogin(){
-  if(_relogging)return false;
-  _relogging=true;
+  if(_relogging)return false;_relogging=true;
   try{
     const c=JSON.parse(localStorage.getItem('eng_cred')||'null');
     if(!c)return false;
     const d=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).then(r=>r.json());
     if(!d.ok)return false;
-    AUTH={token:d.token,user:d.user};
-    localStorage.setItem('eng_auth',JSON.stringify(AUTH));
-    return true;
-  }catch(_){return false;}
-  finally{_relogging=false;}
+    AUTH={token:d.token,user:d.user};localStorage.setItem('eng_auth',JSON.stringify(AUTH));return true;
+  }catch(_){return false;}finally{_relogging=false;}
 }
 
 async function api(p,o={}){
   const h={'Content-Type':'application/json',...(o.headers||{})};
   if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;
-  let res=await fetch(p,{...o,headers:h}).catch(e=>null);
+  let res=await fetch(p,{...o,headers:h}).catch(()=>null);
   if(!res)return{ok:false,error:'Network error'};
-  // ถ้า 401 → re-login อัตโนมัติ แล้วลองใหม่
   if(res.status===401){
     const ok=await autoRelogin();
-    if(ok){
-      h['Authorization']='Bearer '+AUTH.token;
-      res=await fetch(p,{...o,headers:h}).catch(e=>null);
-      if(!res)return{ok:false,error:'Network error'};
-    }
+    if(ok){h['Authorization']='Bearer '+AUTH.token;res=await fetch(p,{...o,headers:h}).catch(()=>null);if(!res)return{ok:false,error:'Network error'};}
   }
   return res.json().catch(()=>({ok:false,error:'Invalid response'}));
 }
 
-// ═══ EMERGENCY DATA ═══
+/* ═══ EMERGENCY DATA ═════════════════════════════════════════ */
 const EMERG=[
   {cat:'emergency',catTh:'เหตุด่วนเหตุร้าย',catEn:'Emergency',items:[
     {n:'ตำรวจ / Police',p:'191'},{n:'ดับเพลิง / Fire',p:'199'},{n:'รถหาย / Stolen Vehicle',p:'1192'},
@@ -233,62 +434,29 @@ const EMERG=[
     {n:'TAC',p:'02-134-4077'}]}
 ];
 
-// ═══ GPS TRACKING ═══
+/* ═══ GPS TRACKING ═══════════════════════════════════════════ */
 function startGPSTracking(){
-  if(!('geolocation' in navigator)){
-    updateGPSBar(false,'GPS ไม่รองรับบนอุปกรณ์นี้');return;
-  }
+  if(!('geolocation' in navigator)){updateGPSBar(false,'GPS ไม่รองรับบนอุปกรณ์นี้');return;}
   if(gpsWatch!==null)navigator.geolocation.clearWatch(gpsWatch);
-
   gpsWatch=navigator.geolocation.watchPosition(
     pos=>{
-      _gpsActive=true;
-      const {latitude,longitude,accuracy}=pos.coords;
-      // ส่ง GPS ไป server
-      api('/api/gps',{method:'POST',body:JSON.stringify({
-        latitude,longitude,accuracy,
-        engineer_name:AUTH.user.name,
-        user_id:AUTH.user.id,
-        brand:AUTH.user.brand
-      })});
+      _gpsActive=true;const{latitude,longitude,accuracy}=pos.coords;
+      api('/api/gps',{method:'POST',body:JSON.stringify({latitude,longitude,accuracy,engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand})});
       updateGPSBar(true,`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
     },
-    err=>{
-      _gpsActive=false;
-      const msgs={1:'ไม่ได้รับอนุญาต GPS',2:'ไม่พบตำแหน่ง',3:'หมดเวลา GPS'};
-      updateGPSBar(false,msgs[err.code]||'GPS ไม่พร้อมใช้งาน');
-    },
+    err=>{_gpsActive=false;const msgs={1:'ไม่ได้รับอนุญาต GPS',2:'ไม่พบตำแหน่ง',3:'หมดเวลา GPS'};updateGPSBar(false,msgs[err.code]||'GPS ไม่พร้อมใช้งาน');},
     {enableHighAccuracy:true,maximumAge:30000,timeout:15000}
   );
 }
-
 function updateGPSBar(ok,msg){
-  const dot=document.getElementById('gps-dot');
-  const text=document.getElementById('gps-text');
-  const bar=document.getElementById('gps-status-bar');
+  const dot=document.getElementById('gps-dot'),text=document.getElementById('gps-text'),bar=document.getElementById('gps-status-bar');
   if(!dot||!text||!bar)return;
-  if(ok){
-    dot.className='gps-pulse';
-    text.style.color='var(--green)';
-    text.textContent='📍 GPS Active — '+msg;
-    bar.style.background='rgba(45,122,79,.08)';
-    bar.style.borderBottomColor='rgba(45,122,79,.2)';
-  }else{
-    dot.className='gps-pulse off';
-    text.style.color='var(--red)';
-    text.textContent='⚠️ '+msg;
-    bar.style.background='rgba(184,50,50,.06)';
-    bar.style.borderBottomColor='rgba(184,50,50,.15)';
-  }
+  if(ok){dot.className='gps-pulse';text.style.color='var(--green)';text.textContent='📍 GPS Active — '+msg;bar.style.background='rgba(45,122,79,.08)';bar.style.borderBottomColor='rgba(45,122,79,.2)';}
+  else{dot.className='gps-pulse off';text.style.color='var(--red)';text.textContent='⚠️ '+msg;bar.style.background='rgba(184,50,50,.06)';bar.style.borderBottomColor='rgba(184,50,50,.15)';}
 }
+function stopGPSTracking(){if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}_gpsActive=false;updateGPSBar(false,'GPS หยุดทำงาน');}
 
-function stopGPSTracking(){
-  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
-  _gpsActive=false;
-  updateGPSBar(false,'GPS หยุดทำงาน');
-}
-
-// ═══ AUTH ═══
+/* ═══ AUTH ═══════════════════════════════════════════════════ */
 async function tryAuto(){
   const s=localStorage.getItem('eng_auth');if(!s)return false;
   try{
@@ -309,128 +477,96 @@ document.getElementById('btn-login').onclick=async()=>{
     if(!d.ok)throw new Error(d.error||'Login failed');
     AUTH={token:d.token,user:d.user};
     localStorage.setItem('eng_auth',JSON.stringify(AUTH));
-    // เก็บ credentials สำหรับ auto re-login
     localStorage.setItem('eng_cred',JSON.stringify({username:u,password:p}));
     boot();
   }catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
 };
-
 ['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
 
 function logout(){
   stopGPSTracking();
   localStorage.removeItem('eng_st_'+(AUTH?.user?.id||'x'));
-  localStorage.removeItem('eng_cred'); // ล้าง credentials ตอน logout ตั้งใจ
+  localStorage.removeItem('eng_cred');
   AUTH=null;localStorage.removeItem('eng_auth');location.reload();
 }
 
+let _dark=false;
 function togTheme(){
-  const d=document.documentElement;
-  d.dataset.t=d.dataset.t==='dark'?'':'dark';
-  document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';
+  _dark=!_dark;
+  document.documentElement.dataset.t=_dark?'dark':'';
+  const btn=document.getElementById('btn-theme-sb');
+  if(btn)btn.textContent=_dark?'☀️ Light':'🌙 Dark';
 }
-// Default always light — no localStorage persistence
 
-// ═══ BOOT ═══
+/* ═══ BOOT ═══════════════════════════════════════════════════ */
 async function boot(){
   document.getElementById('login').style.display='none';
   document.getElementById('app').classList.add('on');
-  document.getElementById('eng-name').textContent=AUTH.user.name;
-  document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
-  startClock();
-  connectSSE();
+  const u=AUTH.user;
+  document.getElementById('sb-name').textContent=u.name;
+  document.getElementById('sb-role').textContent=({'superadmin':'Super Admin','manager':'Manager','admin':'Admin','lead_engineer':'Lead Engineer','engineer':'ช่าง IT','guest':'Guest (Demo)'})[u.role]||u.role;
+  startClock();connectSSE();
   await loadTickets();
-  startGPSTracking(); // เริ่ม GPS หลัง login ทันที
-  render();
+  render();startGPSTracking();initPreviewRole();
 }
 
-// ═══ DATA ═══
+/* ═══ DATA ════════════════════════════════════════════════════ */
 async function loadTickets(){
   try{
     const d=await api('/api/tickets');
     if(d.ok){
-      const my=AUTH.user.name;
-      const role=AUTH.user.role;
+      const my=AUTH.user.name,role=AUTH.user.role;
       const canSeeAll=['lead_engineer','admin','superadmin','manager','guest'].includes(role);
       tickets=(d.tickets||[]).filter(t=>canSeeAll||t.engineerName===my||t.assignedTo===my||t.assigned_to===my);
     }
   }catch(e){}
 }
-
 async function doRefresh(){await loadTickets();render();toast('Refreshed');}
-
 function connectSSE(){
   if(sse)try{sse.close();}catch(_){}
   sse=new EventSource('/api/events');
   sse.addEventListener('ticket_updated',()=>{loadTickets().then(render)});
   sse.addEventListener('ticket_created',()=>{loadTickets().then(render)});
 }
-
 function startClock(){
   const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};
   t();setInterval(t,1000);
 }
-
-// นับเวลาทำงานแบบ realtime เฉพาะ ticket ที่กดเริ่มงานแล้ว
 function startWorkTimers(){
   if(window._workTimerInterval)clearInterval(window._workTimerInterval);
   window._workTimerInterval=setInterval(()=>{
-    const working=tickets.filter(x=>/ระหว่าง/.test(x.status||''));
-    working.forEach(t=>{
-      const el=document.getElementById('timer-'+t._recordId);
-      if(!el)return;
-      let startedAt=t.started_at||t.startedAt||null;
-      if(!startedAt){
-        try{
-          const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
-          if(saved[t._recordId])startedAt=saved[t._recordId];
-        }catch(_){}
-      }
-      if(!startedAt)return; // ไม่มี startedAt → ไม่นับ
-      const ms=Date.now()-new Date(startedAt).getTime();
-      if(ms<0)return;
-      const h=Math.floor(ms/3600000);
-      const m=Math.floor((ms%3600000)/60000);
-      const s=Math.floor((ms%60000)/1000);
+    tickets.filter(x=>/ระหว่าง/.test(x.status||'')).forEach(t=>{
+      const el=document.getElementById('timer-'+t._recordId);if(!el)return;
+      let sa=t.started_at||t.startedAt||null;
+      if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
+      if(!sa)return;
+      const ms=Date.now()-new Date(sa).getTime();if(ms<0)return;
+      const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
       el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     });
   },1000);
 }
 
-// ═══ RENDER ═══
+/* ═══ RENDER ══════════════════════════════════════════════════ */
 function render(){
-  const role=AUTH?.user?.role||'engineer';
-  const isGuest=role==='guest';
-  const showMap=false; // ซ่อน My Map ทุก role
-
+  const isGuest=AUTH?.user?.role==='guest';
   const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
   const review=tickets.filter(t=>/review|revision|ตรวจ/.test(t.status||''));
   const done=tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
 
   document.getElementById('eng-stats').innerHTML=`
-    <div class="es"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div>
-    <div class="es"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div>
-    <div class="es"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
+    <div class="es" onclick="switchTab('active')"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div>
+    <div class="es" onclick="switchTab('review')"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div>
+    <div class="es" onclick="switchTab('done')"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
 
-  const tabs=[
-    {id:'active',lb:'Jobs',ct:active.length},
-    {id:'review',lb:'Review',ct:review.length},
-    {id:'done',lb:'Done',ct:done.length},
-    {id:'emergency',lb:'Emergency',ct:0},
-    ...(showMap?[{id:'map',lb:'My Map',ct:0}]:[])
-  ];
-  document.getElementById('nav-tabs').innerHTML=tabs.map(t=>`
-    <button class="ntab${tab===t.id?' on':''}" onclick="tab='${t.id}';render()">
-      ${t.lb}${t.ct?`<span class="ct">${t.ct}</span>`:''}
-    </button>`).join('');
+  updateSidebarNav();
 
   const view=document.getElementById('view');
   if(tab==='emergency'){renderEmergency(view);return;}
-  if(tab==='map'){renderMyMap(view);return;}
 
   const list=tab==='active'?active:tab==='review'?review:done;
   if(!list.length){
-    view.innerHTML=`<div class="empty"><div class="empty-t">${{active:'No active jobs',review:'No jobs in review',done:'No completed jobs'}[tab]||'Empty'}</div></div>`;
+    view.innerHTML=`<div class="empty"><div class="empty-t">${{active:'ยังไม่มีงานมอบหมาย',review:'ไม่มีงานรอตรวจ',done:'ยังไม่มีงานเสร็จสิ้น'}[tab]||'Empty'}</div></div>`;
     return;
   }
 
@@ -441,35 +577,19 @@ function render(){
     const isWorking=/in_progress|ระหว่าง/.test(t.status||'');
     const isReview=/ตรวจ|review/.test(t.status||'');
     const isDone=/เสร็จ|completed/.test(t.status||'');
-
-    // เช็คว่ากดเริ่มงานในเซสชันนี้แล้วหรือยัง (ต้องมี started_at)
-    let startedAt=t.started_at||t.startedAt||null;
-    if(!startedAt){
-      try{
-        const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
-        if(saved[t._recordId])startedAt=saved[t._recordId];
-      }catch(_){}
-    }
-    const hasStarted=isWorking&&!!startedAt;
-
-    // stamp เฉพาะที่กดเริ่มงานแล้ว หรือ review/done
+    let sa=t.started_at||t.startedAt||null;
+    if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
+    const hasStarted=isWorking&&!!sa;
     let stamp='';
-    if(hasStarted) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
-    else if(isReview) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
-    else if(isDone) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
+    if(hasStarted)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
+    else if(isReview)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
+    else if(isDone)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
 
     return`<div class="jcard" style="animation-delay:${i*.03}s">
       ${stamp}
-      ${hasStarted?`<div class="timer-bar">
-        <div class="gps-dot"></div>
-        <div class="timer-label">กำลังทำงาน</div>
-        <div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div>
-      </div>`:''}
+      ${hasStarted?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">กำลังทำงาน</div><div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div></div>`:''}
       <div class="jc-top">
-        <div style="flex:1">
-          <div class="jc-id">${esc(t.id||'--')}</div>
-          <div class="jc-type">${esc(t.type||'-')}</div>
-        </div>
+        <div style="flex:1"><div class="jc-id">${esc(t.id||'--')}</div><div class="jc-type">${esc(t.type||'-')}</div></div>
         <span class="pill">${statusLabel(t.status)}</span>
       </div>
       <div class="jc-meta">
@@ -480,222 +600,70 @@ function render(){
       ${t.detail?`<div class="jc-detail">${esc(t.detail)}</div>`:''}
       ${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}</div>`:''}
       <div class="jc-btns">
-        ${isGuest?`
-          <button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode — ดูอย่างเดียว">🔒 รับงาน</button>
-          <button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode — ดูอย่างเดียว">🔒 เริ่มงาน</button>
-          <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
-        `:`
-          ${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
+        ${isGuest?`<button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode">🔒 รับงาน</button><button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode">🔒 เริ่มงาน</button><button class="jc-b" onclick="openDetail('${rid}')">Detail</button>`
+        :`${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
           ${isAccepted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
           ${isWorking&&!hasStarted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
           ${hasStarted?`<button class="jc-b" style="opacity:.6;cursor:default">⏱️ กำลังทำอยู่</button><button class="jc-b pri" onclick="openSubmit('${rid}')">✅ Complete</button><button class="jc-b" onclick="openUpload('${rid}')">📷 Photo</button>`:''}
-          <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>
-        `}
+          <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>`}
       </div>
     </div>`;
   }).join('');
-  // เริ่มนับเวลาทำงาน
   startWorkTimers();
 }
 
-// ═══ MY MAP ═══
-function renderMyMap(el){
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-      <div style="font-family:var(--display);font-size:14px;font-weight:800;letter-spacing:-.02em">📍 ตำแหน่งของฉัน</div>
-      <div style="display:flex;gap:5px">
-        <button class="smb" onclick="centerMyMap()">🎯 ตำแหน่งปัจจุบัน</button>
-        <button class="smb" onclick="renderMyMap(document.getElementById('view'))">🔄 รีเฟรช</button>
-      </div>
-    </div>
-    <div id="eng-map"></div>
-    <div id="eng-map-info" style="margin-top:8px;font-size:12px;color:var(--fg4);text-align:center">
-      ${_gpsActive?'GPS กำลังทำงาน — แผนที่จะอัปเดตอัตโนมัติ':'GPS ไม่ได้ใช้งาน — กรุณาเปิด Location'}
-    </div>`;
-  loadLeaflet(()=>initMyMap());
-}
-
-let _myMap=null,_myMarker=null;
-
-function loadLeaflet(cb){
-  if(!document.getElementById('leaflet-css')){
-    const css=document.createElement('link');
-    css.id='leaflet-css';css.rel='stylesheet';
-    css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-    document.head.appendChild(css);
-  }
-  if(window.L){cb();return;}
-  const js=document.createElement('script');
-  js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-  js.onload=cb;
-  document.head.appendChild(js);
-}
-
-function initMyMap(){
-  const mapEl=document.getElementById('eng-map');
-  if(!mapEl)return;
-  if(_myMap){_myMap.remove();_myMap=null;_myMarker=null;}
-
-  _myMap=L.map('eng-map').setView([13.7563,100.5018],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap',maxZoom:19
-  }).addTo(_myMap);
-
-  // ถ้ามี GPS แล้วให้แสดงทันที
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const {latitude,longitude}=pos.coords;
-    placeMyMarker(latitude,longitude);
-    _myMap.setView([latitude,longitude],15);
-    const info=document.getElementById('eng-map-info');
-    if(info)info.textContent=`📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-  },()=>{
-    const info=document.getElementById('eng-map-info');
-    if(info)info.textContent='⚠️ ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด Location';
-  },{enableHighAccuracy:true,timeout:10000});
-}
-
-function placeMyMarker(lat,lng){
-  if(!_myMap)return;
-  const icon=L.divIcon({
-    html:`<div style="background:#2b5ea8;color:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)">${(AUTH?.user?.name||'?').charAt(0).toUpperCase()}</div>`,
-    iconSize:[38,38],iconAnchor:[19,19],className:''
-  });
-  if(_myMarker){_myMarker.setLatLng([lat,lng]);}
-  else{_myMarker=L.marker([lat,lng],{icon}).addTo(_myMap).bindPopup(`<b>${AUTH?.user?.name||'ฉัน'}</b><br>${AUTH?.user?.brand||'-'}<br><small>${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`);}
-}
-
-function centerMyMap(){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const {latitude,longitude}=pos.coords;
-    if(_myMap){_myMap.setView([latitude,longitude],16);placeMyMarker(latitude,longitude);}
-    const info=document.getElementById('eng-map-info');
-    if(info)info.textContent=`📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-  },()=>toast('ไม่สามารถดึงตำแหน่งได้'),{enableHighAccuracy:true,timeout:10000});
-}
-
-// ═══ EMERGENCY ═══
+/* ═══ EMERGENCY ═══════════════════════════════════════════════ */
 function renderEmergency(el){
   el.innerHTML=`<div class="em-search"><input placeholder="Search emergency numbers..." oninput="filterEmerg(this.value)"/></div><div id="em-list">${EMERG.map((c,ci)=>`<div class="em-cat" id="em-cat-${ci}"><div class="em-cat-h" onclick="document.getElementById('em-cat-${ci}').classList.toggle('open')">${c.catTh} / ${c.catEn}<span class="arrow">></span></div><div class="em-list">${c.items.map(it=>`<div class="em-item" data-kw="${(it.n+' '+it.p).toLowerCase()}"><div class="em-name">${it.n}</div><a href="tel:${it.p}" class="em-phone">${it.p}</a></div>`).join('')}</div></div>`).join('')}</div>`;
 }
-function filterEmerg(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('.em-item').forEach(el=>{el.style.display=el.dataset.kw.includes(q)?'':'none';});
-  if(q)document.querySelectorAll('.em-cat').forEach(el=>el.classList.add('open'));
-}
+function filterEmerg(q){q=q.toLowerCase();document.querySelectorAll('.em-item').forEach(el=>{el.style.display=el.dataset.kw.includes(q)?'':'none';});if(q)document.querySelectorAll('.em-cat').forEach(el=>el.classList.add('open'));}
 
-// ═══ ACTIONS ═══
+/* ═══ ACTIONS ════════════════════════════════════════════════ */
 async function doAccept(rid){
-  try{
-    await api(`/api/tickets/${rid}/accept`,{method:'POST'});
-    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'accepted'}:x);
-    render();toast('Job accepted');
-  }catch(e){toast('Error: '+e.message);}
+  try{await api(`/api/tickets/${rid}/accept`,{method:'POST'});tickets=tickets.map(x=>x._recordId===rid?{...x,status:'accepted'}:x);render();toast('Job accepted');}
+  catch(e){toast('Error: '+e.message);}
 }
-
-// ── GPS Permission Popup ──
 function showGPSPermissionPopup(onGranted){
-  openMod(`
-    <div style="text-align:center;padding:8px 0">
-      <div style="font-size:36px;margin-bottom:12px">📍</div>
-      <div class="mod-t" style="text-align:center">ต้องการเปิด GPS</div>
-      <div style="font-size:13px;color:var(--fg3);line-height:1.6;margin-bottom:16px">
-        กรุณาอนุญาตให้เว็บไซต์เข้าถึงตำแหน่งของคุณ<br>
-        เพื่อบันทึกตำแหน่งเริ่มงาน
-      </div>
-      <button class="bp" style="width:100%;margin-bottom:8px" onclick="requestGPSPermission()">
-        🔓 อนุญาตให้เข้าถึง GPS
-      </button>
-      <div style="font-size:11px;color:var(--fg4);line-height:1.7;background:var(--bg2);border-radius:7px;padding:10px;text-align:left;margin-bottom:8px">
-        <b>ถ้าปุ่มไม่ขึ้น popup:</b><br>
-        iOS: Settings → Safari → Location → Allow<br>
-        Android: Settings → Apps → Browser → Permissions → Location
-      </div>
-      <button class="bo2" style="width:100%" onclick="closeMod()">ยกเลิก</button>
-    </div>`);
+  openMod(`<div style="text-align:center;padding:8px 0">
+    <div style="font-size:36px;margin-bottom:12px">📍</div>
+    <div class="mod-t" style="text-align:center">ต้องการเปิด GPS</div>
+    <div style="font-size:13px;color:var(--fg3);line-height:1.6;margin-bottom:16px">กรุณาอนุญาตให้เว็บไซต์เข้าถึงตำแหน่งของคุณ<br>เพื่อบันทึกตำแหน่งเริ่มงาน</div>
+    <button class="bp" style="width:100%;margin-bottom:8px" onclick="requestGPSPermission()">🔓 อนุญาตให้เข้าถึง GPS</button>
+    <div style="font-size:11px;color:var(--fg4);line-height:1.7;background:var(--bg2);border-radius:7px;padding:10px;text-align:left;margin-bottom:8px"><b>ถ้าปุ่มไม่ขึ้น popup:</b><br>iOS: Settings → Safari → Location → Allow<br>Android: Settings → Apps → Browser → Permissions → Location</div>
+    <button class="bo2" style="width:100%" onclick="closeMod()">ยกเลิก</button>
+  </div>`);
   window._gpsGrantedCallback=onGranted;
 }
-
 function requestGPSPermission(){
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      _gpsActive=true;
-      updateGPSBar(true,`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
-      closeMod();
-      if(window._gpsGrantedCallback){window._gpsGrantedCallback();window._gpsGrantedCallback=null;}
-    },
-    err=>{
-      const msgs={1:'กด Allow ในป๊อปอัพของ browser',2:'ไม่พบสัญญาณ GPS',3:'หมดเวลา ลองใหม่อีกครั้ง'};
-      document.getElementById('mod').querySelector('.bp').textContent='🔄 ลองอีกครั้ง';
-      toast('⚠️ '+(msgs[err.code]||'ไม่สามารถเข้าถึง GPS'));
-    },
+    pos=>{_gpsActive=true;updateGPSBar(true,`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);closeMod();if(window._gpsGrantedCallback){window._gpsGrantedCallback();window._gpsGrantedCallback=null;}},
+    err=>{const msgs={1:'กด Allow ในป๊อปอัพของ browser',2:'ไม่พบสัญญาณ GPS',3:'หมดเวลา ลองใหม่อีกครั้ง'};document.getElementById('mod').querySelector('.bp').textContent='🔄 ลองอีกครั้ง';toast('⚠️ '+(msgs[err.code]||'ไม่สามารถเข้าถึง GPS'));},
     {enableHighAccuracy:true,timeout:15000}
   );
 }
-
 async function doStartWork(rid){
-  // Feature 3: ถ้า GPS ไม่ active → แสดง popup ขอสิทธิ์ก่อน
-  if(!_gpsActive){
-    showGPSPermissionPopup(()=>doStartWork(rid));
-    return;
-  }
-
+  if(!_gpsActive){showGPSPermissionPopup(()=>doStartWork(rid));return;}
   try{
     const startedAt=new Date().toISOString();
     const t=tickets.find(x=>x._recordId===rid);
-
-    // Feature 1: บันทึก started_at ลง DB ผ่าน API
-    const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({
-      status:'อยู่ระหว่างดำเนินการ ⚙️',
-      brand:t?.brand||'',
-      started_at:startedAt
-    })});
+    const d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||'',started_at:startedAt})});
     if(!d.ok)throw new Error(d.error||'Failed');
-
-    // เก็บ started_at ใน localStorage สำรองไว้ด้วย
-    try{
-      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
-      saved[rid]=startedAt;
-      localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(saved));
-    }catch(_){}
-
-    // ส่ง GPS พร้อม ticket_id
-    navigator.geolocation.getCurrentPosition(pos=>{
-      api('/api/gps',{method:'POST',body:JSON.stringify({
-        latitude:pos.coords.latitude,longitude:pos.coords.longitude,
-        accuracy:pos.coords.accuracy,ticket_id:rid,
-        engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand
-      })});
-    },()=>{},{enableHighAccuracy:true,timeout:5000});
-
-    // reload จาก server ให้ sync ทุกอุปกรณ์
-    await loadTickets();
-    render();
-    toast('🚀 เริ่มงานแล้ว!');
+    try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');sv[rid]=startedAt;localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(sv));}catch(_){}
+    navigator.geolocation.getCurrentPosition(pos=>{api('/api/gps',{method:'POST',body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,ticket_id:rid,engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand})});},()=>{},{enableHighAccuracy:true,timeout:5000});
+    await loadTickets();render();toast('🚀 เริ่มงานแล้ว!');
   }catch(e){toast('Error: '+e.message);}
 }
 
-// ═══ MODALS ═══
+/* ═══ MODALS ═════════════════════════════════════════════════ */
 function openMod(h){document.getElementById('mod').innerHTML=h;document.getElementById('mod-bg').classList.add('on');}
 function closeMod(){document.getElementById('mod-bg').classList.remove('on');}
 document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod();};
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
-
-  // Feature 1: คำนวณชั่วโมงจาก started_at ใน ticket (DB) หรือ localStorage สำรอง
-  let autoHours='';
-  let startedAt=t.started_at||t.startedAt||null;
-  if(!startedAt){
-    try{
-      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
-      if(saved[rid])startedAt=saved[rid];
-    }catch(_){}
-  }
-  if(startedAt){
-    const ms=Date.now()-new Date(startedAt).getTime();
-    if(ms>0)autoHours=(ms/3600000).toFixed(2);
-  }
-
+  let autoHours='',sa=t.started_at||t.startedAt||null;
+  if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}}
+  if(sa){const ms=Date.now()-new Date(sa).getTime();if(ms>0)autoHours=(ms/3600000).toFixed(2);}
   openMod(`<div class="mod-t">Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
     <div class="fg"><label>Work Detail *</label><textarea id="m-wd" placeholder="Describe work done...">${esc(t.workDetail||'')}</textarea></div>
@@ -705,80 +673,118 @@ function openSubmit(rid){
     </div>
     <div class="fg"><label>Photo (camera)</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
     <div id="m-loc" style="font-size:11px;color:var(--fg4);margin-bottom:8px;text-align:center">📍 กำลังดึงตำแหน่งปัจจุบัน...</div>
-    <div class="mod-f">
-      <button class="bo2" onclick="closeMod()">Cancel</button>
-      <button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button>
-    </div>`);
-
-  // Feature 2: ดึง GPS ตำแหน่งจบงานทันทีที่เปิด modal
+    <div class="mod-f"><button class="bo2" onclick="closeMod()">Cancel</button><button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button></div>`);
   window._completeLat=null;window._completeLng=null;
-  navigator.geolocation.getCurrentPosition(pos=>{
-    window._completeLat=pos.coords.latitude;
-    window._completeLng=pos.coords.longitude;
-    const locEl=document.getElementById('m-loc');
-    if(locEl)locEl.innerHTML=`📍 ตำแหน่งจบงาน: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-  },()=>{
-    const locEl=document.getElementById('m-loc');
-    if(locEl)locEl.innerHTML='⚠️ ไม่สามารถดึงตำแหน่งได้';
-  },{enableHighAccuracy:true,timeout:10000});
+  navigator.geolocation.getCurrentPosition(pos=>{window._completeLat=pos.coords.latitude;window._completeLng=pos.coords.longitude;const locEl=document.getElementById('m-loc');if(locEl)locEl.innerHTML=`📍 ตำแหน่งจบงาน: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;},()=>{const locEl=document.getElementById('m-loc');if(locEl)locEl.innerHTML='⚠️ ไม่สามารถดึงตำแหน่งได้';},{enableHighAccuracy:true,timeout:10000});
 }
-
 async function doSubmit(rid){
   const wd=(document.getElementById('m-wd')?.value||'').trim();
   if(!wd){toast('กรุณากรอกรายละเอียดงาน');return;}
   const pt=(document.getElementById('m-pt')?.value||'').trim();
   const wh=(document.getElementById('m-wh')?.value||'').trim();
-
-  // Feature 2: รวม GPS จบงาน
-  const payload={
-    workDetail:wd,partsUsed:pt,workHours:wh,
-    completed_lat:window._completeLat||null,
-    completed_lng:window._completeLng||null
-  };
-
   try{
-    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify(payload)});
+    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh,completed_lat:window._completeLat||null,completed_lng:window._completeLng||null})});
     if(!d.ok)throw new Error(d.error||'Failed');
-
-    // ล้าง localStorage startTime
-    try{
-      const saved=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');
-      delete saved[rid];
-      localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(saved));
-    }catch(_){}
-
+    try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');delete sv[rid];localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(sv));}catch(_){}
     tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน '}:x);
     closeMod();render();toast('ส่งงานสำเร็จ ✅');
   }catch(e){toast('Error: '+e.message);}
 }
-
-function openUpload(rid){
-  openMod(`<div class="mod-t">Upload Photo</div>
-    <div class="fg"><label>Camera (live photo)</label><input type="file" accept="image/*" capture="camera"/></div>
-    <div class="fg"><label>Additional from gallery</label><input type="file" accept="image/*" multiple/></div>
-    <div class="mod-f"><button class="bo2" onclick="closeMod()">Close</button></div>`);
-}
-
+function openUpload(rid){openMod(`<div class="mod-t">Upload Photo</div><div class="fg"><label>Camera</label><input type="file" accept="image/*" capture="camera"/></div><div class="fg"><label>Gallery</label><input type="file" accept="image/*" multiple/></div><div class="mod-f"><button class="bo2" onclick="closeMod()">Close</button></div>`);}
 function openDetail(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
   openMod(`<div class="mod-t">Ticket Detail</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:8px">${esc(t.id)}</div>
-    ${[['Type',t.type],['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Location',t.location]]
-      .map(([l,v])=>`<div style="display:flex;gap:4px;margin-bottom:2px;font-size:13px"><span style="color:var(--fg4);min-width:60px;font-size:11px;font-weight:600">${l}</span><span style="color:var(--fg);font-weight:500">${esc(v||'-')}</span></div>`).join('')}
+    ${[['Type',t.type],['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Location',t.location]].map(([l,v])=>`<div style="display:flex;gap:4px;margin-bottom:2px;font-size:13px"><span style="color:var(--fg4);min-width:60px;font-size:11px;font-weight:600">${l}</span><span style="color:var(--fg);font-weight:500">${esc(v||'-')}</span></div>`).join('')}
     ${t.detail?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--fg);margin-top:8px;line-height:1.5">${esc(t.detail)}</div>`:''}
     ${t.adminNote?`<div style="background:var(--bg2);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg3);margin-top:5px;border-left:2px solid var(--fg)">Admin: ${esc(t.adminNote)}</div>`:''}
     <div class="mod-f"><button class="bo2" onclick="closeMod()" style="width:100%">Close</button></div>`);
 }
-
 let toastT;
-function toast(m){
-  const el=document.getElementById('toast');
-  el.textContent=m;el.style.display='block';el.style.animation='none';
-  el.offsetHeight;el.style.animation='';
-  clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);
+function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
+
+/* ═══ PREVIEW ROLE ═══════════════════════════════════════════ */
+let pvOpen=false,pvPendRole='',pvPendPage='',pvTimer=null,pvCurRole='',pvCurPage='Engineer';
+
+function initPreviewRole(){
+  pvCurRole=AUTH?.user?.role||'';
+  if(pvCurRole==='superadmin'){
+    const trig=document.getElementById('pv-trigger');
+    trig.classList.add('show');
+    document.getElementById('pv-t-role').textContent=pvCurRole;
+    document.querySelectorAll('.pv-ropt').forEach(b=>b.classList.toggle('active',b.textContent.trim().startsWith(pvCurRole)));
+    pvPendRole=pvCurRole;pvPendPage='Engineer';
+  }
 }
 
-// ═══ INIT ═══
+function pvToggle(){
+  pvOpen=!pvOpen;
+  const drop=document.getElementById('pv-drop'),trig=document.getElementById('pv-trigger');
+  drop.classList.toggle('open',pvOpen);trig.classList.toggle('open',pvOpen);
+  if(pvOpen)pvStartTimer();else pvClearTimer();
+}
+function pvClose(){
+  pvOpen=false;
+  document.getElementById('pv-drop').classList.remove('open');
+  document.getElementById('pv-trigger').classList.remove('open');
+  pvClearTimer();
+}
+function pvStartTimer(){
+  pvClearTimer();
+  const bar=document.getElementById('pv-timer');
+  bar.style.transition='none';bar.style.width='100%';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition='width 5s linear';bar.style.width='0%';}));
+  pvTimer=setTimeout(()=>pvClose(),5000);
+}
+function pvClearTimer(){
+  if(pvTimer){clearTimeout(pvTimer);pvTimer=null;}
+  const bar=document.getElementById('pv-timer');bar.style.transition='none';bar.style.width='100%';
+}
+function pvPickRole(el,role,page){
+  document.querySelectorAll('.pv-ropt').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');pvPendRole=role;pvPendPage=page;
+  document.getElementById('pv-hint').textContent='→ '+role;
+  pvStartTimer();
+}
+function pvConfirm(){
+  const btn=document.getElementById('pv-ok-btn');
+  btn.classList.add('go');btn.textContent='🔐 กำลังเปลี่ยน...';pvClearTimer();
+  setTimeout(()=>{
+    btn.classList.remove('go');btn.textContent='🔏 ยืนยัน';
+    document.getElementById('pv-hint').textContent='เลือก role แล้วกด ✓';
+    pvClose();
+    const fr=pvCurRole,fp=pvCurPage;
+    pvShowLoading(fr,pvPendRole,fp,pvPendPage,()=>{
+      pvCurRole=pvPendRole;pvCurPage=pvPendPage;
+      document.getElementById('pv-t-role').textContent=pvCurRole;
+      document.querySelectorAll('.pv-ropt').forEach(b=>b.classList.toggle('active',b.textContent.trim().startsWith(pvCurRole)));
+      if(['superadmin','manager','admin','guest'].includes(pvPendRole)&&pvPendPage==='Admin')window.location.href='/admin';
+    });
+  },800);
+}
+function pvShowLoading(fr,tr,fp,tp,cb){
+  const ov=document.getElementById('pv-overlay');
+  const slR=document.getElementById('pvo-sl-role'),slP=document.getElementById('pvo-sl-page'),pSt=document.getElementById('pvo-p-static');
+  const rc=fr!==tr,pc=fp!==tp;
+  document.getElementById('pvo-r-old').textContent=fr;document.getElementById('pvo-r-new').textContent=tr;
+  document.getElementById('pvo-p-old').textContent=fp+' Portal';document.getElementById('pvo-p-new').textContent=tp+' Portal';
+  pSt.textContent=fp+' Portal';
+  slR.classList.remove('do-flip');slP.classList.remove('do-flip');
+  ['pvo-r-old','pvo-r-new','pvo-p-old','pvo-p-new'].forEach(id=>{const el=document.getElementById(id);el.style.animation='none';el.offsetHeight;el.style.animation='';});
+  ['pvo-r-old','pvo-p-old'].forEach(id=>{const el=document.getElementById(id);el.style.opacity='1';el.style.transform='rotateX(0)';});
+  ['pvo-r-new','pvo-p-new'].forEach(id=>{const el=document.getElementById(id);el.style.opacity='0';el.style.transform='rotateX(90deg)';});
+  slR.style.display='flex';slP.style.display=pc?'flex':'none';pSt.style.display=pc?'none':'block';
+  ov.style.animation='';ov.style.opacity='1';ov.style.display='flex';
+  if(rc)setTimeout(()=>slR.classList.add('do-flip'),700);
+  if(pc)setTimeout(()=>slP.classList.add('do-flip'),rc?1200:700);
+  const total=(pc&&rc)?2800:2200;
+  setTimeout(()=>{ov.style.animation='pvOut .45s ease forwards';setTimeout(()=>{ov.style.display='none';ov.style.animation='';if(cb)cb();},450);},total);
+}
+
+document.addEventListener('click',e=>{if(pvOpen&&!e.target.closest('#pv-drop')&&!e.target.closest('#pv-trigger'))pvClose();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSidebar();pvClose();}});
+
+/* ═══ INIT ═══════════════════════════════════════════════════ */
 (async()=>{if(await tryAuto().catch(()=>false))boot();})();
 </script>
 </body>
