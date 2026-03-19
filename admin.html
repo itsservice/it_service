@@ -177,9 +177,152 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 @media(max-width:640px){.g2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.drw{width:100vw}.content{padding:10px}.ugrid{grid-template-columns:1fr}
 .tbl thead{display:none}.tr{display:block;margin-bottom:4px;border:1px solid var(--border);border-radius:7px;padding:9px}.tr td{display:block;border:none;padding:2px 0}.tr td:first-child,.tr td:last-child{border:none;border-radius:0}}
 @media(min-width:1025px){.side{transform:none}.ov{display:none!important}.main{margin-left:var(--sidebar)}}
+
+/* ── Preview Role ── */
+.prev-ropt:hover{background:var(--bg2)!important}
+.prev-ropt.active{background:var(--fg)!important;color:var(--bg)!important}
+.prev-ropt.active span{color:var(--bg)!important}
+#prev-drop.open{opacity:1!important;transform:translateY(0)!important;pointer-events:all!important}
+#prev-trigger.open{background:var(--fg)!important;color:var(--bg)!important;border-color:var(--fg)!important}
+#prev-trigger.open #prev-cur-badge{background:var(--bg)!important;color:var(--fg)!important}
+#prev-trigger.open #prev-arrow{transform:rotate(180deg);color:var(--bg)!important}
+
+/* ── Animations ── */
+@keyframes beatFade{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(4deg)}}
+@keyframes foldOut{0%{transform:rotateX(0);opacity:1}100%{transform:rotateX(-80deg);opacity:0}}
+@keyframes foldIn{0%{transform:rotateX(80deg);opacity:0}100%{transform:rotateX(0);opacity:1}}
+@keyframes dotPulse{0%,100%{background:#ddd;transform:scale(.8)}50%{background:#111;transform:scale(1.2)}}
+@keyframes overlayOut{0%{opacity:1}100%{opacity:0}}
+@keyframes zoomIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
+@keyframes zoomOutDown{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(.7) translateY(60px)}}
+
+/* ── Loading overlay ── */
+#role-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center}
+.rl-line1{font-size:11px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#ccc;margin-bottom:32px}
+.rl-slot{position:relative;height:52px;display:flex;align-items:center;justify-content:center;min-width:260px;margin-bottom:12px;perspective:600px}
+.rl-box{background:#111;color:#fff;font-size:22px;font-weight:800;padding:6px 22px;border-radius:10px;position:absolute;backface-visibility:hidden}
+.rl-box.new{transform:rotateX(90deg);opacity:0}
+.rl-slot.flipping .rl-box.old{animation:foldOut .32s cubic-bezier(.55,0,1,.45) forwards}
+.rl-slot.flipping .rl-box.new{animation:foldIn .32s cubic-bezier(0,.55,.45,1) .28s forwards}
+.rl-static{font-size:14px;color:#bbb;font-weight:700;letter-spacing:.05em;margin-bottom:12px;text-align:center}
+.rl-dots{display:flex;gap:8px;margin-top:32px}
+.rl-dot{width:8px;height:8px;border-radius:50%;background:#eee}
+.rl-dot:nth-child(1){animation:dotPulse 1.2s 0s infinite}
+.rl-dot:nth-child(2){animation:dotPulse 1.2s .2s infinite}
+.rl-dot:nth-child(3){animation:dotPulse 1.2s .4s infinite}
+
+/* ── Role Guide popup ── */
+#role-guide-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
+#role-guide-box{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:720px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.2)}
+#role-guide-box.in{animation:zoomIn .3s cubic-bezier(.22,.61,.36,1) forwards}
+#role-guide-box.out{animation:zoomOutDown .35s cubic-bezier(.55,0,1,.45) forwards}
+.rg-header{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.rg-icon{font-size:24px;animation:shake 2s ease-in-out infinite}
+.rg-title{font-family:var(--display);font-size:18px;font-weight:800;flex:1}
+.rg-close{background:#f0f0f0;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.rg-close:hover{background:#e0e0e0}
+.rg-table{width:100%;border-collapse:collapse;font-size:12px}
+.rg-table th{background:#111;color:#fff;padding:8px 10px;text-align:left;font-size:11px;letter-spacing:.05em}
+.rg-table th:first-child{border-radius:8px 0 0 0}
+.rg-table th:last-child{border-radius:0 8px 0 0}
+.rg-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+.rg-table tr:hover td{background:#fafafa}
+.rg-table tr:last-child td{border-bottom:none}
+.rg-yes{color:#22c55e;font-weight:700;font-size:14px}
+.rg-no{color:#ef4444;font-weight:700;font-size:14px}
+.rg-view{color:#f59e0b;font-weight:700;font-size:13px}
+.rg-role-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
 </style>
 </head>
 <body>
+
+<!-- ── ROLE LOADING OVERLAY ── -->
+<div id="role-loading">
+  <div class="rl-line1">Switching View</div>
+  <div class="rl-slot" id="rl-slot-role">
+    <div class="rl-box old" id="rl-role-old">superadmin</div>
+    <div class="rl-box new" id="rl-role-new">engineer</div>
+  </div>
+  <div class="rl-slot" id="rl-slot-page" style="display:none">
+    <div class="rl-box old" id="rl-page-old" style="font-size:16px">Admin Portal</div>
+    <div class="rl-box new" id="rl-page-new" style="font-size:16px">Engineer Portal</div>
+  </div>
+  <div class="rl-static" id="rl-page-static"></div>
+  <div class="rl-dots">
+    <div class="rl-dot"></div><div class="rl-dot"></div><div class="rl-dot"></div>
+  </div>
+</div>
+
+<!-- ── ROLE GUIDE POPUP ── -->
+<div id="role-guide-overlay" onclick="closeRoleGuide(event)">
+  <div id="role-guide-box">
+    <div class="rg-header">
+      <span class="rg-icon">ⓘ</span>
+      <div class="rg-title">คู่มือ Role Permissions</div>
+      <button class="rg-close" onclick="closeRoleGuideBtn()">✕</button>
+    </div>
+    <table class="rg-table">
+      <thead>
+        <tr>
+          <th>Role</th><th>ชื่อตำแหน่ง</th>
+          <th>Admin</th><th>Engineer</th>
+          <th>ดู Ticket</th><th>แก้ไข Ticket</th>
+          <th>Users</th><th>GPS Map</th><th>รหัสผ่าน</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#fef3c7;color:#92400e">superadmin</span></td>
+          <td>Dev / System Admin</td>
+          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
+          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
+          <td class="rg-yes">✓</td><td class="rg-yes">✓</td><td class="rg-yes">✓</td>
+        </tr>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#ede9fe;color:#5b21b6">manager</span></td>
+          <td>Manager / Operation</td>
+          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
+          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
+          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
+          <td class="rg-no">✗ ดูได้อย่างเดียว</td>
+        </tr>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#dbeafe;color:#1e40af">admin</span></td>
+          <td>Super Admin / Admin</td>
+          <td class="rg-yes">✓</td><td class="rg-no">✗</td>
+          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
+          <td class="rg-view">ดู+แก้ไข</td><td class="rg-view">ดูเท่านั้น</td>
+          <td class="rg-no">✗</td>
+        </tr>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#d1fae5;color:#065f46">lead_engineer</span></td>
+          <td>Lead Engineer</td>
+          <td class="rg-no">✗</td><td class="rg-yes">✓</td>
+          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓ รับงานใครก็ได้</td>
+          <td class="rg-no">✗</td><td class="rg-no">✗ ซ่อน</td><td class="rg-no">✗</td>
+        </tr>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#e0f2fe;color:#0c4a6e">engineer</span></td>
+          <td>Engineer / IT Support</td>
+          <td class="rg-no">✗</td><td class="rg-yes">✓</td>
+          <td class="rg-view">เฉพาะงานตัวเอง</td><td class="rg-yes">✓</td>
+          <td class="rg-no">✗</td><td class="rg-no">✗ ซ่อน</td><td class="rg-no">✗</td>
+        </tr>
+        <tr>
+          <td><span class="rg-role-badge" style="background:#f1f5f9;color:#475569">guest</span></td>
+          <td>ผู้เยี่ยมชม / Demo</td>
+          <td class="rg-view">ดูเท่านั้น</td><td class="rg-view">ดูเท่านั้น</td>
+          <td class="rg-yes">ทั้งหมด</td><td class="rg-no">✗ ปุ่ม lock</td>
+          <td class="rg-no">✗</td><td class="rg-view">ดูเท่านั้น</td><td class="rg-no">✗</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px;font-size:11.5px;color:#888;line-height:1.7">
+      <b style="color:#333">หมายเหตุ:</b> ✓ = ทำได้เต็มที่ &nbsp;|&nbsp; ✗ = ทำไม่ได้ &nbsp;|&nbsp; ดูเท่านั้น = เห็นได้แต่กดไม่ได้
+    </div>
+  </div>
+</div>
 
 <div id="login">
 <div class="lcard">
@@ -197,6 +340,43 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
   <div class="s-head"><div class="s-logo">IT</div><div><div class="s-name" id="s-name">--</div><div class="s-role" id="s-role">--</div></div></div>
   <nav class="s-nav" id="s-nav"></nav>
   <div class="s-foot">
+    <!-- ROLE GUIDE BUTTON -->
+    <button onclick="openRoleGuide()" style="display:flex;align-items:center;justify-content:center;gap:6px;animation:beatFade 2s ease-in-out infinite" title="คู่มือ / Role Permissions">
+      <span style="font-size:14px;animation:shake 2s ease-in-out infinite">ⓘ</span>
+      <span>คู่มือ / Role</span>
+    </button>
+
+    <!-- PREVIEW ROLE (superadmin only) -->
+    <div id="preview-wrap" style="display:none;position:relative">
+      <!-- Dropdown upward -->
+      <div id="prev-drop" style="position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--card);border:1.5px solid var(--border);border-radius:10px;box-shadow:0 -8px 32px rgba(0,0,0,.15);padding:8px;display:flex;flex-direction:column;gap:3px;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s,transform .2s;z-index:200">
+        ${[
+          {r:'superadmin',label:'Dev / System Admin',color:'#f59e0b',badge:'Dev'},
+          {r:'manager',label:'Manager / Operation',color:'#8b5cf6',badge:'Mgr'},
+          {r:'admin',label:'Admin / Staff',color:'#3b82f6',badge:'Admin'},
+          {r:'lead_engineer',label:'Lead Engineer',color:'#10b981',badge:'Lead'},
+          {r:'engineer',label:'Engineer / IT Support',color:'#0ea5e9',badge:'Eng'},
+          {r:'guest',label:'ผู้เยี่ยมชม / Demo',color:'#94a3b8',badge:'Demo'},
+        ].map(x=>`<button class="prev-ropt" data-role="${x.r}" data-page="${['lead_engineer','engineer'].includes(x.r)?'Engineer':'Admin'}" onclick="pickPreviewRole(this,'${x.r}','${['lead_engineer','engineer'].includes(x.r)?'Engineer':'Admin'}')" style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:11.5px;color:var(--fg);font-family:var(--sans);text-align:left;width:100%;transition:background .12s">
+          <div style="width:7px;height:7px;border-radius:50%;background:${x.color};flex-shrink:0"></div>
+          <span style="flex:1">${x.r}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:99px;background:${x.color}22;color:${x.color};font-weight:700">${x.badge}</span>
+        </button>`).join('')}
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 4px 2px;border-top:1px solid var(--border);margin-top:2px">
+          <span id="prev-hint" style="font-size:10.5px;color:var(--fg4);flex:1">เลือก role</span>
+          <button id="prev-confirm" onclick="doPreviewConfirm()" style="background:var(--fg);color:var(--bg);border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s">🔏 ยืนยัน</button>
+        </div>
+        <div id="prev-timer" style="height:2px;background:var(--fg);border-radius:2px;width:100%;transition:width linear;margin-top:4px"></div>
+      </div>
+      <!-- Trigger -->
+      <button id="prev-trigger" onclick="togglePreviewDrop()" style="display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:11.5px;color:var(--fg);transition:all .2s">
+        <span>👁</span>
+        <span style="flex:1;text-align:left;font-weight:600">Preview Role</span>
+        <span id="prev-cur-badge" style="font-size:9px;background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:99px;font-weight:700">superadmin</span>
+        <span id="prev-arrow" style="font-size:10px;color:var(--fg4);transition:transform .2s">▾</span>
+      </button>
+    </div>
+
     <a href="/">Home</a>
     <div style="display:flex;gap:3px">
       <button onclick="togTheme()" style="flex:1" id="theme-btn">Dark</button>
@@ -293,6 +473,7 @@ async function boot(){
   const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager'};
   document.getElementById('s-role').textContent=rl[AUTH.user.role]||AUTH.user.role;
   buildNav();startClock();connectSSE();
+  initPreviewRole();
 
   await Promise.all([
     Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]),
@@ -854,6 +1035,143 @@ function uForm(u){const BR=["ALL","Dunkin'","Greyhound Cafe","Greyhound Original
 async function doAddUser(){const n=document.getElementById('uf-n').value.trim(),u=document.getElementById('uf-u').value.trim(),p=document.getElementById('uf-p').value;if(!n||!u||!p)return toast('Fill all required fields');try{const d=await api('/api/users',{method:'POST',body:JSON.stringify({name:n,username:u,password:p,role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()})});if(!d.ok)throw new Error(d.error);users.push(d.user);closeMod();render();toast('User added');}catch(e){toast('Error: '+e.message);}}
 async function doEditUser(id){const data={name:document.getElementById('uf-n').value.trim(),role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()};const p=document.getElementById('uf-p').value;if(p)data.password=p;try{const d=await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify(data)});if(!d.ok)throw new Error(d.error);users=users.map(u=>u.id===id?{...u,...d.user}:u);closeMod();render();toast('Saved');}catch(e){toast('Error: '+e.message);}}
 async function delUser(id,name){if(!confirm('Delete user '+name+'?'))return;try{const d=await api('/api/users/'+id,{method:'DELETE'});if(!d.ok)throw new Error(d.error);users=users.filter(u=>u.id!==id);render();toast('Deleted');}catch(e){toast('Error: '+e.message);}}
+
+// ══ FEATURE 1 — Role Guide ══
+function openRoleGuide(){
+  const ov=document.getElementById('role-guide-overlay');
+  const box=document.getElementById('role-guide-box');
+  ov.style.display='flex';
+  box.className='in';
+}
+function closeRoleGuide(e){
+  if(e.target===document.getElementById('role-guide-overlay')) closeRoleGuideBtn();
+}
+function closeRoleGuideBtn(){
+  const ov=document.getElementById('role-guide-overlay');
+  const box=document.getElementById('role-guide-box');
+  box.className='out';
+  setTimeout(()=>{ ov.style.display='none'; box.className=''; },350);
+}
+
+// ══ FEATURE 2 — Preview Role (superadmin only) ══
+let previewDropOpen=false, previewTimer=null;
+let previewPendRole='superadmin', previewPendPage='Admin';
+let previewCurRole='superadmin', previewCurPage='Admin';
+
+function initPreviewRole(){
+  if(AUTH?.user?.role==='superadmin'){
+    document.getElementById('preview-wrap').style.display='block';
+    previewCurRole=AUTH.user.role;
+    previewCurPage='Admin';
+    document.getElementById('prev-cur-badge').textContent=previewCurRole;
+  }
+}
+
+function togglePreviewDrop(){
+  previewDropOpen=!previewDropOpen;
+  const drop=document.getElementById('prev-drop');
+  const trig=document.getElementById('prev-trigger');
+  drop.classList.toggle('open',previewDropOpen);
+  trig.classList.toggle('open',previewDropOpen);
+  if(previewDropOpen) startPreviewTimer();
+  else clearPreviewTimer();
+}
+
+function closePreviewDrop(){
+  previewDropOpen=false;
+  document.getElementById('prev-drop').classList.remove('open');
+  document.getElementById('prev-trigger').classList.remove('open');
+  clearPreviewTimer();
+}
+
+function startPreviewTimer(){
+  clearPreviewTimer();
+  const bar=document.getElementById('prev-timer');
+  bar.style.transition='none'; bar.style.width='100%';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    bar.style.transition='width 5s linear'; bar.style.width='0%';
+  }));
+  previewTimer=setTimeout(closePreviewDrop, 5000);
+}
+
+function clearPreviewTimer(){
+  if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
+  const bar=document.getElementById('prev-timer');
+  bar.style.transition='none'; bar.style.width='100%';
+}
+
+function pickPreviewRole(el, role, page){
+  document.querySelectorAll('.prev-ropt').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  previewPendRole=role; previewPendPage=page;
+  document.getElementById('prev-hint').textContent=`→ ${role}`;
+  startPreviewTimer();
+}
+
+function doPreviewConfirm(){
+  const btn=document.getElementById('prev-confirm');
+  btn.textContent='🔐 กำลังเปลี่ยน...';
+  clearPreviewTimer();
+  setTimeout(()=>{
+    btn.textContent='🔏 ยืนยัน';
+    closePreviewDrop();
+    document.getElementById('prev-hint').textContent='เลือก role';
+    const fromRole=previewCurRole, fromPage=previewCurPage;
+    showRoleLoading(fromRole, previewPendRole, fromPage, previewPendPage, ()=>{
+      previewCurRole=previewPendRole;
+      previewCurPage=previewPendPage;
+      document.getElementById('prev-cur-badge').textContent=previewCurRole;
+      // redirect ถ้าเปลี่ยน page
+      if(previewPendPage==='Engineer' && window.location.pathname.includes('admin')){
+        window.location.href='/engineer';
+      }
+    });
+  }, 800);
+}
+
+function showRoleLoading(fr, tr, fp, tp, cb){
+  const ov=document.getElementById('role-loading');
+  const slRole=document.getElementById('rl-slot-role');
+  const slPage=document.getElementById('rl-slot-page');
+  const pStatic=document.getElementById('rl-page-static');
+  const roleChanged=fr!==tr, pageChanged=fp!==tp;
+
+  document.getElementById('rl-role-old').textContent=fr;
+  document.getElementById('rl-role-new').textContent=tr;
+  document.getElementById('rl-page-old').textContent=fp+' Portal';
+  document.getElementById('rl-page-new').textContent=tp+' Portal';
+  pStatic.textContent=fp+' Portal';
+
+  // reset
+  slRole.classList.remove('flipping'); slPage.classList.remove('flipping');
+  ['rl-role-old','rl-role-new','rl-page-old','rl-page-new'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.animation='none'; el.offsetHeight; el.style.animation='';
+  });
+  document.getElementById('rl-role-old').style.cssText='opacity:1;transform:rotateX(0)';
+  document.getElementById('rl-role-new').style.cssText='opacity:0;transform:rotateX(90deg)';
+  document.getElementById('rl-page-old').style.cssText='font-size:16px;opacity:1;transform:rotateX(0)';
+  document.getElementById('rl-page-new').style.cssText='font-size:16px;opacity:0;transform:rotateX(90deg)';
+
+  slPage.style.display=pageChanged?'flex':'none';
+  pStatic.style.display=pageChanged?'none':'block';
+
+  ov.style.animation=''; ov.style.opacity='1'; ov.style.display='flex';
+
+  if(roleChanged) setTimeout(()=>slRole.classList.add('flipping'), 700);
+  if(pageChanged) setTimeout(()=>slPage.classList.add('flipping'), roleChanged?1200:700);
+
+  const total=(pageChanged&&roleChanged)?2800:2200;
+  setTimeout(()=>{
+    ov.style.animation='overlayOut .4s ease forwards';
+    setTimeout(()=>{ ov.style.display='none'; ov.style.animation=''; if(cb)cb(); },400);
+  }, total);
+}
+
+// close dropdown on outside click
+document.addEventListener('click',e=>{
+  if(previewDropOpen && !e.target.closest('#preview-wrap')) closePreviewDrop();
+});
 
 let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
 
