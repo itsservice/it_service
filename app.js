@@ -237,6 +237,7 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
     if (completed_lat) updates.completed_lat = completed_lat;
     if (completed_lng) updates.completed_lng = completed_lng;
     const t = await updateTicket(req.params.rid, updates);
+    try { invalidateCache(); } catch(_) {}
     addLog({ user:req.user, action:'update_status', ticketId:req.params.rid, detail:`สถานะ -> ${status}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status, ts:new Date().toISOString() });
     if (status.includes('แก้ไข')||status.includes('revision')) {
