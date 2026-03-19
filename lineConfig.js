@@ -56,12 +56,24 @@ async function getAdminGroupId() {
   return cfg['admin_group_id'] || process.env.LINE_ADMIN_GROUP_ID || '';
 }
 
-// ดึง LINE user IDs ของ Admin ทุกคน (admin_user_id_1, admin_user_id_2, ...)
+// ดึง LINE user IDs ของ Admin ทุกคน จาก users table โดยตรง
 async function getAdminUserIds() {
-  const cfg = await getConfig();
-  return Object.entries(cfg)
-    .filter(([k, v]) => k.startsWith('admin_user_id_') && v && v.trim())
-    .map(([, v]) => v.trim());
+  try {
+    const r = await axios.get(`${API_URL}/api/admin-line-ids`, {
+      headers: { 'X-API-Key': API_KEY },
+      timeout: 8000,
+    });
+    if (r.data?.ok) {
+      const ids = (r.data.admins || [])
+        .map(u => (u.line_user_id || '').trim())
+        .filter(Boolean);
+      console.log('[LineConfig] admin LINE IDs:', ids.length);
+      return ids;
+    }
+  } catch (e) {
+    console.warn('[LineConfig] getAdminUserIds failed:', e.message);
+  }
+  return [];
 }
 
 function hasToken() {
