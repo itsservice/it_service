@@ -856,21 +856,28 @@ function rLine(){
     <div class="crd" style="max-width:580px">
       <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
       <div style="padding:16px">
-        ${[
-          {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
-          {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
-          {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
-          {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
-          {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
-          {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
-        ].map(({label,key,ph})=>`
-        <div style="margin-bottom:14px">
-          <div style="font-size:11.5px;font-weight:700;color:var(--fg2);margin-bottom:5px">${label}</div>
-          <div style="display:flex;gap:6px">
-            <input id="lg-${key}" class="sel" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono)" placeholder="${ph}" value=""/>
-            <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง">🧪 Test</button>
-          </div>
-        </div>`).join('')}
+        ${(()=>{
+          const isSA = AUTH?.user?.role==='superadmin';
+          return [
+            {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
+            {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
+            {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
+            {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
+            {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
+            {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
+          ].map(({label,key,ph})=>`
+          <div style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <div style="font-size:11.5px;font-weight:700;color:var(--fg2)">${label}</div>
+              ${!isSA?'<span style="font-size:10px;color:var(--fg4);background:var(--bg3);padding:2px 8px;border-radius:20px">🔒 superadmin only</span>':''}
+            </div>
+            <div style="display:flex;gap:6px">
+              <input id="lg-${key}" class="sel" type="password" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono);${!isSA?'opacity:.5;cursor:not-allowed;':''}" placeholder="${ph}" value="" ${!isSA?'readonly':''}/>
+              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" title="แสดง/ซ่อน" style="min-width:38px;font-size:15px">👁️</button>`:''}
+              <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง" ${!isSA?'disabled style="opacity:.4;cursor:not-allowed"':''}>🧪 Test</button>
+            </div>
+          </div>`).join('');
+        })()}
         <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
           <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);padding:9px 18px" onclick="saveLineGroups()">💾 บันทึกทั้งหมด</button>
           <button class="smb" onclick="loadLineGroups()">🔄 โหลด</button>
@@ -907,6 +914,14 @@ async function testLineGroup(key){
   if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
   try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}
   catch(e){toast('❌ '+e.message);}
+}
+function toggleLgShow(key){
+  const inp=document.getElementById('lg-'+key);
+  const btn=document.getElementById('lg-eye-'+key);
+  if(!inp)return;
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  if(btn)btn.textContent=show?'🙈':'👁️';
 }
 
 function rSystem(){
