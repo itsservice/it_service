@@ -94,7 +94,7 @@ async function getAdminUserIds() {
 // updateConfig — บันทึกค่าลง MySQL ผ่าน FastAPI (PATCH /api/line-config)
 async function updateConfig(body) {
   try {
-    const r = await axios.post(`${API_URL}/api/line-config`, body, {
+    const r = await axios.patch(`${API_URL}/api/line-config`, body, {
       headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' },
       timeout: 10000,
     });
