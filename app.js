@@ -93,18 +93,27 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 // ═══════════════════════════════════════════════════════════
 // LINE SETTINGS API
 // ═══════════════════════════════════════════════════════════
-app.get('/api/line-config', requireAuth(['superadmin','admin']), (req, res) => {
-  res.json({
-    ok: true,
-    config: lineConfig.getConfig(),
-    hasToken: lineConfig.hasToken(),
-    tokenPreview: lineConfig.getTokenPreview(),
-  });
+app.get('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
+  try {
+    const flat = await lineConfig.getConfig();
+    // แปลงจาก flat → nested format ที่ frontend คาดหวัง
+    const config = {
+      adminGroupId: flat['admin_group_id'] || '',
+      brandGroups: {
+        "Dunkin'"            : flat['brand_group_dunkin']             || '',
+        "Greyhound Cafe"     : flat['brand_group_greyhound_cafe']     || '',
+        "Greyhound Original" : flat['brand_group_greyhound_original'] || '',
+        "Au Bon Pain"        : flat['brand_group_au_bon_pain']        || '',
+        "Funky Fries"        : flat['brand_group_funky_fries']        || '',
+      },
+    };
+    res.json({ ok:true, config, hasToken:lineConfig.hasToken(), tokenPreview:lineConfig.getTokenPreview() });
+  } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/line-config', requireAuth(['superadmin','admin']), (req, res) => {
+app.patch('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
   try {
-    const updated = lineConfig.updateConfig(req.body);
+    const updated = await lineConfig.updateConfig(req.body);
     addLog({ user:req.user, action:'update_line_config', detail:'อัปเดตค่า LINE Settings' });
     res.json({ ok:true, config:updated });
   } catch(e) { res.json({ ok:false, error:e.message }); }
