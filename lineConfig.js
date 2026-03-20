@@ -5,9 +5,17 @@ const API_URL  = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site:80
 const API_KEY  = process.env.REPAIR_API_KEY  || 'repair123';
 
 // ── in-memory cache (refresh ทุก 5 นาที) ──────────────────────
-let _cache     = null;
-let _cacheExp  = 0;
+let _cache    = null;
+let _cacheExp = 0;
 const CACHE_TTL = 5 * 60 * 1000;
+
+const BRAND_KEY_MAP = {
+  "Dunkin'"            : 'brand_group_dunkin',
+  "Greyhound Cafe"     : 'brand_group_greyhound_cafe',
+  "Greyhound Original" : 'brand_group_greyhound_original',
+  "Au Bon Pain"        : 'brand_group_au_bon_pain',
+  "Funky Fries"        : 'brand_group_funky_fries',
+};
 
 async function fetchFromMySQL() {
   try {
@@ -16,7 +24,19 @@ async function fetchFromMySQL() {
       timeout: 8000,
     });
     if (r.data?.ok) {
-      _cache    = r.data.config || {};
+      const raw = r.data.config || {};
+      // รองรับทั้ง nested format {adminGroupId, brandGroups} และ flat format
+      if (raw.brandGroups !== undefined) {
+        const flat = {};
+        if (raw.adminGroupId) flat['admin_group_id'] = raw.adminGroupId;
+        for (const [brand, val] of Object.entries(raw.brandGroups || {})) {
+          const key = BRAND_KEY_MAP[brand];
+          if (key) flat[key] = val || '';
+        }
+        _cache = flat;
+      } else {
+        _cache = raw;
+      }
       _cacheExp = Date.now() + CACHE_TTL;
       console.log('[LineConfig] fetched from MySQL:', Object.keys(_cache).length, 'keys');
     }
@@ -36,19 +56,13 @@ function invalidate() {
   _cacheExp = 0;
 }
 
-// ── Helpers ───────────────────────────────────────────────────
-const BRAND_KEY_MAP = {
-  "Dunkin'"            : 'brand_group_dunkin',
-  "Greyhound Cafe"     : 'brand_group_greyhound_cafe',
-  "Greyhound Original" : 'brand_group_greyhound_original',
-  "Au Bon Pain"        : 'brand_group_au_bon_pain',
-  "Funky Fries"        : 'brand_group_funky_fries',
-};
-
 async function getBrandGroupId(brand) {
   const cfg = await getConfig();
-  const key = BRAND_KEY_MAP[brand] || BRAND_KEY_MAP[Object.keys(BRAND_KEY_MAP).find(k => k.toLowerCase() === (brand||'').toLowerCase())];
-  return key ? (cfg[key] || '') : '';
+  const key = BRAND_KEY_MAP[brand] ||
+    BRAND_KEY_MAP[Object.keys(BRAND_KEY_MAP).find(k => k.toLowerCase() === (brand||'').toLowerCase())];
+  const val = key ? (cfg[key] || '') : '';
+  // กรอง placeholder
+  return val && !val.includes('xxx') ? val : '';
 }
 
 async function getAdminGroupId() {
@@ -56,7 +70,8 @@ async function getAdminGroupId() {
   return cfg['admin_group_id'] || process.env.LINE_ADMIN_GROUP_ID || '';
 }
 
-// ดึง LINE user IDs ของ Admin ทุกคน จาก users table โดยตรง
+// ดึง LINE User ID ของ Admin/Superadmin/Manager จาก users table
+// กรองเฉพาะ U... (User ID) ไม่เอา C... (Group ID)
 async function getAdminUserIds() {
   try {
     const r = await axios.get(`${API_URL}/api/admin-line-ids`, {
@@ -66,8 +81,8 @@ async function getAdminUserIds() {
     if (r.data?.ok) {
       const ids = (r.data.admins || [])
         .map(u => (u.line_user_id || '').trim())
-        .filter(Boolean);
-      console.log('[LineConfig] admin LINE IDs:', ids.length);
+        .filter(id => id.startsWith('U')); // เฉพาะ User ID จริงๆ
+      console.log('[LineConfig] admin LINE user IDs:', ids.length);
       return ids;
     }
   } catch (e) {
