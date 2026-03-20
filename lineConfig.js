@@ -91,6 +91,21 @@ async function getAdminUserIds() {
   return [];
 }
 
+// updateConfig — บันทึกค่าลง MySQL ผ่าน FastAPI (PATCH /api/line-config)
+async function updateConfig(body) {
+  try {
+    const r = await axios.post(`${API_URL}/api/line-config`, body, {
+      headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' },
+      timeout: 10000,
+    });
+    invalidate(); // ล้าง cache
+    return r.data?.config || body;
+  } catch (e) {
+    console.error('[LineConfig] updateConfig failed:', e.message);
+    throw new Error('บันทึกไม่สำเร็จ: ' + e.message);
+  }
+}
+
 function hasToken() {
   return !!(process.env.LINE_CHANNEL_ACCESS_TOKEN);
 }
@@ -100,4 +115,4 @@ function getTokenPreview() {
   return t ? t.slice(0, 8) + '...' : '(not set)';
 }
 
-module.exports = { getConfig, getBrandGroupId, getAdminGroupId, getAdminUserIds, invalidate, hasToken, getTokenPreview };
+module.exports = { getConfig, updateConfig, getBrandGroupId, getAdminGroupId, getAdminUserIds, invalidate, hasToken, getTokenPreview };
