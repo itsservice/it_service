@@ -873,7 +873,7 @@ function rLine(){
             </div>
             <div style="display:flex;gap:6px">
               <input id="lg-${key}" class="sel" type="password" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono);${!isSA?'opacity:.5;cursor:not-allowed;':''}" placeholder="${ph}" value="" ${!isSA?'readonly':''}/>
-              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" title="แสดง/ซ่อน" style="min-width:38px;font-size:15px">👁️</button>`:''}
+              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" style="min-width:52px;font-size:12px;font-weight:700;letter-spacing:.03em">Show</button>`:''}
               <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง" ${!isSA?'disabled style="opacity:.4;cursor:not-allowed"':''}>🧪 Test</button>
             </div>
           </div>`).join('');
@@ -888,16 +888,23 @@ function rLine(){
   loadLineGroups();
 }
 async function loadLineGroups(){
+  const msg=document.getElementById('line-msg');
+  if(msg)msg.innerHTML='<span style="color:var(--fg3)">⏳ กำลังโหลด...</span>';
   try{
-    const d=await api('/api/line-config');if(!d.ok)return;
+    const d=await api('/api/line-config');
+    if(!d.ok){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ โหลดไม่สำเร็จ: '+(d.error||'error')+'</span>';return;}
     const cfg=d.config||{};
-    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el&&val)el.value=val;};
+    // set ทุก field ไม่ว่าค่าจะว่างหรือไม่
+    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el)el.value=val||'';};
     setVal('adminGroupId',cfg.adminGroupId||'');
     const bg=cfg.brandGroups||{};
-    setVal('dunkin',bg["Dunkin'"]||'');setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
-    setVal('greyhoundOriginal',bg['Greyhound Original']||'');setVal('auBonPain',bg['Au Bon Pain']||'');
+    setVal('dunkin',bg["Dunkin'"]||'');
+    setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
+    setVal('greyhoundOriginal',bg['Greyhound Original']||'');
+    setVal('auBonPain',bg['Au Bon Pain']||'');
     setVal('funkyFries',bg['Funky Fries']||'');
-  }catch(_){}
+    if(msg){msg.innerHTML='<span style="color:var(--green)">✅ โหลดข้อมูลแล้ว</span>';setTimeout(()=>{if(msg)msg.innerHTML='';},2000);}
+  }catch(e){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
 }
 async function saveLineGroups(){
   const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
@@ -921,7 +928,7 @@ function toggleLgShow(key){
   if(!inp)return;
   const show=inp.type==='password';
   inp.type=show?'text':'password';
-  if(btn)btn.textContent=show?'🙈':'👁️';
+  if(btn)btn.textContent=show?'Hide':'Show';
 }
 
 function rSystem(){
