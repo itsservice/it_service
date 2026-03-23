@@ -130,70 +130,51 @@ app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (re
 });
 
 // ═══════════════════════════════════════════════════════════
-// BRANCHES
+// BRANCHES — MySQL via FastAPI
 // ═══════════════════════════════════════════════════════════
-const BRANCH_TABLES = [
-  { brand: "Dunkin'",           tableId: process.env.LARK_BRANCH_DUNKIN },
-  { brand: "Greyhound Cafe",    tableId: process.env.LARK_BRANCH_GREYHOUND_CAFE },
-  { brand: "Greyhound Original",tableId: null },
-  { brand: "Au Bon Pain",       tableId: process.env.LARK_BRANCH_AU_BON_PAIN },
-  { brand: "Funky Fries",       tableId: process.env.LARK_BRANCH_FUNKY_FRIES },
-];
-
 let _branchCache = null, _branchCacheExp = 0;
 
 app.get('/api/branches', async (req, res) => {
   try {
     if (_branchCache && Date.now() < _branchCacheExp) return res.json({ ok:true, branches:_branchCache });
-    const { getToken } = require('./larkService');
     const axios = require('axios');
-    const BASE = 'https://open.larksuite.com/open-apis';
-    const APP = process.env.LARK_APP_TOKEN;
-    const token = await getToken();
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+
+    const r = await axios.get(`${REPAIR_URL}/api/branches`, {
+      headers: { 'X-API-Key': REPAIR_KEY },
+      timeout: 10000
+    });
+
+    if (!r.data?.ok) throw new Error('branches API error');
+
+    // แปลง flat array → nested by brand
     const result = {};
-
-    async function fetchAll(tableId) {
-      let all=[], pt;
-      do {
-        const r = await axios.get(`${BASE}/bitable/v1/apps/${APP}/tables/${tableId}/records`,
-          { headers:{Authorization:`Bearer ${token}`}, params:{page_size:100,...(pt?{page_token:pt}:{})}, timeout:12000 });
-        all = all.concat(r.data.data?.items||[]);
-        pt = r.data.data?.has_more ? r.data.data.page_token : null;
-      } while(pt);
-      return all;
-    }
-
-    function parseBranch(fields) {
-      return {
-        code: String(fields['รหัสสาขา']||fields['Shop Code']||'').trim(),
-        nameTh: String(fields['ชื่อสาขา (Thai)']||fields['ชื่อสาขา']||'').replace(/^'+|'+$/g,'').trim(),
-        nameEn: String(fields['ชื่อสาขา (English)']||fields['Shop Name (English)']||'').replace(/^'+|'+$/g,'').trim()
-      };
-    }
-
-    const masterTableId = process.env.LARK_BRANCH_TABLE;
-    if (masterTableId) {
-      const items = await fetchAll(masterTableId);
-      items.forEach(rec => {
-        const f = rec.fields||{};
-        const rv = f['แบรนด์']||f['Brand']||'';
-        const bv = typeof rv==='object'&&'text' in rv ? rv.text : String(rv);
-        const b = parseBranch(f);
-        if (b.code && bv) { if(!result[bv])result[bv]=[]; result[bv].push(b); }
+    for (const b of (r.data.branches || [])) {
+      const brand = b.brand || 'Unknown';
+      if (!result[brand]) result[brand] = [];
+      result[brand].push({
+        id:           b.id,
+        code:         b.code,
+        nameTh:       b.nameTh || b.name_th || '',
+        nameEn:       b.nameEn || b.name_en || '',
+        ip:           b.ip || '',
+        phone:        b.phone || '',
+        location_lat:  b.location_lat  || null,
+        location_lng:  b.location_lng  || null,
+        location_name: b.location_name || '',
       });
     }
 
-    await Promise.allSettled(
-      BRANCH_TABLES.filter(b=>b.tableId&&!result[b.brand]?.length).map(async({brand,tableId})=>{
-        const items = await fetchAll(tableId);
-        result[brand] = items.map(r=>parseBranch(r.fields||{})).filter(b=>b.code);
-      })
-    );
-
     _branchCache = result;
-    _branchCacheExp = Date.now()+10*60*1000;
+    _branchCacheExp = Date.now() + 5 * 60 * 1000; // cache 5 นาที
     res.json({ ok:true, branches:result });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) {
+    console.error('[branches]', e.message);
+    // ถ้า API ล้มเหลว คืน cache เก่าถ้ามี
+    if (_branchCache) return res.json({ ok:true, branches:_branchCache, cached:true });
+    res.json({ ok:false, error:e.message });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
