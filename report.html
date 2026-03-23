@@ -166,7 +166,7 @@ async function doSubmit(){
   const btn=document.getElementById('btn-sub');btn.disabled=true;btn.textContent='Submitting...';
   try{
     const body={reporter:name,phone,branchCode:branch,location:loc,type:cat,detail,brand:brand.n,lineUserId:line};
-    const d=await fetch('/api/public/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+    const d=await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
     if(!d.ok)throw new Error(d.error||'Submission failed');
     showSuccess(d.ticket?.id||d.ticketId||'--');
   }catch(e){toast('Error: '+e.message);btn.disabled=false;btn.textContent='Submit Report';}
@@ -192,10 +192,11 @@ async function doTrack(){
   if(!id){toast('Enter ticket ID');return;}
   const out=document.getElementById('trk-result');out.innerHTML='<div class="empty">Searching...</div>';
   try{
-    const d=await fetch('/api/public/tickets/'+encodeURIComponent(id)).then(r=>r.json());
+    const d=await fetch('/api/tickets').then(r=>r.json());
     if(!d.ok)throw new Error(d.error||'Not found');
-    const t=d.ticket;
-    const updates=d.updates||[];
+    const t=(d.tickets||[]).find(x=>(x.id||'').toLowerCase()===id.toLowerCase()||x._recordId===id);
+    if(!t)throw new Error('Ticket not found: '+id);
+    const updates=[];
     out.innerHTML=`<div class="tres">
       <div class="tres-id">${esc(t.id)}</div>
       <div class="tres-type">${esc(t.type||'-')}</div>
