@@ -549,6 +549,23 @@ function updateGPSBar(){
 }
 
 // ══ SUBMIT ═════════════════════════════════════════════════
+const RETRY_MAX=3;
+const RETRY_LABELS_TH=['กำลังส่ง...','ลองใหม่ครั้งที่ 2...','ลองใหม่ครั้งที่ 3...'];
+const RETRY_LABELS_EN=['Submitting...','Retrying (2/3)...','Retrying (3/3)...'];
+
+async function fetchWithTimeout(url,opts,ms=30000){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),ms);
+  try{
+    const r=await fetch(url,{...opts,signal:ctrl.signal});
+    clearTimeout(tid);
+    return r;
+  }catch(e){
+    clearTimeout(tid);
+    throw e.name==='AbortError'?new Error('timeout'):e;
+  }
+}
+
 async function doSubmit(){
   const l=t();
   const branchCode=selectedBranch?.code||'';
@@ -562,23 +579,69 @@ async function doSubmit(){
   if(!branchCode||!name||!phone||!cat||!detail||!loc){toast(l.required);return;}
   if(detail.length<10){toast(l.detailMin);return;}
 
-  // Append GPS coords to location field
   if(gpsCoords){
     const tag=`[${gpsCoords.source}:${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}]`;
     if(!loc.includes('[GPS:')&&!loc.includes('[DB:'))loc=loc+' '+tag;
   }
 
   const btn=document.getElementById('btn-sub');
-  btn.disabled=true;btn.textContent=l.submitting;
-  try{
-    const body={reporter:name,phone,branchCode,location:loc,type:cat,detail,brand:brand.n};
-    const d=await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
-    if(!d.ok)throw new Error(d.error||'Submission failed');
-    showSuccess(d.ticket?.id||d.ticketId||'--');
-  }catch(e){
-    toast('Error: '+e.message);
-    btn.disabled=false;btn.textContent=l.submit;
+  const body={reporter:name,phone,branchCode,location:loc,type:cat,detail,brand:brand.n};
+  const retryLabels=lang==='th'?RETRY_LABELS_TH:RETRY_LABELS_EN;
+
+  btn.disabled=true;
+
+  for(let attempt=0;attempt<RETRY_MAX;attempt++){
+    btn.textContent=retryLabels[attempt];
+    if(attempt>0){
+      // wait 2s before retry + show countdown
+      for(let s=2;s>0;s--){
+        btn.textContent=(lang==='th'?`รอ ${s}s...`:`Wait ${s}s...`);
+        await new Promise(r=>setTimeout(r,1000));
+      }
+      btn.textContent=retryLabels[attempt];
+    }
+    try{
+      const r=await fetchWithTimeout('/api/tickets',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body),
+      },30000);
+      const d=await r.json();
+      if(!d.ok)throw new Error(d.error||'Submission failed');
+      showSuccess(d.ticket?.id||d.ticketId||'--');
+      return;
+    }catch(e){
+      const isLast=attempt===RETRY_MAX-1;
+      if(isLast){
+        // ทุก retry ล้มเหลว
+        const errMsg=e.message?.includes('timeout')
+          ?(lang==='th'
+            ?'Server ตอบช้าเกินไป กรุณาลองอีกครั้งในอีกสักครู่'
+            :'Server timeout — please try again later')
+          :'Error: '+e.message;
+        toast(errMsg);
+        btn.textContent=l.submit;
+        btn.disabled=false;
+        // แสดง retry button แยกต่างหาก
+        showRetryButton(body);
+      }
+      // ถ้ายังไม่ใช่ครั้งสุดท้าย → loop ต่อ
+    }
   }
+}
+
+function showRetryButton(body){
+  const l=t();
+  // เพิ่ม retry hint ใต้ปุ่ม
+  const existing=document.getElementById('retry-hint');
+  if(existing)return;
+  const hint=document.createElement('div');
+  hint.id='retry-hint';
+  hint.style.cssText='margin-top:8px;text-align:center;font-size:12px;color:var(--fg3)';
+  hint.innerHTML=lang==='th'
+    ?'หากปัญหายังคงอยู่ กรุณาติดต่อ IT Support โดยตรง'
+    :'If issue persists, please contact IT Support directly';
+  document.getElementById('btn-sub')?.after(hint);
 }
 
 // ══ SUCCESS ════════════════════════════════════════════════
