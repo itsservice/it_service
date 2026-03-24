@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fff;--bg2:#f6f6f4;--bg3:#edede9;--bg4:#e4e4df;--fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;--border:#e0e0db;--border2:#c8c8c2;--card:#fff;--green:#2d7a4f;--red:#b83232;--display:'Syne',sans-serif;--sans:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;--ease:cubic-bezier(.22,.61,.36,1)}
+:root{--bg:#f5f5f5;--bg2:#ffffff;--bg3:#f4f4f4;--bg4:#eeeeee;--fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;--border:#e8e8e8;--border2:#d4d4d4;--card:#ffffff;--green:#2d7a4f;--red:#b83232;--display:'Syne',sans-serif;--sans:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;--ease:cubic-bezier(.22,.61,.36,1)}
 [data-t="dark"]{--bg:#0a0a0a;--bg2:#141413;--bg3:#1e1e1c;--bg4:#282826;--fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#7a7a75;--fg4:#4a4a46;--border:#252523;--border2:#353532;--card:#141413;--green:#4ade80;--red:#f87171}
 html,body{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
 a{color:inherit;text-decoration:none}
@@ -18,6 +18,7 @@ a{color:inherit;text-decoration:none}
 .top-t{font-family:var(--display);font-size:14px;font-weight:800;flex:1;color:var(--fg);letter-spacing:-.02em}
 .top-clock{font-family:var(--mono);font-size:11px;color:var(--fg4)}
 .smb{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}.smb:hover{background:var(--bg2);color:var(--fg)}
+.smb.lang-active{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .wrap{max-width:540px;margin:0 auto;padding:16px 14px 60px}
 
 .rtabs{display:flex;gap:3px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:6px;transition:border-color .4s}
@@ -36,6 +37,61 @@ a{color:inherit;text-decoration:none}
 .fg select{appearance:none;cursor:pointer}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #other-input{display:none;margin-top:6px}
+
+/* Branch picker button */
+.branch-btn{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--fg);font-family:var(--sans);font-size:14px;text-align:left;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:space-between}
+.branch-btn:hover{border-color:var(--fg)}
+.branch-btn.has-val{border-color:var(--fg)}
+.branch-btn-placeholder{color:var(--fg4)}
+.branch-btn-arrow{color:var(--fg4);font-size:10px;flex-shrink:0}
+
+/* GPS status bar */
+.gps-bar{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:5px;transition:all .3s}
+.gps-bar.gps-none{background:var(--bg3);color:var(--fg4)}
+.gps-bar.gps-loading{background:#fef9ec;color:#92400e}
+[data-t="dark"] .gps-bar.gps-loading{background:#2a1f08;color:#fcd34d}
+.gps-bar.gps-ok{background:#f0fdf4;color:#166534}
+[data-t="dark"] .gps-bar.gps-ok{background:#052e16;color:#4ade80}
+.gps-bar.gps-denied{background:#fff5f5;color:#991b1b}
+[data-t="dark"] .gps-bar.gps-denied{background:#1c0606;color:#f87171}
+.gps-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.gps-none .gps-dot{background:var(--fg4)}
+.gps-loading .gps-dot{background:#f59e0b;animation:gpspulse 1s infinite}
+.gps-ok .gps-dot{background:var(--green)}
+.gps-denied .gps-dot{background:var(--red)}
+@keyframes gpspulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Bottom sheet */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.sheet-overlay.open{opacity:1;pointer-events:all}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:201;background:var(--card);border-radius:16px 16px 0 0;max-height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s var(--ease);box-shadow:0 -4px 30px rgba(0,0,0,.12)}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0}
+.sheet-head{padding:12px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sheet-title{font-family:var(--display);font-size:14px;font-weight:800;color:var(--fg);letter-spacing:-.02em}
+.sheet-search{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;transition:all .3s;margin-top:8px}
+.sheet-search:focus{border-color:var(--fg)}
+.sheet-search::placeholder{color:var(--fg4)}
+.sheet-list{overflow-y:auto;flex:1;padding:6px 8px 20px}
+.sheet-item{padding:10px 10px;border-radius:8px;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:1px}
+.sheet-item:hover{background:var(--bg3)}
+.sheet-item-code{font-family:var(--mono);font-size:10px;color:var(--fg4)}
+.sheet-item-name{font-size:14px;font-weight:600;color:var(--fg)}
+.sheet-item-sub{font-size:11px;color:var(--fg3)}
+.sheet-empty{text-align:center;padding:24px;color:var(--fg4);font-size:13px}
+
+/* GPS consent popup */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .25s;pointer-events:none}
+.popup-overlay.open{opacity:1;pointer-events:all}
+.popup-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;max-width:340px;width:100%;text-align:center;animation:up .25s var(--ease)}
+.popup-icon{font-size:30px;margin-bottom:10px}
+.popup-title{font-family:var(--display);font-size:15px;font-weight:800;color:var(--fg);margin-bottom:6px;letter-spacing:-.02em}
+.popup-desc{font-size:13px;color:var(--fg3);margin-bottom:18px;line-height:1.6}
+.popup-btns{display:flex;gap:8px;justify-content:center}
+.popup-btn{flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--fg);font-family:var(--display);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.popup-btn:hover{background:var(--bg3)}
+.popup-btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.popup-btn.pri:hover{opacity:.8}
 
 .sub-btn{width:100%;padding:12px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-family:var(--display);font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;margin-top:6px;letter-spacing:-.01em}
 .sub-btn:hover{opacity:.8}.sub-btn:disabled{opacity:.3}
@@ -61,7 +117,6 @@ a{color:inherit;text-decoration:none}
 .tres-l{color:var(--fg4);min-width:70px;font-size:11px;font-weight:600}.tres-v{color:var(--fg);font-weight:500;flex:1}
 .pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--fg2);font-family:var(--mono);transition:all .4s}
 
-/* TIMELINE */
 .timeline{margin-top:12px;border-left:2px solid var(--border);padding-left:14px;transition:border-color .4s}
 .tl-item{position:relative;padding-bottom:12px}
 .tl-item::before{content:'';position:absolute;left:-19px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--fg4);border:2px solid var(--bg2);transition:all .4s}
@@ -84,18 +139,43 @@ a{color:inherit;text-decoration:none}
 </head>
 <body>
 
+<!-- Bottom Sheet -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="branch-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title" id="sheet-title">เลือกสาขา</div>
+    <input class="sheet-search" id="sheet-search" placeholder="ค้นหาชื่อ หรือ รหัสสาขา..." oninput="filterBranches(this.value)"/>
+  </div>
+  <div class="sheet-list" id="sheet-list"></div>
+</div>
+
+<!-- GPS Consent Popup -->
+<div class="popup-overlay" id="gps-popup">
+  <div class="popup-box">
+    <div class="popup-icon">📍</div>
+    <div class="popup-title" id="gps-popup-title">อนุญาตเข้าถึง GPS?</div>
+    <div class="popup-desc" id="gps-popup-desc">ระบบจะบันทึกพิกัดตำแหน่งปัจจุบันเพื่อช่วยให้ช่างค้นหาสาขาได้รวดเร็วขึ้น</div>
+    <div class="popup-btns">
+      <button class="popup-btn" onclick="denyGPS()">ไม่อนุญาต</button>
+      <button class="popup-btn pri" onclick="allowGPS()">อนุญาต</button>
+    </div>
+  </div>
+</div>
+
 <div class="top">
   <div class="top-logo" id="top-icon">RP</div>
   <div class="top-t" id="top-t">Report IT Issue</div>
   <div class="top-clock" id="clock">--:--:--</div>
+  <button class="smb" id="btn-lang" onclick="toggleLang()">EN</button>
   <button class="smb" id="btn-theme" onclick="togTheme()">Dark</button>
   <a href="/" class="smb">Home</a>
 </div>
 
 <div class="wrap">
   <div class="rtabs">
-    <button class="rtab on" id="tab-report" onclick="showTab('report')">Report</button>
-    <button class="rtab" id="tab-track" onclick="showTab('track')">Track</button>
+    <button class="rtab on" id="tab-report" onclick="showTab('report')"></button>
+    <button class="rtab" id="tab-track" onclick="showTab('track')"></button>
   </div>
   <div id="view-report"></div>
   <div id="view-track" style="display:none"></div>
@@ -103,6 +183,7 @@ a{color:inherit;text-decoration:none}
 <div class="toast" id="toast"></div>
 
 <script>
+// ══ CONSTANTS ══════════════════════════════════════════════
 const BRANDS=[
   {s:'dunkin',n:"Dunkin'",p:'GD'},
   {s:'greyhound-cafe',n:'Greyhound Cafe',p:'GH'},
@@ -115,111 +196,491 @@ const CATS=[
   'งานระบบปรับอากาศ','งานเครื่องจักร/อุปกรณ์เฉพาะทาง','ตู้แช่/ตู้เย็น',
   'เครื่องกรองน้ำ/ไส้กรองน้ำ','เครื่องซีลแก้ว','เครื่องทำน้ำร้อน','งานโครงสร้าง','อื่นๆ'
 ];
+
+// ══ LABELS (TH / EN) ═══════════════════════════════════════
+const L={
+  th:{
+    tabReport:'แจ้งปัญหา', tabTrack:'ติดตาม Ticket',
+    topTitle:'แจ้งปัญหา IT',
+    cardSub:'รหัส Ticket: XXXX | SLA: 7 วันทำการ',
+    branch:'รหัสสาขา', branchPick:'เลือกสาขา...',
+    reporter:'ชื่อผู้แจ้ง', phone:'เบอร์โทร',
+    category:'ประเภทปัญหา', catDefault:'-- เลือกประเภท --',
+    otherPlaceholder:'ระบุประเภทอื่นๆ...',
+    detail:'รายละเอียด', detailPH:'อธิบายปัญหาอย่างละเอียด (อย่างน้อย 10 ตัวอักษร)...',
+    location:'สถานที่', locationPH:'ชั้น, โซน, ตำแหน่งเฉพาะ',
+    photos:'รูปภาพ (สูงสุด 3 รูป)',
+    submit:'ส่งรายงาน', submitting:'กำลังส่ง...',
+    sheetTitle:'เลือกสาขา', sheetSearch:'ค้นหาชื่อ หรือ รหัสสาขา...',
+    gpsAllow:'อนุญาต', gpsDeny:'ไม่อนุญาต',
+    gpsTitle:'อนุญาตเข้าถึง GPS?',
+    gpsDesc:'ระบบจะบันทึกพิกัดตำแหน่งปัจจุบันเพื่อช่วยให้ช่างค้นหาสาขาได้รวดเร็วขึ้น',
+    gpsNone:'ยังไม่ได้ระบุตำแหน่ง',
+    gpsLoading:'กำลังค้นหาตำแหน่ง...',
+    gpsOkBrowser:'บันทึกตำแหน่ง GPS แล้ว',
+    gpsOkDB:'ใช้ตำแหน่งจาก DB',
+    gpsDenied:'ไม่ได้รับอนุญาต — กรอกสถานที่เอง',
+    sucTitle:'ส่งรายงานเรียบร้อย',
+    sucDesc:'ทีม IT Support รับทราบแล้ว\nSLA: 7 วันทำการ — ใช้รหัส Ticket ติดตามสถานะ',
+    sucTrack:'ติดตาม Ticket',
+    sucNew:'แจ้งปัญหาใหม่',
+    trackTitle:'ติดตาม Ticket',
+    trackPH:'รหัส Ticket เช่น GD-00042',
+    trackBtn:'ค้นหา',
+    required:'กรุณากรอกข้อมูลให้ครบ (*)',
+    detailMin:'รายละเอียดต้องมีอย่างน้อย 10 ตัวอักษร',
+    ticketNotFound:'ไม่พบ Ticket',
+    selectBrand:'เลือกแบรนด์ของคุณ',
+    loadingBranches:'กำลังโหลดรายการสาขา...',
+    noBranches:'ไม่พบสาขา',
+  },
+  en:{
+    tabReport:'Report', tabTrack:'Track',
+    topTitle:'Report IT Issue',
+    cardSub:'Ticket prefix: XXXX | SLA: 7 business days',
+    branch:'Branch Code', branchPick:'Select branch...',
+    reporter:'Reporter Name', phone:'Phone',
+    category:'Category', catDefault:'-- Select category --',
+    otherPlaceholder:'Specify other category...',
+    detail:'Detail', detailPH:'Describe the issue in detail (min 10 characters)...',
+    location:'Location', locationPH:'Floor, area, specific location',
+    photos:'Photos (max 3)',
+    submit:'Submit Report', submitting:'Submitting...',
+    sheetTitle:'Select Branch', sheetSearch:'Search by name or branch code...',
+    gpsAllow:'Allow', gpsDeny:'Deny',
+    gpsTitle:'Allow GPS Access?',
+    gpsDesc:'The system will record your current location to help engineers find your branch faster.',
+    gpsNone:'No location set',
+    gpsLoading:'Getting location...',
+    gpsOkBrowser:'GPS location captured',
+    gpsOkDB:'Location from database',
+    gpsDenied:'GPS denied — please fill location manually',
+    sucTitle:'Report Submitted',
+    sucDesc:'The IT Support team has been notified.\nSLA: 7 business days — use ticket ID to track status.',
+    sucTrack:'Track Status',
+    sucNew:'New Report',
+    trackTitle:'Track Ticket',
+    trackPH:'Ticket ID e.g. GD-00042',
+    trackBtn:'Search',
+    required:'Fill in all required fields (*)',
+    detailMin:'Detail must be at least 10 characters',
+    ticketNotFound:'Ticket not found',
+    selectBrand:'Select your brand',
+    loadingBranches:'Loading branches...',
+    noBranches:'No branches found',
+  }
+};
+let lang='th';
+const t=()=>L[lang];
+
+// ══ STATE ══════════════════════════════════════════════════
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 
 let brand=null;
+let allBranches={};          // nested by brand from /api/branches
+let selectedBranch=null;     // branch object from DB
+let gpsCoords=null;          // {lat, lng, source:'GPS'|'DB'}
+let gpsState='none';         // none | loading | ok | denied
 
-function detectBrand(){   const p=location.pathname;   const parts=p.split('/');   const raw=parts[parts.length-1];   if(!raw||raw==='report')return null;   const decoded=decodeURIComponent(raw).toLowerCase().trim();   for(const b of BRANDS){     if(decoded===b.s||decoded===b.n.toLowerCase()||decoded.includes(b.s)||b.n.toLowerCase().includes(decoded))return b;   }   return null; }
-function setBrand(b){brand=b;document.getElementById('top-t').textContent=b.n+' — Report';renderForm();}
-function showTab(t){
-  document.getElementById('tab-report').classList.toggle('on',t==='report');
-  document.getElementById('tab-track').classList.toggle('on',t==='track');
-  document.getElementById('view-report').style.display=t==='report'?'':'none';
-  document.getElementById('view-track').style.display=t==='track'?'':'none';
-  if(t==='track')renderTrack();
+// ══ LANG TOGGLE ════════════════════════════════════════════
+function toggleLang(){
+  lang=lang==='th'?'en':'th';
+  localStorage.setItem('rep_lang',lang);
+  document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
+  document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
+  applyLang();
+  renderForm();
+  renderTrack();
+  updateGPSBar();
 }
 
+function applyLang(){
+  const l=t();
+  document.getElementById('tab-report').textContent=l.tabReport;
+  document.getElementById('tab-track').textContent=l.tabTrack;
+  document.getElementById('sheet-title').textContent=l.sheetTitle;
+  const ss=document.getElementById('sheet-search');
+  if(ss)ss.placeholder=l.sheetSearch;
+  const gpt=document.getElementById('gps-popup-title');
+  if(gpt)gpt.textContent=l.gpsTitle;
+  const gpd=document.getElementById('gps-popup-desc');
+  if(gpd)gpd.textContent=l.gpsDesc;
+}
+
+// ══ THEME ══════════════════════════════════════════════════
+function togTheme(){
+  const d=document.documentElement;
+  d.dataset.t=d.dataset.t==='dark'?'':'dark';
+  localStorage.setItem('rep_theme',d.dataset.t);
+  document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';
+}
+
+// ══ BRAND ══════════════════════════════════════════════════
+function detectBrand(){
+  const p=location.pathname;
+  const parts=p.split('/');
+  const raw=parts[parts.length-1];
+  if(!raw||raw==='report')return null;
+  const decoded=decodeURIComponent(raw).toLowerCase().trim();
+  for(const b of BRANDS){
+    if(decoded===b.s||decoded===b.n.toLowerCase()||decoded.includes(b.s)||b.n.toLowerCase().includes(decoded))return b;
+  }
+  return null;
+}
+
+function setBrand(b){
+  brand=b;
+  selectedBranch=null;
+  gpsCoords=null;
+  gpsState='none';
+  document.getElementById('top-t').textContent=b.n+' — '+t().topTitle;
+  renderForm();
+}
+
+// ══ TABS ═══════════════════════════════════════════════════
+function showTab(tab){
+  document.getElementById('tab-report').classList.toggle('on',tab==='report');
+  document.getElementById('tab-track').classList.toggle('on',tab==='track');
+  document.getElementById('view-report').style.display=tab==='report'?'':'none';
+  document.getElementById('view-track').style.display=tab==='track'?'':'none';
+  if(tab==='track')renderTrack();
+}
+
+// ══ RENDER FORM ════════════════════════════════════════════
 function renderForm(){
-  if(!brand){document.getElementById('view-report').innerHTML=`<div class="fcard"><div style="text-align:center;margin-bottom:10px;font-size:13px;color:var(--fg3)">Select your brand</div><div class="bpick">${BRANDS.map(b=>`<div class="bpick-c" onclick="setBrand(BRANDS.find(x=>x.s==='${b.s}'))"><div class="bp-prefix">${b.p}</div><div class="bp-name">${b.n}</div></div>`).join('')}</div></div>`;return;}
+  const l=t();
+  if(!brand){
+    document.getElementById('view-report').innerHTML=`
+      <div class="fcard">
+        <div style="text-align:center;margin-bottom:10px;font-size:13px;color:var(--fg3)">${l.selectBrand}</div>
+        <div class="bpick">
+          ${BRANDS.map(b=>`<div class="bpick-c" onclick="setBrand(BRANDS.find(x=>x.s==='${b.s}'))">
+            <div class="bp-prefix">${b.p}</div>
+            <div class="bp-name">${b.n}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const branchVal=selectedBranch
+    ?`<span style="font-family:var(--mono);font-size:12px;color:var(--fg)">${esc(selectedBranch.code)}</span>
+       <span style="font-size:12px;color:var(--fg3);margin-left:6px">${esc(selectedBranch.nameTh||selectedBranch.nameEn||'')}</span>`
+    :`<span class="branch-btn-placeholder">${l.branchPick}</span>`;
+
   document.getElementById('view-report').innerHTML=`
     <div class="fcard">
       <div class="fcard-h">${brand.n}</div>
-      <div class="fcard-s">Ticket prefix: ${brand.p}-XXXXX | SLA: 7 business days</div>
-      <div class="g2">
-        <div class="fg"><label>Branch Code <span class="req">*</span></label><input id="f-branch" placeholder="e.g. ${brand.p}001"/></div>
-        <div class="fg"><label>Reporter Name <span class="req">*</span></label><input id="f-name" placeholder="Full name"/></div>
+      <div class="fcard-s">${l.cardSub.replace('XXXX',brand.p+'-XXXXX')}</div>
+
+      <div class="fg">
+        <label>${l.branch} <span class="req">*</span></label>
+        <button class="branch-btn${selectedBranch?' has-val':''}" onclick="openSheet()" id="branch-btn-el">
+          <span id="branch-btn-text">${branchVal}</span>
+          <span class="branch-btn-arrow">▼</span>
+        </button>
+        <div id="gps-bar"></div>
       </div>
-      <div class="fg"><label>Phone <span class="req">*</span></label><input id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/></div>
-      <div class="fg"><label>Category <span class="req">*</span></label><select id="f-cat" onchange="document.getElementById('other-input').style.display=this.value==='อื่นๆ'?'block':'none'"><option value="">-- Select category --</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><input id="other-input" placeholder="Specify other category..." style="display:none;margin-top:6px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:14px;width:100%;outline:none"/></div>
-      <div class="fg"><label>Detail <span class="req">*</span></label><textarea id="f-detail" placeholder="Describe the issue in detail (min 10 characters)..."></textarea></div>
-      <div class="fg"><label>Location <span class="req">*</span></label><input id="f-loc" placeholder="Floor, area, specific location"/></div>
-      <div class="fg"><label>Photos (max 3)</label><input type="file" accept="image/*" multiple id="f-photos" style="font-size:13px"/></div>
-      <div class="fg"><label>LINE User ID (optional)</label><input id="f-line" placeholder="For LINE notifications"/></div>
-      <button class="sub-btn" id="btn-sub" onclick="doSubmit()">Submit Report</button>
+
+      <div class="g2">
+        <div class="fg">
+          <label>${l.reporter} <span class="req">*</span></label>
+          <input id="f-name" placeholder="${l.reporter}"/>
+        </div>
+        <div class="fg">
+          <label>${l.phone} <span class="req">*</span></label>
+          <input id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>${l.category} <span class="req">*</span></label>
+        <select id="f-cat" onchange="document.getElementById('other-input').style.display=this.value==='อื่นๆ'?'block':'none'">
+          <option value="">${l.catDefault}</option>
+          ${CATS.map(c=>`<option>${c}</option>`).join('')}
+        </select>
+        <input id="other-input" placeholder="${l.otherPlaceholder}" style="display:none;margin-top:6px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:14px;width:100%;outline:none"/>
+      </div>
+
+      <div class="fg">
+        <label>${l.detail} <span class="req">*</span></label>
+        <textarea id="f-detail" placeholder="${l.detailPH}"></textarea>
+      </div>
+
+      <div class="fg">
+        <label>${l.location} <span class="req">*</span></label>
+        <input id="f-loc" placeholder="${l.locationPH}"/>
+      </div>
+
+      <div class="fg">
+        <label>${l.photos}</label>
+        <input type="file" accept="image/*" multiple id="f-photos" style="font-size:13px"/>
+      </div>
+
+      <button class="sub-btn" id="btn-sub" onclick="doSubmit()">${l.submit}</button>
     </div>`;
+
+  updateGPSBar();
+  loadBranchesIfNeeded();
 }
 
+// ══ BRANCHES / BOTTOM SHEET ════════════════════════════════
+async function loadBranchesIfNeeded(){
+  if(Object.keys(allBranches).length)return;
+  try{
+    const d=await fetch('/api/branches').then(r=>r.json());
+    if(d.ok)allBranches=d.branches||{};
+  }catch(e){console.warn('[branches]',e.message);}
+}
+
+function getBrandBranches(q=''){
+  if(!brand)return[];
+  const list=allBranches[brand.n]||[];
+  if(!q)return list;
+  const lq=q.toLowerCase();
+  return list.filter(b=>(b.code||'').toLowerCase().includes(lq)||(b.nameTh||'').toLowerCase().includes(lq)||(b.nameEn||'').toLowerCase().includes(lq));
+}
+
+function openSheet(){
+  document.getElementById('sheet-overlay').classList.add('open');
+  document.getElementById('branch-sheet').classList.add('open');
+  document.getElementById('sheet-search').value='';
+  renderSheetList('');
+  setTimeout(()=>document.getElementById('sheet-search').focus(),350);
+}
+
+function closeSheet(){
+  document.getElementById('sheet-overlay').classList.remove('open');
+  document.getElementById('branch-sheet').classList.remove('open');
+}
+
+function renderSheetList(q){
+  const l=t();
+  const list=getBrandBranches(q);
+  const el=document.getElementById('sheet-list');
+  if(!el)return;
+  if(!list.length){
+    const msg=Object.keys(allBranches).length===0?l.loadingBranches:l.noBranches;
+    el.innerHTML=`<div class="sheet-empty">${msg}</div>`;
+    return;
+  }
+  el.innerHTML=list.map(b=>`
+    <div class="sheet-item" onclick="pickBranch(${JSON.stringify(b).replace(/"/g,'&quot;')})">
+      <span class="sheet-item-code">${esc(b.code)}</span>
+      <span class="sheet-item-name">${esc(b.nameTh||b.nameEn||b.code)}</span>
+      ${b.nameEn&&b.nameTh?`<span class="sheet-item-sub">${esc(b.nameEn)}</span>`:''}
+    </div>`).join('');
+}
+
+function filterBranches(q){
+  renderSheetList(q);
+}
+
+function pickBranch(b){
+  selectedBranch=b;
+  closeSheet();
+  // update button text
+  const btn=document.getElementById('branch-btn-text');
+  if(btn){
+    btn.innerHTML=`<span style="font-family:var(--mono);font-size:12px;color:var(--fg)">${esc(b.code)}</span>
+      <span style="font-size:12px;color:var(--fg3);margin-left:6px">${esc(b.nameTh||b.nameEn||'')}</span>`;
+  }
+  const btnEl=document.getElementById('branch-btn-el');
+  if(btnEl)btnEl.classList.add('has-val');
+  // GPS flow
+  if(b.location_lat&&b.location_lng){
+    gpsCoords={lat:b.location_lat,lng:b.location_lng,source:'DB'};
+    gpsState='ok';
+    updateGPSBar();
+  } else {
+    showGPSPopup();
+  }
+}
+
+// ══ GPS ════════════════════════════════════════════════════
+function showGPSPopup(){
+  const l=t();
+  document.getElementById('gps-popup-title').textContent=l.gpsTitle;
+  document.getElementById('gps-popup-desc').textContent=l.gpsDesc;
+  document.getElementById('gps-popup').classList.add('open');
+}
+function hideGPSPopup(){
+  document.getElementById('gps-popup').classList.remove('open');
+}
+
+function allowGPS(){
+  hideGPSPopup();
+  gpsState='loading';
+  updateGPSBar();
+  if(!navigator.geolocation){gpsState='denied';updateGPSBar();return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      gpsCoords={lat:pos.coords.latitude,lng:pos.coords.longitude,source:'GPS'};
+      gpsState='ok';
+      updateGPSBar();
+    },
+    ()=>{gpsState='denied';updateGPSBar();},
+    {timeout:10000,maximumAge:30000}
+  );
+}
+
+function denyGPS(){
+  hideGPSPopup();
+  gpsState='denied';
+  gpsCoords=null;
+  updateGPSBar();
+}
+
+function updateGPSBar(){
+  const bar=document.getElementById('gps-bar');
+  if(!bar)return;
+  const l=t();
+  const states={
+    none:  {cls:'gps-none',   txt:l.gpsNone},
+    loading:{cls:'gps-loading',txt:l.gpsLoading},
+    ok:    {cls:'gps-ok',     txt:gpsCoords?.source==='DB'?l.gpsOkDB:l.gpsOkBrowser},
+    denied:{cls:'gps-denied', txt:l.gpsDenied},
+  };
+  const s=states[gpsState]||states.none;
+  bar.className=`gps-bar ${s.cls}`;
+  bar.innerHTML=`<span class="gps-dot"></span><span>${s.txt}</span>
+    ${gpsState==='ok'&&gpsCoords?`<span style="font-family:var(--mono);font-size:10px;margin-left:auto;opacity:.7">${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}</span>`:''}`;
+}
+
+// ══ SUBMIT ═════════════════════════════════════════════════
 async function doSubmit(){
-  const branch=(document.getElementById('f-branch')?.value||'').trim();
+  const l=t();
+  const branchCode=selectedBranch?.code||'';
   const name=(document.getElementById('f-name')?.value||'').trim();
   const phone=(document.getElementById('f-phone')?.value||'').trim();
   let cat=document.getElementById('f-cat')?.value||'';
   if(cat==='อื่นๆ'){const other=(document.getElementById('other-input')?.value||'').trim();if(other)cat=other;}
   const detail=(document.getElementById('f-detail')?.value||'').trim();
-  const loc=(document.getElementById('f-loc')?.value||'').trim();
-  const line=(document.getElementById('f-line')?.value||'').trim();
+  let loc=(document.getElementById('f-loc')?.value||'').trim();
 
-  if(!branch||!name||!phone||!cat||!detail||!loc){toast('Fill in all required fields (*)');return;}
-  if(detail.length<10){toast('Detail must be at least 10 characters');return;}
+  if(!branchCode||!name||!phone||!cat||!detail||!loc){toast(l.required);return;}
+  if(detail.length<10){toast(l.detailMin);return;}
 
-  const btn=document.getElementById('btn-sub');btn.disabled=true;btn.textContent='Submitting...';
+  // Append GPS coords to location field
+  if(gpsCoords){
+    const tag=`[${gpsCoords.source}:${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}]`;
+    if(!loc.includes('[GPS:')&&!loc.includes('[DB:'))loc=loc+' '+tag;
+  }
+
+  const btn=document.getElementById('btn-sub');
+  btn.disabled=true;btn.textContent=l.submitting;
   try{
-    const body={reporter:name,phone,branchCode:branch,location:loc,type:cat,detail,brand:brand.n,lineUserId:line};
+    const body={reporter:name,phone,branchCode,location:loc,type:cat,detail,brand:brand.n};
     const d=await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
     if(!d.ok)throw new Error(d.error||'Submission failed');
     showSuccess(d.ticket?.id||d.ticketId||'--');
-  }catch(e){toast('Error: '+e.message);btn.disabled=false;btn.textContent='Submit Report';}
+  }catch(e){
+    toast('Error: '+e.message);
+    btn.disabled=false;btn.textContent=l.submit;
+  }
 }
 
+// ══ SUCCESS ════════════════════════════════════════════════
 function showSuccess(tid){
-  document.getElementById('view-report').innerHTML=`<div class="success">
-    <div style="font-size:36px;margin-bottom:12px;color:var(--green)">+</div>
-    <div class="suc-t">Report Submitted</div>
-    <div class="suc-id">${esc(tid)}</div>
-    <div class="suc-d">The team has been notified via LINE.<br/>SLA: 7 business days from now.<br/>Use ticket ID to track status.</div>
-    <button class="suc-btn" onclick="showTab('track')">Track Status</button>
-    <button class="suc-btn pri" onclick="renderForm()">New Report</button>
-  </div>`;
+  const l=t();
+  document.getElementById('view-report').innerHTML=`
+    <div class="success">
+      <div style="font-size:36px;margin-bottom:12px;color:var(--green)">✓</div>
+      <div class="suc-t">${l.sucTitle}</div>
+      <div class="suc-id">${esc(tid)}</div>
+      <div class="suc-d">${l.sucDesc.replace(/\n/g,'<br/>')}</div>
+      <button class="suc-btn" onclick="showTab('track')">${l.sucTrack}</button>
+      <button class="suc-btn pri" onclick="resetForm()">${l.sucNew}</button>
+    </div>`;
 }
 
+function resetForm(){
+  selectedBranch=null;gpsCoords=null;gpsState='none';
+  renderForm();
+}
+
+// ══ TRACK ══════════════════════════════════════════════════
 function renderTrack(){
-  document.getElementById('view-track').innerHTML=`<div class="tcard"><div class="tcard-h">Track Ticket</div><div class="tsrch"><input id="trk-id" placeholder="Ticket ID e.g. ${brand?.p||'GD'}-00042"/><button onclick="doTrack()">Search</button></div><div id="trk-result"></div></div>`;
+  const l=t();
+  document.getElementById('view-track').innerHTML=`
+    <div class="tcard">
+      <div class="tcard-h">${l.trackTitle}</div>
+      <div class="tsrch">
+        <input id="trk-id" placeholder="${l.trackPH}"/>
+        <button onclick="doTrack()">${l.trackBtn}</button>
+      </div>
+      <div id="trk-result"></div>
+    </div>`;
 }
 
 async function doTrack(){
+  const l=t();
   const id=(document.getElementById('trk-id')?.value||'').trim();
-  if(!id){toast('Enter ticket ID');return;}
-  const out=document.getElementById('trk-result');out.innerHTML='<div class="empty">Searching...</div>';
+  if(!id){toast(l.ticketNotFound);return;}
+  const out=document.getElementById('trk-result');
+  out.innerHTML='<div class="empty">...</div>';
   try{
     const d=await fetch('/api/tickets').then(r=>r.json());
-    if(!d.ok)throw new Error(d.error||'Not found');
-    const t=(d.tickets||[]).find(x=>(x.id||'').toLowerCase()===id.toLowerCase()||x._recordId===id);
-    if(!t)throw new Error('Ticket not found: '+id);
-    const updates=[];
+    if(!d.ok)throw new Error(d.error||'Error');
+    const tk=(d.tickets||[]).find(x=>(x.id||'').toLowerCase()===id.toLowerCase()||x._recordId===id);
+    if(!tk)throw new Error(l.ticketNotFound+': '+id);
     out.innerHTML=`<div class="tres">
-      <div class="tres-id">${esc(t.id)}</div>
-      <div class="tres-type">${esc(t.type||'-')}</div>
-      <div style="margin-bottom:8px"><span class="pill">${statusLabel(t.status)}</span></div>
-      ${[['Brand',t.brand],['Branch',t.branchCode],['Reporter',t.reporter],['Date',t.sentDate||t.created_at],['Engineer',t.engineerName],['Location',t.location]].map(([l,v])=>v?`<div class="tres-row"><span class="tres-l">${l}</span><span class="tres-v">${esc(v)}</span></div>`:'').join('')}
-      ${t.detail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:6px;line-height:1.5;transition:background .4s">${esc(t.detail)}</div>`:''}
-      ${t.workDetail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:5px;border-left:2px solid var(--fg);transition:background .4s"><strong>Engineer:</strong> ${esc(t.workDetail)}</div>`:''}
-      ${updates.length?`<div class="timeline" style="margin-top:14px">${updates.map(u=>`<div class="tl-item"><div class="tl-action">${esc(u.action||u.new_value||'Update')}</div><div class="tl-meta">${esc(u.user?.name||'System')} — ${esc(u.created_at||'')}</div>${u.comment?`<div class="tl-note">${esc(u.comment)}</div>`:''}</div>`).join('')}</div>`:''}
+      <div class="tres-id">${esc(tk.id)}</div>
+      <div class="tres-type">${esc(tk.type||'-')}</div>
+      <div style="margin-bottom:8px"><span class="pill">${statusLabel(tk.status)}</span></div>
+      ${[['Brand',tk.brand],['Branch',tk.branchCode],['Reporter',tk.reporter],['Date',tk.sentDate||tk.created_at],['Engineer',tk.engineerName],['Location',tk.location]]
+        .map(([lbl,v])=>v?`<div class="tres-row"><span class="tres-l">${lbl}</span><span class="tres-v">${esc(v)}</span></div>`:'').join('')}
+      ${tk.detail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:6px;line-height:1.5;transition:background .4s">${esc(tk.detail)}</div>`:''}
+      ${tk.workDetail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:5px;border-left:2px solid var(--fg);transition:background .4s"><strong>Engineer:</strong> ${esc(tk.workDetail)}</div>`:''}
     </div>`;
   }catch(e){out.innerHTML=`<div class="empty">${esc(e.message)}</div>`;}
 }
 
-function togTheme(){const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';localStorage.setItem('rep_theme',d.dataset.t);document.getElementById('btn-theme').textContent=d.dataset.t==='dark'?'Light':'Dark';}
+// ══ CLOCK ══════════════════════════════════════════════════
+setInterval(()=>{
+  const el=document.getElementById('clock');
+  if(el)el.textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+// ══ TOAST ══════════════════════════════════════════════════
+let toastT;
+function toast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.style.display='block';
+  el.style.animation='none';el.offsetHeight;el.style.animation='';
+  clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);
+}
+
+// ══ SHEET SEARCH — keyboard close ══════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeSheet();
+    document.getElementById('gps-popup')?.classList.remove('open');
+  }
+});
+
+// ══ INIT ═══════════════════════════════════════════════════
+// restore theme
 if(localStorage.getItem('rep_theme')==='dark')document.documentElement.dataset.t='dark';
-
-// CLOCK
-setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
-
-let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
-
-// INIT
 document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
-const detected=detectBrand();if(detected)setBrand(detected);else renderForm();renderTrack();
+
+// restore lang
+lang=localStorage.getItem('rep_lang')||'th';
+document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
+document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
+applyLang();
+
+// init tabs
+document.getElementById('tab-report').textContent=t().tabReport;
+document.getElementById('tab-track').textContent=t().tabTrack;
+
+// detect brand from URL
+const detected=detectBrand();
+if(detected)setBrand(detected);
+else renderForm();
+
+renderTrack();
 </script>
 </body>
 </html>
