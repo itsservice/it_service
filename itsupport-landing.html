@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>IT Support Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -13,7 +13,7 @@
   --border:#e0e0db;--border2:#c8c8c2;
   --card:#fff;--card-h:#fafaf8;
   --display:'Prompt',sans-serif;
-  --sans:'Prompt','Helvetica Neue',sans-serif;
+  --sans:'Prompt',sans-serif;
   --mono:'Prompt',monospace;
   --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1)
 }
@@ -92,21 +92,37 @@ a{color:inherit;text-decoration:none}
 .sec-desc{font-size:14px;color:var(--fg3);max-width:420px;line-height:1.75}
 
 /* ═══ BRANDS ═══ */
-.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:32px}
-.bcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;transition:all .3s var(--ease);position:relative;overflow:hidden}
-.bcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
-.bcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.05)}
-[data-t="dark"] .bcard:hover{box-shadow:0 8px 28px rgba(0,0,0,.3)}
-.bcard:hover::before{transform:scaleX(1)}
-.bc-prefix{font-family:var(--mono);font-size:10px;color:var(--fg4);letter-spacing:.06em;margin-bottom:4px}
-.bc-name{font-family:var(--display);font-size:16px;font-weight:700;color:var(--fg);margin-bottom:2px;letter-spacing:-.02em}
-.bc-slug{font-size:11px;color:var(--fg4);font-family:var(--mono);margin-bottom:14px}
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:32px}
+
+/* ── Brand Card — Diagonal Wipe ── */
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:32px}
+.bcard{border-radius:14px;overflow:hidden;position:relative;cursor:pointer;height:160px;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .3s var(--ease),box-shadow .3s;background:var(--bg)}
+.bcard:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 16px 40px rgba(0,0,0,.14)}
+[data-t="dark"] .bcard:hover{box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.bcard:active{transform:scale(.98)}
+/* bg layer — starts as page bg, stays until wipe */
+.bc-bg-base{position:absolute;inset:0;background:var(--card);border:1px solid var(--border);border-radius:14px;z-index:0;transition:border-color .3s}
+.bcard:hover .bc-bg-base{border-color:transparent}
+/* wipe layers */
+.dw,.dw2{position:absolute;inset:0;border-radius:14px;transform:translateX(-115%) skewX(-10deg);transition:transform .45s cubic-bezier(.4,0,.15,1);z-index:2}
+.dw2{opacity:.6;transition-delay:.07s;z-index:3}
+.bcard:hover .dw,.bcard.tapped .dw{transform:translateX(0) skewX(0deg)}
+.bcard:hover .dw2,.bcard.tapped .dw2{transform:translateX(0) skewX(0deg)}
+/* abbr — visible before hover */
+.t-abbr{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:22px;font-weight:800;color:var(--fg3);transition:opacity .18s,transform .28s;pointer-events:none;letter-spacing:.04em}
+.bcard:hover .t-abbr,.bcard.tapped .t-abbr{opacity:0;transform:translateX(10px)}
+/* content after wipe */
+.bc-body{position:relative;z-index:11;padding:14px 16px;opacity:0;transition:opacity .18s .38s}
+.bcard:hover .bc-body,.bcard.tapped .bc-body{opacity:1}
+.bc-prefix{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:4px;opacity:.75}
+.bc-name{font-family:var(--display);font-size:17px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:10px}
 .bc-btns{display:flex;gap:5px}
-.bc-btn{flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg2);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block}
-.bc-btn:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
-.bc-btn:active{transform:scale(.97)}
-.bc-btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.bc-btn.pri:hover{opacity:.8}
+.bc-btn{flex:1;padding:7px 6px;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block;letter-spacing:.01em}
+.bc-btn.pri{background:rgba(255,255,255,.95);border:none}
+.bc-btn.sec{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.9)}
+.bc-btn.sec:hover{background:rgba(255,255,255,.25)}
+.bc-badge{position:absolute;top:10px;right:10px;z-index:12;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:99px;color:var(--fg3);border:1px solid var(--border);background:var(--card);transition:opacity .2s .1s}
+.bcard:hover .bc-badge{opacity:0}
 
 /* ═══ SYSTEM PREVIEW ═══ */
 .previews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:32px}
@@ -142,6 +158,29 @@ a{color:inherit;text-decoration:none}
   .brands{grid-template-columns:repeat(2,1fr)}
   .previews{grid-template-columns:repeat(3,1fr)}
 }
+
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:32px}
+@media(max-width:480px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;animation:up .5s var(--ease) both;transition:all .4s}
+.sc-v{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.04em;color:var(--fg)}
+.sc-l{font-size:10px;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;font-weight:600}
+.sc-bar{height:2px;background:var(--bg3);border-radius:99px;margin-top:8px;overflow:hidden}
+.sc-fill{height:100%;border-radius:99px;animation:growBar 1.2s var(--ease) .6s both}
+@keyframes growBar{from{width:0}to{width:var(--w)}}
+
+/* ── FAQ ── */
+.faq{margin-top:0;display:flex;flex-direction:column;gap:6px}
+.faq-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
+.faq-item.open{border-color:var(--border2)}
+.faq-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:var(--card);transition:background .2s;user-select:none}
+.faq-h:hover{background:var(--card-h)}
+.faq-q{font-size:14px;font-weight:600;color:var(--fg)}
+.faq-ic{width:22px;height:22px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg3);transition:transform .25s,background .2s,color .2s;flex-shrink:0}
+.faq-item.open .faq-ic{transform:rotate(45deg);background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.faq-body{max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s;background:var(--bg2);padding:0 16px;font-size:13px;color:var(--fg3);line-height:1.75}
+.faq-item.open .faq-body{max-height:220px;padding:12px 16px}
+
 </style>
 </head>
 <body>
@@ -159,11 +198,13 @@ a{color:inherit;text-decoration:none}
 
 <nav class="mmenu" id="mmenu">
   <div class="mm-sec" data-t="m_brands">BRANDS</div>
-  <a class="mm-link" href="/brands/dunkin/report">Dunkin' <span class="mm-tag">GD</span></a>
-  <a class="mm-link" href="/brands/greyhound-cafe/report">Greyhound Cafe <span class="mm-tag">GH</span></a>
-  <a class="mm-link" href="/brands/greyhound-original/report">Greyhound Original <span class="mm-tag">GO</span></a>
-  <a class="mm-link" href="/brands/au-bon-pain/report">Au Bon Pain <span class="mm-tag">ABP</span></a>
-  <a class="mm-link" href="/brands/funky-fries/report">Funky Fries <span class="mm-tag">FF</span></a>
+  <a class="mm-link" href="/report/Dunkin">Dunkin' <span class="mm-tag">GD</span></a>
+  <a class="mm-link" href="/report/Greyhound%20Cafe">Greyhound Cafe' <span class="mm-tag">GHC</span></a>
+  <a class="mm-link" href="/report/Greyhound%20Original">Greyhound Original <span class="mm-tag">GO</span></a>
+  <a class="mm-link" href="/report/Au%20Bon%20Pain">Au Bon Pain <span class="mm-tag">ABP</span></a>
+  <a class="mm-link" href="/report/Funky%20Fries">Funky Fries <span class="mm-tag">FF</span></a>
+  <a class="mm-link" href="/report/Another%20Hound">Another Hound Cafe' <span class="mm-tag">AHC</span></a>
+  <a class="mm-link" href="/report/Bean%20Hound">Bean Hound <span class="mm-tag">BE</span></a>
   <div class="mm-sec" data-t="m_sys">SYSTEM</div>
   <a class="mm-link" href="/admin"><span data-t="n_admin">Admin Dashboard</span></a>
   <a class="mm-link" href="/engineer"><span data-t="n_eng">Engineer Portal</span></a>
@@ -186,6 +227,12 @@ a{color:inherit;text-decoration:none}
   <div class="sec-label" data-t="br_label">BRANDS</div>
   <h2 class="sec-title" data-t="br_title">Choose your brand</h2>
   <p class="sec-desc" data-t="br_desc">Each brand has its own dedicated report and tracking page with unique identity.</p>
+  <div class="stats-row">
+    <div class="sc" style="animation-delay:.05s"><div class="sc-v">7</div><div class="sc-l">Brands</div><div class="sc-bar"><div class="sc-fill" style="background:var(--fg);--w:100%"></div></div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-v">1,118</div><div class="sc-l">Branches</div><div class="sc-bar"><div class="sc-fill" style="background:#2d7a4f;--w:88%"></div></div></div>
+    <div class="sc" style="animation-delay:.15s"><div class="sc-v" id="stat-open">--</div><div class="sc-l">Open tickets</div><div class="sc-bar"><div class="sc-fill" style="background:#185FA5;--w:50%"></div></div></div>
+    <div class="sc" style="animation-delay:.2s"><div class="sc-v">7</div><div class="sc-l">วันทำการ SLA</div><div class="sc-bar"><div class="sc-fill" style="background:#854F0B;--w:70%"></div></div></div>
+  </div>
   <div class="brands" id="brand-grid"></div>
 </section>
 
@@ -196,7 +243,7 @@ a{color:inherit;text-decoration:none}
   <div class="previews">
     <a href="/admin" class="pcard"><span class="pc-tag">01 / ADMIN</span><div class="pc-title" data-t="pv_admin">Dashboard</div><div class="pc-desc" data-t="pv_admin_d">Manage tickets, assign engineers, review work, track SLA compliance.</div><div class="pc-stat" id="stat-tickets">--</div><div class="pc-stat-label" data-t="pv_total">Total tickets</div></a>
     <a href="/engineer" class="pcard"><span class="pc-tag">02 / ENGINEER</span><div class="pc-title" data-t="pv_eng">Engineer Portal</div><div class="pc-desc" data-t="pv_eng_d">Accept jobs, track GPS, upload photos, submit work reports.</div><div class="pc-stat" id="stat-engineers">--</div><div class="pc-stat-label" data-t="pv_active">Active engineers</div></a>
-    <div class="pcard"><span class="pc-tag">03 / REPORT</span><div class="pc-title" data-t="pv_rep">Report System</div><div class="pc-desc" data-t="pv_rep_d">Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.</div><div class="pc-stat">5</div><div class="pc-stat-label" data-t="pv_brands">Brands supported</div></div>
+    <div class="pcard"><span class="pc-tag">03 / REPORT</span><div class="pc-title" data-t="pv_rep">Report System</div><div class="pc-desc" data-t="pv_rep_d">Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.</div><div class="pc-stat">7</div><div class="pc-stat-label" data-t="pv_brands">Brands supported</div></div>
   </div>
 </section>
 
@@ -210,16 +257,24 @@ a{color:inherit;text-decoration:none}
   </div>
 </section>
 
+<section class="sec reveal">
+  <div class="sec-label">FAQ</div>
+  <h2 class="sec-title" id="faq-title">คำถามที่พบบ่อย</h2>
+  <div class="faq" id="faq-list"></div>
+</section>
+
 <footer class="footer"><div class="footer-txt">IT Support Hub v2.0 — <span data-t="footer">Multi-brand Restaurant IT Management</span></div></footer>
 
 <script>
 // ═══ BRANDS ═══
 const BRANDS=[
-  {s:'dunkin',n:"Dunkin'",p:'GD',r:"/report/Dunkin'"},
-  {s:'greyhound-cafe',n:'Greyhound Cafe',p:'GH',r:'/report/Greyhound%20Cafe'},
-  {s:'greyhound-original',n:'Greyhound Original',p:'GO',r:'/report/Greyhound%20Original'},
-  {s:'au-bon-pain',n:'Au Bon Pain',p:'ABP',r:'/report/Au%20Bon%20Pain'},
-  {s:'funky-fries',n:'Funky Fries',p:'FF',r:'/report/Funky%20Fries'}
+  {s:'dunkin',            n:"Dunkin'",            p:'GD',  r:'/report/Dunkin',             c1:'#FF6B00',c2:'#E91E8C',tc:'#fff'},
+  {s:'greyhound-cafe',    n:"Greyhound Cafe'",     p:'GHC', r:'/report/Greyhound%20Cafe',   c1:'#1A1A1A',c2:'#3d3d3d',tc:'#fff'},
+  {s:'greyhound-original',n:'Greyhound Original',  p:'GO',  r:'/report/Greyhound%20Original',c1:'#5a5a5a',c2:'#9a9a9a',tc:'#fff'},
+  {s:'au-bon-pain',       n:'Au Bon Pain',         p:'ABP', r:'/report/Au%20Bon%20Pain',    c1:'#F5C518',c2:'#e8a000',tc:'#111'},
+  {s:'funky-fries',       n:'Funky Fries',         p:'FF',  r:'/report/Funky%20Fries',      c1:'#1B3F8B',c2:'#F5A623',tc:'#fff'},
+  {s:'another-hound',     n:"Another Hound Cafe'", p:'AHC', r:'/report/Another%20Hound',    c1:'#0D2B23',c2:'#D4B896',tc:'#fff'},
+  {s:'bean-hound',        n:'Bean Hound',          p:'BE',  r:'/report/Bean%20Hound',       c1:'#4a3728',c2:'#C8C0B8',tc:'#fff'},
 ];
 
 // ═══ I18N ═══
@@ -229,11 +284,41 @@ const T={
   en:{h_chip:'Multi-brand IT Ticket Management',h_t1:'Every IT issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign, repair — all in one platform. 5 brands, real-time LINE notifications, GPS tracking, SLA management.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_title:'Choose your brand',br_desc:'Each brand has its own dedicated report and tracking page with unique identity.',br_rep:'Report',br_trk:'Track',pv_label:'SYSTEM PREVIEW',pv_title:'Platform overview',pv_desc:'Three connected systems working together end-to-end.',pv_admin:'Dashboard',pv_admin_d:'Manage tickets, assign engineers, review work, track SLA compliance.',pv_total:'Total tickets',pv_eng:'Engineer Portal',pv_eng_d:'Accept jobs, track GPS, upload photos, submit work reports.',pv_active:'Active engineers',pv_rep:'Report System',pv_rep_d:'Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.',pv_brands:'Brands supported',q_label:'QUICK ACCESS',q_title:'System access',q_rep:'Report',q_rep_d:'Submit IT repair tickets',q_eng:'Engineer',q_eng_d:'Accept and complete jobs',q_adm:'Admin',q_adm_d:'Manage system and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-brand Restaurant IT Management'}
 };
 
+
+// ─── FAQ ───
+const FAQS={
+  th:[
+    {q:'ระบบนี้ใช้สำหรับอะไร?',a:'IT Support Hub สำหรับแจ้งและจัดการปัญหา IT ของ 7 แบรนด์ รวมกว่า 1,118 สาขาทั่วประเทศ มีระบบมอบหมายช่าง ติดตาม GPS และแจ้งเตือน LINE อัตโนมัติ'},
+    {q:'วิธีแจ้งปัญหาทำอย่างไร?',a:'สแกน QR Code ของสาขา หรือเปิด /report เลือกแบรนด์และสาขา กรอกรายละเอียด แล้วกดส่งรายงาน ระบบจะสร้าง Ticket ID สำหรับติดตามสถานะ'},
+    {q:'ช่างจะได้รับแจ้งผ่านช่องทางใด?',a:'ระบบส่ง notification ผ่าน LINE Bot ทันทีที่มีการมอบหมายงาน ช่างเข้าหน้า /engineer เพื่อดูรายละเอียดและรับงาน'},
+    {q:'ติดตาม ticket ได้ที่ไหน?',a:'ใช้ Ticket ID ที่ได้รับ เปิดหน้า /report แท็บ "ติดตาม Ticket" กรอก ID จะเห็น timeline การดำเนินการทั้งหมดแบบ real-time'},
+    {q:'SLA คือกี่วัน?',a:'SLA มาตรฐานคือ 7 วันทำการ นับจากวันแจ้งปัญหา Admin สามารถปรับรายเคสตามความเร่งด่วนได้'},
+  ],
+  en:[
+    {q:'What is this system for?',a:'IT Support Hub manages IT issues across 7 brands with 1,118+ branches. It features engineer assignment, GPS tracking, and automatic LINE notifications.'},
+    {q:'How do I submit a ticket?',a:'Scan the branch QR Code or open /report, select your brand and branch, fill in the details, and submit. You receive a Ticket ID to track progress.'},
+    {q:'How are engineers notified?',a:'The system sends LINE Bot notifications instantly when a job is assigned. Engineers access /engineer to view and accept jobs.'},
+    {q:'Where can I track my ticket?',a:'Use your Ticket ID on /report under Track Ticket tab to see current status and full action timeline in real-time.'},
+    {q:'What is the SLA?',a:'Standard SLA is 7 business days from submission. Admins can adjust SLA per ticket based on urgency.'},
+  ]
+};
+function renderFAQ(){
+  const list=document.getElementById('faq-list');if(!list)return;
+  const ft=document.getElementById('faq-title');
+  if(ft)ft.textContent=lang==='th'?'คำถามที่พบบ่อย':'Frequently Asked Questions';
+  list.innerHTML='';
+  FAQS[lang].forEach(f=>{
+    const el=document.createElement('div');el.className='faq-item';
+    el.innerHTML=`<div class="faq-h" onclick="this.parentElement.classList.toggle('open')"><span class="faq-q">${f.q}</span><span class="faq-ic">+</span></div><div class="faq-body">${f.a}</div>`;
+    list.appendChild(el);
+  });
+}
 function applyI18n(){
   document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(T[lang]?.[k])e.textContent=T[lang][k]});
   document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
   document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?(lang==='th'?'Light':'Light'):(lang==='th'?'Dark':'Dark');
   renderBrands();
+  renderFAQ();
 }
 function togLang(){lang=lang==='th'?'en':'th';localStorage.setItem('hub_lang',lang);applyI18n();}
 function togTheme(){
@@ -243,16 +328,33 @@ function togTheme(){
   applyI18n();
 }
 function renderBrands(){
-  document.getElementById('brand-grid').innerHTML=BRANDS.map((b,i)=>`
-    <div class="bcard" style="animation:up .4s var(--ease) ${.05+i*.05}s both">
-      <div class="bc-prefix">${b.p}-XXXXX</div>
-      <div class="bc-name">${b.n}</div>
-      <div class="bc-slug">${b.r}</div>
-      <div class="bc-btns">
-        <a href="${b.r}" class="bc-btn pri">${T[lang].br_rep}</a>
-        <a href="${b.r}#track" class="bc-btn">${T[lang].br_trk}</a>
-      </div>
-    </div>`).join('');
+  const grid=document.getElementById('brand-grid');
+  grid.innerHTML='';
+  BRANDS.forEach((b,i)=>{
+    const card=document.createElement('div');
+    card.className='bcard';
+    card.style.cssText=`animation:up .4s var(--ease) ${.05+i*.05}s both`;
+    card.innerHTML=`
+      <div class="bc-bg-base"></div>
+      <div class="dw" style="background:${b.c1}"></div>
+      <div class="dw2" style="background:${b.c2}"></div>
+      <div class="bc-badge">${b.p}</div>
+      <div class="t-abbr">${b.p}</div>
+      <div class="bc-body">
+        <div class="bc-prefix" style="color:${b.tc}">${b.p}-XXXXX</div>
+        <div class="bc-name" style="color:${b.tc}">${b.n.replace(/'/g,"&#39;")}</div>
+        <div class="bc-btns">
+          <a href="${b.r}" class="bc-btn pri" style="color:${b.c1}">${T[lang].br_rep||'Report'}</a>
+          <a href="${b.r}#track" class="bc-btn sec">${T[lang].br_trk||'Track'}</a>
+        </div>
+      </div>`;
+    card.addEventListener('touchstart',e=>{
+      e.preventDefault();
+      card.classList.add('tapped');
+      setTimeout(()=>card.classList.remove('tapped'),1600);
+    },{passive:false});
+    grid.appendChild(card);
+  });
 }
 
 // ═══ MENU ═══
@@ -275,7 +377,11 @@ fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.501
 
 // ═══ LIVE STATS ═══
 fetch('/api/tickets').then(r=>r.json()).then(d=>{
-  if(d.ok&&d.tickets){document.getElementById('stat-tickets').textContent=d.tickets.length;}
+  if(d.ok&&d.tickets){
+    document.getElementById('stat-tickets').textContent=d.tickets.length;
+    const o=d.tickets.filter(t=>!/เสร็จ|complet|ยกเลิก|cancel/i.test(t.status||'')).length;
+    const el=document.getElementById('stat-open');if(el)el.textContent=o;
+  }
 }).catch(()=>{document.getElementById('stat-tickets').textContent='--';});
 fetch('/api/users').then(r=>r.json()).then(d=>{
   if(d.ok&&d.users){document.getElementById('stat-engineers').textContent=d.users.filter(u=>u.role==='engineer').length;}
