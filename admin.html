@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Admin — IT Support</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -13,7 +13,7 @@
   --border:#e0e0db;--border2:#c8c8c2;
   --card:#fff;
   --green:#2d7a4f;--red:#b83232;--blue:#2b5ea8;--orange:#b87a1a;
-  --display:'Syne',sans-serif;--sans:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --display:'Prompt',sans-serif;--sans:'Prompt',sans-serif;--mono:'Prompt',monospace;
   --ease:cubic-bezier(.22,.61,.36,1);--sidebar:230px
 }
 [data-t="dark"]{
@@ -413,6 +413,7 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
   <div class="content">
     <div class="page on" id="pg-dash"></div>
     <div class="page" id="pg-tickets"></div>
+    <div class="page" id="pg-branches"></div>
     <div class="page" id="pg-users"></div>
     <div class="page" id="pg-log"></div>
     <div class="page" id="pg-gps"></div>
@@ -429,11 +430,12 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 <div class="toast" id="toast"></div>
 
 <script>
-let AUTH=null,tickets=[],logs=[],users=[],pg='dash',sse=null;
-const PG={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs'};
+let AUTH=null,tickets=[],logs=[],users=[],branches={},pg='dash',sse=null;
+const PG={dash:'Overview',tickets:'All Tickets',branches:'สาขา / Branches',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs'};
 const NAV_ALL=[
   {id:'dash',ic:'D',lb:'Overview',min:40},
   {id:'tickets',ic:'T',lb:'Tickets',min:40},
+  {id:'branches',ic:'B',lb:'สาขา',min:40},
   {id:'users',ic:'U',lb:'Users',min:80},
   {id:'log',ic:'L',lb:'Activity Log',min:60},
   {id:'gps',ic:'G',lb:'GPS Map',min:60},
@@ -494,7 +496,7 @@ async function boot(){
   initPreviewRole();
 
   await Promise.all([
-    Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]),
+    Promise.allSettled([loadTickets(),loadLogs(),loadUsers(),loadBranches()]),
     new Promise(res=>{
       const checkDone=setInterval(()=>{
         const st=document.getElementById('load-status');
@@ -532,7 +534,7 @@ function closeSide(){document.getElementById('side').classList.remove('open');do
 
 // ═══ DATA ═══
 async function loadTickets(){try{const d=await api('/api/tickets');if(d.ok)tickets=d.tickets||[];updateBdg();}catch(e){}}
-async function loadLogs(){try{const d=await api('/api/logs?limit=200');if(d.ok)logs=d.logs||[];}catch(e){}}
+async function loadBranches(){try{const d=await api('/api/branches');if(d.ok)branches=d.branches||{};}catch(e){}}
 async function loadUsers(){try{const d=await api('/api/users');if(d.ok)users=d.users||[];}catch(e){}}
 function updateBdg(){const n=tickets.filter(t=>/รอ|pending/.test(t.status||'')).length;const b=document.getElementById('nav-bdg');if(b){b.textContent=n;b.style.display=n?'':'none';}}
 async function doRefresh(){const b=document.getElementById('btn-rf');b.textContent='...';document.getElementById('dot').className='status-dot loading';await Promise.allSettled([loadTickets(),loadLogs(),loadUsers()]);b.textContent='Refresh';document.getElementById('dot').className='status-dot online';render();toast('Refreshed');}
@@ -553,7 +555,186 @@ function connectSSE(){
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
-function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
+function render(){try{({dash:rDash,tickets:rTickets,branches:rBranches,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
+
+function render(){try{({dash:rDash,tickets:rTickets,branches:rBranches,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
+
+// ═══ BRANCHES ═══════════════════════════════════════════════
+let bF={brand:'',q:'',status:'active',p:1};const BP=25;
+
+function rBranches(){
+  const isSA=AUTH?.user?.role==='superadmin';
+  const allBrands=Object.keys(branches).sort();
+  const flat=[];
+  for(const [brand,list] of Object.entries(branches)){
+    for(const b of list)flat.push({...b,brand});
+  }
+  let data=[...flat];
+  if(bF.brand)data=data.filter(x=>x.brand===bF.brand);
+  if(bF.status)data=data.filter(x=>(x.status||'active')===bF.status);
+  if(bF.q){const q=bF.q.toLowerCase();data=data.filter(x=>`${x.code} ${x.nameTh} ${x.nameEn} ${x.ip} ${x.phone}`.toLowerCase().includes(q));}
+  const tp=Math.max(1,Math.ceil(data.length/BP));bF.p=Math.min(bF.p,tp);
+  const paged=data.slice((bF.p-1)*BP,bF.p*BP);
+  const el=document.getElementById('pg-branches');
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.03em">สาขา / Branches</div>
+        <div style="font-size:12px;color:var(--fg4);margin-top:2px">${flat.length.toLocaleString()} สาขาทั้งหมด | แสดง ${data.length.toLocaleString()} รายการ</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${isSA?`<button class="smb" onclick="openAddBranch()" style="background:var(--fg);color:var(--bg);border-color:var(--fg)">+ เพิ่มสาขา</button>`:''}
+        <button class="smb" onclick="loadBranches().then(rBranches)">↻ รีเฟรช</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="smb" style="${!bF.brand?'background:var(--fg);color:var(--bg);border-color:var(--fg)':''}" onclick="bF.brand='';bF.p=1;rBranches()">ทั้งหมด (${flat.length})</button>
+      ${allBrands.map(b=>`<button class="smb" style="${bF.brand===b?'background:var(--fg);color:var(--bg);border-color:var(--fg)':''}" onclick="bF.brand=decodeURIComponent('${encodeURIComponent(b)}');bF.p=1;rBranches()">${esc(b)} (${(branches[b]||[]).length})</button>`).join('')}
+    </div>
+    <div class="filters" style="margin-bottom:10px">
+      <div class="srch" style="flex:1;min-width:180px">
+        <span class="si">🔍</span>
+        <input placeholder="ค้นหา รหัส / ชื่อ / IP..." value="${esc(bF.q)}" oninput="bF.q=this.value;bF.p=1;rBranches()"/>
+      </div>
+      <select class="sel" onchange="bF.status=this.value;bF.p=1;rBranches()">
+        <option value="active" ${bF.status==='active'?'selected':''}>Active</option>
+        <option value="pending" ${bF.status==='pending'?'selected':''}>Pending</option>
+        <option value="" ${bF.status===''?'selected':''}>ทั้งหมด</option>
+      </select>
+      ${bF.q||bF.brand?`<button class="smb" onclick="bF.q='';bF.brand='';bF.p=1;rBranches()" style="color:var(--red)">✕ ล้าง</button>`:''}
+    </div>
+    ${paged.length?`<div style="overflow-x:auto"><table class="tbl" style="min-width:640px">
+      <thead><tr><th>รหัส</th><th>ชื่อสาขา</th><th>แบรนด์</th><th>IP</th><th>เบอร์</th><th>GPS</th><th>สถานะ</th><th>Action</th></tr></thead>
+      <tbody>${paged.map(b=>{
+        const hasGPS=b.location_lat&&b.location_lng;
+        const isPending=(b.status||'active')==='pending';
+        const safeB=encodeURIComponent(JSON.stringify(b));
+        return`<tr class="tr">
+          <td><span style="font-family:var(--mono);font-size:11px">${esc(b.code)}</span></td>
+          <td><div style="font-weight:600;font-size:13px">${esc(b.nameTh||b.code)}</div>${b.nameEn?`<div style="font-size:11px;color:var(--fg4)">${esc(b.nameEn)}</div>`:''}</td>
+          <td style="font-size:12px">${esc(b.brand)}</td>
+          <td><span style="font-family:var(--mono);font-size:11px;color:var(--fg3)">${esc(b.ip||'-')}</span></td>
+          <td style="font-size:12px">${esc(b.phone||'-')}</td>
+          <td>${hasGPS?`<span style="font-size:11px;color:var(--green)">📍 ${parseFloat(b.location_lat).toFixed(4)}, ${parseFloat(b.location_lng).toFixed(4)}</span>`:`<span style="font-size:11px;color:var(--fg4)">— ไม่มี</span>`}</td>
+          <td><span class="pill" style="${isPending?'background:rgba(184,122,26,.12);color:var(--orange)':'background:rgba(45,122,79,.1);color:var(--green)'}">${isPending?'Pending':'Active'}</span></td>
+          <td><div style="display:flex;gap:3px;flex-wrap:wrap">
+            <button class="uc-b" onclick="openBranchEdit(decodeURIComponent('${safeB}'))">แก้ไข</button>
+            ${isSA&&isPending?`<button class="uc-b" style="color:var(--green);border-color:var(--green)" onclick="approveBranch(${b.id})">Approve</button><button class="uc-b" style="color:var(--red);border-color:var(--red)" onclick="rejectBranch(${b.id})">Reject</button>`:''}
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--fg4)">
+        <span>${data.length.toLocaleString()} สาขา | หน้า ${bF.p}/${tp}</span>
+        <div style="display:flex;gap:3px">${bF.p>1?`<button class="smb" onclick="bF.p--;rBranches()">← ก่อนหน้า</button>`:''} ${bF.p<tp?`<button class="smb" onclick="bF.p++;rBranches()">ถัดไป →</button>`:''}</div>
+      </div>`
+    :'<div class="empty"><div class="empty-t">ไม่พบสาขา</div><div class="empty-d">ลองเปลี่ยน filter หรือรีเฟรช</div></div>'}`;
+}
+
+function openBranchEdit(jsonStr){
+  let b;try{b=typeof jsonStr==='string'?JSON.parse(jsonStr):jsonStr;}catch(e){toast('parse error');return;}
+  const isSA=AUTH?.user?.role==='superadmin';
+  openMod(`<div class="mod-t">แก้ไขสาขา</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:12px">${esc(b.code)} — ${esc(b.nameTh||b.nameEn||'')}</div>
+    ${isSA?`<div class="fg"><label>ชื่อ (ไทย)</label><input id="be-nameTh" value="${esc(b.nameTh||'')}"/></div>
+    <div class="fg"><label>ชื่อ (English)</label><input id="be-nameEn" value="${esc(b.nameEn||'')}"/></div>
+    <div class="fg"><label>IP Address</label><input id="be-ip" value="${esc(b.ip||'')}" placeholder="192.168.x.x"/></div>
+    <div class="fg"><label>เบอร์โทร</label><input id="be-phone" value="${esc(b.phone||'')}"/></div>`
+    :`<div style="background:var(--bg2);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--fg3);line-height:1.7">
+      <div><b>รหัส:</b> ${esc(b.code)}</div><div><b>ชื่อ:</b> ${esc(b.nameTh||b.nameEn||'-')}</div>
+      <div><b>IP:</b> ${esc(b.ip||'-')}</div><div><b>เบอร์:</b> ${esc(b.phone||'-')}</div>
+    </div>
+    <div style="font-size:11px;color:var(--orange);background:rgba(184,122,26,.1);padding:8px 10px;border-radius:6px;margin-bottom:10px">⚠️ การแก้ไขจะถูกส่งให้ Superadmin อนุมัติก่อนมีผล</div>`}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>Latitude</label><input id="be-lat" type="number" step="any" value="${b.location_lat||''}" placeholder="13.xxxxx"/></div>
+      <div class="fg"><label>Longitude</label><input id="be-lng" type="number" step="any" value="${b.location_lng||''}" placeholder="100.xxxxx"/></div>
+    </div>
+    <div class="fg"><label>ชื่อตำแหน่ง (GPS)</label><input id="be-locname" value="${esc(b.location_name||'')}" placeholder="เช่น ชั้น B2"/></div>
+    <div style="font-size:11px;color:var(--fg4);margin-bottom:10px">💡 Google Maps → คลิกขวา → คัดลอก lat,lng</div>
+    <div class="mod-f">
+      <button class="bo" onclick="closeMod()">ยกเลิก</button>
+      <button class="bp" onclick="saveBranchEdit(${b.id},'${esc(b.brand)}',${isSA})">${isSA?'💾 บันทึก':'📤 ส่งคำขอ'}</button>
+    </div>`);
+}
+
+async function saveBranchEdit(id,brand,isSA){
+  const lat=document.getElementById('be-lat')?.value?.trim();
+  const lng=document.getElementById('be-lng')?.value?.trim();
+  const locname=document.getElementById('be-locname')?.value?.trim()||'';
+  if(lat&&isNaN(parseFloat(lat))){toast('Latitude ไม่ถูกต้อง');return;}
+  if(lng&&isNaN(parseFloat(lng))){toast('Longitude ไม่ถูกต้อง');return;}
+  const payload={location_name:locname};
+  if(lat)payload.location_lat=parseFloat(lat);
+  if(lng)payload.location_lng=parseFloat(lng);
+  if(isSA){
+    const nameTh=document.getElementById('be-nameTh')?.value?.trim();
+    const nameEn=document.getElementById('be-nameEn')?.value?.trim();
+    const ip=document.getElementById('be-ip')?.value?.trim();
+    const phone=document.getElementById('be-phone')?.value?.trim();
+    if(nameTh)payload.nameTh=nameTh;if(nameEn)payload.nameEn=nameEn;
+    if(ip)payload.ip=ip;if(phone)payload.phone=phone;
+  }
+  try{
+    const d=await api(`/api/branches/${id}`,{method:'PATCH',body:JSON.stringify(payload)});
+    if(branches[brand])branches[brand]=branches[brand].map(b=>b.id===id?{...b,...payload}:b);
+    toast(d.ok?(isSA?'✅ บันทึกแล้ว':'📤 ส่งคำขอแล้ว'):'⚠️ API error — อัปเดต local แล้ว');
+  }catch(e){
+    if(branches[brand])branches[brand]=branches[brand].map(b=>b.id===id?{...b,...payload}:b);
+    toast('⚠️ API offline — อัปเดต local');
+  }
+  closeMod();rBranches();
+}
+
+async function approveBranch(id){
+  try{const d=await api(`/api/branches/${id}/approve`,{method:'POST'});toast(d.ok?'✅ Approved':'❌ '+(d.error||'error'));}
+  catch(e){toast('❌ '+e.message);}
+  await loadBranches();rBranches();
+}
+async function rejectBranch(id){
+  try{const d=await api(`/api/branches/${id}/reject`,{method:'POST'});toast(d.ok?'✅ Rejected':'❌ '+(d.error||'error'));}
+  catch(e){toast('❌ '+e.message);}
+  await loadBranches();rBranches();
+}
+
+function openAddBranch(){
+  const brands=["Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];
+  openMod(`<div class="mod-t">+ เพิ่มสาขาใหม่</div>
+    <div class="fg"><label>แบรนด์ *</label>
+      <select class="sel" id="nb-brand" style="width:100%"><option value="">-- เลือก --</option>
+      ${brands.map(b=>`<option>${esc(b)}</option>`).join('')}</select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>รหัสสาขา *</label><input id="nb-code" placeholder="K.0001"/></div>
+      <div class="fg"><label>IP Address</label><input id="nb-ip" placeholder="172.x.x.x"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>ชื่อ (ไทย) *</label><input id="nb-nameTh"/></div>
+      <div class="fg"><label>ชื่อ (English)</label><input id="nb-nameEn"/></div>
+    </div>
+    <div class="fg"><label>เบอร์โทร</label><input id="nb-phone"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>Latitude</label><input id="nb-lat" type="number" step="any" placeholder="13.xxxxx"/></div>
+      <div class="fg"><label>Longitude</label><input id="nb-lng" type="number" step="any" placeholder="100.xxxxx"/></div>
+    </div>
+    <div class="mod-f"><button class="bo" onclick="closeMod()">ยกเลิก</button><button class="bp" onclick="doAddBranch()">+ เพิ่มสาขา</button></div>`);
+}
+
+async function doAddBranch(){
+  const brand=document.getElementById('nb-brand').value;
+  const code=document.getElementById('nb-code').value.trim();
+  const nameTh=document.getElementById('nb-nameTh').value.trim();
+  if(!brand||!code||!nameTh){toast('กรุณากรอกข้อมูล *');return;}
+  const payload={brand,code,nameTh,
+    nameEn:document.getElementById('nb-nameEn').value.trim()||'',
+    ip:document.getElementById('nb-ip').value.trim()||'',
+    phone:document.getElementById('nb-phone').value.trim()||'',
+    location_lat:parseFloat(document.getElementById('nb-lat').value)||null,
+    location_lng:parseFloat(document.getElementById('nb-lng').value)||null,
+  };
+  try{
+    const d=await api('/api/branches',{method:'POST',body:JSON.stringify(payload)});
+    toast(d.ok?'✅ เพิ่มสาขาแล้ว':'⚠️ '+(d.error||'error'));
+    closeMod();await loadBranches();rBranches();
+  }catch(e){toast('❌ '+e.message);}
+}
 
 function rDash(){
   const t=tickets.length,w=tickets.filter(x=>/รอ|pending/.test(x.status||'')).length,p=tickets.filter(x=>/ระหว่าง|progress/.test(x.status||'')).length,rv=tickets.filter(x=>/ตรวจ|review/.test(x.status||'')).length,dn=tickets.filter(x=>/เสร็จ|completed/.test(x.status||'')).length;
