@@ -400,15 +400,15 @@ app.get('/debug/gps', async (_, res) => {
   }
 });
 
-app.get('/debug/env', (_, res) => {
+app.get('/debug/env', async (_, res) => {
   res.json({
-    hasLarkAppId:!!process.env.LARK_APP_ID, hasLarkSecret:!!process.env.LARK_APP_SECRET,
-    hasLarkAppToken:!!process.env.LARK_APP_TOKEN, hasLarkTableId:!!process.env.LARK_TABLE_ID,
-    hasLineToken:!!process.env.LINE_CHANNEL_ACCESS_TOKEN, hasLineSecret:!!process.env.LINE_CHANNEL_SECRET,
-    hasLineAdminGroup:!!lineConfig.getAdminGroupId(),
-    lineAdminGroup: lineConfig.getAdminGroupId() ? lineConfig.getAdminGroupId().slice(0,10)+'...' : '(not set)',
-    nodeEnv: process.env.NODE_ENV||'development',
-    appUrl: process.env.APP_URL||'(not set)',
+    hasLarkAppId:       !!process.env.LARK_APP_ID,
+    hasLineToken:       !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+    hasLineSecret:      !!process.env.LINE_CHANNEL_SECRET,
+    hasLineAdminGroup:  !!(await lineConfig.getAdminGroupId()),
+    lineAdminGroup:     ((await lineConfig.getAdminGroupId()) || '(not set)').slice(0,10)+'...',
+    nodeEnv:            process.env.NODE_ENV || 'development',
+    appUrl:             process.env.APP_URL || '(not set)',
   });
 });
 
