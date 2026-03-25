@@ -117,13 +117,30 @@ a{color:inherit;text-decoration:none}
 .tres-l{color:var(--fg4);min-width:70px;font-size:11px;font-weight:600}.tres-v{color:var(--fg);font-weight:500;flex:1}
 .pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--fg2);font-family:var(--mono);transition:all .4s}
 
-.timeline{margin-top:12px;border-left:2px solid var(--border);padding-left:14px;transition:border-color .4s}
-.tl-item{position:relative;padding-bottom:12px}
-.tl-item::before{content:'';position:absolute;left:-19px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--fg4);border:2px solid var(--bg2);transition:all .4s}
-.tl-item:first-child::before{background:var(--fg)}
-.tl-action{font-size:13px;font-weight:600;color:var(--fg)}
-.tl-meta{font-size:11px;color:var(--fg4);margin-top:1px}
-.tl-note{font-size:12px;color:var(--fg3);margin-top:2px}
+/* ── TRACK TIMELINE ── */
+.tpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:1.5rem}
+.tswrap{text-align:center;position:relative}
+.tsline{position:absolute;top:16px;left:-50%;right:50%;height:2px;z-index:0;transition:background .3s}
+.tscirc{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 5px;position:relative;z-index:1;transition:all .3s}
+.tslabel{font-size:10px;color:var(--fg3);line-height:1.4}
+.tl-row{display:flex;gap:10px;position:relative;cursor:pointer}
+.tl-row+.tl-row{margin-top:0}
+.tl-row:not(:last-child) .tl-main{padding-bottom:14px}
+.tl-row:not(:last-child)::before{content:'';position:absolute;left:5px;top:11px;height:100%;width:1px;background:var(--border)}
+.tl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:2px;z-index:1;transition:background .2s}
+.tl-main{flex:1}
+.tl-head{display:flex;align-items:center;justify-content:space-between}
+.tl-title{font-size:13px;font-weight:600;color:var(--fg)}
+.tl-arrow{font-size:10px;color:var(--fg4);transition:transform .25s;flex-shrink:0;margin-left:6px}
+.tl-row.open .tl-arrow{transform:rotate(180deg)}
+.tl-sub{font-size:12px;color:var(--fg3);margin-top:2px}
+.tl-time{font-size:11px;color:var(--fg4);margin-top:2px}
+.tl-detail{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .25s ease,margin .2s ease;opacity:0;margin-top:0}
+.tl-row.open .tl-detail{max-height:220px;opacity:1;margin-top:8px}
+.tl-detail-inner{background:var(--bg3);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--fg3);line-height:1.8;border-left:2px solid var(--border2)}
+.tl-detail-inner strong{color:var(--fg2);font-weight:600}
+.tl-pop{animation:tlpop .35s var(--ease)}
+@keyframes tlpop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
 .bpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:14px}
 .bpick-c{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .25s}
@@ -670,11 +687,126 @@ function renderTrack(){
     <div class="tcard">
       <div class="tcard-h">${l.trackTitle}</div>
       <div class="tsrch">
-        <input id="trk-id" placeholder="${l.trackPH}"/>
+        <input id="trk-id" placeholder="${l.trackPH}" onkeydown="if(event.key==='Enter')doTrack()"/>
         <button onclick="doTrack()">${l.trackBtn}</button>
       </div>
       <div id="trk-result"></div>
     </div>`;
+}
+
+const TK_STATUS_CFG={
+  'pending':     {label:'รอดำเนินการ',    pillBg:'#F1EFE8',pillC:'#5F5E5A',dot:'#B4B2A9'},
+  'assigned':    {label:'มอบหมายช่าง',   pillBg:'#E6F1FB',pillC:'#185FA5',dot:'#378ADD'},
+  'in_progress': {label:'กำลังดำเนินการ',pillBg:'#FAEEDA',pillC:'#854F0B',dot:'#EF9F27'},
+  'review':      {label:'รอตรวจรับ',     pillBg:'#EEEDFE',pillC:'#3C3489',dot:'#7F77DD'},
+  'completed':   {label:'เสร็จสิ้น',     pillBg:'#EAF3DE',pillC:'#3B6D11',dot:'#3B6D11'},
+  'cancelled':   {label:'ยกเลิก',        pillBg:'#FAECE7',pillC:'#993C1D',dot:'#D85A30'},
+};
+const TK_PROG=[
+  {k:'pending',l:'รับเรื่อง'},{k:'assigned',l:'มอบหมายช่าง'},
+  {k:'in_progress',l:'ดำเนินการ'},{k:'completed',l:'เสร็จสิ้น'},
+];
+const TK_ORD=['pending','assigned','in_progress','review','completed','cancelled'];
+const TK_DOTS=['#3B6D11','#639922','#97C459','#EF9F27','#378ADD','#D85A30'];
+
+function tkStatusKey(raw){
+  if(!raw)return'pending';
+  const r=raw.toLowerCase().replace(/[⏱️⚙️✅❌\s]/g,'');
+  if(/cancel|ยกเลิก/.test(r))return'cancelled';
+  if(/complet|เสร็จ|done/.test(r))return'completed';
+  if(/review|ตรวจ/.test(r))return'review';
+  if(/progress|ระหว่าง|inprogress/.test(r))return'in_progress';
+  if(/assign|มอบ/.test(r))return'assigned';
+  return'pending';
+}
+
+function buildTkTimeline(tk){
+  const sid=tkStatusKey(tk.status);
+  const ci=TK_ORD.indexOf(sid);
+  const hist=[];
+  hist.push({title:'รับเรื่องแล้ว — รอมอบหมายช่าง',sub:`ผู้แจ้ง: ${tk.reporter||'-'} · ${tk.phone||'-'}`,
+    rows:[['ประเภท',tk.type||'-'],['รายละเอียด',tk.detail||'-'],['สถานที่',tk.location||'-'],['วันที่แจ้ง',tk.sentDate||'-']],dot:'#B4B2A9'});
+  if(ci>=TK_ORD.indexOf('assigned'))
+    hist.push({title:'มอบหมายช่างแล้ว',sub:`ช่าง: ${tk.engineerName||tk.assignedTo||'-'}`,
+      rows:[['ช่างผู้รับงาน',tk.engineerName||tk.assignedTo||'-'],['แบรนด์',tk.brand||'-'],['หมายเหตุ Admin',tk.adminNote||'-']],dot:'#378ADD'});
+  if(ci>=TK_ORD.indexOf('in_progress'))
+    hist.push({title:'ช่างเริ่มทำงานแล้ว',sub:`ช่าง${tk.engineerName||'-'} · เดินทางถึงสาขา`,
+      rows:[['เวลาเริ่มงาน',tk.startedAt||'-'],['GPS',tk.completedLat?`${tk.completedLat}, ${tk.completedLng}`:'-']],dot:'#EF9F27'});
+  if(ci>=TK_ORD.indexOf('review'))
+    hist.push({title:'ช่างส่งงาน — รอ Admin ตรวจรับ',sub:`ช่าง${tk.engineerName||'-'}`,
+      rows:[['รายละเอียดงาน',tk.workDetail||'-'],['อะไหล่',tk.partsUsed||'-'],['ชั่วโมงทำงาน',tk.workHours?tk.workHours+' ชม.':'-']],dot:'#7F77DD'});
+  if(sid==='completed')
+    hist.push({title:'ปิดงานเรียบร้อย',sub:`ปิดโดย: ${tk.closedBy||'Admin'}`,
+      rows:[['หมายเหตุ',tk.adminNote||'-'],['เวลาปิดงาน',tk.closedAt||'-']],dot:'#3B6D11'});
+  if(sid==='cancelled')
+    hist.push({title:'ยกเลิก Ticket',sub:`โดย: ${tk.closedBy||'Admin'}`,
+      rows:[['หมายเหตุ',tk.adminNote||'-'],['เวลา',tk.closedAt||'-']],dot:'#D85A30'});
+  return hist.reverse();
+}
+
+let _trkOpen=0;
+function toggleTlRow(i){
+  _trkOpen=_trkOpen===i?-1:i;
+  document.querySelectorAll('.tl-row').forEach((el,idx)=>el.classList.toggle('open',idx===_trkOpen));
+}
+
+function renderTicketTimeline(tk){
+  const sid=tkStatusKey(tk.status);
+  const cfg=TK_STATUS_CFG[sid]||TK_STATUS_CFG['pending'];
+  const ci=TK_ORD.indexOf(sid);
+  const cancelled=sid==='cancelled';
+  const hist=buildTkTimeline(tk);
+
+  const progHtml=cancelled
+    ?`<div style="grid-column:1/-1;text-align:center;padding:10px 0;color:#993C1D;font-size:13px;font-weight:700"><div style="font-size:20px;margin-bottom:4px">✕</div>ยกเลิก Ticket แล้ว</div>`
+    :TK_PROG.map((p,i)=>{
+      const pi=TK_ORD.indexOf(p.k);const done=ci>=pi;
+      const lc=i>0&&done?'#3B6D11':'var(--border)';
+      const cc=done?'#3B6D11':ci===pi?'#185FA5':'var(--border)';
+      const ico=done
+        ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+        :`<span style="font-size:10px;color:${ci===pi?'#fff':'var(--fg4)'};font-weight:600">${i+1}</span>`;
+      return`<div class="tswrap">${i>0?`<div class="tsline" style="background:${lc}"></div>`:''}
+        <div class="tscirc" style="background:${cc}">${ico}</div>
+        <div class="tslabel">${p.l}</div></div>`;
+    }).join('');
+
+  const tlHtml=hist.map((h,i)=>{
+    const dc=TK_DOTS[Math.min(i,TK_DOTS.length-1)];
+    const rows=h.rows.filter(([,v])=>v&&v!=='-')
+      .map(([k,v])=>`<div style="display:flex;gap:6px;flex-wrap:wrap"><strong style="min-width:90px;flex-shrink:0">${k}</strong><span style="flex:1">${esc(v)}</span></div>`).join('');
+    return`<div style="position:relative">
+      ${i<hist.length-1?`<div style="position:absolute;left:5px;top:11px;height:100%;width:1px;background:var(--border)"></div>`:''}
+      <div class="tl-row${i===0?' open tl-pop':''}" onclick="toggleTlRow(${i})">
+        <div class="tl-dot" style="background:${dc}"></div>
+        <div class="tl-main">
+          <div class="tl-head"><span class="tl-title">${h.title}</span><span class="tl-arrow">▾</span></div>
+          <div class="tl-sub">${h.sub}</div>
+          <div class="tl-detail"><div class="tl-detail-inner">${rows||'<span style="color:var(--fg4)">ไม่มีข้อมูลเพิ่มเติม</span>'}</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return`<div style="background:transparent">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--fg4)">${esc(tk.id)}</span>
+        <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:${cfg.pillBg};color:${cfg.pillC}">${cfg.label}</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:var(--fg);margin-bottom:2px">${esc(tk.type||'-')}</div>
+      <div style="font-size:12px;color:var(--fg3)">${esc(tk.brand||'-')} / ${esc(tk.branchCode||'-')}</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div class="tpgrid">${progHtml}</div>
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--fg4);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase">
+          ประวัติการดำเนินการ <span style="font-weight:400">— กดเพื่อดูรายละเอียด</span>
+        </div>
+        ${tlHtml}
+      </div>
+    </div>
+  </div>`;
 }
 
 async function doTrack(){
@@ -688,15 +820,8 @@ async function doTrack(){
     if(!d.ok)throw new Error(d.error||'Error');
     const tk=(d.tickets||[]).find(x=>(x.id||'').toLowerCase()===id.toLowerCase()||x._recordId===id);
     if(!tk)throw new Error(l.ticketNotFound+': '+id);
-    out.innerHTML=`<div class="tres">
-      <div class="tres-id">${esc(tk.id)}</div>
-      <div class="tres-type">${esc(tk.type||'-')}</div>
-      <div style="margin-bottom:8px"><span class="pill">${statusLabel(tk.status)}</span></div>
-      ${[['Brand',tk.brand],['Branch',tk.branchCode],['Reporter',tk.reporter],['Date',tk.sentDate||tk.created_at],['Engineer',tk.engineerName],['Location',tk.location]]
-        .map(([lbl,v])=>v?`<div class="tres-row"><span class="tres-l">${lbl}</span><span class="tres-v">${esc(v)}</span></div>`:'').join('')}
-      ${tk.detail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:6px;line-height:1.5;transition:background .4s">${esc(tk.detail)}</div>`:''}
-      ${tk.workDetail?`<div style="background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--fg2);margin-top:5px;border-left:2px solid var(--fg);transition:background .4s"><strong>Engineer:</strong> ${esc(tk.workDetail)}</div>`:''}
-    </div>`;
+    _trkOpen=0;
+    out.innerHTML=renderTicketTimeline(tk);
   }catch(e){out.innerHTML=`<div class="empty">${esc(e.message)}</div>`;}
 }
 
