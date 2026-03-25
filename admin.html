@@ -233,6 +233,119 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 .rg-no{color:#ef4444;font-weight:700;font-size:14px}
 .rg-view{color:#f59e0b;font-weight:700;font-size:13px}
 .rg-role-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+
+/* ── SKELETON ── */
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:1200px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+.sk-line{height:13px;margin-bottom:8px}.sk-line.w60{width:60%}.sk-line.w40{width:40%}.sk-line.w80{width:80%}
+.sk-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+.sk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sk-circle{width:36px;height:36px;border-radius:50%;flex-shrink:0}
+.sk-block{flex:1}
+
+/* ── COMMAND PALETTE ── */
+.cmd-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:none;align-items:flex-start;justify-content:center;padding-top:80px;backdrop-filter:blur(4px)}
+.cmd-backdrop.on{display:flex;animation:fadeIn .15s}
+.cmd-box{background:var(--card);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;animation:popIn .2s var(--spring)}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.cmd-search{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.cmd-icon{font-family:var(--mono);font-size:14px;color:var(--fg3)}
+.cmd-input{flex:1;background:none;border:none;outline:none;color:var(--fg);font-family:var(--sans);font-size:14px}
+.cmd-input::placeholder{color:var(--fg4)}
+.cmd-kbd{font-family:var(--mono);font-size:10px;color:var(--fg4);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+.cmd-list{padding:6px;max-height:320px;overflow-y:auto}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .12s;font-size:13px}
+.cmd-item:hover,.cmd-item.sel{background:var(--bg2)}
+.cmd-ic{width:28px;height:28px;border-radius:7px;background:var(--bg3);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--fg3);flex-shrink:0}
+.cmd-label{flex:1;font-weight:500;color:var(--fg)}
+.cmd-desc{font-size:11px;color:var(--fg4)}
+.cmd-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:12px;font-family:var(--mono);font-size:10px;color:var(--fg4)}
+
+/* ── KANBAN ── */
+.kanban-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+.k-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:200px;transition:border-color .2s}
+.k-col.drag-over{border-color:var(--fg);background:var(--bg3)}
+.k-col-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.k-dot{width:7px;height:7px;border-radius:50%}
+.k-col-title{font-size:11px;font-weight:700;color:var(--fg3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.k-count{font-family:var(--mono);font-size:10px;color:var(--fg4);background:var(--bg3);border-radius:4px;padding:1px 6px}
+.k-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:grab;transition:all .2s;user-select:none;font-size:12px}
+.k-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.08);transform:scale(1.01)}
+.k-card.dragging{opacity:.35;transform:scale(.97)}
+.k-card-id{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:3px}
+.k-card-title{font-weight:600;color:var(--fg);line-height:1.4;margin-bottom:4px}
+.k-card-meta{display:flex;gap:4px;align-items:center;margin-top:5px}
+
+/* ── TOGGLE SETTING ROW ── */
+.tog-list{display:flex;flex-direction:column;gap:6px}
+.tog-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .2s}
+.tog-row:hover{border-color:var(--border2)}
+.tog-label{font-size:13px;font-weight:600;color:var(--fg)}
+.tog-sub{font-size:11px;color:var(--fg3);margin-top:2px}
+.tog{width:40px;height:22px;background:var(--bg3);border:1px solid var(--border);border-radius:99px;position:relative;transition:background .25s,border-color .25s;flex-shrink:0}
+.tog.on{background:var(--fg);border-color:var(--fg)}
+.tog::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--bg);top:2px;left:2px;transition:transform .25s var(--spring);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.tog.on::after{transform:translateX(18px)}
+
+/* ── ACCORDION ── */
+.acc-list{display:flex;flex-direction:column;gap:5px}
+.acc-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
+.acc-item.open{border-color:var(--border2)}
+.acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:var(--card);transition:background .2s;user-select:none}
+.acc-head:hover{background:var(--bg2)}
+.acc-q{font-size:13px;font-weight:600;color:var(--fg)}
+.acc-ic{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--fg3);transition:transform .25s,background .2s,color .2s;flex-shrink:0}
+.acc-item.open .acc-ic{transform:rotate(45deg);background:var(--fg);color:var(--bg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s;background:var(--bg2);padding:0 14px;font-size:12px;color:var(--fg3);line-height:1.7}
+.acc-item.open .acc-body{max-height:300px;padding:10px 14px}
+
+/* ── NOTIFICATION BELL ── */
+.notif-btn{position:relative;width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--fg3);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .2s}
+.notif-btn:hover{background:var(--bg2);color:var(--fg)}
+.notif-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#ef4444;border-radius:50%;font-family:var(--mono);font-size:8px;font-weight:700;color:#fff;display:grid;place-items:center;border:2px solid var(--bg);display:none}
+.notif-badge.on{display:grid;animation:pulse .8s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.notif-drop{position:absolute;top:46px;right:0;width:320px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:200;display:none;overflow:hidden}
+[data-t="dark"] .notif-drop{box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.notif-drop.on{display:block;animation:popIn .2s var(--spring)}
+.notif-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.notif-title{font-size:13px;font-weight:700;color:var(--fg)}
+.notif-clear{font-size:11px;color:var(--fg3);cursor:pointer;background:none;border:none;font-family:var(--sans)}
+.notif-clear:hover{color:var(--fg)}
+.notif-list{max-height:260px;overflow-y:auto}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;cursor:pointer;transition:background .15s}
+.notif-item:hover{background:var(--bg2)}
+.notif-item.unread{background:var(--bg3)}
+.notif-item:last-child{border-bottom:none}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:4px}
+.notif-dot.read{background:var(--border2)}
+.notif-body{flex:1}
+.notif-msg{font-size:12px;font-weight:500;color:var(--fg);line-height:1.4}
+.notif-time{font-size:10px;color:var(--fg4);margin-top:2px;font-family:var(--mono)}
+.notif-empty{padding:24px;text-align:center;font-size:12px;color:var(--fg4)}
+
+/* ── BRANCHES PAGE ── */
+.br-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.br-search{flex:1;min-width:160px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s}
+.br-search:focus{border-color:var(--border2)}
+.br-sel{padding:7px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer}
+.br-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px}
+.br-table{width:100%;border-collapse:collapse;font-size:12px}
+.br-table th{padding:9px 12px;background:var(--bg2);color:var(--fg3);font-weight:700;text-align:left;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.br-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--fg);vertical-align:middle}
+.br-table tr:last-child td{border-bottom:none}
+.br-table tr:hover td{background:var(--bg2);cursor:pointer}
+.br-badge{padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:700}
+.br-badge.active{background:rgba(45,122,79,.15);color:#2d7a4f}
+[data-t="dark"] .br-badge.active{background:rgba(74,222,128,.15);color:#4ade80}
+.br-badge.pending{background:rgba(234,179,8,.15);color:#854F0B}
+[data-t="dark"] .br-badge.pending{background:rgba(253,224,71,.15);color:#fde047}
+.br-badge.inactive{background:var(--bg3);color:var(--fg4)}
+.br-map-btn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--fg3);cursor:pointer;transition:all .15s}
+.br-map-btn:hover{background:var(--bg2);color:var(--fg)}
+.br-pending-banner{background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;display:none}
+.br-pending-banner.on{display:flex}
 </style>
 </head>
 <body>
@@ -409,6 +522,10 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
     <div class="top-clock" id="clock">--:--:--</div>
     <div class="status-dot offline" id="dot"></div>
     <button class="smb" id="btn-rf" onclick="doRefresh()">Refresh</button>
+    <button class="smb" onclick="openCmd()" title="⌘K">⌘K</button>
+    <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน">
+      🔔<span class="notif-badge" id="notif-badge">0</span>
+    </button>
   </div>
   <div class="content">
     <div class="page on" id="pg-dash"></div>
@@ -419,6 +536,7 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
     <div class="page" id="pg-line"></div>
     <div class="page" id="pg-system"></div>
     <div class="page" id="pg-server"></div>
+    <div class="page" id="pg-branches"></div>
   </div>
 </div>
 </div>
@@ -428,9 +546,30 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 <div class="mod-bg" id="mod-bg"><div class="mod" id="mod"></div></div>
 <div class="toast" id="toast"></div>
 
+<!-- NOTIFICATION DROPDOWN -->
+<div style="position:fixed;top:56px;right:12px;z-index:201" id="notif-wrap">
+  <div class="notif-drop" id="notif-drop">
+    <div class="notif-head"><span class="notif-title">การแจ้งเตือน</span><button class="notif-clear" onclick="clearNotifs()">ล้างทั้งหมด</button></div>
+    <div class="notif-list" id="notif-list"><div class="notif-empty">ไม่มีการแจ้งเตือนใหม่</div></div>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="cmd-backdrop" id="cmd-backdrop" onclick="closeCmd()">
+  <div class="cmd-box" onclick="event.stopPropagation()">
+    <div class="cmd-search">
+      <span class="cmd-icon">⌘</span>
+      <input class="cmd-input" id="cmd-input" placeholder="ค้นหา ticket, สาขา, คำสั่ง..." oninput="filterCmd(this.value)">
+      <span class="cmd-kbd">ESC</span>
+    </div>
+    <div class="cmd-list" id="cmd-list"></div>
+    <div class="cmd-footer"><span>↑↓ เลื่อน</span><span>↵ เลือก</span><span>ESC ปิด</span></div>
+  </div>
+</div>
+
 <script>
 let AUTH=null,tickets=[],logs=[],users=[],pg='dash',sse=null;
-const PG={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs'};
+const PG={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
 const NAV_ALL=[
   {id:'dash',ic:'D',lb:'Overview',min:40},
   {id:'tickets',ic:'T',lb:'Tickets',min:40},
@@ -439,7 +578,8 @@ const NAV_ALL=[
   {id:'gps',ic:'G',lb:'GPS Map',min:60},
   {id:'line',ic:'L',lb:'LINE Groups',min:100},
   {id:'system',ic:'S',lb:'System',min:100},
-  {id:'server',ic:'V',lb:'Server Logs',min:100}
+  {id:'server',ic:'V',lb:'Server Logs',min:100},
+  {id:'branches',ic:'B',lb:'Branches',min:60}
 ];
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -639,6 +779,7 @@ function rTickets(){
   const paged=data.slice((tF.p-1)*PP,tF.p*PP);
   const sortIcon=col=>tF.sortCol===col?(tF.sortDir==='asc'?' ↑':' ↓'):'';
   const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
+  if(kanbanMode){renderKanban();return;}
   document.getElementById('pg-tickets').innerHTML=`
     <div class="filters" style="flex-wrap:wrap;gap:6px">
       <div class="srch" style="flex:1;min-width:160px;max-width:340px">
@@ -934,33 +1075,44 @@ function toggleLgShow(key){
 function rSystem(){
   const cfg=window._lineCfg||{};
   document.getElementById('pg-system').innerHTML=`
-    <div style="margin-bottom:16px">
-      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">⚙️ System Settings</div>
-      <div style="font-size:13px;color:var(--fg3);margin-top:3px">LINE Notification Groups — Super Admin only</div>
-    </div>
-    <div class="crd" style="max-width:600px">
-      <div class="crd-h">LINE Group IDs</div>
-      <div style="padding:16px">
-        ${[
-          {label:'🔔 Admin Group (ทุก Ticket)',key:'adminGroupId'},
-          {label:"🍩 Dunkin'",key:'dunkin'},{label:'☕ Greyhound Cafe',key:'greyhoundCafe'},
-          {label:'🐕 Greyhound Original',key:'greyhoundOriginal'},{label:'🥐 Au Bon Pain',key:'auBonPain'},
-          {label:'🍟 Funky Fries',key:'funkyFries'},
-        ].map(({label,key})=>`
-        <div style="margin-bottom:12px">
-          <div style="font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">${label}</div>
-          <div style="display:flex;gap:6px">
-            <input id="line-${key}" class="sel" style="flex:1;border-radius:7px;padding:8px 10px" value="${esc(cfg[key]||cfg.brandGroups?.[label.replace(/^[^\s]+\s/,'')]||'')}" placeholder="C... หรือ U... (LINE ID)"/>
-            <button class="smb" onclick="testLine('${key}')">Test</button>
-          </div>
-        </div>`).join('')}
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="saveLineConfig()">💾 บันทึก</button>
-          <button class="smb" onclick="loadLineConfig()">🔄 โหลด</button>
-        </div>
-        <div id="system-msg" style="margin-top:8px;font-size:12px;color:var(--green);min-height:16px"></div>
+    <div style="padding:12px;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">การแจ้งเตือน</div>
+        ${makeTogRow('LINE Notification','ส่งแจ้งเตือนผ่าน LINE Bot อัตโนมัติ',true,'line_notif')}
+        ${makeTogRow('SSE Real-time','อัพเดท ticket แบบ real-time',true,'sse')}
+        ${makeTogRow('Email Notification','ส่งอีเมลเมื่อมี ticket ใหม่',false,'email_notif')}
       </div>
-    </div>`;
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">ระบบ</div>
+        ${makeTogRow('Dark Mode','ธีมสีเข้ม',document.documentElement.dataset.t==='dark','dark_mode')}
+        ${makeTogRow('GPS Auto-attach','แนบ GPS location อัตโนมัติ',false,'gps_auto')}
+        ${makeTogRow('SLA Reminder','แจ้งเตือนเมื่อใกล้ครบ SLA',true,'sla_remind')}
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">LINE Config</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${['admin','engineer','manager'].map(role=>`
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">${role} LINE ID</div>
+              <div style="display:flex;gap:6px">
+                <input id="line-${role}" style="flex:1;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--mono);font-size:12px;outline:none" placeholder="U... หรือ C...">
+                <button class="smb" onclick="testLine('${role}')" style="font-size:11px">Test</button>
+                <button class="smb" onclick="saveLine('${role}')" style="font-size:11px;background:var(--fg);color:var(--bg)">Save</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">FAQ / คู่มือ</div>
+        ${makeAccordion([
+          {q:'วิธีเพิ่ม engineer ใหม่',a:'ไปที่เมนู Users → กด Add User → กรอกข้อมูล เลือก role = engineer ระบุ brand ที่รับผิดชอบ'},
+          {q:'วิธีเพิ่ม LINE Group',a:'ไปที่เมนู System → กรอก Group ID ของ LINE Group (ขึ้นต้น C) → กด Test เพื่อตรวจสอบ'},
+          {q:'SLA คืออะไร',a:'Service Level Agreement — ระยะเวลาที่กำหนดให้แก้ไขปัญหา ค่า default = 7 วันทำการ'},
+          {q:'วิธีดู GPS location สาขา',a:'ไปที่ Branches → คลิกปุ่ม Map ข้างสาขา หรือเปิด GPS Map เพื่อดูแผนที่รวม'},
+        ])}
+      </div>
+    </div>
+  \``;
   loadLineConfig();
 }
 async function loadLineConfig(){try{const d=await api('/api/line-config');if(d.ok){window._lineCfg=d.config||{};rSystem();}}catch(_){}}
@@ -1216,6 +1368,370 @@ document.addEventListener('click',e=>{
 let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
 
 (async()=>{if(await tryAuto().catch(()=>false))boot();})();
+
+// ══════════════════════════════════════════
+// SKELETON LOADER
+// ══════════════════════════════════════════
+function skeletonCards(n=3){
+  return Array(n).fill(0).map(()=>`
+    <div class="sk-card">
+      <div class="sk-row">
+        <div class="sk sk-circle"></div>
+        <div class="sk-block">
+          <div class="sk sk-line w60"></div>
+          <div class="sk sk-line w40" style="height:10px"></div>
+        </div>
+      </div>
+      <div class="sk sk-line w80"></div>
+      <div class="sk sk-line w60" style="height:10px"></div>
+    </div>`).join('');
+}
+function skeletonTable(rows=5){
+  return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    ${Array(rows).fill(0).map(()=>`
+      <div style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr 1fr;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)">
+        ${Array(5).fill(0).map((_,i)=>`<div class="sk sk-line" style="width:${[40,30,80,20,30][i]}%;height:12px;margin:0"></div>`).join('')}
+      </div>`).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ══════════════════════════════════════════
+let notifications=[];
+function addNotif(msg,type='info'){
+  const n={id:Date.now(),msg,type,time:new Date(),read:false};
+  notifications.unshift(n);
+  if(notifications.length>20)notifications.pop();
+  renderNotifBadge();
+  renderNotifList();
+}
+function renderNotifBadge(){
+  const unread=notifications.filter(n=>!n.read).length;
+  const badge=document.getElementById('notif-badge');
+  if(!badge)return;
+  if(unread>0){badge.textContent=unread>9?'9+':unread;badge.classList.add('on');}
+  else{badge.classList.remove('on');}
+}
+function renderNotifList(){
+  const list=document.getElementById('notif-list');
+  if(!list)return;
+  if(!notifications.length){list.innerHTML='<div class="notif-empty">ไม่มีการแจ้งเตือนใหม่</div>';return;}
+  list.innerHTML=notifications.map(n=>`
+    <div class="notif-item${n.read?'':' unread'}" onclick="markRead(${n.id})">
+      <div class="notif-dot${n.read?' read':''}"></div>
+      <div class="notif-body">
+        <div class="notif-msg">${esc(n.msg)}</div>
+        <div class="notif-time">${n.time.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>`).join('');
+}
+function markRead(id){notifications=notifications.map(n=>n.id===id?{...n,read:true}:n);renderNotifBadge();renderNotifList();}
+function clearNotifs(){notifications=[];renderNotifBadge();renderNotifList();}
+let notifOpen=false;
+function togNotif(){
+  notifOpen=!notifOpen;
+  document.getElementById('notif-drop').classList.toggle('on',notifOpen);
+  if(notifOpen){notifications.forEach(n=>n.read=true);renderNotifBadge();renderNotifList();}
+}
+document.addEventListener('click',e=>{
+  if(notifOpen&&!e.target.closest('#notif-btn')&&!e.target.closest('#notif-drop')){
+    notifOpen=false;document.getElementById('notif-drop')?.classList.remove('on');
+  }
+});
+
+// ══════════════════════════════════════════
+// COMMAND PALETTE
+// ══════════════════════════════════════════
+const CMD_ITEMS=[
+  {ic:'D',label:'Overview',desc:'ไปหน้า Dashboard',action:()=>navTo('dash')},
+  {ic:'T',label:'All Tickets',desc:'ดู ticket ทั้งหมด',action:()=>navTo('tickets')},
+  {ic:'B',label:'Branches',desc:'จัดการสาขา',action:()=>navTo('branches')},
+  {ic:'U',label:'Users',desc:'จัดการผู้ใช้',action:()=>navTo('users')},
+  {ic:'G',label:'GPS Map',desc:'แผนที่ GPS',action:()=>navTo('gps')},
+  {ic:'L',label:'Activity Log',desc:'ประวัติการใช้งาน',action:()=>navTo('log')},
+  {ic:'S',label:'System',desc:'ตั้งค่าระบบ',action:()=>navTo('system')},
+  {ic:'R',label:'Refresh',desc:'โหลดข้อมูลใหม่',action:()=>doRefresh()},
+  {ic:'⊕',label:'New Ticket',desc:'เปิด ticket ใหม่',action:()=>navTo('tickets')},
+];
+let cmdSel=0;
+function openCmd(){
+  document.getElementById('cmd-backdrop').classList.add('on');
+  setTimeout(()=>document.getElementById('cmd-input')?.focus(),50);
+  renderCmd(CMD_ITEMS);cmdSel=0;
+}
+function closeCmd(){document.getElementById('cmd-backdrop').classList.remove('on');document.getElementById('cmd-input').value='';}
+function filterCmd(q){
+  const f=q?CMD_ITEMS.filter(i=>i.label.toLowerCase().includes(q.toLowerCase())||i.desc.includes(q)):CMD_ITEMS;
+  renderCmd(f);cmdSel=0;
+}
+function renderCmd(items){
+  document.getElementById('cmd-list').innerHTML=items.map((it,i)=>`
+    <div class="cmd-item${i===cmdSel?' sel':''}" onclick="${it.action.toString().includes('navTo')?`navTo('${it.label==='Branches'?'branches':it.label==='All Tickets'?'tickets':it.label==='Overview'?'dash':it.label==='Users'?'users':it.label==='GPS Map'?'gps':it.label==='Activity Log'?'log':it.label==='System'?'system':it.label==='Refresh'?'doRefresh()':''}')`:'doRefresh()'};closeCmd()">
+      <div class="cmd-ic">${it.ic}</div>
+      <div style="flex:1"><div class="cmd-label">${it.label}</div><div class="cmd-desc">${it.desc}</div></div>
+    </div>`).join('');
+}
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openCmd();}
+  if(e.key==='Escape'){closeCmd();}
+});
+
+// ══════════════════════════════════════════
+// KANBAN VIEW (ticket board mode)
+// ══════════════════════════════════════════
+let kanbanMode=false;
+const K_COLS=[
+  {id:'รอดำเนินการ ⏱️',label:'รอดำเนินการ',color:'#f59e0b'},
+  {id:'อยู่ระหว่างดำเนินการ ⚙️',label:'ดำเนินการ',color:'#6366f1'},
+  {id:'ตรวจงาน',label:'ตรวจงาน',color:'#06b6d4'},
+  {id:'เสร็จสิ้น ✅',label:'เสร็จสิ้น',color:'#22c55e'},
+];
+function renderKanban(){
+  const el=document.getElementById('pg-tickets');
+  const byCol={};K_COLS.forEach(k=>{byCol[k.id]=tickets.filter(t=>(t.status||'').includes(k.label.replace('รอดำเนินการ','รอ').replace('ดำเนินการ','ดำเนิน'))||t.status===k.id);});
+  // simpler match
+  K_COLS.forEach(k=>{byCol[k.id]=tickets.filter(t=>{const s=t.status||'';return s===k.id||s.startsWith(k.label.substring(0,4));});});
+  el.innerHTML=`
+    <div style="padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <button class="smb" onclick="kanbanMode=false;render()" style="font-size:11px">☰ Table</button>
+        <button class="smb on" style="font-size:11px;background:var(--fg);color:var(--bg)">⬛ Board</button>
+        <span style="font-size:11px;color:var(--fg4);margin-left:auto">${tickets.length} tickets</span>
+      </div>
+      <div class="kanban-wrap">${K_COLS.map(k=>`
+        <div class="k-col" data-col="${k.id}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="kDrop(event,'${k.id}')">
+          <div class="k-col-head">
+            <div class="k-dot" style="background:${k.color}"></div>
+            <div class="k-col-title">${k.label}</div>
+            <div class="k-count">${(byCol[k.id]||[]).length}</div>
+          </div>
+          ${(byCol[k.id]||[]).map(t=>`
+            <div class="k-card" draggable="true" ondragstart="kDragStart(event,'${t._recordId}')" ondragend="this.classList.remove('dragging')" onclick="openDrw('${t._recordId}')">
+              <div class="k-card-id">${esc(t.ticket_id||t._recordId||'')}</div>
+              <div class="k-card-title">${esc((t.type||t.category||'').substring(0,40))}</div>
+              <div class="k-card-meta">
+                <span class="badge sm">${esc(t.brand||'')}</span>
+                ${t.engineerName?`<span style="font-size:10px;color:var(--fg4)">${esc(t.engineerName)}</span>`:''}
+              </div>
+            </div>`).join('')}
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+let kDragging=null;
+function kDragStart(e,rid){kDragging=rid;setTimeout(()=>e.target.classList.add('dragging'),0);}
+async function kDrop(e,colId){
+  e.currentTarget.classList.remove('drag-over');
+  if(!kDragging)return;
+  const t=tickets.find(x=>x._recordId===kDragging);
+  if(t&&t.status!==colId){
+    try{await api(`/api/tickets/${kDragging}/status`,{method:'PATCH',body:JSON.stringify({status:colId,brand:t.brand||''})});
+    tickets=tickets.map(x=>x._recordId===kDragging?{...x,status:colId}:x);
+    addNotif(`Ticket ${t.ticket_id||kDragging} moved → ${colId}`,'info');
+    renderKanban();}catch(err){toast('Error: '+err.message);}
+  }
+  kDragging=null;
+}
+
+// ══════════════════════════════════════════
+// BRANCHES PAGE
+// ══════════════════════════════════════════
+let branches=[],brFilter={brand:'',q:''},brLoaded=false;
+const BR_BRANDS=["Dunkin'","Greyhound Cafe'","Greyhound Original","Au Bon Pain","Funky Fries","Another Hound Cafe'","Bean Hound"];
+
+async function loadBranches(){
+  if(brLoaded)return;
+  document.getElementById('pg-branches').innerHTML='<div style="padding:12px">'+skeletonTable(8)+'</div>';
+  try{
+    const d=await api('/api/branches');
+    if(d.ok&&d.branches){
+      branches=[];
+      Object.entries(d.branches).forEach(([brand,list])=>{
+        list.forEach(b=>branches.push({...b,brand}));
+      });
+      brLoaded=true;
+    }
+  }catch(e){toast('Error loading branches: '+e.message);}
+}
+
+async function renderBranches(){
+  await loadBranches();
+  const isSup=AUTH?.user?.role==='superadmin';
+  const pendingCount=branches.filter(b=>b.status==='pending').length;
+  
+  // Filter
+  let list=branches;
+  if(brFilter.brand)list=list.filter(b=>b.brand===brFilter.brand);
+  if(brFilter.q){const q=brFilter.q.toLowerCase();list=list.filter(b=>(b.name_en||'').toLowerCase().includes(q)||(b.code||'').toLowerCase().includes(q)||(b.nameTh||'').toLowerCase().includes(q));}
+  
+  document.getElementById('pg-branches').innerHTML=`
+    <div style="padding:12px">
+      ${pendingCount&&isSup?`<div class="br-pending-banner on">
+        <span style="font-size:13px;font-weight:600">⏳ มี ${pendingCount} สาขารออนุมัติ location</span>
+        <button class="smb" onclick="brFilter.brand='';brFilter.q='pending_only';renderBranches()">ดูทั้งหมด</button>
+      </div>`:''}
+      <div class="br-filters">
+        <input class="br-search" placeholder="ค้นหาชื่อ / รหัสสาขา..." value="${esc(brFilter.q)}" oninput="brFilter.q=this.value;renderBranches()">
+        <select class="br-sel" onchange="brFilter.brand=this.value;renderBranches()">
+          <option value="">ทุกแบรนด์</option>
+          ${BR_BRANDS.map(b=>`<option value="${b}"${brFilter.brand===b?' selected':''}>${b}</option>`).join('')}
+        </select>
+        <span style="font-size:12px;color:var(--fg4);white-space:nowrap">${list.length} สาขา</span>
+        <button class="smb" onclick="brLoaded=false;renderBranches()">↻</button>
+      </div>
+      <div class="br-table-wrap">
+        <table class="br-table">
+          <thead><tr>
+            <th>Code</th><th>Brand</th><th>ชื่อสาขา</th>
+            <th>Location</th><th>Status</th><th>Action</th>
+          </tr></thead>
+          <tbody>${list.slice(0,100).map(b=>`
+            <tr onclick="openBranchModal('${b.id}')">
+              <td><span style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</span></td>
+              <td><span style="font-size:11px">${esc(b.brand||'')}</span></td>
+              <td>${esc(b.name_en||b.nameTh||'')}</td>
+              <td>${b.location_lat&&b.location_lng
+                ?`<button class="br-map-btn" onclick="event.stopPropagation();openBranchMap(${b.location_lat},${b.location_lng},'${esc(b.name_en||'')}')">📍 Map</button>`
+                :`<span style="font-size:11px;color:var(--fg4)">ไม่มีข้อมูล</span>`}</td>
+              <td><span class="br-badge ${b.status||'active'}">${b.status||'active'}</span></td>
+              <td><button class="smb" onclick="event.stopPropagation();openBranchModal('${b.id}')" style="font-size:11px">แก้ไข</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${list.length>100?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--fg4)">แสดง 100 จาก ${list.length} สาขา — กรองเพิ่มเติมเพื่อดูทั้งหมด</div>`:''}
+    </div>`;
+}
+
+function openBranchMap(lat,lng,name){
+  navTo('gps');
+  setTimeout(()=>{
+    const map=document.getElementById('map-frame');
+    if(map)map.src=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  },300);
+}
+
+function openBranchModal(id){
+  const b=branches.find(x=>String(x.id)===String(id));
+  if(!b)return;
+  const isSup=AUTH?.user?.role==='superadmin';
+  const mod=document.getElementById('mod');
+  const mbg=document.getElementById('mod-bg');
+  mod.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:3px">${esc(b.code||'')} · ${esc(b.brand||'')}</div>
+        <div style="font-size:16px;font-weight:700">${esc(b.name_en||b.nameTh||'')}</div>
+      </div>
+      <button onclick="closeMod()" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--fg3);font-size:12px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Latitude</div>
+        <input id="br-lat" type="number" step="any" value="${b.location_lat||''}" 
+          style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+          ${isSup?'':'disabled'} placeholder="เช่น 13.7563">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Longitude</div>
+        <input id="br-lng" type="number" step="any" value="${b.location_lng||''}"
+          style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+          ${isSup?'':'disabled'} placeholder="เช่น 100.5018">
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Location Name</div>
+      <input id="br-locname" value="${esc(b.location_name||'')}"
+        style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+        ${isSup?'':'disabled'} placeholder="ชื่อสถานที่ / ที่อยู่">
+    </div>
+    ${b.location_lat&&b.location_lng?`<div style="margin-bottom:14px">
+      <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${b.location_lat},${b.location_lng}" 
+        style="width:100%;height:140px;border:1px solid var(--border);border-radius:8px" frameborder="0" loading="lazy"></iframe>
+    </div>`:''}
+    <div style="display:flex;gap:8px">
+      ${isSup
+        ?`<button onclick="saveBranchLocation('${b.id}')" style="flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">บันทึก</button>`
+        :`<button onclick="submitBranchApproval('${b.id}')" style="flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">ส่งขออนุมัติ</button>`}
+      <button onclick="closeMod()" style="padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--fg3);font-size:13px">ยกเลิก</button>
+    </div>`;
+  mbg.classList.add('on');
+}
+
+async function saveBranchLocation(id){
+  const lat=parseFloat(document.getElementById('br-lat').value);
+  const lng=parseFloat(document.getElementById('br-lng').value);
+  const name=document.getElementById('br-locname').value.trim();
+  if(isNaN(lat)||isNaN(lng))return toast('กรุณากรอก lat/lng ให้ถูกต้อง');
+  try{
+    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})});
+    if(!d.ok)throw new Error(d.error||'Error');
+    branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name}:b);
+    closeMod();renderBranches();
+    addNotif(`อัพเดท location สาขา ${id} สำเร็จ`,'success');
+    toast('✅ บันทึก location สำเร็จ');
+  }catch(e){toast('❌ '+e.message);}
+}
+
+async function submitBranchApproval(id){
+  const lat=parseFloat(document.getElementById('br-lat').value);
+  const lng=parseFloat(document.getElementById('br-lng').value);
+  const name=document.getElementById('br-locname').value.trim();
+  if(isNaN(lat)||isNaN(lng))return toast('กรุณากรอก lat/lng ให้ถูกต้อง');
+  try{
+    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name,status:'pending',requested_by:AUTH?.user?.username})});
+    if(!d.ok)throw new Error(d.error||'Error');
+    branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name,status:'pending'}:b);
+    closeMod();renderBranches();
+    addNotif(`ส่งคำขอแก้ไข location สาขา ${id} แล้ว รอ superadmin อนุมัติ`,'info');
+    toast('✅ ส่งคำขออนุมัติแล้ว');
+  }catch(e){toast('❌ '+e.message);}
+}
+
+// ══════════════════════════════════════════
+// TOGGLE SETTINGS helper
+// ══════════════════════════════════════════
+function makeTogRow(label,sub,initOn,key){
+  const on=localStorage.getItem('tog_'+key)==='true'||(initOn&&localStorage.getItem('tog_'+key)===null);
+  return `<div class="tog-row" onclick="togSetting('${key}',this)">
+    <div><div class="tog-label">${label}</div><div class="tog-sub">${sub}</div></div>
+    <div class="tog${on?' on':''}"></div>
+  </div>`;
+}
+function togSetting(key,row){
+  const tog=row.querySelector('.tog');
+  const on=tog.classList.toggle('on');
+  localStorage.setItem('tog_'+key,on);
+  toast(on?'เปิดใช้งาน':'ปิดใช้งาน');
+  addNotif(`Setting "${key}" ${on?'เปิด':'ปิด'}แล้ว`,'info');
+}
+
+// ══════════════════════════════════════════
+// ACCORDION helper
+// ══════════════════════════════════════════
+function makeAccordion(items){
+  return '<div class="acc-list">'+items.map(it=>`
+    <div class="acc-item">
+      <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="acc-q">${it.q}</span><span class="acc-ic">+</span>
+      </div>
+      <div class="acc-body">${it.a}</div>
+    </div>`).join('')+'</div>';
+}
+
+// ══════════════════════════════════════════
+// HOOK notifications into existing actions
+// ══════════════════════════════════════════
+const _origToast=toast;
+window.toast=function(m){
+  _origToast(m);
+  if(m&&!m.includes('Refresh'))addNotif(m);
+};
+
+// Intercept SSE for real-time notifs
+const _origSSE=window.startSSE;
+
 </script>
 </body>
 </html>
