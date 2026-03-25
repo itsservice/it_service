@@ -177,6 +177,29 @@ app.get('/api/branches', async (req, res) => {
   }
 });
 
+// PATCH /api/branches/:id — update location (admin+)
+app.patch('/api/branches/:id', requireAuth, async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { id } = req.params;
+    const body = req.body || {};
+    const r = await axios.patch(`${REPAIR_URL}/api/branches/${id}`, body, {
+      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+      timeout: 10000
+    });
+    // clear branch cache
+    _branchCache = null;
+    _branchCacheExp = 0;
+    logActivity(req.user?.username || 'unknown', `Updated branch ${id} location`);
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch patch]', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════
 // TICKETS
 // ═══════════════════════════════════════════════════════════
