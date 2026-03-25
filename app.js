@@ -401,14 +401,15 @@ app.get('/debug/gps', async (_, res) => {
 });
 
 app.get('/debug/env', async (_, res) => {
+  const adminGroup = await lineConfig.getAdminGroupId().catch(()=>'');
   res.json({
-    hasLarkAppId:       !!process.env.LARK_APP_ID,
-    hasLineToken:       !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
-    hasLineSecret:      !!process.env.LINE_CHANNEL_SECRET,
-    hasLineAdminGroup:  !!(await lineConfig.getAdminGroupId()),
-    lineAdminGroup:     ((await lineConfig.getAdminGroupId()) || '(not set)').slice(0,10)+'...',
-    nodeEnv:            process.env.NODE_ENV || 'development',
-    appUrl:             process.env.APP_URL || '(not set)',
+    hasLarkAppId:!!process.env.LARK_APP_ID, hasLarkSecret:!!process.env.LARK_APP_SECRET,
+    hasLarkAppToken:!!process.env.LARK_APP_TOKEN, hasLarkTableId:!!process.env.LARK_TABLE_ID,
+    hasLineToken:!!process.env.LINE_CHANNEL_ACCESS_TOKEN, hasLineSecret:!!process.env.LINE_CHANNEL_SECRET,
+    hasLineAdminGroup:!!adminGroup,
+    lineAdminGroup: adminGroup ? adminGroup.slice(0,10)+'...' : '(not set)',
+    nodeEnv: process.env.NODE_ENV||'development',
+    appUrl: process.env.APP_URL||'(not set)',
   });
 });
 
@@ -440,7 +441,7 @@ app.get('/debug/tables', async (_,res) => {
 });
 
 app.get('/debug/test-line', async (_,res) => {
-  const to = lineConfig.getAdminGroupId();
+  const to = await lineConfig.getAdminGroupId().catch(()=>'');
   if (!to) return res.json({ ok:false, error:'No Admin Group ID set — go to Admin > LINE Settings' });
   const result = await lineNotify.push(to, [{ type:'text', text:'Test from IT Support Hub' }]);
   res.json(result);
