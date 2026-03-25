@@ -243,6 +243,61 @@ a{color:inherit;text-decoration:none}
 .pvo-dot:nth-child(3){animation:dotP 1.2s .4s infinite}
 @keyframes dotP{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 @keyframes pvOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.03)}}
+
+/* ── SKELETON ── */
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:1200px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+.sk-line{height:13px;margin-bottom:8px}.sk-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+.sk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.sk-circle{width:36px;height:36px;border-radius:50%;flex-shrink:0}.sk-block{flex:1}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto}
+.tab-btn{padding:9px 16px;border:none;background:none;color:var(--fg3);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;position:relative;white-space:nowrap;transition:color .2s}
+.tab-btn:hover{color:var(--fg)}
+.tab-btn.on{color:var(--fg);font-weight:700}
+.tab-btn.on::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--fg);border-radius:2px 2px 0 0}
+.tab-panel{display:none}.tab-panel.on{display:block;animation:up .25s var(--ease)}
+
+/* ── ACCORDION ── */
+.acc-list{display:flex;flex-direction:column;gap:5px}
+.acc-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.acc-item.open{border-color:var(--border2)}
+.acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:var(--card);transition:background .2s;user-select:none}
+.acc-head:hover{background:var(--bg2)}
+.acc-q{font-size:13px;font-weight:600;color:var(--fg)}
+.acc-ic{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--fg3);transition:transform .25s,background .2s,color .2s;flex-shrink:0}
+.acc-item.open .acc-ic{transform:rotate(45deg);background:var(--fg);color:var(--bg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s;background:var(--bg2);padding:0 14px;font-size:12px;color:var(--fg3);line-height:1.7}
+.acc-item.open .acc-body{max-height:300px;padding:10px 14px}
+
+/* ── TOGGLE ── */
+.tog-list{display:flex;flex-direction:column;gap:6px}
+.tog-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .2s}
+.tog-row:hover{border-color:var(--border2)}
+.tog-label{font-size:13px;font-weight:600;color:var(--fg)}
+.tog-sub{font-size:11px;color:var(--fg3);margin-top:2px}
+.tog{width:40px;height:22px;background:var(--bg3);border:1px solid var(--border);border-radius:99px;position:relative;transition:background .25s;flex-shrink:0}
+.tog.on{background:var(--fg);border-color:var(--fg)}
+.tog::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--bg);top:2px;left:2px;transition:transform .25s var(--spring);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.tog.on::after{transform:translateX(18px)}
+
+/* ── STATS PROGRESS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;transition:all .4s}
+.stat-val{font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.04em;color:var(--fg)}
+.stat-lbl{font-size:10px;color:var(--fg4);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.stat-bar{height:3px;background:var(--bg3);border-radius:99px;margin-top:8px;overflow:hidden}
+.stat-fill{height:100%;border-radius:99px;transition:width 1s var(--ease)}
+
+/* ── MORPH MODAL enhancement ── */
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.job-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--fg);border-radius:3px 0 0 3px;transform:scaleY(0);transition:transform .25s var(--spring)}
+.job-card:hover::before{transform:scaleY(1)}
+.job-card:hover{border-color:var(--border2);transform:translateX(3px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+[data-t="dark"] .job-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.job-card-id{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:4px}
+.job-card-title{font-size:14px;font-weight:700;color:var(--fg);margin-bottom:6px;line-height:1.4}
+.job-card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
 <body>
@@ -320,6 +375,16 @@ a{color:inherit;text-decoration:none}
     <div class="content">
       <div class="content-inner">
         <div class="eng-stats" id="eng-stats"></div>
+        <div class="tabs" id="eng-tabs">
+          <button class="tab-btn on" data-tab="active" onclick="switchEngTab('active')">งานที่รับแล้ว</button>
+          <button class="tab-btn" data-tab="done" onclick="switchEngTab('done')">งานเสร็จแล้ว</button>
+          <button class="tab-btn" data-tab="history" onclick="switchEngTab('history')">ประวัติ</button>
+          <button class="tab-btn" data-tab="settings" onclick="switchEngTab('settings')">ตั้งค่า</button>
+        </div>
+        <div id="tab-active" class="tab-panel on"></div>
+        <div id="tab-done" class="tab-panel"></div>
+        <div id="tab-history" class="tab-panel"></div>
+        <div id="tab-settings" class="tab-panel"></div>
         <div id="view"></div>
       </div>
     </div>
@@ -786,6 +851,165 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSidebar();pvCl
 
 /* ═══ INIT ═══════════════════════════════════════════════════ */
 (async()=>{if(await tryAuto().catch(()=>false))boot();})();
+
+// ══════════════════════════════════════════
+// TAB SWITCHING (engineer)
+// ══════════════════════════════════════════
+let engTab = 'active';
+function switchEngTab(t){
+  engTab = t;
+  document.querySelectorAll('#eng-tabs .tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.tab===t));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+t)?.classList.add('on');
+  renderEngTab();
+}
+
+function renderEngTab(){
+  const active = tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
+  const done   = tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
+
+  // ── Stats with progress bars ──
+  const total = tickets.length || 1;
+  document.getElementById('eng-stats').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-box" style="animation:up .3s var(--ease) .05s both">
+        <div class="stat-val">${active.length}</div>
+        <div class="stat-lbl">งานที่รับ</div>
+        <div class="stat-bar"><div class="stat-fill" style="background:#6366f1;width:${Math.min(active.length/Math.max(total,1)*100,100)}%"></div></div>
+      </div>
+      <div class="stat-box" style="animation:up .3s var(--ease) .1s both">
+        <div class="stat-val">${done.length}</div>
+        <div class="stat-lbl">เสร็จแล้ว</div>
+        <div class="stat-bar"><div class="stat-fill" style="background:#22c55e;width:${Math.min(done.length/Math.max(total,1)*100,100)}%"></div></div>
+      </div>
+      <div class="stat-box" style="animation:up .3s var(--ease) .15s both">
+        <div class="stat-val">${total}</div>
+        <div class="stat-lbl">ทั้งหมด</div>
+        <div class="stat-bar"><div class="stat-fill" style="background:var(--fg);width:100%"></div></div>
+      </div>
+    </div>`;
+
+  if(engTab==='active') renderEngJobList('tab-active', active, true);
+  else if(engTab==='done') renderEngJobList('tab-done', done, false);
+  else if(engTab==='history') renderEngHistory();
+  else if(engTab==='settings') renderEngSettings();
+}
+
+function renderEngJobList(containerId, list, isActive){
+  const isGuest = AUTH?.user?.role==='guest';
+  const el = document.getElementById(containerId);
+  if(!list.length){
+    el.innerHTML = `<div class="empty"><div class="empty-t">${isActive?'ยังไม่มีงานที่รับ':'ยังไม่มีงานเสร็จ'}</div></div>`;
+    return;
+  }
+  // skeleton first
+  el.innerHTML = '<div>' + Array(Math.min(list.length,3)).fill(0).map(()=>`
+    <div class="sk-card"><div class="sk-row"><div class="sk sk-circle"></div><div class="sk-block">
+      <div class="sk sk-line" style="width:60%"></div><div class="sk sk-line" style="width:40%;height:10px"></div>
+    </div></div><div class="sk sk-line" style="width:80%"></div></div>`).join('') + '</div>';
+
+  setTimeout(()=>{
+    el.innerHTML = list.map((t,i)=>{
+      const rid = esc(t._recordId);
+      const isAssigned = /assigned|มอบหมาย/.test(t.status||'');
+      const isAccepted = /accepted|รับงาน/.test(t.status||'');
+      const isWorking  = /in_progress|ระหว่าง/.test(t.status||'');
+      const isReview   = /ตรวจ|review/.test(t.status||'');
+      const isDone     = /เสร็จ|completed/.test(t.status||'');
+      let sa = t.started_at||t.startedAt||null;
+      if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
+      const hasStarted = isWorking&&!!sa;
+      let stamp='';
+      if(hasStarted) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
+      else if(isReview) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
+      else if(isDone)   stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
+
+      return `<div class="job-card" style="animation:up .3s var(--ease) ${i*.04}s both" onclick="openDetail('${rid}')">
+        ${stamp}
+        ${hasStarted?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">กำลังทำงาน</div><div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div></div>`:''}
+        <div class="job-card-id">${esc(t.id||t.ticket_id||'--')} · ${esc(t.brand||'')}</div>
+        <div class="job-card-title">${esc(t.type||t.category||'-')}</div>
+        <div class="job-card-meta">
+          <span class="pill">${statusLabel(t.status)}</span>
+          <span style="font-size:11px;color:var(--fg4)">${esc(t.branchCode||'')} · ${esc(t.sentDate||'')}</span>
+        </div>
+        ${t.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:6px;line-height:1.5">${esc(t.detail.substring(0,80))}${t.detail.length>80?'…':''}</div>`:''}
+        <div class="jc-btns" style="margin-top:8px">
+          ${isGuest
+            ? `<button class="jc-b" style="opacity:.4;cursor:not-allowed">🔒 Demo</button>`
+            : `${isAssigned?`<button class="jc-b pri" onclick="event.stopPropagation();doAccept('${rid}')">✅ รับงาน</button>`:''}
+               ${isAccepted||isWorking&&!hasStarted?`<button class="jc-b pri" onclick="event.stopPropagation();doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
+               ${hasStarted?`<button class="jc-b pri" onclick="event.stopPropagation();openSubmit('${rid}')">✅ ส่งงาน</button>`:''}
+               <button class="jc-b" onclick="event.stopPropagation();openDetail('${rid}')">Detail</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    startWorkTimers();
+  }, 400);
+}
+
+function renderEngHistory(){
+  const el = document.getElementById('tab-history');
+  const all = [...tickets].sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
+  if(!all.length){el.innerHTML='<div class="empty"><div class="empty-t">ยังไม่มีประวัติ</div></div>';return;}
+
+  const items = all.map(t=>({
+    q:`${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})`,
+    a:`สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}`
+  }));
+
+  el.innerHTML = `<div style="padding:4px 0">
+    <div style="font-size:11px;color:var(--fg4);margin-bottom:10px">ประวัติ ${all.length} รายการ</div>
+    <div class="acc-list">
+      ${items.map(it=>`
+        <div class="acc-item">
+          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+            <span class="acc-q">${it.q}</span>
+            <span class="acc-ic">+</span>
+          </div>
+          <div class="acc-body">${it.a}</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderEngSettings(){
+  const el = document.getElementById('tab-settings');
+  el.innerHTML = `<div style="padding:4px 0">
+    <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">การแจ้งเตือน</div>
+    <div class="tog-list">
+      ${makeTog('แจ้งเตือนงานใหม่','รับ notification เมื่อมีงานมอบหมาย',true,'eng_notif_new')}
+      ${makeTog('GPS Auto-track','ส่ง GPS location อัตโนมัติเมื่อเริ่มงาน',true,'eng_gps_auto')}
+      ${makeTog('Dark Mode','ธีมสีเข้ม',document.documentElement.dataset.t==='dark','eng_dark')}
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:16px;margin-bottom:8px">ภาษา</div>
+    <div class="tog-list">
+      ${makeTog('ภาษาไทย','แสดงข้อความเป็นภาษาไทย',true,'eng_lang_th')}
+    </div>
+  </div>`;
+}
+
+function makeTog(label,sub,initOn,key){
+  const on = localStorage.getItem('etog_'+key)==='true' || (initOn&&localStorage.getItem('etog_'+key)===null);
+  return `<div class="tog-row" onclick="engTogSet('${key}',this)">
+    <div><div class="tog-label">${label}</div><div class="tog-sub">${sub}</div></div>
+    <div class="tog${on?' on':''}"></div>
+  </div>`;
+}
+function engTogSet(key,row){
+  const tog=row.querySelector('.tog');
+  const on=tog.classList.toggle('on');
+  localStorage.setItem('etog_'+key,on);
+  if(key==='eng_dark'){document.documentElement.dataset.t=on?'dark':'';localStorage.setItem('eng_theme',on?'dark':'');}
+  toast(on?'เปิดใช้งาน':'ปิดใช้งาน');
+}
+
+// Override original render() to use new tabs
+const _origRender = render;
+window.render = function(){
+  renderEngTab();
+}
+
 </script>
 </body>
 </html>
