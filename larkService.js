@@ -98,7 +98,7 @@ async function listTickets(opts = {}) {
 async function getTicket(recordId) {
   try {
     const r = await axios.get(`${API_BASE}/api/tickets/${recordId}`, {
-      headers, timeout: 10000,
+      headers, timeout: 25000,
     });
     return mapTicket(r.data);
   } catch(e) {
@@ -126,7 +126,7 @@ async function createTicket(data) {
       line_user_id: data.lineUserId || null,
     };
     const r = await axios.post(`${API_BASE}/api/tickets`, payload, {
-      headers, timeout: 10000,
+      headers, timeout: 25000,
     });
     invalidateCache();
     const tickets = await listTickets({ noCache: true });
@@ -170,7 +170,7 @@ async function updateTicket(recordId, data) {
     }
 
     await axios.patch(`${API_BASE}/api/tickets/${recordId}`, payload, {
-      headers, timeout: 10000,
+      headers, timeout: 25000,
     });
     invalidateCache();
     return await getTicket(recordId);
