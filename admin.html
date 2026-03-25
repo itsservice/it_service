@@ -1537,22 +1537,40 @@ async function kDrop(e,colId){
 // ══════════════════════════════════════════
 // BRANCHES PAGE
 // ══════════════════════════════════════════
-let branches=[],brFilter={brand:'',q:''},brLoaded=false;
+let branches=[],brFilter={brand:'',q:''},brLoaded=false,brPage=0;
 const BR_BRANDS=["Dunkin'","Greyhound Cafe'","Greyhound Original","Au Bon Pain","Funky Fries","Another Hound Cafe'","Bean Hound"];
 
 async function loadBranches(){
   if(brLoaded)return;
-  document.getElementById('pg-branches').innerHTML='<div style="padding:12px">'+skeletonTable(8)+'</div>';
+  const pg=document.getElementById('pg-branches');
+  if(pg)pg.innerHTML='<div style="padding:12px">'+skeletonTable(8)+'</div>';
   try{
     const d=await api('/api/branches');
     if(d.ok&&d.branches){
       branches=[];
       Object.entries(d.branches).forEach(([brand,list])=>{
-        list.forEach(b=>branches.push({...b,brand}));
+        (list||[]).forEach(b=>branches.push({
+          id:b.id, code:b.code||'',
+          name_en:b.nameEn||b.name_en||'',
+          nameTh:b.nameTh||b.name_th||'',
+          brand, ip:b.ip||'', phone:b.phone||'',
+          location_lat:b.location_lat||null,
+          location_lng:b.location_lng||null,
+          location_name:b.location_name||'',
+          status:b.status||'active'
+        }));
       });
       brLoaded=true;
+      addNotif(`โหลดสาขาครบ ${branches.length} สาขาแล้ว`,'info');
+    } else {
+      const pg2=document.getElementById('pg-branches');
+      if(pg2)pg2.innerHTML=`<div style="padding:24px;text-align:center;color:var(--fg4)">ไม่สามารถโหลดสาขาได้: ${esc(d.error||'unknown')}</div>`;
     }
-  }catch(e){toast('Error loading branches: '+e.message);}
+  }catch(e){
+    toast('❌ โหลดสาขาไม่ได้: '+e.message);
+    const pg2=document.getElementById('pg-branches');
+    if(pg2)pg2.innerHTML=`<div style="padding:24px;text-align:center;color:var(--fg4)">Error: ${esc(e.message)}</div>`;
+  }
 }
 
 async function renderBranches(){
@@ -1563,7 +1581,11 @@ async function renderBranches(){
   // Filter
   let list=branches;
   if(brFilter.brand)list=list.filter(b=>b.brand===brFilter.brand);
-  if(brFilter.q){const q=brFilter.q.toLowerCase();list=list.filter(b=>(b.name_en||'').toLowerCase().includes(q)||(b.code||'').toLowerCase().includes(q)||(b.nameTh||'').toLowerCase().includes(q));}
+  if(brFilter.q&&brFilter.q!=='pending_only'){
+    const q=brFilter.q.toLowerCase();
+    list=list.filter(b=>(b.name_en||'').toLowerCase().includes(q)||(b.code||'').toLowerCase().includes(q)||(b.nameTh||'').toLowerCase().includes(q)||(b.brand||'').toLowerCase().includes(q));
+  }
+  if(brFilter.q==='pending_only')list=list.filter(b=>b.status==='pending');
   
   document.getElementById('pg-branches').innerHTML=`
     <div style="padding:12px">
@@ -1572,8 +1594,8 @@ async function renderBranches(){
         <button class="smb" onclick="brFilter.brand='';brFilter.q='pending_only';renderBranches()">ดูทั้งหมด</button>
       </div>`:''}
       <div class="br-filters">
-        <input class="br-search" placeholder="ค้นหาชื่อ / รหัสสาขา..." value="${esc(brFilter.q)}" oninput="brFilter.q=this.value;renderBranches()">
-        <select class="br-sel" onchange="brFilter.brand=this.value;renderBranches()">
+        <input class="br-search" placeholder="ค้นหาชื่อ / รหัสสาขา..." value="${esc(brFilter.q)}" oninput="brFilter.q=this.value;brPage=0;renderBranches()">
+        <select class="br-sel" onchange="brFilter.brand=this.value;brPage=0;renderBranches()">
           <option value="">ทุกแบรนด์</option>
           ${BR_BRANDS.map(b=>`<option value="${b}"${brFilter.brand===b?' selected':''}>${b}</option>`).join('')}
         </select>
@@ -1586,7 +1608,7 @@ async function renderBranches(){
             <th>Code</th><th>Brand</th><th>ชื่อสาขา</th>
             <th>Location</th><th>Status</th><th>Action</th>
           </tr></thead>
-          <tbody>${list.slice(0,100).map(b=>`
+          <tbody>${list.slice(brPage*100,(brPage+1)*100).map(b=>`
             <tr onclick="openBranchModal('${b.id}')">
               <td><span style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</span></td>
               <td><span style="font-size:11px">${esc(b.brand||'')}</span></td>
@@ -1600,7 +1622,11 @@ async function renderBranches(){
           </tbody>
         </table>
       </div>
-      ${list.length>100?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--fg4)">แสดง 100 จาก ${list.length} สาขา — กรองเพิ่มเติมเพื่อดูทั้งหมด</div>`:''}
+      ${list.length>100?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px">
+        <button class="smb" onclick="brPage=Math.max(0,brPage-1);renderBranches()" ${brPage===0?'disabled':''}>← ก่อนหน้า</button>
+        <span style="font-size:12px;color:var(--fg4)">หน้า ${brPage+1}/${Math.ceil(list.length/100)} (${list.length} สาขา)</span>
+        <button class="smb" onclick="brPage=Math.min(Math.ceil(list.length/100)-1,brPage+1);renderBranches()" ${brPage>=Math.ceil(list.length/100)-1?'disabled':''}>ถัดไป →</button>
+      </div>`:''}
     </div>`;
 }
 
