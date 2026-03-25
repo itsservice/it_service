@@ -142,16 +142,40 @@ a{color:inherit;text-decoration:none}
 .tl-pop{animation:tlpop .35s var(--ease)}
 @keyframes tlpop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
-.bpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:14px}
-.bpick-c{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .25s}
-.bpick-c:hover{border-color:var(--border2);transform:translateY(-1px)}
-.bpick-c.sel{border-color:var(--fg);background:var(--bg2)}
-.bp-prefix{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:2px}
-.bp-name{font-family:var(--display);font-size:14px;font-weight:700;color:var(--fg);letter-spacing:-.02em}
+.bpick{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;justify-content:center}
+.bc-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.bc{position:relative;width:88px;height:88px;border-radius:16px;overflow:hidden;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.bc .dw,.bc .dw2{position:absolute;inset:0;border-radius:16px;transform:translateX(-115%) skewX(-10deg);transition:transform .45s cubic-bezier(.4,0,.15,1);z-index:2}
+.bc .dw2{opacity:.6;transition-delay:.07s;z-index:3}
+.bc:hover .dw,.bc.tapped .dw{transform:translateX(0) skewX(0deg)}
+.bc:hover .dw2,.bc.tapped .dw2{transform:translateX(0) skewX(0deg)}
+.bc .t-abbr{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:rgba(255,255,255,.75);transition:opacity .18s,transform .28s;pointer-events:none;letter-spacing:.02em}
+.bc:hover .t-abbr,.bc.tapped .t-abbr{opacity:0;transform:translateX(10px)}
+.bc .t-full{position:absolute;inset:0;z-index:11;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;text-align:center;line-height:1.3;padding:8px;opacity:0;transition:opacity .18s .38s;pointer-events:none}
+.bc:hover .t-full,.bc.tapped .t-full{opacity:1}
+.bc-label{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--fg4);text-transform:uppercase}
 
 .empty{text-align:center;padding:20px;color:var(--fg4);font-size:13px}
 .toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
 @media(max-width:640px){.g2{grid-template-columns:1fr}.wrap{padding:10px 10px 40px}}
+
+/* ── SKELETON ── */
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:1200px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+.sk-item{padding:10px;margin-bottom:4px;display:flex;flex-direction:column;gap:5px}
+.sk-line{height:12px;margin:0}.sk-line.w60{width:60%}.sk-line.w80{width:80%}.sk-line.w40{width:40%;height:9px}
+
+/* ── ACCORDION (track FAQ) ── */
+.acc-list{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+.acc-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.acc-item.open{border-color:var(--border2)}
+.acc-head{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;cursor:pointer;background:var(--card);transition:background .2s;user-select:none}
+.acc-head:hover{background:var(--bg2)}
+.acc-q{font-size:13px;font-weight:600;color:var(--fg)}
+.acc-ic{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--fg3);transition:transform .25s,background .2s,color .2s;flex-shrink:0}
+.acc-item.open .acc-ic{transform:rotate(45deg);background:var(--fg);color:var(--bg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s;background:var(--bg2);padding:0 14px;font-size:12px;color:var(--fg3);line-height:1.7}
+.acc-item.open .acc-body{max-height:200px;padding:10px 14px}
 </style>
 </head>
 <body>
@@ -202,11 +226,13 @@ a{color:inherit;text-decoration:none}
 <script>
 // ══ CONSTANTS ══════════════════════════════════════════════
 const BRANDS=[
-  {s:'dunkin',n:"Dunkin'",p:'GD'},
-  {s:'greyhound-cafe',n:'Greyhound Cafe',p:'GH'},
-  {s:'greyhound-original',n:'Greyhound Original',p:'GO'},
-  {s:'au-bon-pain',n:'Au Bon Pain',p:'ABP'},
-  {s:'funky-fries',n:'Funky Fries',p:'FF'}
+  {s:'dunkin',         n:"Dunkin'",           p:'GD',  c1:'#FF6B00',c2:'#E91E8C',tc:'#ffffff'},
+  {s:'greyhound-cafe', n:"Greyhound Cafe'",    p:'GHC', c1:'#1A1A1A',c2:'#3d3d3d',tc:'#ffffff'},
+  {s:'greyhound-original',n:'Greyhound Original',p:'GO',c1:'#6B6B6B',c2:'#9a9a9a',tc:'#ffffff'},
+  {s:'au-bon-pain',    n:'Au Bon Pain',        p:'ABP', c1:'#F5C518',c2:'#e8b000',tc:'#1a1000'},
+  {s:'funky-fries',    n:'Funky Fries',        p:'FF',  c1:'#1B3F8B',c2:'#F5A623',tc:'#ffffff'},
+  {s:'another-hound',  n:"Another Hound Cafe'",p:'AHC', c1:'#0D2B23',c2:'#D4B896',tc:'#ffffff'},
+  {s:'bean-hound',     n:'Bean Hound',         p:'BE',  c1:'#C8C0B8',c2:'#2A2A2A',tc:'#ffffff'},
 ];
 const CATS=[
   'งานระบบไฟฟ้า/แสงสว่าง','งานระบบประปาและสุขาภิบาล','เครื่องทำกาแฟ/เครื่องบดกาแฟ',
@@ -305,7 +331,36 @@ function toggleLang(){
   lang=lang==='th'?'en':'th';
   localStorage.setItem('rep_lang',lang);
   document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
-  document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
+  
+// ── FAQ ACCORDION in track page ──
+function renderTrackFAQ(){
+  const faqEl = document.getElementById('track-faq');
+  if(!faqEl)return;
+  const isEn = document.documentElement.lang==='en'||document.getElementById('btn-lang')?.textContent==='TH';
+  const faqs = isEn ? [
+    {q:'What is a Ticket ID?', a:'A unique identifier automatically generated when you submit a ticket, e.g. GD-00001. Use it to track your repair status.'},
+    {q:'How long does repair take?', a:'Standard SLA is 7 business days. Urgent cases may be prioritized by admin.'},
+    {q:'What does each status mean?', a:'รอดำเนินการ = Waiting · อยู่ระหว่างดำเนินการ = In Progress · ตรวจงาน = Under Review · เสร็จสิ้น = Completed'},
+  ] : [
+    {q:'Ticket ID คืออะไร?', a:'หมายเลขอ้างอิงที่ระบบสร้างให้อัตโนมัติเมื่อส่งรายงาน เช่น GD-00001 ใช้เพื่อติดตามสถานะการซ่อม'},
+    {q:'งานซ่อมใช้เวลานานแค่ไหน?', a:'SLA มาตรฐานคือ 7 วันทำการ กรณีเร่งด่วน Admin สามารถจัดลำดับความสำคัญได้'},
+    {q:'แต่ละสถานะหมายความว่าอะไร?', a:'รอดำเนินการ = รอรับงาน · อยู่ระหว่างดำเนินการ = ช่างกำลังซ่อม · ตรวจงาน = ผู้ดูแลตรวจสอบ · เสร็จสิ้น = ซ่อมเสร็จแล้ว'},
+    {q:'ถ้ายังไม่ได้รับการติดต่อทำอย่างไร?', a:'ตรวจสอบสถานะด้วย Ticket ID ก่อน หากเกิน SLA กรุณาแจ้ง Admin โดยตรง'},
+  ];
+  faqEl.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:8px">คำถามที่พบบ่อย / FAQ</div>
+    <div class="acc-list">
+      ${faqs.map(f=>`
+        <div class="acc-item">
+          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+            <span class="acc-q">${f.q}</span><span class="acc-ic">+</span>
+          </div>
+          <div class="acc-body">${f.a}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
   applyLang();
   renderForm();
   renderTrack();
@@ -372,9 +427,14 @@ function renderForm(){
       <div class="fcard">
         <div style="text-align:center;margin-bottom:10px;font-size:13px;color:var(--fg3)">${l.selectBrand}</div>
         <div class="bpick">
-          ${BRANDS.map(b=>`<div class="bpick-c" onclick="setBrand(BRANDS.find(x=>x.s==='${b.s}'))">
-            <div class="bp-prefix">${b.p}</div>
-            <div class="bp-name">${b.n}</div>
+          ${BRANDS.map(b=>`<div class="bc-wrap">
+            <div class="bc" onclick="setBrand(BRANDS.find(x=>x.s==='${b.s}'))" ontouchstart="this.classList.add('tapped');setTimeout(()=>this.classList.remove('tapped'),1600)">
+              <div class="dw" style="background:${b.c1}"></div>
+              <div class="dw2" style="background:${b.c2}"></div>
+              <div class="t-abbr">${b.p}</div>
+              <div class="t-full" style="color:${b.tc}">${b.n.replace("'","&#39;")}</div>
+            </div>
+            <div class="bc-label">${b.p}</div>
           </div>`).join('')}
         </div>
       </div>`;
@@ -478,8 +538,17 @@ function renderSheetList(q){
   const el=document.getElementById('sheet-list');
   if(!el)return;
   if(!list.length){
-    const msg=Object.keys(allBranches).length===0?l.loadingBranches:l.noBranches;
-    el.innerHTML=`<div class="sheet-empty">${msg}</div>`;
+    if(Object.keys(allBranches).length===0){
+      // Show skeleton while loading
+      el.innerHTML=Array(6).fill(0).map(()=>`
+        <div class="sk-item">
+          <div class="sk sk-line w40"></div>
+          <div class="sk sk-line w80"></div>
+          <div class="sk sk-line w60"></div>
+        </div>`).join('');
+    } else {
+      el.innerHTML=`<div class="sheet-empty">${l.noBranches}</div>`;
+    }
     return;
   }
   el.innerHTML=list.map(b=>`
@@ -856,6 +925,35 @@ document.getElementById('btn-theme').textContent=document.documentElement.datase
 // restore lang
 lang=localStorage.getItem('rep_lang')||'th';
 document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
+
+// ── FAQ ACCORDION in track page ──
+function renderTrackFAQ(){
+  const faqEl = document.getElementById('track-faq');
+  if(!faqEl)return;
+  const isEn = document.documentElement.lang==='en'||document.getElementById('btn-lang')?.textContent==='TH';
+  const faqs = isEn ? [
+    {q:'What is a Ticket ID?', a:'A unique identifier automatically generated when you submit a ticket, e.g. GD-00001. Use it to track your repair status.'},
+    {q:'How long does repair take?', a:'Standard SLA is 7 business days. Urgent cases may be prioritized by admin.'},
+    {q:'What does each status mean?', a:'รอดำเนินการ = Waiting · อยู่ระหว่างดำเนินการ = In Progress · ตรวจงาน = Under Review · เสร็จสิ้น = Completed'},
+  ] : [
+    {q:'Ticket ID คืออะไร?', a:'หมายเลขอ้างอิงที่ระบบสร้างให้อัตโนมัติเมื่อส่งรายงาน เช่น GD-00001 ใช้เพื่อติดตามสถานะการซ่อม'},
+    {q:'งานซ่อมใช้เวลานานแค่ไหน?', a:'SLA มาตรฐานคือ 7 วันทำการ กรณีเร่งด่วน Admin สามารถจัดลำดับความสำคัญได้'},
+    {q:'แต่ละสถานะหมายความว่าอะไร?', a:'รอดำเนินการ = รอรับงาน · อยู่ระหว่างดำเนินการ = ช่างกำลังซ่อม · ตรวจงาน = ผู้ดูแลตรวจสอบ · เสร็จสิ้น = ซ่อมเสร็จแล้ว'},
+    {q:'ถ้ายังไม่ได้รับการติดต่อทำอย่างไร?', a:'ตรวจสอบสถานะด้วย Ticket ID ก่อน หากเกิน SLA กรุณาแจ้ง Admin โดยตรง'},
+  ];
+  faqEl.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:8px">คำถามที่พบบ่อย / FAQ</div>
+    <div class="acc-list">
+      ${faqs.map(f=>`
+        <div class="acc-item">
+          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+            <span class="acc-q">${f.q}</span><span class="acc-ic">+</span>
+          </div>
+          <div class="acc-body">${f.a}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
 document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
 applyLang();
 
