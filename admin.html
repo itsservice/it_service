@@ -504,12 +504,6 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
   <div class="s-head"><div class="s-logo">IT</div><div><div class="s-name" id="s-name">--</div><div class="s-role" id="s-role">--</div></div></div>
   <nav class="s-nav" id="s-nav"></nav>
   <div class="s-foot">
-    <!-- ROLE GUIDE BUTTON -->
-    <button onclick="openRoleGuide()" style="display:flex;align-items:center;justify-content:center;gap:6px;animation:beatFade 2s ease-in-out infinite" title="คู่มือ / Role Permissions">
-      <span style="font-size:14px;animation:shake 2s ease-in-out infinite">ⓘ</span>
-      <span>คู่มือ / Role</span>
-    </button>
-
     <!-- PREVIEW ROLE (superadmin only) -->
     <div id="preview-wrap" style="display:none;position:relative">
       <!-- Dropdown upward -->
@@ -574,7 +568,8 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
     <div class="status-dot offline" id="dot"></div>
     <button class="smb" id="btn-rf" onclick="doRefresh()">Refresh</button>
     <button class="smb" onclick="openCmd()" title="⌘K">⌘K</button>
-    <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน">
+    <button class="smb" id="lang-btn" onclick="togLang()" title="สลับภาษา">TH</button>
+    <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน" style="position:fixed;top:12px;right:12px;z-index:9990">
       🔔<span class="notif-badge" id="notif-badge">0</span>
     </button>
   </div>
@@ -598,7 +593,7 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 <div class="toast" id="toast"></div>
 
 <!-- NOTIFICATION DROPDOWN -->
-<div style="position:fixed;top:56px;right:12px;z-index:201" id="notif-wrap">
+<div style="position:fixed;top:56px;right:12px;z-index:9991" id="notif-wrap">
   <div class="notif-drop" id="notif-drop">
     <div class="notif-head"><span class="notif-title">การแจ้งเตือน</span><button class="notif-clear" onclick="clearNotifs()">ล้างทั้งหมด</button></div>
     <div class="notif-list" id="notif-list"><div class="notif-empty">ไม่มีการแจ้งเตือนใหม่</div></div>
@@ -960,7 +955,7 @@ async function initGPSMap(){
       <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
         <div style="font-family:var(--display);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">👷 รายชื่อช่าง</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">
-          ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>`
+          ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)&&u.active!==false).map(u=>`
           <div style="background:var(--bg2);border-radius:7px;padding:10px;font-size:13px">
             <div style="font-weight:700">${esc(u.name)}</div>
             <div style="font-size:11px;color:var(--fg4);margin-top:2px">${esc(u.brand||'-')}</div>
@@ -974,6 +969,13 @@ async function initGPSMap(){
 
   // มีข้อมูล GPS — วาง markers
   const bounds=[];
+  // A1: filter out deleted/inactive users
+  const activeGPS=d.locations.filter(loc=>{
+    const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name||u.username===loc.username);
+    return eng && eng.active!==false && eng.id;
+  });
+  d.locations=activeGPS;
+
   d.locations.forEach(loc=>{
     const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name);
     const name=loc.engineer_name||eng?.name||'?';
@@ -1135,36 +1137,11 @@ function rSystem(){
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">ระบบ</div>
-        ${makeTogRow('Dark Mode','ธีมสีเข้ม',document.documentElement.dataset.t==='dark','dark_mode')}
         ${makeTogRow('GPS Auto-attach','แนบ GPS location อัตโนมัติ',false,'gps_auto')}
         ${makeTogRow('SLA Reminder','แจ้งเตือนเมื่อใกล้ครบ SLA',true,'sla_remind')}
       </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">LINE Config</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${['admin','engineer','manager'].map(role=>`
-            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">${role} LINE ID</div>
-              <div style="display:flex;gap:6px">
-                <input id="line-${role}" style="flex:1;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--mono);font-size:12px;outline:none" placeholder="U... หรือ C...">
-                <button class="smb" onclick="testLine('${role}')" style="font-size:11px">Test</button>
-                <button class="smb" onclick="saveLine('${role}')" style="font-size:11px;background:var(--fg);color:var(--bg)">Save</button>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">FAQ / คู่มือ</div>
-        ${makeAccordion([
-          {q:'วิธีเพิ่ม engineer ใหม่',a:'ไปที่เมนู Users → กด Add User → กรอกข้อมูล เลือก role = engineer ระบุ brand ที่รับผิดชอบ'},
-          {q:'วิธีเพิ่ม LINE Group',a:'ไปที่เมนู System → กรอก Group ID ของ LINE Group (ขึ้นต้น C) → กด Test เพื่อตรวจสอบ'},
-          {q:'SLA คืออะไร',a:'Service Level Agreement — ระยะเวลาที่กำหนดให้แก้ไขปัญหา ค่า default = 7 วันทำการ'},
-          {q:'วิธีดู GPS location สาขา',a:'ไปที่ Branches → คลิกปุ่ม Map ข้างสาขา หรือเปิด GPS Map เพื่อดูแผนที่รวม'},
-        ])}
-      </div>
     </div>
   \``;
-  loadLineConfig();
 }
 async function loadLineConfig(){try{const d=await api('/api/line-config');if(d.ok){window._lineCfg=d.config||{};rSystem();}}catch(_){}}
 async function saveLineConfig(){
@@ -1194,11 +1171,17 @@ function rServer(){
       <div class="stat"><div class="stat-l">🎫 Tickets (RAM)</div><div class="stat-v" id="srv-tickets" style="font-size:22px">—</div></div>
     </div>
     <div class="crd" style="max-width:600px">
-      <div class="crd-h" style="display:flex;align-items:center;justify-content:space-between">
-        Activity Log (ล่าสุด)
-        <button class="smb" onclick="loadServerHealth()">🔄 รีเฟรช</button>
+      <div class="crd-h" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>Activity Log</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <input type="date" id="srv-from" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:11px" onchange="loadSrvLog()">
+          <span style="font-size:11px;color:var(--fg3)">ถึง</span>
+          <input type="date" id="srv-to" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:11px" onchange="loadSrvLog()">
+          <button class="smb" onclick="clearSrvFilter()">ทั้งหมด</button>
+          <button class="smb" onclick="loadSrvLog()">🔄 รีเฟรช</button>
+        </div>
       </div>
-      <div id="srv-log-list" style="padding:10px 14px;max-height:400px;overflow-y:auto">
+      <div id="srv-log-list" style="padding:10px 14px;max-height:500px;overflow-y:auto">
         <div style="color:var(--fg4);text-align:center;padding:20px">กดรีเฟรชเพื่อโหลด...</div>
       </div>
     </div>`;
@@ -1229,6 +1212,33 @@ async function loadServerHealth(){
       </div>`).join('');
     }else if(logEl){logEl.innerHTML='<div style="color:var(--fg4);text-align:center;padding:20px">ยังไม่มี log</div>';}
   }catch(_){}
+}
+
+async function loadSrvLog(){
+  const from=document.getElementById('srv-from')?.value;
+  const to=document.getElementById('srv-to')?.value;
+  let url='/api/logs?limit=200';
+  if(from)url+=`&from=${from}`;
+  if(to)url+=`&to=${to}T23:59:59`;
+  const logEl=document.getElementById('srv-log-list');
+  if(logEl)logEl.innerHTML='<div style="color:var(--fg4);text-align:center;padding:20px">กำลังโหลด...</div>';
+  try{
+    const d=await api(url);
+    if(logEl&&d.ok&&d.logs?.length){
+      logEl.innerHTML=d.logs.map(l=>`<div class="log-i">
+        <div class="log-dot" style="background:${l.action==='login'?'var(--green)':l.action?.includes('delete')?'var(--red)':'var(--fg3)'}"></div>
+        <div class="log-b">
+          <div class="log-a" style="font-size:13px">${esc(l.action||'-')} ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4)">${esc(l.ticketLabel)}</span>`:''}</div>
+          <div class="log-m"><span>👤 ${esc(l.user?.name||'System')}</span><span>🕐 ${esc(l.displayTs||l.ts||'')}</span></div>
+          ${l.detail?`<div style="font-size:12px;color:var(--fg3)">${esc(l.detail)}</div>`:''}
+        </div>
+      </div>`).join('');
+    }else if(logEl){logEl.innerHTML='<div style="color:var(--fg4);text-align:center;padding:20px">ไม่พบ log ในช่วงเวลาที่เลือก</div>';}
+  }catch(e){if(logEl)logEl.innerHTML='<div style="color:var(--fg4);text-align:center;padding:20px">Error: '+esc(e.message)+'</div>';}
+}
+function clearSrvFilter(){
+  const f=document.getElementById('srv-from');const t=document.getElementById('srv-to');
+  if(f)f.value='';if(t)t.value='';loadSrvLog();
 }
 
 // ═══ DRAWER ═══
@@ -1693,11 +1703,16 @@ async function renderBranches(){
 }
 
 function openBranchMap(lat,lng,name){
-  navTo('gps');
-  setTimeout(()=>{
-    const map=document.getElementById('map-frame');
-    if(map)map.src=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  },300);
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const url=`https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${lat},${lng}&travelmode=driving`;
+      window.open(url,'_blank');
+    },()=>{
+      window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,'_blank');
+    });
+  } else {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,'_blank');
+  }
 }
 
 function openBranchModal(id){
@@ -1806,6 +1821,45 @@ function makeAccordion(items){
       </div>
       <div class="acc-body">${it.a}</div>
     </div>`).join('')+'</div>';
+}
+
+
+// ══════════════════════════════════════════
+// TH/EN LANGUAGE TOGGLE
+// ══════════════════════════════════════════
+let _lang='th';
+const LANG={
+  th:{
+    'Overview':'Overview','All Tickets':'All Tickets','Users':'Users',
+    'Activity Log':'Activity Log','GPS Map':'GPS Map','LINE Groups':'LINE Groups',
+    'System Settings':'System Settings','Server Logs':'Server Logs','Branches':'Branches',
+    'Refresh':'Refresh','Add User':'+ Add User','btn-rf':'Refresh',
+    'pg-title-dash':'ภาพรวม','pg-title-tickets':'ตั๋วทั้งหมด',
+    'notif-title-txt':'การแจ้งเตือน'
+  },
+  en:{
+    'Overview':'Overview','All Tickets':'All Tickets','Users':'Users',
+    'Activity Log':'Activity Log','GPS Map':'GPS Map','LINE Groups':'LINE Groups',
+    'System Settings':'System Settings','Server Logs':'Server Logs','Branches':'Branches',
+    'Refresh':'Refresh','Add User':'+ Add User','btn-rf':'Refresh',
+    'pg-title-dash':'Overview','pg-title-tickets':'All Tickets',
+    'notif-title-txt':'Notifications'
+  }
+};
+function togLang(){
+  _lang=_lang==='th'?'en':'th';
+  const btn=document.getElementById('lang-btn');
+  if(btn)btn.textContent=_lang==='th'?'TH':'EN';
+  // Update page names
+  const PG_TH={dash:'ภาพรวม',tickets:'ตั๋วทั้งหมด',users:'ผู้ใช้งาน',log:'บันทึกกิจกรรม',gps:'GPS Map',line:'LINE Groups',system:'ตั้งค่าระบบ',server:'Server Logs',branches:'สาขา'};
+  const PG_EN={dash:'Overview',tickets:'All Tickets',users:'Users',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
+  const map=_lang==='th'?PG_TH:PG_EN;
+  window._PG_OVERRIDE=map;
+  // Re-render current page title
+  const curTitle=map[pg];
+  if(curTitle){const t=document.getElementById('top-t');if(t)t.textContent=curTitle;}
+  // Re-render to pick up label changes
+  render();
 }
 
 // ══════════════════════════════════════════
