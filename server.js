@@ -48,15 +48,37 @@ server.timeout          = 30_000; // request timeout 30s
 server.keepAliveTimeout = 65_000; // ต้องมากกว่า load balancer Render (60s)
 server.headersTimeout   = 66_000; // ต้องมากกว่า keepAliveTimeout
 
-// ── Memory watchdog: exit ถ้า heap เกิน 400MB ────────────────────
-// Render free tier มี RAM ~512MB — exit แล้ว Render จะ restart เอง
+// ── Memory watchdog (ทุก 30 วินาที) ─────────────────────────────
+// Render free tier = 512MB RAM
+// ลดจาก 400MB → 250MB เพื่อให้ graceful restart ก่อน Render OOM kill
 setInterval(() => {
-  const mb = process.memoryUsage().heapUsed / 1024 / 1024;
-  if (mb > 400) {
-    console.error(`[Memory] Heap ${mb.toFixed(0)}MB — exiting for auto-restart`);
+  const mem = process.memoryUsage();
+  const heapMB = mem.heapUsed / 1024 / 1024;
+  const rssMB  = mem.rss / 1024 / 1024;
+
+  // Log memory ทุก 5 นาที
+  const sec = Math.floor(process.uptime());
+  if (sec % 300 < 30) {
+    console.log(`[Memory] heap=${heapMB.toFixed(0)}MB rss=${rssMB.toFixed(0)}MB uptime=${sec}s`);
+  }
+
+  // GC hint ถ้า heap เกิน 150MB
+  if (heapMB > 150 && global.gc) {
+    try { global.gc(); } catch(_) {}
+  }
+
+  // Graceful exit ถ้า heap เกิน 250MB
+  if (heapMB > 250) {
+    console.error(`[Memory] Heap ${heapMB.toFixed(0)}MB > 250MB — exiting for auto-restart`);
     process.exit(1);
   }
-}, 60_000);
+
+  // Safety net: exit ถ้า RSS (physical memory) เกิน 450MB
+  if (rssMB > 450) {
+    console.error(`[Memory] RSS ${rssMB.toFixed(0)}MB > 450MB — emergency exit`);
+    process.exit(1);
+  }
+}, 30_000);
 
 // ── Graceful shutdown ─────────────────────────────────────────────
 function shutdown(signal) {
@@ -71,5 +93,11 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
 
 // ── Error handlers กัน crash ─────────────────────────────────────
-process.on('uncaughtException',  (err)    => console.error('[uncaughtException]',  err.message));
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err.message);
+  if (err.message?.includes('ENOMEM') || err.message?.includes('allocation')) {
+    console.error('[FATAL] Memory allocation error — shutting down');
+    process.exit(1);
+  }
+});
 process.on('unhandledRejection', (reason) => console.error('[unhandledRejection]', reason));
