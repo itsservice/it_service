@@ -178,6 +178,44 @@ app.get('/api/branches', async (req, res) => {
 });
 
 
+
+// POST /api/upload — proxy to FastAPI upload
+app.post('/api/upload', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const FormData = require('form-data');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    // pipe multipart directly
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', async () => {
+      try {
+        const r = await axios.post(`${REPAIR_URL}/api/upload`, Buffer.concat(chunks), {
+          headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': req.headers['content-type'] },
+          timeout: 30000
+        });
+        res.json(r.data);
+      } catch(e) { res.json({ ok: false, error: e.message }); }
+    });
+  } catch(e) { res.json({ ok: false, error: e.message }); }
+});
+
+// GET /uploads/:filename — proxy image from FastAPI
+app.get('/uploads/:filename', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const r = await axios.get(`${REPAIR_URL}/uploads/${req.params.filename}`, {
+      headers: { 'X-API-Key': REPAIR_KEY },
+      responseType: 'stream', timeout: 15000
+    });
+    res.setHeader('Content-Type', r.headers['content-type'] || 'image/jpeg');
+    r.data.pipe(res);
+  } catch(e) { res.status(404).json({ error: 'Not found' }); }
+});
+
 // PATCH /api/users/:id/preference — save UI preference
 app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
   try {
