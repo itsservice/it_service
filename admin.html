@@ -220,6 +220,17 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 .rg-header{display:flex;align-items:center;gap:10px;margin-bottom:20px}
 .rg-icon{font-size:24px;animation:shake 2s ease-in-out infinite}
 .rg-title{font-family:var(--display);font-size:18px;font-weight:800;flex:1}
+.rg-card{flex:0 0 108px;border:0.5px solid var(--border);border-radius:10px;overflow:hidden}
+.rg-card-head{height:68px;padding:10px 8px;text-align:center;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.rg-card-sub{font-size:10px;color:var(--fg3);line-height:1.3;text-align:center}
+.rg-cell{height:44px;display:flex;align-items:center;justify-content:center;border-bottom:0.5px solid var(--border);padding:3px 6px;text-align:center}
+.rg-cell:last-child{border-bottom:none}
+.rg-feat-item{height:44px;display:flex;align-items:center;font-size:11px;color:var(--fg3);padding:0 4px;border-bottom:0.5px solid var(--border)}
+.rg-feat-item:last-child{border-bottom:none}
+.rg-yes{font-size:13px;color:#16a34a;font-weight:700;text-align:center}
+.rg-no{font-size:12px;color:#dc2626;font-weight:500;text-align:center;line-height:1.3}
+.rg-warn{font-size:10px;color:#d97706;font-weight:500;text-align:center;line-height:1.3}
+.rg-info{font-size:10px;color:#2563eb;font-weight:500;text-align:center}
 .rg-close{background:#f0f0f0;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
 .rg-close:hover{background:#e0e0e0}
 .rg-table{width:100%;border-collapse:collapse;font-size:12px}
@@ -371,68 +382,108 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 <div id="role-guide-overlay" onclick="closeRoleGuide(event)">
   <div id="role-guide-box">
     <div class="rg-header">
-      <span class="rg-icon">ⓘ</span>
+      <span class="rg-icon">📖</span>
       <div class="rg-title">คู่มือ Role Permissions</div>
       <button class="rg-close" onclick="closeRoleGuideBtn()">✕</button>
     </div>
-    <table class="rg-table">
-      <thead>
-        <tr>
-          <th>Role</th><th>ชื่อตำแหน่ง</th>
-          <th>Admin</th><th>Engineer</th>
-          <th>ดู Ticket</th><th>แก้ไข Ticket</th>
-          <th>Users</th><th>GPS Map</th><th>รหัสผ่าน</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#fef3c7;color:#92400e">superadmin</span></td>
-          <td>Dev / System Admin</td>
-          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
-          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
-          <td class="rg-yes">✓</td><td class="rg-yes">✓</td><td class="rg-yes">✓</td>
-        </tr>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#ede9fe;color:#5b21b6">manager</span></td>
-          <td>Manager / Operation</td>
-          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
-          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
-          <td class="rg-yes">✓</td><td class="rg-yes">✓</td>
-          <td class="rg-no">✗ ดูได้อย่างเดียว</td>
-        </tr>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#dbeafe;color:#1e40af">admin</span></td>
-          <td>Super Admin / Admin</td>
-          <td class="rg-yes">✓</td><td class="rg-no">✗</td>
-          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓</td>
-          <td class="rg-view">ดู+แก้ไข</td><td class="rg-view">ดูเท่านั้น</td>
-          <td class="rg-no">✗</td>
-        </tr>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#d1fae5;color:#065f46">lead_engineer</span></td>
-          <td>Lead Engineer</td>
-          <td class="rg-no">✗</td><td class="rg-yes">✓</td>
-          <td class="rg-yes">ทั้งหมด</td><td class="rg-yes">✓ รับงานใครก็ได้</td>
-          <td class="rg-no">✗</td><td class="rg-no">✗ ซ่อน</td><td class="rg-no">✗</td>
-        </tr>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#e0f2fe;color:#0c4a6e">engineer</span></td>
-          <td>Engineer / IT Support</td>
-          <td class="rg-no">✗</td><td class="rg-yes">✓</td>
-          <td class="rg-view">เฉพาะงานตัวเอง</td><td class="rg-yes">✓</td>
-          <td class="rg-no">✗</td><td class="rg-no">✗ ซ่อน</td><td class="rg-no">✗</td>
-        </tr>
-        <tr>
-          <td><span class="rg-role-badge" style="background:#f1f5f9;color:#475569">guest</span></td>
-          <td>ผู้เยี่ยมชม / Demo</td>
-          <td class="rg-view">ดูเท่านั้น</td><td class="rg-view">ดูเท่านั้น</td>
-          <td class="rg-yes">ทั้งหมด</td><td class="rg-no">✗ ปุ่ม lock</td>
-          <td class="rg-no">✗</td><td class="rg-view">ดูเท่านั้น</td><td class="rg-no">✗</td>
-        </tr>
-      </tbody>
-    </table>
-    <div style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px;font-size:11.5px;color:#888;line-height:1.7">
-      <b style="color:#333">หมายเหตุ:</b> ✓ = ทำได้เต็มที่ &nbsp;|&nbsp; ✗ = ทำไม่ได้ &nbsp;|&nbsp; ดูเท่านั้น = เห็นได้แต่กดไม่ได้
+    <div style="overflow-x:auto;padding-bottom:6px">
+      <div style="display:flex;gap:8px;min-width:max-content">
+        <div style="flex:0 0 100px">
+          <div style="height:68px"></div>
+          <div class="rg-feat-item">ชื่อตำแหน่ง</div>
+          <div class="rg-feat-item">Admin Panel</div>
+          <div class="rg-feat-item">Engineer Portal</div>
+          <div class="rg-feat-item">ดู Ticket</div>
+          <div class="rg-feat-item">แก้ไข Ticket</div>
+          <div class="rg-feat-item">จัดการ Users</div>
+          <div class="rg-feat-item">GPS Map</div>
+          <div class="rg-feat-item">รหัสผ่าน</div>
+        </div>
+        <div class="rg-card" style="border-color:#7c3aed">
+          <div class="rg-card-head" style="background:#f5f3ff">
+            <span class="rg-role-badge" style="background:#ede9fe;color:#6d28d9">superadmin</span>
+            <div class="rg-card-sub">Dev / System Admin</div>
+          </div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-info">ทั้งหมด</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+        </div>
+        <div class="rg-card">
+          <div class="rg-card-head">
+            <span class="rg-role-badge" style="background:#dbeafe;color:#1d4ed8">manager</span>
+            <div class="rg-card-sub">Manager / Operation</div>
+          </div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-info">ทั้งหมด</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-no" style="font-size:10px">✗ ดูได้<br>อย่างเดียว</span></div>
+        </div>
+        <div class="rg-card">
+          <div class="rg-card-head">
+            <span class="rg-role-badge" style="background:#fff7ed;color:#c2410c">admin</span>
+            <div class="rg-card-sub">Super Admin / Admin</div>
+          </div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-info">ทั้งหมด</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-warn">ดู+แก้ไข</span></div>
+          <div class="rg-cell"><span class="rg-warn">ดูเท่านั้น</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+        </div>
+        <div class="rg-card">
+          <div class="rg-card-head">
+            <span class="rg-role-badge" style="background:#f0fdf4;color:#15803d">lead_engineer</span>
+            <div class="rg-card-sub">Lead Engineer</div>
+          </div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-info">ทั้งหมด</span></div>
+          <div class="rg-cell"><span class="rg-yes" style="font-size:10px">✓ รับงาน<br>ใครก็ได้</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-no">✗ ซ่อน</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+        </div>
+        <div class="rg-card">
+          <div class="rg-card-head">
+            <span class="rg-role-badge" style="background:#ecfdf5;color:#059669">engineer</span>
+            <div class="rg-card-sub">Engineer / IT Support</div>
+          </div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-warn">เฉพาะงาน<br>ตัวเอง</span></div>
+          <div class="rg-cell"><span class="rg-yes">✓</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-no">✗ ซ่อน</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+        </div>
+        <div class="rg-card">
+          <div class="rg-card-head">
+            <span class="rg-role-badge" style="background:#f9fafb;color:#6b7280;border:0.5px solid #e5e7eb">guest</span>
+            <div class="rg-card-sub">ผู้เยี่ยมชม / Demo</div>
+          </div>
+          <div class="rg-cell"><span class="rg-warn">ดูเท่านั้น</span></div>
+          <div class="rg-cell"><span class="rg-warn">ดูเท่านั้น</span></div>
+          <div class="rg-cell"><span class="rg-info">ทั้งหมด</span></div>
+          <div class="rg-cell"><span class="rg-no">✗ ปุ่ม lock</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+          <div class="rg-cell"><span class="rg-warn">ดูเท่านั้น</span></div>
+          <div class="rg-cell"><span class="rg-no">✗</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:#f5f5f3;border-radius:8px;font-size:11px;color:#888;line-height:1.8">
+      <b style="color:#333">หมายเหตุ:</b>&nbsp;
+      <span style="color:#16a34a">✓ ทำได้เต็มที่</span> &nbsp;|&nbsp;
+      <span style="color:#dc2626">✗ ทำไม่ได้</span> &nbsp;|&nbsp;
+      <span style="color:#d97706">ดูเท่านั้น = เห็นได้แต่กดไม่ได้</span>
     </div>
   </div>
 </div>
@@ -834,8 +885,8 @@ function rUsers(){
   const el=document.getElementById('pg-users');
   if(!users.length){el.innerHTML='<div class="empty"><div class="empty-t">No users</div><button class="empty-b" onclick="loadUsers().then(rUsers)">Reload</button></div>';return;}
   const sorted=[...users].sort((a,b)=>({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[a.role]||9)-({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[b.role]||9));
-  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">Users (${users.length})</div><button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button></div>
-  <div class="ugrid">${sorted.map(u=>`<div class="ucard"><div class="uc-h"><div class="uc-av">${(u.name||'?').charAt(0).toUpperCase()}</div><div><div class="uc-n">${esc(u.name)}</div><div class="uc-u">@${esc(u.username)}</div></div></div><div class="uc-meta"><span class="rbdg">${u.role}</span><span style="font-size:10px;color:var(--fg4)">${esc(u.brand==='ALL'?'All brands':u.brand||'-')}</span>${u.line_user_id?'<span style="font-size:10px;color:var(--fg4)">LINE</span>':''}</div><div class="uc-btns"><button class="uc-b" onclick="openEditUser('${esc(u.id)}')">Edit</button>${u.id!==AUTH.user.id?`<button class="uc-b" onclick="delUser('${esc(u.id)}','${esc(u.name)}')">Delete</button>`:''}</div></div>`).join('')}</div>`;
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users (${users.length})</div><button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button><button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button></div>
+  <div class="ugrid">${sorted.map(u=>`<div class="ucard"><div class="uc-h"><div class="uc-av">${(u.name||'?').charAt(0).toUpperCase()}</div><div><div class="uc-n">${esc(u.name)}</div><div class="uc-u">@${esc(u.username)}</div></div></div><div class="uc-meta"><span class="rbdg">${u.role}</span><span style="font-size:10px;color:var(--fg4)">${esc(u.brand==='ALL'?'All brands':u.brand||'-')}</span>${u.line_user_id?'<span style="font-size:10px;color:var(--fg4)">LINE</span>':''}</div><div class="uc-btns"><button class="uc-b" onclick="openEditUser('${esc(u.id)}')">Edit</button>${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:''}</div></div>`).join('')}</div>`;
 }
 
 function rLog(){
@@ -1226,7 +1277,18 @@ function toggleEye(id,btn){const i=document.getElementById(id);const show=i.type
 function uForm(u){const BR=["ALL","Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];const ROLES=['superadmin','admin','manager','lead_engineer','engineer'];return`<div class="fg"><label>Name</label><input id="uf-n" value="${esc(u.name||'')}"/></div><div class="fg"><label>Username</label><input id="uf-u" value="${esc(u.username||'')}" ${u.id?'disabled':''}/></div>${u.id?`<div class="fg"><label>Current Password</label><div style="position:relative"><input id="uf-cur" type="password" value="${esc(u.password_plain||'')}" readonly style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-cur',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div>`:''}<div class="fg"><label>${u.id?'New Password (blank = no change)':'Password'}</label><div style="position:relative"><input id="uf-p" type="password" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-p',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><div class="fg"><label>Role</label><select class="sel" id="uf-r" style="width:100%">${ROLES.map(r=>`<option${u.role===r?' selected':''}>${r}</option>`).join('')}</select></div><div class="fg"><label>Brand</label><select class="sel" id="uf-b" style="width:100%">${BR.map(b=>`<option${u.brand===b?' selected':''}>${esc(b)}</option>`).join('')}</select></div></div><div class="fg"><label>LINE User ID</label><input id="uf-line" value="${esc(u.line_user_id||'')}" placeholder="For personal LINE notifications"/></div><div class="fg"><label>Phone</label><input id="uf-ph" value="${esc(u.phone||'')}" placeholder="08x-xxx-xxxx"/></div>`;}
 async function doAddUser(){const n=document.getElementById('uf-n').value.trim(),u=document.getElementById('uf-u').value.trim(),p=document.getElementById('uf-p').value;if(!n||!u||!p)return toast('Fill all required fields');try{const d=await api('/api/users',{method:'POST',body:JSON.stringify({name:n,username:u,password:p,role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()})});if(!d.ok)throw new Error(d.error);users.push(d.user);closeMod();render();toast('User added');}catch(e){toast('Error: '+e.message);}}
 async function doEditUser(id){const data={name:document.getElementById('uf-n').value.trim(),role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()};const p=document.getElementById('uf-p').value;if(p)data.password=p;try{const d=await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify(data)});if(!d.ok)throw new Error(d.error);users=users.map(u=>u.id===id?{...u,...d.user}:u);closeMod();render();toast('Saved');}catch(e){toast('Error: '+e.message);}}
-async function delUser(id,name){if(!confirm('Delete user '+name+'?'))return;try{const d=await api('/api/users/'+id,{method:'DELETE'});if(!d.ok)throw new Error(d.error);await loadUsers();render();toast('Deleted');}catch(e){toast('Error: '+e.message);}}
+function confirmDelUser(id,name){
+  window._pendingDelId=id;window._pendingDelName=name;
+  document.getElementById('del-confirm-name').textContent=name;
+  const _pb=document.getElementById('del-confirm-bg');_pb.style.display='flex';_pb.style.alignItems='center';_pb.style.justifyContent='center';
+}
+async function doDelUser(){
+  const id=window._pendingDelId;
+  document.getElementById('del-confirm-bg').style.display='none';
+  try{const d=await api('/api/users/'+id,{method:'DELETE'});if(!d.ok)throw new Error(d.error);await loadUsers();render();toast('ลบผู้ใช้งานแล้ว');}
+  catch(e){toast('Error: '+e.message);}
+}
+async function delUser(id,name){confirmDelUser(id,name);}
 
 // ══ FEATURE 1 — Role Guide ══
 function openRoleGuide(){
@@ -1759,5 +1821,19 @@ window.toast=function(m){
 const _origSSE=window.startSSE;
 
 </script>
+
+<!-- DELETE CONFIRM POPUP -->
+<div id="del-confirm-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:280px;text-align:center;animation:up .25s var(--ease)">
+    <div style="width:44px;height:44px;border-radius:50%;background:#fff1f2;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px">&#128465;</div>
+    <div style="font-size:15px;font-weight:700;color:var(--fg);margin-bottom:6px">&#3621;&#3610;&#3612;&#3641;&#3657;&#3651;&#3594;&#3657;&#3591;&#3634;&#3609;</div>
+    <div style="font-size:13px;color:var(--fg3);margin-bottom:20px;line-height:1.5">&#3588;&#3640;&#3603;&#3605;&#3657;&#3629;&#3591;&#3585;&#3634;&#3619;&#3621;&#3610; <b style="color:var(--fg)" id="del-confirm-name"></b> &#3629;&#3629;&#3585;&#3592;&#3634;&#3585;&#3619;&#3632;&#3610;&#3610;?<br><span style="font-size:11px;color:var(--fg4)">&#3652;&#3617;&#3656;&#3626;&#3634;&#3617;&#3634;&#3619;&#3606;&#3585;&#3641;&#3657;&#3588;&#3639;&#3609;&#3652;&#3604;&#3657;</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="smb" style="flex:1;padding:9px" onclick="document.getElementById('del-confirm-bg').style.display='none'">&#3618;&#3585;&#3648;&#3621;&#3636;&#3585;</button>
+      <button class="smb" style="flex:1;padding:9px;background:#dc2626;color:#fff;border-color:#b91c1c" onclick="doDelUser()">&#3618;&#3639;&#3609;&#3618;&#3633;&#3609;&#3621;&#3610;</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
