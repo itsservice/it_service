@@ -230,7 +230,7 @@ app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
 });
 
 // PATCH /api/branches/:id — update location (admin+)
-app.patch('/api/branches/:id', requireAuth, async (req, res) => {
+app.patch('/api/branches/:id', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const axios = require('axios');
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
@@ -244,7 +244,7 @@ app.patch('/api/branches/:id', requireAuth, async (req, res) => {
     // clear branch cache
     _branchCache = null;
     _branchCacheExp = 0;
-    logActivity(req.user?.username || 'unknown', `Updated branch ${id} location`);
+    addLog({ user: req.user, action: 'update_branch', detail: `Updated branch ${id} location` });
     res.json(r.data);
   } catch(e) {
     console.error('[branch patch]', e.message);
@@ -420,8 +420,6 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 // ═══════════════════════════════════════════════════════════
 // GPS — ผ่าน FastAPI (repair.mobile1234.site)
 // ═══════════════════════════════════════════════════════════
-const FASTAPI_URL = 'https://repair.mobile1234.site';
-const FASTAPI_KEY = 'repair123';
 
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
@@ -430,7 +428,9 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
     const lng = parseFloat(longitude);
     if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Missing coordinates' });
     const axios = require('axios');
-    await axios.post(`${FASTAPI_URL}/api/gps`, {
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    await axios.post(`${REPAIR_URL}/api/gps`, {
       user_id: String(req.user.id),
       engineer_name: req.user.name,
       brand: req.user.brand || null,
@@ -438,7 +438,7 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
       longitude: lng,
       accuracy: accuracy ? parseFloat(accuracy) : null,
       ticket_id: ticket_id || null
-    }, { headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000 });
+    }, { headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000 });
     broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude:lat, longitude:lng });
     res.json({ ok:true });
   } catch(e) {
@@ -450,8 +450,10 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
 app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const axios = require('axios');
-    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
-      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const r = await axios.get(`${REPAIR_URL}/api/gps`, {
+      headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000
     });
     res.json(r.data);
   } catch(e) {
@@ -466,8 +468,10 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 app.get('/debug/gps', async (_, res) => {
   try {
     const axios = require('axios');
-    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
-      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const r = await axios.get(`${REPAIR_URL}/api/gps`, {
+      headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000
     });
     res.json({ ok:true, count:r.data.locations?.length||0, rows:r.data.locations });
   } catch(e) {
