@@ -1,8 +1,8 @@
 // lineConfig.js — ดึงค่า LINE config จาก MySQL ผ่าน FastAPI
 const axios = require('axios');
 
-const API_URL  = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site:8000';
-const API_KEY  = process.env.REPAIR_API_KEY  || 'repair123';
+const API_URL  = process.env.REPAIR_API_URL || process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
+const API_KEY  = process.env.REPAIR_API_KEY || 'repair123';
 
 // ── in-memory cache (refresh ทุก 5 นาที) ──────────────────────
 let _cache    = null;
