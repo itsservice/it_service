@@ -744,7 +744,7 @@ function connectSSE(){
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
-function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer}[pg]||rDash)();}catch(e){console.error(e);}}
+function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer,branches:renderBranches}[pg]||rDash)();}catch(e){console.error(e);}}
 
 function rDash(){
   const t=tickets.length,w=tickets.filter(x=>/รอ|pending/.test(x.status||'')).length,p=tickets.filter(x=>/ระหว่าง|progress/.test(x.status||'')).length,rv=tickets.filter(x=>/ตรวจ|review/.test(x.status||'')).length,dn=tickets.filter(x=>/เสร็จ|completed/.test(x.status||'')).length;
