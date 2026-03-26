@@ -149,10 +149,23 @@ a{color:inherit;text-decoration:none}
 .content-inner{max-width:680px;margin:0 auto}
 
 /* STATS */
-.eng-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
-@media(max-width:540px){.eng-stats{grid-template-columns:repeat(2,1fr)}}
-.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-@media(max-width:540px){.stat-grid-4{grid-template-columns:repeat(2,1fr)}}
+.eng-stats{padding:12px 14px 0;background:var(--bg)}
+.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:1024px){.stat-grid-4{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:left;transition:all .4s;position:relative;overflow:hidden}
+.stat-box::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.stat-box.sb-blue::after{background:#6366f1}
+.stat-box.sb-amber::after{background:#f59e0b}
+.stat-box.sb-green::after{background:#22c55e}
+.stat-box.sb-dark::after{background:var(--fg)}
+.stat-val{font-family:var(--display);font-size:32px;font-weight:800;letter-spacing:-.05em;color:var(--fg);line-height:1}
+.stat-lbl{font-size:11px;color:var(--fg3);font-weight:600;margin-top:4px}
+.stat-bar{height:4px;background:var(--bg3);border-radius:99px;margin-top:10px;overflow:hidden}
+.stat-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+/* Dashboard overview section */
+.eng-overview{padding:10px 14px 0}
+.ov-greeting{font-size:13px;font-weight:700;color:var(--fg2);margin-bottom:2px}
+.ov-sub{font-size:11px;color:var(--fg4)}
 /* ── NE4: Desktop sidebar always visible (same as Admin) ── */
 @media(min-width:1025px){
   .sidebar{transform:translateX(0)!important;position:relative;height:100%}
@@ -388,7 +401,7 @@ a{color:inherit;text-decoration:none}
     </div>
     <div class="content">
       <div class="content-inner">
-        <div class="eng-stats" id="eng-stats"></div>
+        <div id="eng-stats"></div>
         <div class="tabs" id="eng-tabs">
           <button class="tab-btn on" data-tab="active" onclick="switchEngTab('active')">งานที่รับ</button>
           <button class="tab-btn" data-tab="review" onclick="switchEngTab('review')">งานตรวจ</button>
@@ -953,29 +966,38 @@ function renderEngTab(){
   const done   = tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
   const total  = tickets.length;
 
-  // ── Stats with progress bars (4 boxes) ──
+  // ── Dashboard Overview ──
   const mx = Math.max(total,1);
+  const engName = AUTH?.user?.name||AUTH?.user?.username||'Engineer';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});
   document.getElementById('eng-stats').innerHTML = `
-    <div class="stat-grid" class="stat-grid-4">
-      <div class="stat-box" style="animation:up .3s var(--ease) .05s both">
-        <div class="stat-val">${active.length}</div>
-        <div class="stat-lbl">งานที่รับ</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:#6366f1;width:${Math.min(active.length/mx*100,100)}%"></div></div>
-      </div>
-      <div class="stat-box" style="animation:up .3s var(--ease) .08s both">
-        <div class="stat-val">${review.length}</div>
-        <div class="stat-lbl">งานตรวจ</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:#f59e0b;width:${Math.min(review.length/mx*100,100)}%"></div></div>
-      </div>
-      <div class="stat-box" style="animation:up .3s var(--ease) .1s both">
-        <div class="stat-val">${done.length}</div>
-        <div class="stat-lbl">เสร็จแล้ว</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:#22c55e;width:${Math.min(done.length/mx*100,100)}%"></div></div>
-      </div>
-      <div class="stat-box" style="animation:up .3s var(--ease) .15s both">
-        <div class="stat-val">${total}</div>
-        <div class="stat-lbl">ทั้งหมด</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:var(--fg);width:100%"></div></div>
+    <div class="eng-overview">
+      <div class="ov-greeting">${isEngLangEN?'Welcome back, ':'ยินดีต้อนรับ, '}${engName} 👋</div>
+      <div class="ov-sub">${dateStr} · ${isEngLangEN?'Here is your work summary':'สรุปงานของคุณวันนี้'}</div>
+    </div>
+    <div class="eng-stats">
+      <div class="stat-grid-4">
+        <div class="stat-box sb-blue" style="animation:up .3s var(--ease) .05s both">
+          <div class="stat-lbl" style="margin-top:0;margin-bottom:8px">🔧 ${isEngLangEN?'Active':'งานที่รับ'}</div>
+          <div class="stat-val">${active.length}</div>
+          <div class="stat-bar"><div class="stat-fill" style="background:#6366f1;width:${Math.min(active.length/mx*100,100)}%"></div></div>
+        </div>
+        <div class="stat-box sb-amber" style="animation:up .3s var(--ease) .08s both">
+          <div class="stat-lbl" style="margin-top:0;margin-bottom:8px">🔍 ${isEngLangEN?'Review':'งานตรวจ'}</div>
+          <div class="stat-val">${review.length}</div>
+          <div class="stat-bar"><div class="stat-fill" style="background:#f59e0b;width:${Math.min(review.length/mx*100,100)}%"></div></div>
+        </div>
+        <div class="stat-box sb-green" style="animation:up .3s var(--ease) .1s both">
+          <div class="stat-lbl" style="margin-top:0;margin-bottom:8px">✅ ${isEngLangEN?'Done':'เสร็จแล้ว'}</div>
+          <div class="stat-val">${done.length}</div>
+          <div class="stat-bar"><div class="stat-fill" style="background:#22c55e;width:${Math.min(done.length/mx*100,100)}%"></div></div>
+        </div>
+        <div class="stat-box sb-dark" style="animation:up .3s var(--ease) .15s both">
+          <div class="stat-lbl" style="margin-top:0;margin-bottom:8px">📋 ${isEngLangEN?'Total':'ทั้งหมด'}</div>
+          <div class="stat-val">${total}</div>
+          <div class="stat-bar"><div class="stat-fill" style="background:var(--fg);width:100%"></div></div>
+        </div>
       </div>
     </div>`;
 
