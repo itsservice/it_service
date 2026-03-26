@@ -694,7 +694,20 @@ async function doSubmit(){
       },30000);
       const d=await r.json();
       if(!d.ok)throw new Error(d.error||'Submission failed');
-      showSuccess(d.ticket?.id||d.ticketId||'--');
+      const ticketId=d.ticket?.id||d.ticketId||'--';
+      // Upload photos if any
+      const photoInput=document.getElementById('f-photos');
+      if(photoInput?.files?.length){
+        for(const file of Array.from(photoInput.files).slice(0,3)){
+          try{
+            const fd=new FormData();
+            fd.append('file',file);
+            fd.append('ticket_id',ticketId);
+            await fetch('/api/upload',{method:'POST',body:fd});
+          }catch(_){}
+        }
+      }
+      showSuccess(ticketId);
       return;
     }catch(e){
       const isLast=attempt===RETRY_MAX-1;
