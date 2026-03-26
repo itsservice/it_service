@@ -1065,6 +1065,7 @@ function renderEngSettings(){
     <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">การแจ้งเตือน</div>
     <div class="tog-list">
       ${makeTog('แจ้งเตือนงานใหม่','รับ notification เมื่อมีงานมอบหมาย',true,'eng_notif_new')}
+      ${makeTog('GPS Auto-track','ส่ง GPS location อัตโนมัติเมื่อเริ่มงาน',true,'eng_gps_auto')}
       ${makeTog('Dark Mode','ธีมสีเข้ม',document.documentElement.dataset.t==='dark','eng_dark')}
     </div>
     <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:16px;margin-bottom:8px">ภาษา</div>
@@ -1096,5 +1097,8 @@ window.render = function(){
 }
 
 </script>
+
+<!-- ⚡ DEV BUILDER — Ctrl+Shift+B to activate -->
+<script src="/builder-core.js"></script>
 </body>
 </html>
