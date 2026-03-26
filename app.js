@@ -28,8 +28,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── SSE ─────────────────────────────────────────────────────
+// ── SSE (with heartbeat to prevent dead connection buildup) ──
 const clients = new Set();
+const SSE_MAX = 50; // จำกัด connections กัน memory leak
+
 function broadcast(evt, data) {
   const msg = `event: ${evt}\ndata: ${JSON.stringify(data)}\n\n`;
   clients.forEach(res => { try{ res.write(msg); }catch(_){ clients.delete(res); } });
@@ -37,6 +39,12 @@ function broadcast(evt, data) {
 app.locals.broadcast = broadcast;
 
 app.get('/api/events', (req, res) => {
+  // ถ้า clients เกิน limit → ตัด connection เก่าสุดออก
+  if (clients.size >= SSE_MAX) {
+    const oldest = clients.values().next().value;
+    try { oldest.end(); } catch(_) {}
+    clients.delete(oldest);
+  }
   res.set({ 'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive' });
   res.flushHeaders();
   res.write('data: connected\n\n');
@@ -44,10 +52,18 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => clients.delete(res));
 });
 
+// Heartbeat ทุก 30 วินาที — ตัด dead connections ออก
+setInterval(() => {
+  clients.forEach(res => {
+    try { res.write(': heartbeat\n\n'); }
+    catch(_) { clients.delete(res); }
+  });
+}, 30_000);
+
 // ── Health ──────────────────────────────────────────────────
 app.get('/health', (_, res) => {
   const mb = process.memoryUsage().heapUsed / 1024 / 1024;
-  res.json({ ok:true, ts:Date.now(), uptime:Math.floor(process.uptime()), memory:`${mb.toFixed(0)}MB` });
+  res.json({ ok:true, ts:Date.now(), uptime:Math.floor(process.uptime()), memory:`${mb.toFixed(0)}MB`, sseClients:clients.size });
 });
 
 // ── Static ──────────────────────────────────────────────────
@@ -265,8 +281,9 @@ app.get('/api/tickets', async (req, res) => {
     ]).catch(async()=>{ try{return await require('./larkService').listTickets({noCache:false})||[];}catch(_){return[];} });
     const s = getSession((req.headers.authorization||'').slice(7));
     if (s&&s.user.role==='engineer'&&s.user.brand!=='ALL') tickets=tickets.filter(t=>t.brand===s.user.brand);
+    // จำกัด brand cache กัน memory leak (เก็บแค่ 1000 ล่าสุด)
+    if (_ticketBrandCache.size > 1000) _ticketBrandCache.clear();
     tickets.forEach(t=>{ if(t._recordId&&t.brand) _ticketBrandCache.set(t._recordId,t.brand); });
-    global._debugTickets = tickets;
     res.json({ ok:true, tickets });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -530,13 +547,15 @@ app.get('/debug/lark-fields', async (_,res) => {
   try { res.json({ok:true,...await debugSchema()}); } catch(e){res.json({ok:false,error:e.message});}
 });
 
-app.get('/debug/branches', (_,res) => {
-  const tickets=global._debugTickets||[];
-  const byBrand={};
-  tickets.forEach(t=>{ if(!byBrand[t.brand||'?'])byBrand[t.brand||'?']=new Set(); if(t.branchCode)byBrand[t.brand||'?'].add(t.branchCode); });
-  const result={};
-  Object.entries(byBrand).forEach(([b,s])=>{result[b]=[...s].sort();});
-  res.json({ok:true,total:tickets.length,branchCodes:result});
+app.get('/debug/branches', async (_,res) => {
+  try {
+    const tickets = await listTickets() || [];
+    const byBrand={};
+    tickets.forEach(t=>{ if(!byBrand[t.brand||'?'])byBrand[t.brand||'?']=new Set(); if(t.branchCode)byBrand[t.brand||'?'].add(t.branchCode); });
+    const result={};
+    Object.entries(byBrand).forEach(([b,s])=>{result[b]=[...s].sort();});
+    res.json({ok:true,total:tickets.length,branchCodes:result});
+  } catch(e) { res.json({ok:false,error:e.message}); }
 });
 
 // ── Webhooks ────────────────────────────────────────────────
