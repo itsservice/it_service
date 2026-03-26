@@ -352,10 +352,10 @@ a{color:inherit;text-decoration:none}
         <span class="pv-t-role" id="pv-t-role">—</span>
         <span class="pv-t-arrow">▾</span>
       </div>
-      <a class="sb-home" href="/">🏠 หน้าหลัก</a>
-      <div class="sb-foot-row">
-        <button class="sb-fbt" id="btn-theme-sb" onclick="togTheme()">🌙 Dark</button>
-        <button class="sb-fbt danger" onclick="logout()">⏻ Logout</button>
+      <a href="/" style="display:block;width:100%;padding:7px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;text-align:center;text-decoration:none;margin-bottom:3px;transition:all .3s">Home</a>
+      <div style="display:flex;gap:3px">
+        <button onclick="togTheme()" style="flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .3s" id="btn-theme-sb">Dark</button>
+        <button onclick="logout()" style="flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .3s">Logout</button>
       </div>
     </div>
   </aside>
@@ -366,6 +366,7 @@ a{color:inherit;text-decoration:none}
       <button class="btn-hamburger" onclick="openSidebar()">☰</button>
       <div class="top-t" id="top-title">งานของฉัน</div>
       <div class="top-clock" id="clock">--:--:--</div>
+      <button class="smb" id="eng-lang-btn" onclick="togEngLang()" title="สลับภาษา">TH</button>
       <button class="smb" onclick="doRefresh()">↻</button>
     </div>
     <div id="gps-status-bar">
@@ -376,12 +377,14 @@ a{color:inherit;text-decoration:none}
       <div class="content-inner">
         <div class="eng-stats" id="eng-stats"></div>
         <div class="tabs" id="eng-tabs">
-          <button class="tab-btn on" data-tab="active" onclick="switchEngTab('active')">งานที่รับแล้ว</button>
-          <button class="tab-btn" data-tab="done" onclick="switchEngTab('done')">งานเสร็จแล้ว</button>
+          <button class="tab-btn on" data-tab="active" onclick="switchEngTab('active')">งานที่รับ</button>
+          <button class="tab-btn" data-tab="review" onclick="switchEngTab('review')">งานตรวจ</button>
+          <button class="tab-btn" data-tab="done" onclick="switchEngTab('done')">งานเสร็จ</button>
           <button class="tab-btn" data-tab="history" onclick="switchEngTab('history')">ประวัติ</button>
           <button class="tab-btn" data-tab="settings" onclick="switchEngTab('settings')">ตั้งค่า</button>
         </div>
         <div id="tab-active" class="tab-panel on"></div>
+        <div id="tab-review" class="tab-panel"></div>
         <div id="tab-done" class="tab-panel"></div>
         <div id="tab-history" class="tab-panel"></div>
         <div id="tab-settings" class="tab-panel"></div>
@@ -865,22 +868,30 @@ function switchEngTab(t){
 }
 
 function renderEngTab(){
-  const active = tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
-  const done   = tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
+  // E2 — Stats based on correct status
+  const active = tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง/.test(t.status||''));
+  const review = tickets.filter(t=>/ตรวจงาน|review/.test(t.status||''));
+  const done   = tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
+  const total  = tickets.length;
 
-  // ── Stats with progress bars ──
-  const total = tickets.length || 1;
+  // ── Stats with progress bars (4 boxes) ──
+  const mx = Math.max(total,1);
   document.getElementById('eng-stats').innerHTML = `
-    <div class="stat-grid">
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="stat-box" style="animation:up .3s var(--ease) .05s both">
         <div class="stat-val">${active.length}</div>
         <div class="stat-lbl">งานที่รับ</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:#6366f1;width:${Math.min(active.length/Math.max(total,1)*100,100)}%"></div></div>
+        <div class="stat-bar"><div class="stat-fill" style="background:#6366f1;width:${Math.min(active.length/mx*100,100)}%"></div></div>
+      </div>
+      <div class="stat-box" style="animation:up .3s var(--ease) .08s both">
+        <div class="stat-val">${review.length}</div>
+        <div class="stat-lbl">งานตรวจ</div>
+        <div class="stat-bar"><div class="stat-fill" style="background:#f59e0b;width:${Math.min(review.length/mx*100,100)}%"></div></div>
       </div>
       <div class="stat-box" style="animation:up .3s var(--ease) .1s both">
         <div class="stat-val">${done.length}</div>
         <div class="stat-lbl">เสร็จแล้ว</div>
-        <div class="stat-bar"><div class="stat-fill" style="background:#22c55e;width:${Math.min(done.length/Math.max(total,1)*100,100)}%"></div></div>
+        <div class="stat-bar"><div class="stat-fill" style="background:#22c55e;width:${Math.min(done.length/mx*100,100)}%"></div></div>
       </div>
       <div class="stat-box" style="animation:up .3s var(--ease) .15s both">
         <div class="stat-val">${total}</div>
@@ -889,8 +900,9 @@ function renderEngTab(){
       </div>
     </div>`;
 
-  if(engTab==='active') renderEngJobList('tab-active', active, true);
-  else if(engTab==='done') renderEngJobList('tab-done', done, false);
+  if(engTab==='active')  renderEngJobList('tab-active', active, true);
+  else if(engTab==='review') renderEngJobList('tab-review', review, false);
+  else if(engTab==='done')   renderEngJobList('tab-done', done, false);
   else if(engTab==='history') renderEngHistory();
   else if(engTab==='settings') renderEngSettings();
 }
@@ -948,29 +960,91 @@ function renderEngJobList(containerId, list, isActive){
   }, 400);
 }
 
+
+// ══════════════════════════════════════════
+// TH/EN TOGGLE
+// ══════════════════════════════════════════
+let _engLang='th';
+function togEngLang(){
+  _engLang=_engLang==='th'?'en':'th';
+  const btn=document.getElementById('eng-lang-btn');
+  if(btn)btn.textContent=_engLang==='th'?'TH':'EN';
+  const titleMap={
+    th:{active:'งานของฉัน',review:'งานตรวจ',done:'งานเสร็จ',history:'ประวัติ',settings:'ตั้งค่า'},
+    en:{active:'My Jobs',review:'Review',done:'Completed',history:'History',settings:'Settings'}
+  };
+  const tabMap=titleMap[_engLang];
+  document.querySelectorAll('#eng-tabs .tab-btn').forEach(b=>{
+    const t=b.dataset.tab;
+    if(tabMap[t])b.textContent=tabMap[t];
+  });
+  const topTitle=document.getElementById('top-title');
+  if(topTitle&&tabMap[engTab])topTitle.textContent=tabMap[engTab];
+}
+
+let _histFrom='', _histTo='';
+
 function renderEngHistory(){
   const el = document.getElementById('tab-history');
-  const all = [...tickets].sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
-  if(!all.length){el.innerHTML='<div class="empty"><div class="empty-t">ยังไม่มีประวัติ</div></div>';return;}
-
-  const items = all.map(t=>({
-    q:`${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})`,
-    a:`สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}`
-  }));
-
   el.innerHTML = `<div style="padding:4px 0">
-    <div style="font-size:11px;color:var(--fg4);margin-bottom:10px">ประวัติ ${all.length} รายการ</div>
-    <div class="acc-list">
-      ${items.map(it=>`
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <input type="date" id="hist-from" value="${_histFrom}" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:12px" oninput="_histFrom=this.value;loadEngHistory()">
+      <span style="font-size:12px;color:var(--fg3)">ถึง</span>
+      <input type="date" id="hist-to" value="${_histTo}" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:12px" oninput="_histTo=this.value;loadEngHistory()">
+      <button class="smb" onclick="_histFrom='';_histTo='';document.getElementById('hist-from').value='';document.getElementById('hist-to').value='';loadEngHistory()">ทั้งหมด</button>
+      <button class="smb" onclick="loadEngHistory()">🔄</button>
+    </div>
+    <div id="hist-list"><div style="color:var(--fg4);text-align:center;padding:20px;font-size:13px">กำลังโหลด...</div></div>
+  </div>`;
+  loadEngHistory();
+}
+
+async function loadEngHistory(){
+  const el = document.getElementById('hist-list');
+  if(!el) return;
+  el.innerHTML = '<div style="color:var(--fg4);text-align:center;padding:20px;font-size:13px">กำลังโหลด...</div>';
+  try {
+    const name = AUTH?.user?.name || AUTH?.user?.username || '';
+    let url = `/api/tickets?engineer=${encodeURIComponent(name)}&limit=200`;
+    if(_histFrom) url += `&from=${_histFrom}`;
+    if(_histTo)   url += `&to=${_histTo}T23:59:59`;
+    const d = await fetch(url, {headers:{Authorization:`Bearer ${localStorage.getItem('eng_auth')}`}}).then(r=>r.json());
+    const list = (d.tickets||d.data||[]).sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
+    if(!list.length){
+      el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบประวัติในช่วงเวลาที่เลือก</div></div>';return;
+    }
+    el.innerHTML = `<div style="font-size:11px;color:var(--fg4);margin-bottom:8px">พบ ${list.length} รายการ</div>
+      <div class="acc-list">${list.map(t=>`
         <div class="acc-item">
           <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-            <span class="acc-q">${it.q}</span>
+            <span class="acc-q">${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})</span>
             <span class="acc-ic">+</span>
           </div>
-          <div class="acc-body">${it.a}</div>
+          <div class="acc-body">
+            สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')}<br>
+            วันที่: ${esc(t.sentDate||'-')} · สถานะ: <b>${statusLabel(t.status)}</b><br>
+            ${t.workDetail?`งาน: ${esc(t.workDetail)}<br>`:''}
+            ${t.partsUsed?`อุปกรณ์: ${esc(t.partsUsed)}`:''}
+          </div>
         </div>`).join('')}
-    </div>
-  </div>`;
+      </div>`;
+  } catch(e) {
+    // Fallback to in-memory tickets
+    let all = [...tickets].sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
+    if(_histFrom) all = all.filter(t=>new Date(t.sentDate||0)>=new Date(_histFrom));
+    if(_histTo)   all = all.filter(t=>new Date(t.sentDate||0)<=new Date(_histTo+'T23:59:59'));
+    if(!all.length){el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบประวัติ</div></div>';return;}
+    el.innerHTML = `<div style="font-size:11px;color:var(--fg4);margin-bottom:8px">พบ ${all.length} รายการ (จาก cache)</div>
+      <div class="acc-list">${all.map(t=>`
+        <div class="acc-item">
+          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+            <span class="acc-q">${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})</span>
+            <span class="acc-ic">+</span>
+          </div>
+          <div class="acc-body">สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}</div>
+        </div>`).join('')}
+      </div>`;
+  }
 }
 
 function renderEngSettings(){
