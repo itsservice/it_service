@@ -90,7 +90,7 @@ function addLog({ user, action, ticketId, ticketLabel, detail }) {
     detail:     detail     || null,
   };
   logs.unshift(e);
-  if (logs.length > 500) logs.pop();
+  if (logs.length > 200) logs.length = 200; // ตัดให้เหลือ 200 (ลดจาก 500)
   return e;
 }
 
