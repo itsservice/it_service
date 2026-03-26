@@ -149,7 +149,10 @@ a{color:inherit;text-decoration:none}
 .content-inner{max-width:680px;margin:0 auto}
 
 /* STATS */
-.eng-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.eng-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+@media(max-width:540px){.eng-stats{grid-template-columns:repeat(2,1fr)}}
+.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:540px){.stat-grid-4{grid-template-columns:repeat(2,1fr)}}
 .es{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:all .4s;cursor:pointer}
 .es:hover{border-color:var(--border2)}
 .es-v{font-family:var(--display);font-size:24px;font-weight:800;color:var(--fg);letter-spacing:-.03em}
@@ -877,7 +880,7 @@ function renderEngTab(){
   // ── Stats with progress bars (4 boxes) ──
   const mx = Math.max(total,1);
   document.getElementById('eng-stats').innerHTML = `
-    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-grid" class="stat-grid-4">
       <div class="stat-box" style="animation:up .3s var(--ease) .05s both">
         <div class="stat-val">${active.length}</div>
         <div class="stat-lbl">งานที่รับ</div>
@@ -1004,12 +1007,21 @@ async function loadEngHistory(){
   if(!el) return;
   el.innerHTML = '<div style="color:var(--fg4);text-align:center;padding:20px;font-size:13px">กำลังโหลด...</div>';
   try {
-    const name = AUTH?.user?.name || AUTH?.user?.username || '';
-    let url = `/api/tickets?engineer=${encodeURIComponent(name)}&limit=200`;
+    // NE2: use BOTH name and username to match, strict filter
+    const engName = AUTH?.user?.name || '';
+    const engUser = AUTH?.user?.username || '';
+    let url = `/api/tickets?limit=500`;
     if(_histFrom) url += `&from=${_histFrom}`;
     if(_histTo)   url += `&to=${_histTo}T23:59:59`;
     const d = await fetch(url, {headers:{Authorization:`Bearer ${localStorage.getItem('eng_auth')}`}}).then(r=>r.json());
-    const list = (d.tickets||d.data||[]).sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
+    // NE2: strict filter — only tickets where engineerName matches logged-in user
+    const allTix = d.tickets||d.data||[];
+    const list = allTix
+      .filter(t => {
+        const en = (t.engineerName||t.engineer_name||t.assignedTo||'').toLowerCase();
+        return en && (en===engName.toLowerCase() || en===engUser.toLowerCase());
+      })
+      .sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
     if(!list.length){
       el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบประวัติในช่วงเวลาที่เลือก</div></div>';return;
     }
