@@ -1,11 +1,11 @@
-// larkService.js — Proxy to FastAPI (MySQL) แทน Lark Base
+// larkService.js — Ticket CRUD via FastAPI → MySQL
 // Render.com → FastAPI (repair.mobile1234.site) → MySQL (10.8.1.88)
-// FastAPI PATCH fields: status, assigned_to, engineer_name, work_detail, parts_used, work_hours
+// ชื่อไฟล์ยังคงเดิมเพื่อไม่ต้องแก้ require() ทุกที่
 
 const axios = require('axios');
 
-const API_BASE = process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
-const API_KEY  = process.env.API_KEY      || 'repair123';
+const API_BASE = process.env.REPAIR_API_URL || process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
+const API_KEY  = process.env.REPAIR_API_KEY || process.env.API_KEY     || 'repair123';
 const headers  = { 'X-API-Key': API_KEY };
 
 // ── Cache ──────────────────────────────────────────────────────
@@ -41,6 +41,10 @@ function mapTicket(t) {
     closedAt:     t.closedAt     || t.closed_at    || '',
     closedBy:     t.closedBy     || t.closed_by    || '',
     completedAt:  t.completedAt  || t.completed_at || '',
+    startedAt:    t.startedAt    || t.started_at   || '',
+    completedLat: t.completedLat || t.completed_lat|| null,
+    completedLng: t.completedLng || t.completed_lng|| null,
+    images:       t.images       || null,
   };
 }
 
@@ -139,13 +143,12 @@ async function createTicket(data) {
 }
 
 // ── updateTicket ───────────────────────────────────────────────
-// FastAPI PATCH รับ: status, assigned_to, engineer_name, work_detail, parts_used, work_hours
-// fields อื่น (adminNote, closedBy, completedAt) — ไม่มีใน schema ปล่อยผ่าน
+// FastAPI TicketUpdate รองรับ 14 fields — map ครบทุกตัว
 async function updateTicket(recordId, data) {
   try {
     const payload = {};
 
-    // fields ที่ FastAPI รองรับ
+    // ── Core fields ──
     if (data.status !== undefined)
       payload.status = mapStatusReverse(data.status);
     if (data.engineerName !== undefined)
@@ -159,9 +162,28 @@ async function updateTicket(recordId, data) {
     if (data.workHours !== undefined && data.workHours !== '')
       payload.work_hours = parseFloat(data.workHours) || null;
 
+    // ── Admin / Close fields (เคยหายไป — ทำให้ปิดงานไม่สำเร็จ) ──
+    if (data.adminNote !== undefined)
+      payload.admin_note = data.adminNote;
+    if (data.closedBy !== undefined)
+      payload.closed_by = data.closedBy;
+    if (data.closedAt !== undefined)
+      payload.closed_at = data.closedAt;
+    if (data.slaDate !== undefined || data.sla_date !== undefined)
+      payload.sla_date = data.slaDate || data.sla_date;
+    if (data.completedAt !== undefined)
+      payload.completed_at = data.completedAt;
+
+    // ── Timestamp / GPS fields ──
+    if (data.started_at !== undefined)
+      payload.started_at = data.started_at;
+    if (data.completed_lat !== undefined)
+      payload.completed_lat = parseFloat(data.completed_lat) || null;
+    if (data.completed_lng !== undefined)
+      payload.completed_lng = parseFloat(data.completed_lng) || null;
+
     if (Object.keys(payload).length === 0) {
-      console.warn('[larkService] updateTicket: no supported fields to update');
-      // คืน ticket จาก cache แทน
+      console.warn('[ticketService] updateTicket: no supported fields to update');
       if (_cache) {
         const t = _cache.find(x => x._recordId === recordId);
         if (t) return t;
@@ -175,7 +197,7 @@ async function updateTicket(recordId, data) {
     invalidateCache();
     return await getTicket(recordId);
   } catch(e) {
-    console.error('[larkService] updateTicket error:', e.message);
+    console.error('[ticketService] updateTicket error:', e.message);
     throw e;
   }
 }
