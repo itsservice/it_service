@@ -569,7 +569,7 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
     <button class="smb" id="btn-rf" onclick="doRefresh()">Refresh</button>
     <button class="smb" onclick="openCmd()" title="⌘K">⌘K</button>
     <button class="smb" id="lang-btn" onclick="togLang()" title="สลับภาษา">TH</button>
-    <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน" style="position:fixed;top:12px;right:12px;z-index:9990">
+    <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน">
       🔔<span class="notif-badge" id="notif-badge">0</span>
     </button>
   </div>
@@ -593,7 +593,7 @@ input[type=date].sel{appearance:auto;color-scheme:light dark}
 <div class="toast" id="toast"></div>
 
 <!-- NOTIFICATION DROPDOWN -->
-<div style="position:fixed;top:56px;right:12px;z-index:9991" id="notif-wrap">
+<div style="position:fixed;top:50px;right:12px;z-index:500" id="notif-wrap">
   <div class="notif-drop" id="notif-drop">
     <div class="notif-head"><span class="notif-title">การแจ้งเตือน</span><button class="notif-clear" onclick="clearNotifs()">ล้างทั้งหมด</button></div>
     <div class="notif-list" id="notif-list"><div class="notif-empty">ไม่มีการแจ้งเตือนใหม่</div></div>
@@ -1005,6 +1005,28 @@ async function initGPSMap(){
     window._gpsMapInit=true;
   }
 
+  // ── NA1: Show engineer list FIRST, then map ──
+  // Scroll to list on load (mobile-friendly)
+  setTimeout(()=>{
+    const listEl=document.getElementById('gps-list');
+    if(listEl)listEl.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 300);
+
+  // Auto-scroll back to top after 5s of no interaction
+  let _gpsIdleTimer=null;
+  function _resetGpsIdle(){
+    clearTimeout(_gpsIdleTimer);
+    _gpsIdleTimer=setTimeout(()=>{
+      const pgEl=document.getElementById('pg-gps');
+      if(pgEl)pgEl.scrollTo({top:0,behavior:'smooth'});
+    },5000);
+  }
+  const _gpsContent=document.getElementById('pg-gps');
+  if(_gpsContent){
+    ['touchstart','touchmove','click','scroll'].forEach(ev=>_gpsContent.addEventListener(ev,_resetGpsIdle,{passive:true}));
+    _resetGpsIdle();
+  }
+
   // รายการช่างด้านล่าง
   if(list)list.innerHTML=`
     <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
@@ -1013,8 +1035,8 @@ async function initGPSMap(){
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
       ${d.locations.map(loc=>{
         const updatedTime=loc.updated_at?new Date(loc.updated_at).toLocaleTimeString('th-TH'):'';
-        return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer"
-          onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],16)">
+        return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:box-shadow .2s"
+          onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],16);document.getElementById('gps-map')?.scrollIntoView({behavior:'smooth'});_resetGpsIdle&&_resetGpsIdle()">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             <div style="width:30px;height:30px;background:#2b5ea8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">
               ${(loc.engineer_name||'?').charAt(0).toUpperCase()}
@@ -1567,7 +1589,7 @@ function renderKanban(){
   el.innerHTML=`
     <div style="padding:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <button class="smb" onclick="kanbanMode=false;render()" style="font-size:11px">☰ Table</button>
+        <button class="smb" onclick="kanbanMode=false;saveUserPref('ticketView','table');render()" style="font-size:11px">☰ Table</button>
         <button class="smb on" style="font-size:11px;background:var(--fg);color:var(--bg)">⬛ Board</button>
         <span style="font-size:11px;color:var(--fg4);margin-left:auto">${tickets.length} tickets</span>
       </div>
@@ -1823,6 +1845,31 @@ function makeAccordion(items){
     </div>`).join('')+'</div>';
 }
 
+
+
+// ══════════════════════════════════════════
+// USER PREFERENCE (Kanban/Table + filter/sort)
+// ══════════════════════════════════════════
+async function saveUserPref(key, val){
+  try{
+    const pref = window._userPref || {};
+    pref[key] = val;
+    window._userPref = pref;
+    await api('/api/users/'+AUTH.user.id+'/preference', {method:'PATCH', body:JSON.stringify({ui_preference: JSON.stringify(pref)})});
+  }catch(_){}
+}
+async function loadUserPref(){
+  try{
+    const d = await api('/api/auth/me');
+    if(d.ok && d.user?.ui_preference){
+      window._userPref = typeof d.user.ui_preference==='string'
+        ? JSON.parse(d.user.ui_preference)
+        : d.user.ui_preference;
+      // Apply saved view preference
+      if(window._userPref?.ticketView==='kanban') kanbanMode=true;
+    }
+  }catch(_){}
+}
 
 // ══════════════════════════════════════════
 // TH/EN LANGUAGE TOGGLE
