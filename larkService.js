@@ -8,9 +8,10 @@ const API_BASE = process.env.REPAIR_API_URL || process.env.FASTAPI_URL || 'https
 const API_KEY  = process.env.REPAIR_API_KEY || process.env.API_KEY     || 'repair123';
 const headers  = { 'X-API-Key': API_KEY };
 
-// ── Cache ──────────────────────────────────────────────────────
+// ── Cache (จำกัด 500 tickets, expire 30 วินาที) ─────────────────
 let _cache = null;
 let _cacheExp = 0;
+const CACHE_MAX = 500;
 
 function invalidateCache() { _cache = null; _cacheExp = 0; }
 
@@ -88,7 +89,7 @@ async function listTickets(opts = {}) {
       params: { limit: 500 },
       timeout: 15000,
     });
-    const tickets = (r.data.tickets || []).map(mapTicket);
+    const tickets = (r.data.tickets || []).slice(0, CACHE_MAX).map(mapTicket);
     _cache = tickets;
     _cacheExp = Date.now() + 30_000;
     return tickets;
