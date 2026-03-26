@@ -331,36 +331,7 @@ function toggleLang(){
   lang=lang==='th'?'en':'th';
   localStorage.setItem('rep_lang',lang);
   document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
-  
-// ── FAQ ACCORDION in track page ──
-function renderTrackFAQ(){
-  const faqEl = document.getElementById('track-faq');
-  if(!faqEl)return;
-  const isEn = document.documentElement.lang==='en'||document.getElementById('btn-lang')?.textContent==='TH';
-  const faqs = isEn ? [
-    {q:'What is a Ticket ID?', a:'A unique identifier automatically generated when you submit a ticket, e.g. GD-00001. Use it to track your repair status.'},
-    {q:'How long does repair take?', a:'Standard SLA is 7 business days. Urgent cases may be prioritized by admin.'},
-    {q:'What does each status mean?', a:'รอดำเนินการ = Waiting · อยู่ระหว่างดำเนินการ = In Progress · ตรวจงาน = Under Review · เสร็จสิ้น = Completed'},
-  ] : [
-    {q:'Ticket ID คืออะไร?', a:'หมายเลขอ้างอิงที่ระบบสร้างให้อัตโนมัติเมื่อส่งรายงาน เช่น GD-00001 ใช้เพื่อติดตามสถานะการซ่อม'},
-    {q:'งานซ่อมใช้เวลานานแค่ไหน?', a:'SLA มาตรฐานคือ 7 วันทำการ กรณีเร่งด่วน Admin สามารถจัดลำดับความสำคัญได้'},
-    {q:'แต่ละสถานะหมายความว่าอะไร?', a:'รอดำเนินการ = รอรับงาน · อยู่ระหว่างดำเนินการ = ช่างกำลังซ่อม · ตรวจงาน = ผู้ดูแลตรวจสอบ · เสร็จสิ้น = ซ่อมเสร็จแล้ว'},
-    {q:'ถ้ายังไม่ได้รับการติดต่อทำอย่างไร?', a:'ตรวจสอบสถานะด้วย Ticket ID ก่อน หากเกิน SLA กรุณาแจ้ง Admin โดยตรง'},
-  ];
-  faqEl.innerHTML = `
-    <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:8px">คำถามที่พบบ่อย / FAQ</div>
-    <div class="acc-list">
-      ${faqs.map(f=>`
-        <div class="acc-item">
-          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-            <span class="acc-q">${f.q}</span><span class="acc-ic">+</span>
-          </div>
-          <div class="acc-body">${f.a}</div>
-        </div>`).join('')}
-    </div>`;
-}
-
-document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
+  document.getElementById('btn-lang').classList.toggle('lang-active',lang==='en');
   applyLang();
   renderForm();
   renderTrack();
