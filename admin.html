@@ -1284,6 +1284,15 @@ function openDrw(rid){
     ${[['Name',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Brand',t.brand],['Branch',t.branchCode],['Location',t.location]].map(([l,v])=>`<div class="drow"><span class="dlbl">${l}</span><span class="dval">${esc(v||'-')}</span></div>`).join('')}
     <div class="dsec">Detail</div><div class="dbox">${esc(t.detail||'-')}</div>
     ${t.workDetail?`<div class="dsec">Engineer Report</div><div class="dbox" style="border-left:2px solid var(--fg)"><div style="font-size:11px;font-weight:700;margin-bottom:2px">${esc(t.engineerName||'-')}</div>${esc(t.workDetail)}${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:2px">Parts: ${esc(t.partsUsed)}</div>`:''}${t.workHours?`<div style="font-size:12px;color:var(--fg3)">Hours: ${esc(t.workHours)}</div>`:''}</div>`:''}
+    ${(()=>{
+      // Show images from DB
+      let imgs=[];
+      try{imgs=typeof t.images==='string'?JSON.parse(t.images||'[]'):t.images||[];}catch(_){}
+      if(!imgs.length)return '';
+      return `<div class="dsec">รูปภาพ</div><div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0">
+        ${imgs.map(url=>`<img src="${esc(url)}" onclick="window.open('${esc(url)}','_blank')" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onerror="this.style.display='none'">`).join('')}
+      </div>`;
+    })()}
     ${t.adminNote?`<div class="dsec">Admin Note</div><div class="dbox">${esc(t.adminNote)}</div>`:''}
   </div>`;
 }
