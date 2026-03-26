@@ -2,8 +2,8 @@
 const axios = require('axios');
 const { hashPwd } = require('./auth');
 
-const API = process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
-const KEY = process.env.FASTAPI_KEY || 'repair123';
+const API = process.env.REPAIR_API_URL || process.env.FASTAPI_URL || 'https://repair.mobile1234.site';
+const KEY = process.env.REPAIR_API_KEY || process.env.FASTAPI_KEY || 'repair123';
 const hdr = { 'X-API-Key': KEY, 'Content-Type': 'application/json' };
 
 let USERS = [];
