@@ -177,6 +177,20 @@ app.get('/api/branches', async (req, res) => {
   }
 });
 
+
+// PATCH /api/users/:id/preference — save UI preference
+app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
+  try {
+    const { ui_preference } = req.body || {};
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const r = await axios.patch(`${REPAIR_URL}/api/users/${req.params.id}`,
+      { ui_preference }, { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' }, timeout: 8000 });
+    res.json(r.data);
+  } catch(e) { res.json({ ok: false, error: e.message }); }
+});
+
 // PATCH /api/branches/:id — update location (admin+)
 app.patch('/api/branches/:id', requireAuth, async (req, res) => {
   try {
