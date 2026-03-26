@@ -64,10 +64,11 @@ async function init() {
     ];
   }
 
+  // refresh ทุก 2 นาที (ลดจาก 30 วินาที — ถี่เกินไปทำให้ memory leak)
   setInterval(async () => {
     await refreshCache();
     if (dbOK) await loadPasswords();
-  }, 30000);
+  }, 120_000);
 }
 
 init();
