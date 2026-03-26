@@ -153,6 +153,16 @@ a{color:inherit;text-decoration:none}
 @media(max-width:540px){.eng-stats{grid-template-columns:repeat(2,1fr)}}
 .stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 @media(max-width:540px){.stat-grid-4{grid-template-columns:repeat(2,1fr)}}
+/* ── NE4: Desktop sidebar always visible (same as Admin) ── */
+@media(min-width:1025px){
+  .sidebar{transform:translateX(0)!important;position:relative;height:100%}
+  .sb-overlay{display:none!important}
+  .sb-close{display:none!important}
+  #app{display:flex}
+  .main-area{flex:1}
+  .tabs{display:none!important}
+  .eng-stats{margin-top:4px}
+}
 .es{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:all .4s;cursor:pointer}
 .es:hover{border-color:var(--border2)}
 .es-v{font-family:var(--display);font-size:24px;font-weight:800;color:var(--fg);letter-spacing:-.03em}
@@ -435,27 +445,33 @@ const TAB_DEFS=[
   {id:'active',   icon:'🔧',label:'งานของฉัน'},
   {id:'review',   icon:'🔍',label:'ตรวจงาน'},
   {id:'done',     icon:'✅',label:'เสร็จสิ้น'},
+  {id:'history',  icon:'📋',label:'ประวัติ'},
+  {id:'settings', icon:'⚙️',label:'ตั้งค่า'},
   {id:'emergency',icon:'🚨',label:'ฉุกเฉิน'},
 ];
 const TAB_LABELS={active:'งานของฉัน',review:'ตรวจงาน',done:'เสร็จสิ้น',emergency:'ฉุกเฉิน'};
 
 function updateSidebarNav(){
-  const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
-  const review=tickets.filter(t=>/review|revision|ตรวจ/.test(t.status||''));
-  const done=tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
-  const counts={active:active.length,review:review.length,done:done.length,emergency:0};
+  const active=tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง/.test(t.status||''));
+  const review=tickets.filter(t=>/ตรวจงาน|review/.test(t.status||''));
+  const done=tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
+  const counts={active:active.length,review:review.length,done:done.length,history:0,settings:0,emergency:0};
   document.getElementById('sb-nav').innerHTML=TAB_DEFS.map(d=>`
-    <button class="nav-item${tab===d.id?' on':''}" onclick="switchTab('${d.id}')">
+    <button class="nav-item${(tab===d.id||engTab===d.id)?' on':''}" onclick="switchEngTab('${d.id}');switchTab('${d.id}')">
       <span class="ni">${d.icon}</span><span>${d.label}</span>
       ${counts[d.id]?`<span class="nb">${counts[d.id]}</span>`:''}
     </button>`).join('');
 }
 
 function switchTab(t){
-  tab=t;closeSidebar();
+  tab=t;
+  // Sync engTab too
+  if(['active','review','done','history','settings'].includes(t)) engTab=t;
+  closeSidebar();
   const el=document.getElementById('top-title');
   if(el)el.textContent=TAB_LABELS[t]||t;
-  render();
+  updateSidebarNav();
+  renderEngTab();
 }
 
 /* ═══ AUTO RE-LOGIN ══════════════════════════════════════════ */
@@ -735,18 +751,56 @@ function openSubmit(rid){
   let autoHours='',sa=t.started_at||t.startedAt||null;
   if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}}
   if(sa){const ms=Date.now()-new Date(sa).getTime();if(ms>0)autoHours=(ms/3600000).toFixed(2);}
-  openMod(`<div class="mod-t">Complete Work</div>
+  openMod(`<div class="mod-t">ส่งงาน / Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
-    <div class="fg"><label>Work Detail *</label><textarea id="m-wd" placeholder="Describe work done...">${esc(t.workDetail||'')}</textarea></div>
+    <div class="fg"><label>รายละเอียดงาน *</label><textarea id="m-wd" placeholder="อธิบายการซ่อม/แก้ไขที่ทำ...">${esc(t.workDetail||'')}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-      <div class="fg"><label>Parts Used</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="e.g. LAN cable"/></div>
-      <div class="fg"><label>Hours ${autoHours?'⏱️ อัตโนมัติ':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
+      <div class="fg"><label>อุปกรณ์ที่ใช้</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="เช่น สายแลน, PCB"/></div>
+      <div class="fg"><label>ชั่วโมง ${autoHours?'⏱️ Auto':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
     </div>
-    <div class="fg"><label>Photo (camera)</label><input type="file" accept="image/*" capture="camera" id="m-photo"/></div>
+    <div class="fg">
+      <label>📷 รูปภาพงาน (สูงสุด 3 รูป)</label>
+      <div id="m-img-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;min-height:8px"></div>
+      <div style="display:flex;gap:5px">
+        <button type="button" class="smb" onclick="document.getElementById('m-img-cam').click()" style="flex:1;padding:7px;font-size:12px">📷 ถ่ายรูป</button>
+        <button type="button" class="smb" onclick="document.getElementById('m-img-gal').click()" style="flex:1;padding:7px;font-size:12px">🖼 เลือกรูป</button>
+      </div>
+      <input type="file" id="m-img-cam" accept="image/*" capture="camera" style="display:none" onchange="addEngPhoto(this)">
+      <input type="file" id="m-img-gal" accept="image/*" multiple style="display:none" onchange="addEngPhoto(this)">
+    </div>
     <div id="m-loc" style="font-size:11px;color:var(--fg4);margin-bottom:8px;text-align:center">📍 กำลังดึงตำแหน่งปัจจุบัน...</div>
-    <div class="mod-f"><button class="bo2" onclick="closeMod()">Cancel</button><button class="bp" onclick="doSubmit('${esc(rid)}')">Submit Work</button></div>`);
+    <div class="mod-f"><button class="bo2" onclick="closeMod()">ยกเลิก</button><button class="bp" onclick="doSubmit('${esc(rid)}')">✅ ส่งงาน</button></div>`);
+  window._engPhotos=[];
   window._completeLat=null;window._completeLng=null;
   navigator.geolocation.getCurrentPosition(pos=>{window._completeLat=pos.coords.latitude;window._completeLng=pos.coords.longitude;const locEl=document.getElementById('m-loc');if(locEl)locEl.innerHTML=`📍 ตำแหน่งจบงาน: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;},()=>{const locEl=document.getElementById('m-loc');if(locEl)locEl.innerHTML='⚠️ ไม่สามารถดึงตำแหน่งได้';},{enableHighAccuracy:true,timeout:10000});
+}
+function addEngPhoto(input){
+  if(!window._engPhotos) window._engPhotos=[];
+  const files=Array.from(input.files);
+  const remaining=3-window._engPhotos.length;
+  if(remaining<=0){toast('ใส่รูปได้สูงสุด 3 รูป');return;}
+  files.slice(0,remaining).forEach(file=>{
+    const url=URL.createObjectURL(file);
+    window._engPhotos.push({file,url});
+  });
+  // Render preview
+  const prev=document.getElementById('m-img-preview');
+  if(prev) prev.innerHTML=window._engPhotos.map((p,i)=>`
+    <div style="position:relative;display:inline-block">
+      <img src="${p.url}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+      <button onclick="removeEngPhoto(${i})" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`).join('');
+  input.value='';
+}
+function removeEngPhoto(i){
+  if(!window._engPhotos) return;
+  window._engPhotos.splice(i,1);
+  const prev=document.getElementById('m-img-preview');
+  if(prev) prev.innerHTML=window._engPhotos.map((p,idx)=>`
+    <div style="position:relative;display:inline-block">
+      <img src="${p.url}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+      <button onclick="removeEngPhoto(${idx})" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`).join('');
 }
 async function doSubmit(rid){
   const wd=(document.getElementById('m-wd')?.value||'').trim();
@@ -754,10 +808,21 @@ async function doSubmit(rid){
   const pt=(document.getElementById('m-pt')?.value||'').trim();
   const wh=(document.getElementById('m-wh')?.value||'').trim();
   try{
-    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh,completed_lat:window._completeLat||null,completed_lng:window._completeLng||null})});
+    // Upload photos first
+    const uploadedUrls=[];
+    for(const p of (window._engPhotos||[])){
+      const fd=new FormData();
+      fd.append('file',p.file);
+      fd.append('ticket_id',rid);
+      const up=await fetch('/api/upload',{method:'POST',headers:{'Authorization':'Bearer '+(AUTH?.token||'')},body:fd});
+      const uj=await up.json();
+      if(uj.url) uploadedUrls.push(uj.url);
+    }
+    const d=await api(`/api/tickets/${rid}/engineer-submit`,{method:'PATCH',body:JSON.stringify({workDetail:wd,partsUsed:pt,workHours:wh,completed_lat:window._completeLat||null,completed_lng:window._completeLng||null,images:uploadedUrls.length?JSON.stringify(uploadedUrls):undefined})});
     if(!d.ok)throw new Error(d.error||'Failed');
     try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');delete sv[rid];localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(sv));}catch(_){}
     tickets=tickets.map(x=>x._recordId===rid?{...x,workDetail:wd,partsUsed:pt,workHours:wh,status:'ตรวจงาน '}:x);
+    window._engPhotos=[];
     closeMod();render();toast('ส่งงานสำเร็จ ✅');
   }catch(e){toast('Error: '+e.message);}
 }
@@ -863,10 +928,21 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSidebar();pvCl
 // ══════════════════════════════════════════
 let engTab = 'active';
 function switchEngTab(t){
-  engTab = t;
+  engTab = t; tab = t;
+  // Mobile: toggle tab-btn highlight
   document.querySelectorAll('#eng-tabs .tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.tab===t));
+  // Show/hide tab panels
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('tab-'+t)?.classList.add('on');
+  // Desktop: update sidebar nav highlight
+  document.querySelectorAll('#sb-nav .nav-item').forEach(b=>{
+    b.classList.toggle('on', b.getAttribute('onclick')?.includes("'"+t+"'"));
+  });
+  // Update topbar title
+  const titles={active:'งานของฉัน',review:'ตรวจงาน',done:'งานเสร็จ',history:'ประวัติ',settings:'ตั้งค่า',emergency:'ฉุกเฉิน'};
+  const el=document.getElementById('top-title');
+  if(el&&titles[t])el.textContent=titles[t];
+  closeSidebar();
   renderEngTab();
 }
 
@@ -903,7 +979,13 @@ function renderEngTab(){
       </div>
     </div>`;
 
-  if(engTab==='active')  renderEngJobList('tab-active', active, true);
+  // Update sidebar nav counts
+  updateSidebarNav();
+  // Ensure correct panel visible
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+engTab)?.classList.add('on');
+
+  if(engTab==='active')      renderEngJobList('tab-active', active, true);
   else if(engTab==='review') renderEngJobList('tab-review', review, false);
   else if(engTab==='done')   renderEngJobList('tab-done', done, false);
   else if(engTab==='history') renderEngHistory();
