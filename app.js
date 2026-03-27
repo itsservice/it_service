@@ -28,10 +28,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── SSE (with heartbeat to prevent dead connection buildup) ──
+// ── SSE ─────────────────────────────────────────────────────
 const clients = new Set();
-const SSE_MAX = 50; // จำกัด connections กัน memory leak
-
 function broadcast(evt, data) {
   const msg = `event: ${evt}\ndata: ${JSON.stringify(data)}\n\n`;
   clients.forEach(res => { try{ res.write(msg); }catch(_){ clients.delete(res); } });
@@ -39,12 +37,6 @@ function broadcast(evt, data) {
 app.locals.broadcast = broadcast;
 
 app.get('/api/events', (req, res) => {
-  // ถ้า clients เกิน limit → ตัด connection เก่าสุดออก
-  if (clients.size >= SSE_MAX) {
-    const oldest = clients.values().next().value;
-    try { oldest.end(); } catch(_) {}
-    clients.delete(oldest);
-  }
   res.set({ 'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive' });
   res.flushHeaders();
   res.write('data: connected\n\n');
@@ -52,18 +44,10 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => clients.delete(res));
 });
 
-// Heartbeat ทุก 30 วินาที — ตัด dead connections ออก
-setInterval(() => {
-  clients.forEach(res => {
-    try { res.write(': heartbeat\n\n'); }
-    catch(_) { clients.delete(res); }
-  });
-}, 30_000);
-
 // ── Health ──────────────────────────────────────────────────
 app.get('/health', (_, res) => {
   const mb = process.memoryUsage().heapUsed / 1024 / 1024;
-  res.json({ ok:true, ts:Date.now(), uptime:Math.floor(process.uptime()), memory:`${mb.toFixed(0)}MB`, sseClients:clients.size });
+  res.json({ ok:true, ts:Date.now(), uptime:Math.floor(process.uptime()), memory:`${mb.toFixed(0)}MB` });
 });
 
 // ── Static ──────────────────────────────────────────────────
@@ -112,15 +96,16 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 app.get('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
   try {
     const flat = await lineConfig.getConfig();
-    // แปลงจาก flat → nested format ที่ frontend คาดหวัง
     const config = {
       adminGroupId: flat['admin_group_id'] || '',
       brandGroups: {
-        "Dunkin'"            : flat['brand_group_dunkin']             || '',
-        "Greyhound Cafe"     : flat['brand_group_greyhound_cafe']     || '',
-        "Greyhound Original" : flat['brand_group_greyhound_original'] || '',
-        "Au Bon Pain"        : flat['brand_group_au_bon_pain']        || '',
-        "Funky Fries"        : flat['brand_group_funky_fries']        || '',
+        "Dunkin'"             : flat['brand_group_dunkin']              || '',
+        "Greyhound Cafe'"     : flat['brand_group_greyhound_cafe']      || '',
+        "Greyhound Original"  : flat['brand_group_greyhound_original']  || '',
+        "Au Bon Pain"         : flat['brand_group_au_bon_pain']         || '',
+        "Funky Fries"         : flat['brand_group_funky_fries']         || '',
+        "Another Hound Cafe'" : flat['brand_group_another_hound']       || '',
+        "Bean Hound"          : flat['brand_group_bean_hound']          || '',
       },
     };
     res.json({ ok:true, config, hasToken:lineConfig.hasToken(), tokenPreview:lineConfig.getTokenPreview() });
@@ -142,6 +127,14 @@ app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (re
     const result = await lineNotify.push(to, [{ type:'text', text:'Test from IT Support Hub — LINE connection OK' }]);
     addLog({ user:req.user, action:'test_line', detail:`ทดสอบ LINE -> ${to.slice(0,12)}... result=${result.ok}` });
     res.json(result);
+  } catch(e) { res.json({ ok:false, error:e.message }); }
+});
+
+// ── LINE Diagnostic — ตรวจสอบสถานะ LINE ทั้งหมด ─────────────
+app.get('/api/line/diagnostic', requireAuth(['superadmin','admin']), async (req, res) => {
+  try {
+    const diag = await lineNotify.sendDiagnostic();
+    res.json({ ok:true, diagnostic: diag });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
@@ -246,7 +239,7 @@ app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
 });
 
 // PATCH /api/branches/:id — update location (admin+)
-app.patch('/api/branches/:id', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.patch('/api/branches/:id', requireAuth, async (req, res) => {
   try {
     const axios = require('axios');
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
@@ -260,7 +253,7 @@ app.patch('/api/branches/:id', requireAuth(['superadmin','admin','manager']), as
     // clear branch cache
     _branchCache = null;
     _branchCacheExp = 0;
-    addLog({ user: req.user, action: 'update_branch', detail: `Updated branch ${id} location` });
+    logActivity(req.user?.username || 'unknown', `Updated branch ${id} location`);
     res.json(r.data);
   } catch(e) {
     console.error('[branch patch]', e.message);
@@ -281,9 +274,8 @@ app.get('/api/tickets', async (req, res) => {
     ]).catch(async()=>{ try{return await require('./larkService').listTickets({noCache:false})||[];}catch(_){return[];} });
     const s = getSession((req.headers.authorization||'').slice(7));
     if (s&&s.user.role==='engineer'&&s.user.brand!=='ALL') tickets=tickets.filter(t=>t.brand===s.user.brand);
-    // จำกัด brand cache กัน memory leak (เก็บแค่ 1000 ล่าสุด)
-    if (_ticketBrandCache.size > 1000) _ticketBrandCache.clear();
     tickets.forEach(t=>{ if(t._recordId&&t.brand) _ticketBrandCache.set(t._recordId,t.brand); });
+    global._debugTickets = tickets;
     res.json({ ok:true, tickets });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
@@ -306,6 +298,17 @@ app.post('/api/tickets', async (req, res) => {
     broadcast('ticket_created', { ticket:t });
     lineNotify.notifyNewTicket(t).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t, log });
+  } catch(e) { res.json({ ok:false, error:e.message }); }
+});
+
+// ── Accept ticket (engineer รับงาน) ────────────────────────
+app.post('/api/tickets/:rid/accept', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
+  try {
+    const brand = getBrand(req.params.rid, req.body);
+    const t = await updateTicket(req.params.rid, { status:'อยู่ระหว่างดำเนินการ ⚙️', engineerName:req.user.name, assignedTo:req.user.name, brand });
+    addLog({ user:req.user, action:'accept', ticketId:req.params.rid, detail:'รับงาน' });
+    broadcast('ticket_updated', { recordId:req.params.rid, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString() });
+    res.json({ ok:true, ticket:t });
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
@@ -437,6 +440,8 @@ app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
 // ═══════════════════════════════════════════════════════════
 // GPS — ผ่าน FastAPI (repair.mobile1234.site)
 // ═══════════════════════════════════════════════════════════
+const FASTAPI_URL = 'https://repair.mobile1234.site';
+const FASTAPI_KEY = 'repair123';
 
 app.post('/api/gps', requireAuth(), async (req, res) => {
   try {
@@ -445,9 +450,7 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
     const lng = parseFloat(longitude);
     if (isNaN(lat) || isNaN(lng)) return res.json({ ok:false, error:'Missing coordinates' });
     const axios = require('axios');
-    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
-    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-    await axios.post(`${REPAIR_URL}/api/gps`, {
+    await axios.post(`${FASTAPI_URL}/api/gps`, {
       user_id: String(req.user.id),
       engineer_name: req.user.name,
       brand: req.user.brand || null,
@@ -455,7 +458,7 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
       longitude: lng,
       accuracy: accuracy ? parseFloat(accuracy) : null,
       ticket_id: ticket_id || null
-    }, { headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000 });
+    }, { headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000 });
     broadcast('gps_updated', { user_id:req.user.id, engineer_name:req.user.name, latitude:lat, longitude:lng });
     res.json({ ok:true });
   } catch(e) {
@@ -467,10 +470,8 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
 app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
   try {
     const axios = require('axios');
-    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
-    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-    const r = await axios.get(`${REPAIR_URL}/api/gps`, {
-      headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000
+    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
     });
     res.json(r.data);
   } catch(e) {
@@ -485,10 +486,8 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 app.get('/debug/gps', async (_, res) => {
   try {
     const axios = require('axios');
-    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
-    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-    const r = await axios.get(`${REPAIR_URL}/api/gps`, {
-      headers: { 'X-API-Key': REPAIR_KEY }, timeout: 8000
+    const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, timeout: 8000
     });
     res.json({ ok:true, count:r.data.locations?.length||0, rows:r.data.locations });
   } catch(e) {
@@ -547,15 +546,13 @@ app.get('/debug/lark-fields', async (_,res) => {
   try { res.json({ok:true,...await debugSchema()}); } catch(e){res.json({ok:false,error:e.message});}
 });
 
-app.get('/debug/branches', async (_,res) => {
-  try {
-    const tickets = await listTickets() || [];
-    const byBrand={};
-    tickets.forEach(t=>{ if(!byBrand[t.brand||'?'])byBrand[t.brand||'?']=new Set(); if(t.branchCode)byBrand[t.brand||'?'].add(t.branchCode); });
-    const result={};
-    Object.entries(byBrand).forEach(([b,s])=>{result[b]=[...s].sort();});
-    res.json({ok:true,total:tickets.length,branchCodes:result});
-  } catch(e) { res.json({ok:false,error:e.message}); }
+app.get('/debug/branches', (_,res) => {
+  const tickets=global._debugTickets||[];
+  const byBrand={};
+  tickets.forEach(t=>{ if(!byBrand[t.brand||'?'])byBrand[t.brand||'?']=new Set(); if(t.branchCode)byBrand[t.brand||'?'].add(t.branchCode); });
+  const result={};
+  Object.entries(byBrand).forEach(([b,s])=>{result[b]=[...s].sort();});
+  res.json({ok:true,total:tickets.length,branchCodes:result});
 });
 
 // ── Webhooks ────────────────────────────────────────────────
