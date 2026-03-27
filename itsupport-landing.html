@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>IT Support Hub</title>
+<meta name="viewport" content="width=device-width,inial-scale=1,viewport-f=cover"/>
+<tle>Support</tle>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -12,208 +12,245 @@
   --fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;
   --border:#e0e0db;--border2:#c8c8c2;
   --card:#fff;--card-h:#fafaf8;
-  --display:'Prompt',sans-serif;
-  --sans:'Prompt',sans-serif;
-  --mono:'Prompt',monospace;
-  --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1)
+  --shadow:0 2px 12px rgba(0,0,0,.05);
+  --shadow2:0 8px 32px rgba(0,0,0,.1);
+  --display:'Prompt',sans-serif;--sans:'Prompt',sans-serif;--mono:'Prompt',monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --r:12px;--r2:8px;
 }
 [data-t="dark"]{
   --bg:#0a0a0a;--bg2:#141413;--bg3:#1e1e1c;--bg4:#282826;
   --fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#7a7a75;--fg4:#4a4a46;
   --border:#252523;--border2:#353532;
-  --card:#141413;--card-h:#1a1a18
+  --card:#141413;--card-h:#1a1a18;
+  --shadow:0 2px 12px rgba(0,0,0,.3);--shadow2:0 8px 32px rgba(0,0,0,.5);
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.65;-webk-font-smoothing:antialiased;transion:background .4s,color .4s;overflow-x:hidden}
+a{color:inher;text-decoration:none}
 ::selection{background:var(--fg);color:var(--bg)}
-@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@keyframes textReveal{from{opacity:0;transform:translateY(30px) skewY(2deg)}to{opacity:1;transform:none}}
-.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}.reveal.vis{opacity:1;transform:none}
-
-/* ═══ PARTICLE CANVAS ═══ */
-#particles{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;opacity:.4;transition:opacity .4s}
-[data-t="dark"] #particles{opacity:.25}
-
-/* ═══ TOPBAR ═══ */
-.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 20px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);transition:all .4s}
-.topbar.scrolled{box-shadow:0 1px 20px rgba(0,0,0,.04)}
-[data-t="dark"] .topbar.scrolled{box-shadow:0 1px 20px rgba(0,0,0,.2)}
-.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
-.logo-mark{width:30px;height:30px;background:var(--fg);border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--bg);letter-spacing:-.02em;transition:transform .2s var(--spring),background .4s,color .4s}
-.logo:hover .logo-mark{transform:rotate(-5deg) scale(1.06)}
-.logo-name{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.03em;color:var(--fg)}
+@keyframes up{from{opacy:0;transform:translateY(20px)}to{opacy:1;transform:none}}
+@keyframes pulse{0%,100%{opacy:1}50%{opacy:.25}}
+@keyframes textReveal{from{opacy:0;transform:translateY(32px) skewY(2deg)}to{opacy:1;transform:none}}
+@keyframes growBar{from{width:0}to{width:var(--w)}}
+@keyframes floatA{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(1.5deg)}}
+@keyframes floatB{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(-1deg)}}
+@keyframes floatC{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.reveal{opacy:0;transform:translateY(22px);transion:opacy .7s var(--ease),transform .7s var(--ease)}
+.reveal.vis{opacy:1;transform:none}
+.reveal-l{opacy:0;transform:translateX(-18px);transion:opacy .6s var(--ease),transform .6s var(--ease)}
+.reveal-l.vis{opacy:1;transform:none}
+.reveal-r{opacy:0;transform:translateX(18px);transion:opacy .6s var(--ease),transform .6s var(--ease)}
+.reveal-r.vis{opacy:1;transform:none}
+.reveal-s{opacy:0;transform:scale(.97);transion:opacy .5s var(--ease),transform .5s var(--ease)}
+.reveal-s.vis{opacy:1;transform:none}
+.delay-1{transion-delay:.08s}.delay-2{transion-delay:.16s}.delay-3{transion-delay:.24s}
+/* Particle */
+#particles{posion:fixed;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;opacy:.35;transion:opacy .4s}
+[data-t="dark"] #particles{opacy:.2}
+/* Cursor glow */
+#cursor-glow{posion:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(10,10,10,.025) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:0;will-change:transform}
+[data-t="dark"] #cursor-glow{background:radial-gradient(circle,rgba(240,240,235,.04) 0%,transparent 70%)}
+/* Scroll progress */
+#scroll-progress{posion:fixed;top:0;left:0;right:0;height:2px;z-index:200;transform-origin:left;transform:scaleX(0);background:var(--fg);transion:transform .08s linear}
+/* Topbar */
+.topbar{posion:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-ems:center;padding:0 20px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);transion:all .4s}
+.topbar.scrolled{backdrop-filter:blur(16px);background:rgba(255,255,255,.82);box-shadow:0 1px 24px rgba(0,0,0,.05)}
+[data-t="dark"] .topbar.scrolled{background:rgba(10,10,10,.82)}
+.logo{display:flex;align-ems:center;gap:8px;cursor:pointer;user-select:none}
+.logo-mark{width:30px;height:30px;background:var(--fg);border-radius:7px;display:grid;place-ems:center;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--bg);transion:transform .3s var(--spring),background .4s,color .4s}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.1)}
+.logo-name{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.03em;color:var(--fg);transion:color .4s}
 .spacer{flex:1}
-.info-chip{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg2);white-space:nowrap;transition:all .4s}
-.chip-dot{width:1px;height:10px;background:var(--border2);transition:background .4s}
-.tb{height:32px;min-width:32px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;padding:0 10px;font-family:var(--mono);font-weight:500;letter-spacing:.02em}
-@media(max-width:400px){.tb{height:28px;padding:0 8px;font-size:11px}}
+.info-chip{display:flex;align-ems:center;gap:6px;padding:4px 12px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg2);whe-space:nowrap;transion:all .4s}
+.chip-dot{width:1px;height:10px;background:var(--border2)}
+.tb{height:32px;min-width:32px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--fg2);cursor:pointer;display:inline-flex;align-ems:center;justify-content:center;font-size:12px;transion:all .2s;padding:0 10px;font-family:var(--mono);font-weight:500;letter-spacing:.02em;whe-space:nowrap}
 .tb:hover{background:var(--bg2);color:var(--fg);border-color:var(--border2)}
-.tb:active{transform:scale(.96)}
+.tb:active{transform:scale(.93)}
 .ham-btn{padding:0 9px}
 .ham{display:flex;flex-direction:column;gap:3.5px;width:14px}
-.ham span{display:block;height:1.5px;background:var(--fg);border-radius:1px;transition:all .3s var(--ease)}
+.ham span{display:block;height:1.5px;background:var(--fg);border-radius:1px;transion:all .3s var(--ease)}
 .ham span:nth-child(2){width:9px}
 .ham-on .ham span:nth-child(1){transform:rotate(45deg) translate(2.5px,2.5px)}
-.ham-on .ham span:nth-child(2){opacity:0}
+.ham-on .ham span:nth-child(2){opacy:0;width:14px}
 .ham-on .ham span:nth-child(3){transform:rotate(-45deg) translate(3px,-3px)}
-
-/* ═══ MOBILE MENU ═══ */
-.mmenu{position:fixed;top:56px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);padding:24px 20px;overflow-y:auto;transform:translateY(-110%);opacity:0;transition:all .35s var(--ease)}
-.mmenu.open{transform:none;opacity:1}
-.mm-link{padding:14px 0;border-bottom:1px solid var(--border);font-size:16px;font-weight:500;color:var(--fg);display:flex;align-items:center;gap:8px;transition:all .2s}
-.mm-link:hover{opacity:.6;transform:translateX(6px)}
-.mm-link .mm-tag{font-family:var(--mono);font-size:10px;color:var(--fg3);margin-left:auto;letter-spacing:.04em}
+/* Mobile menu */
+.mmenu{posion:fixed;top:56px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);padding:24px 20px;overflow-y:auto;transform:translateY(-110%);opacy:0;transion:all .35s var(--ease)}
+.mmenu.open{transform:none;opacy:1}
+.mm-link{padding:14px 0;border-bottom:1px solid var(--border);font-size:16px;font-weight:500;color:var(--fg);display:flex;align-ems:center;gap:8px;transion:all .2s}
+.mm-link:hover{opacy:.6;transform:translateX(6px)}
+.mm-link .mm-tag{font-family:var(--mono);font-size:10px;color:var(--fg3);margin-left:auto;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
 .mm-sec{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.16em;margin-top:20px;margin-bottom:4px}
-
-/* ═══ HERO ═══ */
-.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(56px + 32px) 20px 48px;text-align:center;position:relative;z-index:1}
-@media(max-width:540px){.hero{min-height:auto;padding:calc(56px + 20px) 16px 32px}}
-.h-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:100px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg2);margin-bottom:28px;animation:up .6s var(--ease) .1s both;transition:all .4s}
-.h-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--fg);animation:pulse 2.5s infinite;transition:background .4s}
-.h-title{font-family:var(--display);font-size:clamp(28px,7vw,72px);font-weight:800;line-height:1.04;letter-spacing:-.05em;max-width:700px;margin-bottom:16px}
-@media(max-width:540px){.h-title{font-size:clamp(24px,9vw,40px);letter-spacing:-.04em}}
-.h-title .line{display:block;overflow:hidden}
-.h-title .line span{display:inline-block;animation:textReveal .7s var(--ease) both}
-.h-title .line:nth-child(1) span{animation-delay:.2s}
-.h-title .line:nth-child(2) span{animation-delay:.35s;color:var(--fg3)}
-.h-sub{font-size:clamp(14px,1.8vw,16px);color:var(--fg2);max-width:440px;line-height:1.8;margin-bottom:32px;animation:up .6s var(--ease) .5s both}
-.h-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;animation:up .6s var(--ease) .65s both}
+/* Hero */
+.hero{min-height:100svh;display:flex;flex-direction:column;align-ems:center;justify-content:center;padding:calc(56px + 40px) 20px 56px;text-align:center;posion:relative;z-index:1;overflow:hidden}
+@media(max-width:540px){.hero{min-height:auto;padding:calc(56px + 24px) 16px 40px}}
+.hero-deco{posion:absolute;pointer-events:none;z-index:0;border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:11px;color:var(--fg4);padding:8px 12px;background:var(--card);box-shadow:var(--shadow);display:flex;align-ems:center;gap:6px;whe-space:nowrap;transion:all .4s}
+.hero-deco::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.deco-1{top:25%;left:6%;animation:floatA 5s ease-in-out infine;color:var(--fg3)}
+.deco-2{top:35%;right:5%;animation:floatB 6.5s ease-in-out infine;color:var(--fg3)}
+.deco-3{bottom:28%;left:8%;animation:floatC 4.5s ease-in-out infine;color:var(--fg4)}
+.deco-4{bottom:24%;right:7%;animation:floatA 7s ease-in-out infine;color:var(--fg4)}
+@media(max-width:700px){.hero-deco{display:none}}
+.h-badge{display:inline-flex;align-ems:center;gap:7px;padding:6px 16px;border-radius:100px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg2);margin-bottom:28px;animation:up .6s var(--ease) .1s both;transion:all .4s}
+.h-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--fg);animation:pulse 2.5s infine;flex-shrink:0}
+.h-tle{font-family:var(--display);font-size:clamp(28px,7vw,72px);font-weight:800;line-height:1.04;letter-spacing:-.05em;max-width:720px;margin-bottom:16px;posion:relative;z-index:1}
+@media(max-width:540px){.h-tle{font-size:clamp(26px,9vw,42px);letter-spacing:-.04em}}
+.h-tle .line{display:block;overflow:hidden}
+.h-tle .line span{display:inline-block;animation:textReveal .7s var(--ease) both}
+.h-tle .line:nth-child(1) span{animation-delay:.2s}
+.h-tle .line:nth-child(2) span{animation-delay:.35s;color:var(--fg3)}
+.h-sub{font-size:clamp(14px,1.8vw,16px);color:var(--fg2);max-width:460px;line-height:1.85;margin-bottom:36px;animation:up .6s var(--ease) .5s both;posion:relative;z-index:1}
+.h-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;animation:up .6s var(--ease) .65s both;posion:relative;z-index:1}
 @media(max-width:540px){.btn-p,.btn-o{padding:10px 18px;font-size:12px}}
-.btn-p{display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:8px;background:var(--fg);color:var(--bg);border:none;font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.01em;cursor:pointer;transition:all .2s}
-.btn-p:hover{opacity:.8;transform:translateY(-2px)}
-.btn-p:active{transform:translateY(0)}
-.btn-o{display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:8px;background:transparent;color:var(--fg);border:1.5px solid var(--border2);font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.01em;cursor:pointer;transition:all .2s}
-.btn-o:hover{border-color:var(--fg);transform:translateY(-2px)}
-
-/* ═══ SECTIONS ═══ */
-.sec{padding:72px 24px;max-width:920px;margin:0 auto;position:relative;z-index:1}
-@media(max-width:540px){.sec{padding:40px 14px}}
-.sec-label{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
-.sec-title{font-family:var(--display);font-size:clamp(22px,4vw,36px);font-weight:800;letter-spacing:-.04em;line-height:1.15;margin-bottom:10px;color:var(--fg)}
-.sec-desc{font-size:14px;color:var(--fg3);max-width:420px;line-height:1.75}
-
-/* ═══ BRANDS ═══ */
-.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:32px}
+.btn-p{display:inline-flex;align-ems:center;gap:6px;padding:13px 26px;border-radius:var(--r);background:var(--fg);color:var(--bg);border:none;font-family:var(--display);font-size:13px;font-weight:600;cursor:pointer;transion:all .25s var(--ease)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.18);opacy:.9}
+.btn-p:active{transform:scale(.97)}
+.btn-o{display:inline-flex;align-ems:center;gap:6px;padding:12px 24px;border-radius:var(--r);background:transparent;color:var(--fg);border:1.5px solid var(--border2);font-family:var(--display);font-size:13px;font-weight:600;cursor:pointer;transion:all .25s var(--ease)}
+.btn-o:hover{border-color:var(--fg);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.07)}
+.btn-o:active{transform:scale(.97)}
+.h-ticker{posion:relative;z-index:1;margin-top:40px;animation:up .6s var(--ease) .8s both;overflow:hidden;width:100%;max-width:440px}
+.h-ticker-inner{display:flex;gap:24px;animation:tickerScroll 20s linear infine}
+.h-ticker-em{display:flex;align-ems:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--fg4);whe-space:nowrap;flex-shrink:0}
+.h-ticker-em::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--fg4);flex-shrink:0}
+/* Sections */
+.sec{padding:80px 24px;max-width:960px;margin:0 auto;posion:relative;z-index:1}
+@media(max-width:540px){.sec{padding:48px 16px}}
+.sec-label{font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-ems:center;gap:8px}
+.sec-label::before{content:'';flex:none;width:20px;height:1px;background:var(--fg4)}
+.sec-tle{font-family:var(--display);font-size:clamp(22px,4vw,38px);font-weight:800;letter-spacing:-.04em;line-height:1.12;margin-bottom:10px;color:var(--fg)}
+.sec-desc{font-size:14px;color:var(--fg3);max-width:460px;line-height:1.8}
+/* How  works */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:36px}
+@media(max-width:680px){.how-grid{grid-template-columns:1fr;gap:8px}}
+.how-step{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px 20px;posion:relative;overflow:hidden;transion:all .3s var(--ease)}
+.how-step::before{content:'';posion:absolute;top:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transion:transform .4s var(--ease)}
+.how-step:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:var(--shadow2)}
+.how-step:hover::before{transform:scaleX(1)}
+.how-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--fg4);letter-spacing:.1em;margin-bottom:14px;display:flex;align-ems:center;gap:8px}
+.how-num::after{content:'';flex:1;height:1px;background:var(--border)}
+.how-icon{font-size:22px;margin-bottom:10px;display:block;transion:transform .3s var(--spring)}
+.how-step:hover .how-icon{transform:scale(1.15) rotate(-5deg)}
+.how-tle{font-family:var(--display);font-size:15px;font-weight:700;color:var(--fg);margin-bottom:6px}
+.how-desc{font-size:12px;color:var(--fg3);line-height:1.7}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px}
+@media(max-width:540px){.stats-row{grid-template-columns:repeat(2,1fr);gap:6px}}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;text-align:center;animation:up .5s var(--ease) both;transion:all .3s var(--ease)}
+.sc:hover{border-color:var(--border2);transform:translateY(-2px)}
+.sc-v{font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.04em;color:var(--fg);line-height:1}
+.sc-l{font-size:10px;color:var(--fg4);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;font-weight:600}
+.sc-bar{height:2px;background:var(--bg3);border-radius:99px;margin-top:10px;overflow:hidden}
+.sc-fill{height:100%;border-radius:99px;animation:growBar 1.4s var(--ease) .5s both}
+/* Brands */
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:8px}
 @media(max-width:540px){.brands{grid-template-columns:repeat(2,1fr);gap:8px}}
-
-/* ── Brand Card — Diagonal Wipe ── */
-.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:32px}
-@media(max-width:540px){.brands{grid-template-columns:repeat(2,1fr);gap:8px}}
-.bcard{border-radius:14px;overflow:hidden;position:relative;cursor:pointer;height:160px;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .3s var(--ease),box-shadow .3s;background:var(--bg)}
-@media(max-width:540px){.bcard{height:110px;border-radius:12px}}
-@media(max-width:540px){.bc-name{font-size:13px!important}.bc-prefix{font-size:9px!important}.bc-btn{padding:5px 4px!important;font-size:10px!important}}
-.bcard:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 16px 40px rgba(0,0,0,.14)}
-[data-t="dark"] .bcard:hover{box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.bcard{border-radius:14px;overflow:hidden;posion:relative;cursor:pointer;height:160px;display:flex;flex-direction:column;justify-content:flex-end;transion:transform .35s var(--ease),box-shadow .35s;background:var(--bg)}
+@media(max-width:540px){.bcard{height:115px;border-radius:12px}}
+.bcard:hover{transform:translateY(-5px) scale(1.018);box-shadow:0 18px 44px rgba(0,0,0,.15)}
+[data-t="dark"] .bcard:hover{box-shadow:0 18px 44px rgba(0,0,0,.5)}
 .bcard:active{transform:scale(.98)}
-/* bg layer — starts as page bg, stays until wipe */
-.bc-bg-base{position:absolute;inset:0;background:var(--card);border:1px solid var(--border);border-radius:14px;z-index:0;transition:border-color .3s}
+.bc-bg-base{posion:absolute;inset:0;background:var(--card);border:1px solid var(--border);border-radius:14px;z-index:0;transion:border-color .3s}
 .bcard:hover .bc-bg-base{border-color:transparent}
-/* wipe layers */
-.dw,.dw2{position:absolute;inset:0;border-radius:14px;transform:translateX(-115%) skewX(-10deg);transition:transform .45s cubic-bezier(.4,0,.15,1);z-index:2}
-.dw2{opacity:.6;transition-delay:.07s;z-index:3}
+.dw,.dw2{posion:absolute;inset:0;border-radius:14px;transform:translateX(-115%) skewX(-10deg);transion:transform .45s cubic-bezier(.4,0,.15,1);z-index:2}
+.dw2{opacy:.6;transion-delay:.07s;z-index:3}
 .bcard:hover .dw,.bcard.tapped .dw{transform:translateX(0) skewX(0deg)}
 .bcard:hover .dw2,.bcard.tapped .dw2{transform:translateX(0) skewX(0deg)}
-/* abbr — visible before hover */
-.t-abbr{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:22px;font-weight:800;color:var(--fg3);transition:opacity .18s,transform .28s;pointer-events:none;letter-spacing:.04em}
-.bcard:hover .t-abbr,.bcard.tapped .t-abbr{opacity:0;transform:translateX(10px)}
-/* content after wipe */
-.bc-body{position:relative;z-index:11;padding:12px 14px;opacity:0;transition:opacity .18s .38s}
-.bcard:hover .bc-body,.bcard.tapped .bc-body{opacity:1}
+.t-abbr{posion:absolute;inset:0;z-index:10;display:flex;align-ems:center;justify-content:center;font-family:var(--mono);font-size:22px;font-weight:800;color:var(--fg3);transion:opacy .18s,transform .28s;pointer-events:none;letter-spacing:.04em}
+.bcard:hover .t-abbr,.bcard.tapped .t-abbr{opacy:0;transform:translateX(10px)}
+.bc-body{posion:relative;z-index:11;padding:12px 14px;opacy:0;transion:opacy .18s .38s}
+.bcard:hover .bc-body,.bcard.tapped .bc-body{opacy:1}
 @media(max-width:540px){.bc-body{padding:8px 10px}}
-.bc-prefix{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:4px;opacity:.75}
-.bc-name{font-family:var(--display);font-size:17px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:10px}
+.bc-prefix{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:3px;opacy:.75}
+.bc-name{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:10px}
+@media(max-width:540px){.bc-name{font-size:13px}.bc-prefix{font-size:9px}}
 .bc-btns{display:flex;gap:5px}
-.bc-btn{flex:1;padding:7px 6px;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block;letter-spacing:.01em}
+.bc-btn{flex:1;padding:7px 6px;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer;transion:all .2s;text-align:center;text-decoration:none;display:block}
+@media(max-width:540px){.bc-btn{padding:5px 4px;font-size:10px}}
 .bc-btn.pri{background:rgba(255,255,255,.95);border:none}
 .bc-btn.sec{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.9)}
-.bc-btn.sec:hover{background:rgba(255,255,255,.25)}
-.bc-badge{position:absolute;top:10px;right:10px;z-index:12;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:99px;color:var(--fg3);border:1px solid var(--border);background:var(--card);transition:opacity .2s .1s}
-.bcard:hover .bc-badge{opacity:0}
-
-/* ═══ SYSTEM PREVIEW ═══ */
+.bc-btn.sec:hover{background:rgba(255,255,255,.28)}
+.bc-badge{posion:absolute;top:10px;right:10px;z-index:12;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:99px;color:var(--fg3);border:1px solid var(--border);background:var(--card);transion:opacy .2s .1s}
+.bcard:hover .bc-badge{opacy:0}
+/* Platform overview */
 .previews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:32px}
-.pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 18px;transition:all .3s var(--ease);text-decoration:none;color:var(--fg);display:block}
-.pcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.04)}
+@media(max-width:680px){.previews{grid-template-columns:1fr}}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px 20px;transion:all .3s var(--ease);text-decoration:none;color:var(--fg);display:block;posion:relative;overflow:hidden}
+.pcard::after{content:'';posion:absolute;bottom:0;left:0;right:0;height:2px;background:var(--fg);transform:scaleX(0);transform-origin:left;transion:transform .4s var(--ease)}
+.pcard:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:var(--shadow2)}
+.pcard:hover::after{transform:scaleX(1)}
+.pcard:active{transform:scale(.98)}
+.pc-icon{font-size:20px;margin-bottom:12px;display:block;transion:transform .3s var(--spring)}
+.pcard:hover .pc-icon{transform:scale(1.2) rotate(-6deg)}
 .pc-tag{font-family:var(--mono);font-size:10px;color:var(--fg4);letter-spacing:.06em;display:block;margin-bottom:8px}
-.pc-title{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-.pc-desc{font-size:12px;color:var(--fg3);line-height:1.5;margin-bottom:12px}
-.pc-stat{font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--fg)}
-.pc-stat-label{font-size:11px;color:var(--fg4);margin-top:2px}
-
-/* ═══ QUICK ACCESS ═══ */
+.pc-tle{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:5px;letter-spacing:-.02em}
+.pc-desc{font-size:12px;color:var(--fg3);line-height:1.65;margin-bottom:14px}
+.pc-stat{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.05em;color:var(--fg);line-height:1}
+.pc-stat-label{font-size:11px;color:var(--fg4);margin-top:3px}
+.pc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.pc-feature{font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--fg3)}
+/* Quick access */
 .qlinks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:28px}
-.qcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 16px;text-align:center;transition:all .3s var(--ease);text-decoration:none;display:block;color:var(--fg)}
-@media(max-width:540px){.qcard{padding:14px 8px}.qc-title{font-size:12px!important}.qc-desc{display:none}}
-.qcard:hover{border-color:var(--border2);transform:translateY(-2px)}
-.qc-icon{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--fg4);width:36px;height:36px;border-radius:8px;background:var(--bg2);display:inline-grid;place-items:center;margin-bottom:10px;transition:all .4s}
-.qcard:hover .qc-icon{background:var(--fg);color:var(--bg)}
-.qc-title{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:3px;letter-spacing:-.02em}
-.qc-desc{font-size:12px;color:var(--fg3);line-height:1.5}
-
-/* ═══ FOOTER ═══ */
-.footer{border-top:1px solid var(--border);padding:24px;text-align:center;position:relative;z-index:1;transition:border-color .4s}
-.footer-txt{font-size:12px;color:var(--fg4)}
-
-@media(max-width:640px){
-  .info-chip{display:none}.logo-name{display:none}
-  .previews{grid-template-columns:1fr}
-  .qlinks{grid-template-columns:repeat(3,1fr)}
-}
-@media(max-width:400px){
-  .qlinks{grid-template-columns:1fr}
-}
-@media(min-width:641px) and (max-width:1023px){
-  .brands{grid-template-columns:repeat(2,1fr)}
-  .previews{grid-template-columns:repeat(3,1fr)}
-}
-
-/* ── Stats ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
-@media(max-width:540px){.stats-row{grid-template-columns:repeat(2,1fr);gap:6px}}
-@media(max-width:540px){.sc-v{font-size:18px!important}.sc-l{font-size:9px!important}}
-.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;animation:up .5s var(--ease) both;transition:all .4s}
-.sc-v{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.04em;color:var(--fg)}
-.sc-l{font-size:10px;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;font-weight:600}
-.sc-bar{height:2px;background:var(--bg3);border-radius:99px;margin-top:8px;overflow:hidden}
-.sc-fill{height:100%;border-radius:99px;animation:growBar 1.2s var(--ease) .6s both}
-@keyframes growBar{from{width:0}to{width:var(--w)}}
-
-/* ── FAQ ── */
+@media(max-width:400px){.qlinks{grid-template-columns:1fr}}
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px 16px;text-align:center;transion:all .3s var(--ease);text-decoration:none;display:block;color:var(--fg)}
+.qcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--shadow2)}
+.qcard:active{transform:scale(.97)}
+.qc-icon{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--fg4);width:40px;height:40px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);display:inline-grid;place-ems:center;margin-bottom:12px;transion:all .3s var(--spring)}
+.qcard:hover .qc-icon{background:var(--fg);color:var(--bg);transform:scale(1.12) rotate(-5deg);border-color:var(--fg)}
+.qc-tle{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
+.qc-desc{font-size:12px;color:var(--fg3);line-height:1.55}
+.qc-badge{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--bg3);color:var(--fg4)}
+@media(max-width:540px){.qcard{padding:16px 10px}.qc-desc{display:none}}
+/* FAQ */
 .faq{margin-top:0;display:flex;flex-direction:column;gap:6px}
-.faq-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
-.faq-item.open{border-color:var(--border2)}
-.faq-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:var(--card);transition:background .2s;user-select:none}
+.faq-em{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transion:border-color .25s}
+.faq-em.open{border-color:var(--border2)}
+.faq-h{display:flex;justify-content:space-between;align-ems:center;padding:15px 18px;cursor:pointer;background:var(--card);transion:background .2s;user-select:none}
 .faq-h:hover{background:var(--card-h)}
-.faq-q{font-size:14px;font-weight:600;color:var(--fg)}
-.faq-ic{width:22px;height:22px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg3);transition:transform .25s,background .2s,color .2s;flex-shrink:0}
-.faq-item.open .faq-ic{transform:rotate(45deg);background:var(--fg);border-color:var(--fg);color:var(--bg)}
-.faq-body{max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s;background:var(--bg2);padding:0 16px;font-size:13px;color:var(--fg3);line-height:1.75}
-.faq-item.open .faq-body{max-height:220px;padding:12px 16px}
-
+.faq-q{font-size:14px;font-weight:600;color:var(--fg);line-height:1.45}
+.faq-ic{width:22px;height:22px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-ems:center;justify-content:center;font-size:11px;color:var(--fg3);transion:transform .28s var(--ease),background .2s,color .2s;flex-shrink:0;margin-left:12px}
+.faq-em.open .faq-ic{transform:rotate(45deg);background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.faq-body{max-height:0;overflow:hidden;transion:max-height .38s var(--ease),padding .3s;background:var(--bg2);padding:0 18px;font-size:13px;color:var(--fg3);line-height:1.8}
+.faq-em.open .faq-body{max-height:240px;padding:14px 18px}
+/* Footer */
+.footer{border-top:1px solid var(--border);padding:28px 24px;posion:relative;z-index:1;transion:border-color .4s}
+.footer-inner{max-width:960px;margin:0 auto;display:flex;align-ems:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-txt{font-size:12px;color:var(--fg4)}
+.footer-links{display:flex;gap:16px}
+.footer-link{font-size:11px;color:var(--fg4);font-family:var(--mono);transion:color .2s}
+.footer-link:hover{color:var(--fg)}
+@media(max-width:540px){.footer-inner{flex-direction:column;align-ems:flex-start;gap:8px}}
+/* Responsive */
+@media(max-width:640px){.info-chip{display:none}.logo-name{display:none}}
+@media(min-width:641px) and (max-width:1023px){.brands{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-
+<div id="scroll-progress"></div>
+<div id="cursor-glow"></div>
 <canvas id="particles"></canvas>
-
 <header class="topbar" id="topbar">
-  <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})"><div class="logo-mark">IT</div><div class="logo-name">Support Hub</div></div>
+  <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})">
+    <div class="logo-mark"></div>
+    <div class="logo-name">Support Hub</div>
+  </div>
   <div class="spacer"></div>
-  <div class="info-chip"><span id="el-time">--:--:--</span><span class="chip-dot"></span><span id="el-date">--</span><span class="chip-dot"></span><span id="el-temp">--</span></div>
+  <div class="info-chip">
+    <span id="el-time">--:--:--</span><span class="chip-dot"></span>
+    <span id="el-date">--</span><span class="chip-dot"></span>
+    <span id="el-temp">--</span>
+  </div>
   <button class="tb" id="btn-lang" onclick="togLang()">EN</button>
   <button class="tb" id="btn-theme" onclick="togTheme()">Dark</button>
-  <button class="tb ham-btn" id="btn-ham" onclick="togMenu()"><div class="ham"><span></span><span></span><span></span></div></button>
+  <button class="tb ham-btn" id="btn-ham" onclick="togMenu()">
+    <div class="ham"><span></span><span></span><span></span></div>
+  </button>
 </header>
-
 <nav class="mmenu" id="mmenu">
   <div class="mm-sec" data-t="m_brands">BRANDS</div>
   <a class="mm-link" href="/report/Dunkin">Dunkin' <span class="mm-tag">GD</span></a>
   <a class="mm-link" href="/report/Greyhound%20Cafe">Greyhound Cafe' <span class="mm-tag">GHC</span></a>
-  <a class="mm-link" href="/report/Greyhound%20Original">Greyhound Original <span class="mm-tag">GO</span></a>
+  <a class="mm-link" href="/report/Greyhound%20Original">Greyhound Original <span class="mm-tag">GH</span></a>
   <a class="mm-link" href="/report/Au%20Bon%20Pain">Au Bon Pain <span class="mm-tag">ABP</span></a>
   <a class="mm-link" href="/report/Funky%20Fries">Funky Fries <span class="mm-tag">FF</span></a>
   <a class="mm-link" href="/report/Another%20Hound">Another Hound Cafe' <span class="mm-tag">AHC</span></a>
@@ -222,154 +259,242 @@ a{color:inherit;text-decoration:none}
   <a class="mm-link" href="/admin"><span data-t="n_admin">Admin Dashboard</span></a>
   <a class="mm-link" href="/engineer"><span data-t="n_eng">Engineer Portal</span></a>
 </nav>
-
 <section class="hero">
-  <div class="h-badge"><span data-t="h_chip">Multi-brand IT Ticket Management</span></div>
-  <h1 class="h-title">
-    <span class="line"><span data-t="h_t1">Every IT issue,</span></span>
+  <div class="hero-deco deco-1">LINE แจ้งเตือนอัตโนมัติ</div>
+  <div class="hero-deco deco-2">GPS Tracking</div>
+  <div class="hero-deco deco-3">SLA 7 วันทำการ</div>
+  <div class="hero-deco deco-4">1,118 สาขาทั่วประเทศ</div>
+  <div class="h-badge"><span data-t="h_chip">Multi-brand  Ticket Management</span></div>
+  <h1 class="h-tle">
+    <span class="line"><span data-t="h_t1">Every issue,</span></span>
     <span class="line"><span data-t="h_t2">managed in one place.</span></span>
   </h1>
-  <p class="h-sub" data-t="h_sub">Report, track, assign, repair — all in one platform. 5 brands, real-time LINE notifications, GPS tracking, SLA management.</p>
+  <p class="h-sub" data-t="h_sub">แจ้งซ่อม ติดตาม มอบหมาย ครบจบในแพลตฟอร์มเดียว รองรับ 7 แบรนด์ แจ้งเตือน LINE พร้อม GPS tracking</p>
   <div class="h-btns">
-    <a href="#brands" class="btn-p" data-t="h_b1">Select Brand</a>
+    <a href="#brands" class="btn-p" data-t="h_b1">เลือกแบรนด์</a>
     <a href="/admin" class="btn-o" data-t="h_b2">Admin Login</a>
   </div>
+  <div class="h-ticker">
+    <div class="h-ticker-inner">
+      <span class="h-ticker-em">Dunkin' · GD</span>
+      <span class="h-ticker-em">Greyhound Cafe' · GHC</span>
+      <span class="h-ticker-em">Greyhound Original · GH</span>
+      <span class="h-ticker-em">Au Bon Pain · ABP</span>
+      <span class="h-ticker-em">Funky Fries · FF</span>
+      <span class="h-ticker-em">Another Hound Cafe' · AHC</span>
+      <span class="h-ticker-em">Bean Hound · BE</span>
+      <span class="h-ticker-em">Dunkin' · GD</span>
+      <span class="h-ticker-em">Greyhound Cafe' · GHC</span>
+      <span class="h-ticker-em">Greyhound Original · GH</span>
+      <span class="h-ticker-em">Au Bon Pain · ABP</span>
+      <span class="h-ticker-em">Funky Fries · FF</span>
+      <span class="h-ticker-em">Another Hound Cafe' · AHC</span>
+      <span class="h-ticker-em">Bean Hound · BE</span>
+    </div>
+  </div>
 </section>
-
+<section class="sec reveal" id="how">
+  <div class="sec-label" id="how-label">HOW  WORKS</div>
+  <h2 class="sec-tle" id="how-tle">ระบบทำงานยังไง?</h2>
+  <p class="sec-desc" id="how-desc">จากร้านค้าถึงช่างใน 3 ขั้นตอน ตรวจสอบได้ตลอดเวลา</p>
+  <div class="how-grid">
+    <div class="how-step reveal-s delay-1">
+      <div class="how-num">01</div>
+      <span class="how-icon">&#127978;</span>
+      <div class="how-tle" id="how-t1">แจ้งปัญหา</div>
+      <div class="how-desc" id="how-d1">ร้านค้าสแกน QR หรือเปิด /report เลือกแบรนด์ กรอกรายละเอียด ระบบสร้าง Ticket ID ส่ง LINE แจ้ง Admin ทันที</div>
+    </div>
+    <div class="how-step reveal-s delay-2">
+      <div class="how-num">02</div>
+      <span class="how-icon">&#9881;&#65039;</span>
+      <div class="how-tle" id="how-t2">มอบหมายช่าง</div>
+      <div class="how-desc" id="how-d2">Admin รับเรื่อง ตรวจสอบ SLA มอบหมายช่างเทคนิค ระบบ GPS ติดตามตำแหน่ง</div>
+    </div>
+    <div class="how-step reveal-s delay-3">
+      <div class="how-num">03</div>
+      <span class="how-icon">&#9989;</span>
+      <div class="how-tle" id="how-t3">ซ่อมเสร็จ แจ้งกลับ</div>
+      <div class="how-desc" id="how-d3">ช่างถ่ายรูปหลักฐาน ส่งรายงาน Admin ตรวจรับ ปิดงาน LINE แจ้งร้านค้าอัตโนมัติ</div>
+    </div>
+  </div>
+</section>
 <section class="sec reveal" id="brands">
   <div class="sec-label" data-t="br_label">BRANDS</div>
-  <h2 class="sec-title" data-t="br_title">Choose your brand</h2>
-  <p class="sec-desc" data-t="br_desc">Each brand has its own dedicated report and tracking page with unique identity.</p>
-  <div class="stats-row">
+  <h2 class="sec-tle" data-t="br_tle">เลือกแบรนด์ของคุณ</h2>
+  <p class="sec-desc" data-t="br_desc">แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกจากกัน</p>
+  <div class="stats-row" style="margin-top:28px">
     <div class="sc" style="animation-delay:.05s"><div class="sc-v">7</div><div class="sc-l">Brands</div><div class="sc-bar"><div class="sc-fill" style="background:var(--fg);--w:100%"></div></div></div>
-    <div class="sc" style="animation-delay:.1s"><div class="sc-v">1,118</div><div class="sc-l">Branches</div><div class="sc-bar"><div class="sc-fill" style="background:#2d7a4f;--w:88%"></div></div></div>
-    <div class="sc" style="animation-delay:.15s"><div class="sc-v" id="stat-open">--</div><div class="sc-l">Open tickets</div><div class="sc-bar"><div class="sc-fill" style="background:#185FA5;--w:50%"></div></div></div>
-    <div class="sc" style="animation-delay:.2s"><div class="sc-v">7</div><div class="sc-l">วันทำการ SLA</div><div class="sc-bar"><div class="sc-fill" style="background:#854F0B;--w:70%"></div></div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-v">1,118</div><div class="sc-l" id="sc-branches">Branches</div><div class="sc-bar"><div class="sc-fill" style="background:#2d7a4f;--w:88%"></div></div></div>
+    <div class="sc" style="animation-delay:.15s"><div class="sc-v" id="stat-open">--</div><div class="sc-l" id="sc-open">Open Tickets</div><div class="sc-bar"><div class="sc-fill" style="background:#185FA5;--w:50%"></div></div></div>
+    <div class="sc" style="animation-delay:.2s"><div class="sc-v">7</div><div class="sc-l" id="sc-sla">SLA Days</div><div class="sc-bar"><div class="sc-fill" style="background:#854F0B;--w:70%"></div></div></div>
   </div>
   <div class="brands" id="brand-grid"></div>
 </section>
-
 <section class="sec reveal">
   <div class="sec-label" data-t="pv_label">SYSTEM PREVIEW</div>
-  <h2 class="sec-title" data-t="pv_title">Platform overview</h2>
-  <p class="sec-desc" data-t="pv_desc">Three connected systems working together end-to-end.</p>
+  <h2 class="sec-tle" data-t="pv_tle">ภาพรวมระบบ</h2>
+  <p class="sec-desc" data-t="pv_desc">3 ระบบทำงานร่วมกัน</p>
   <div class="previews">
-    <a href="/admin" class="pcard"><span class="pc-tag">01 / ADMIN</span><div class="pc-title" data-t="pv_admin">Dashboard</div><div class="pc-desc" data-t="pv_admin_d">Manage tickets, assign engineers, review work, track SLA compliance.</div><div class="pc-stat" id="stat-tickets">--</div><div class="pc-stat-label" data-t="pv_total">Total tickets</div></a>
-    <a href="/engineer" class="pcard"><span class="pc-tag">02 / ENGINEER</span><div class="pc-title" data-t="pv_eng">Engineer Portal</div><div class="pc-desc" data-t="pv_eng_d">Accept jobs, track GPS, upload photos, submit work reports.</div><div class="pc-stat" id="stat-engineers">--</div><div class="pc-stat-label" data-t="pv_active">Active engineers</div></a>
-    <div class="pcard"><span class="pc-tag">03 / REPORT</span><div class="pc-title" data-t="pv_rep">Report System</div><div class="pc-desc" data-t="pv_rep_d">Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.</div><div class="pc-stat">7</div><div class="pc-stat-label" data-t="pv_brands">Brands supported</div></div>
+    <a href="/admin" class="pcard reveal-l delay-1">
+      <span class="pc-icon">&#9881;&#65039;</span>
+      <span class="pc-tag">01 / ADMIN</span>
+      <div class="pc-tle" data-t="pv_admin">Admin Dashboard</div>
+      <div class="pc-desc" data-t="pv_admin_d">จัดการ Ticket มอบหมายช่าง ตรวจงาน ติดตามงาน SLA</div>
+      <div class="pc-tags">
+        <span class="pc-feature">Kanban</span>
+        <span class="pc-feature">GPS Map</span>
+        <span class="pc-feature">Analytics</span>
+        <span class="pc-feature">Branches</span>
+      </div>
+      <div style="margin-top:16px"><div class="pc-stat" id="stat-tickets">--</div><div class="pc-stat-label" data-t="pv_total">Tickets ทั้งหมด</div></div>
+    </a>
+    <a href="/engineer" class="pcard reveal-s delay-2">
+      <span class="pc-icon">&#128295;</span>
+      <span class="pc-tag">02 / ENGINEER</span>
+      <div class="pc-tle" data-t="pv_eng">Engineer Portal</div>
+      <div class="pc-desc" data-t="pv_eng_d">รับงาน GPS tracking ถ่ายรูป ส่งรายงาน</div>
+      <div class="pc-tags">
+        <span class="pc-feature">GPS Track</span>
+        <span class="pc-feature">Photo Upload</span>
+        <span class="pc-feature">Dashboard</span>
+      </div>
+      <div style="margin-top:16px"><div class="pc-stat" id="stat-engineers">--</div><div class="pc-stat-label" data-t="pv_active">ช่างที่ Active</div></div>
+    </a>
+    <div class="pcard reveal-r delay-3">
+      <span class="pc-icon">&#128203;</span>
+      <span class="pc-tag">03 / REPORT</span>
+      <div class="pc-tle" data-t="pv_rep">Report System</div>
+      <div class="pc-desc" data-t="pv_rep_d">แจ้งปัญหาแยกแบรนด์ สร้าง Ticket อัตโนมัติ ส่ง LINE</div>
+      <div class="pc-tags">
+        <span class="pc-feature">Public</span>
+        <span class="pc-feature">LINE Notify</span>
+        <span class="pc-feature">QR Code</span>
+      </div>
+      <div style="margin-top:16px"><div class="pc-stat">7</div><div class="pc-stat-label" data-t="pv_brands">แบรนด์ที่รองรับ</div></div>
+    </div>
   </div>
 </section>
-
 <section class="sec reveal">
   <div class="sec-label" data-t="q_label">QUICK ACCESS</div>
-  <h2 class="sec-title" data-t="q_title">System access</h2>
+  <h2 class="sec-tle" data-t="q_tle">เข้าสู่ระบบ</h2>
   <div class="qlinks">
-    <a href="/report" class="qcard"><div class="qc-icon">R</div><div class="qc-title" data-t="q_rep">Report</div><div class="qc-desc" data-t="q_rep_d">Submit IT repair tickets</div></a>
-    <a href="/engineer" class="qcard"><div class="qc-icon">E</div><div class="qc-title" data-t="q_eng">Engineer</div><div class="qc-desc" data-t="q_eng_d">Accept and complete jobs</div></a>
-    <a href="/admin" class="qcard"><div class="qc-icon">A</div><div class="qc-title" data-t="q_adm">Admin</div><div class="qc-desc" data-t="q_adm_d">Manage system and users</div></a>
+    <a href="/report" class="qcard reveal-l delay-1">
+      <div class="qc-icon">R</div>
+      <div class="qc-tle" data-t="q_rep">แจ้งปัญหา</div>
+      <div class="qc-desc" data-t="q_rep_d">ส่ง Ticket แจ้งซ่อม</div>
+      <div class="qc-badge" id="qb-rep">&#127757; สาธารณะ</div>
+    </a>
+    <a href="/engineer" class="qcard reveal-s delay-2">
+      <div class="qc-icon">E</div>
+      <div class="qc-tle" data-t="q_eng">หน้าช่าง</div>
+      <div class="qc-desc" data-t="q_eng_d">รับงาน ส่งงาน</div>
+      <div class="qc-badge">&#128274; Login</div>
+    </a>
+    <a href="/admin" class="qcard reveal-r delay-3">
+      <div class="qc-icon">A</div>
+      <div class="qc-tle" data-t="q_adm">Admin</div>
+      <div class="qc-desc" data-t="q_adm_d">จัดการระบบและผู้ใช้</div>
+      <div class="qc-badge">&#128274; Login</div>
+    </a>
   </div>
 </section>
-
 <section class="sec reveal">
   <div class="sec-label">FAQ</div>
-  <h2 class="sec-title" id="faq-title">คำถามที่พบบ่อย</h2>
+  <h2 class="sec-tle" id="faq-tle">คำถามที่พบบ่อย</h2>
   <div class="faq" id="faq-list"></div>
 </section>
-
-<footer class="footer"><div class="footer-txt">IT Support Hub v2.0 — <span data-t="footer">Multi-brand Restaurant IT Management</span></div></footer>
-
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-txt"> Support v2.0 — <span data-t="footer">ระบบจัดการ Support หลายสาขา</span></div>
+    <div class="footer-links">
+      <a href="/report" class="footer-link">Report</a>
+      <a href="/engineer" class="footer-link">Engineer</a>
+      <a href="/admin" class="footer-link">Admin</a>
+    </div>
+  </div>
+</footer>
 <script>
-// ═══ BRANDS ═══
 const BRANDS=[
-  {s:'dunkin',            n:"Dunkin'",            p:'GD',  r:'/report/Dunkin',             c1:'#FF6B00',c2:'#E91E8C',tc:'#fff'},
-  {s:'greyhound-cafe',    n:"Greyhound Cafe'",     p:'GHC', r:'/report/Greyhound%20Cafe',   c1:'#1A1A1A',c2:'#3d3d3d',tc:'#fff'},
-  {s:'greyhound-original',n:'Greyhound Original',  p:'GO',  r:'/report/Greyhound%20Original',c1:'#5a5a5a',c2:'#9a9a9a',tc:'#fff'},
-  {s:'au-bon-pain',       n:'Au Bon Pain',         p:'ABP', r:'/report/Au%20Bon%20Pain',    c1:'#F5C518',c2:'#e8a000',tc:'#111'},
-  {s:'funky-fries',       n:'Funky Fries',         p:'FF',  r:'/report/Funky%20Fries',      c1:'#1B3F8B',c2:'#F5A623',tc:'#fff'},
-  {s:'another-hound',     n:"Another Hound Cafe'", p:'AHC', r:'/report/Another%20Hound',    c1:'#0D2B23',c2:'#D4B896',tc:'#fff'},
-  {s:'bean-hound',        n:'Bean Hound',          p:'BE',  r:'/report/Bean%20Hound',       c1:'#4a3728',c2:'#C8C0B8',tc:'#fff'},
+  {s:'dunkin',n:"Dunkin'",p:'GD',r:'/report/Dunkin',c1:'#FF6B00',c2:'#E91E8C',tc:'#fff'},
+  {s:'greyhound-cafe',n:"Greyhound Cafe'",p:'GHC',r:'/report/Greyhound%20Cafe',c1:'#1A1A1A',c2:'#3d3d3d',tc:'#fff'},
+  {s:'greyhound-original',n:'Greyhound Original',p:'GH',r:'/report/Greyhound%20Original',c1:'#5a5a5a',c2:'#9a9a9a',tc:'#fff'},
+  {s:'au-bon-pain',n:'Au Bon Pain',p:'ABP',r:'/report/Au%20Bon%20Pain',c1:'#F5C518',c2:'#e8a000',tc:'#111'},
+  {s:'funky-fries',n:'Funky Fries',p:'FF',r:'/report/Funky%20Fries',c1:'#1B3F8B',c2:'#F5A623',tc:'#fff'},
+  {s:'another-hound',n:"Another Hound Cafe'",p:'AHC',r:'/report/Another%20Hound',c1:'#0D2B23',c2:'#D4B896',tc:'#fff'},
+  {s:'bean-hound',n:'Bean Hound',p:'BE',r:'/report/Bean%20Hound',c1:'#4a3728',c2:'#C8C0B8',tc:'#fff'},
 ];
-
-// ═══ I18N ═══
 let lang='en';
 const T={
-  th:{h_chip:'ระบบจัดการ IT หลายแบรนด์',h_t1:'ทุกปัญหา IT',h_t2:'จัดการได้ในที่เดียว',h_sub:'แจ้งซ่อม ติดตาม มอบหมาย ครบจบในแพลตฟอร์มเดียว รองรับ 5 แบรนด์ แจ้งเตือน LINE พร้อม GPS tracking',h_b1:'เลือกแบรนด์',h_b2:'เข้า Admin',br_label:'BRANDS',br_title:'เลือกแบรนด์ของคุณ',br_desc:'แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกจากกัน',br_rep:'แจ้งปัญหา',br_trk:'ติดตาม',pv_label:'SYSTEM PREVIEW',pv_title:'ภาพรวมระบบ',pv_desc:'สามระบบเชื่อมต่อทำงานร่วมกัน end-to-end',pv_admin:'Dashboard',pv_admin_d:'จัดการ Ticket มอบหมายช่าง ตรวจงาน ติดตาม SLA',pv_total:'Tickets ทั้งหมด',pv_eng:'หน้าช่าง',pv_eng_d:'รับงาน GPS tracking ถ่ายรูป ส่งรายงาน',pv_active:'ช่างที่ active',pv_rep:'ระบบแจ้งงาน',pv_rep_d:'แจ้งปัญหาแยกแบรนด์ สร้าง Ticket อัตโนมัติ ส่ง LINE',pv_brands:'แบรนด์ที่รองรับ',q_label:'QUICK ACCESS',q_title:'เข้าสู่ระบบ',q_rep:'แจ้งปัญหา',q_rep_d:'ส่ง Ticket แจ้งซ่อม',q_eng:'หน้าช่าง',q_eng_d:'รับงาน ส่งงาน',q_adm:'Admin',q_adm_d:'จัดการระบบและผู้ใช้',n_admin:'Admin Dashboard',n_eng:'หน้าช่าง',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'ระบบจัดการ IT Support หลายสาขา'},
-  en:{h_chip:'Multi-brand IT Ticket Management',h_t1:'Every IT issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign, repair — all in one platform. 5 brands, real-time LINE notifications, GPS tracking, SLA management.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_title:'Choose your brand',br_desc:'Each brand has its own dedicated report and tracking page with unique identity.',br_rep:'Report',br_trk:'Track',pv_label:'SYSTEM PREVIEW',pv_title:'Platform overview',pv_desc:'Three connected systems working together end-to-end.',pv_admin:'Dashboard',pv_admin_d:'Manage tickets, assign engineers, review work, track SLA compliance.',pv_total:'Total tickets',pv_eng:'Engineer Portal',pv_eng_d:'Accept jobs, track GPS, upload photos, submit work reports.',pv_active:'Active engineers',pv_rep:'Report System',pv_rep_d:'Per-brand issue reporting with auto Ticket ID, SLA, LINE notification.',pv_brands:'Brands supported',q_label:'QUICK ACCESS',q_title:'System access',q_rep:'Report',q_rep_d:'Submit IT repair tickets',q_eng:'Engineer',q_eng_d:'Accept and complete jobs',q_adm:'Admin',q_adm_d:'Manage system and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-brand Restaurant IT Management'}
+  th:{h_chip:'ระบบจัดการ  หลายแบรนด์',h_t1:'ทุกปัญหา',h_t2:'จัดการได้ในที่เดียว',h_sub:'แจ้งซ่อม ติดตาม มอบหมาย จบในแพลตฟอร์มเดียว รองรับ 7 แบรนด์ แจ้งเตือน LINE พร้อม GPS tracking',h_b1:'เลือกแบรนด์',h_b2:'เข้า Admin',br_label:'BRANDS',br_tle:'เลือกแบรนด์ของคุณ',br_desc:'แต่ละแบรนด์มีหน้าแจ้งปัญหาและติดตามงานแยกจากกัน',br_rep:'แจ้งปัญหา',br_trk:'ติดตาม',pv_label:'SYSTEM PREVIEW',pv_tle:'ภาพรวมระบบ',pv_desc:'3 ระบบทำงานร่วมกัน ครบวงจร',pv_admin:'Admin Dashboard',pv_admin_d:'จัดการ Ticket มอบหมายช่าง ตรวจงาน ติดตาม SLA',pv_total:'Tickets ทั้งหมด',pv_eng:'หน้าช่าง',pv_eng_d:'รับงาน GPS tracking ถ่ายรูป ส่งรายงาน',pv_active:'ช่างที่ Active',pv_rep:'ระบบแจ้งงาน',pv_rep_d:'แจ้งปัญหาแยกแบรนด์ สร้าง Ticket อัตโนมัติ ส่ง LINE',pv_brands:'แบรนด์ที่รองรับ',q_label:'QUICK ACCESS',q_tle:'เข้าสู่ระบบ',q_rep:'แจ้งปัญหา',q_rep_d:'ส่ง Ticket แจ้งซ่อม',q_eng:'หน้าช่าง',q_eng_d:'รับงาน ส่งงาน',q_adm:'Admin',q_adm_d:'จัดการระบบและผู้ใช้',n_admin:'Admin Dashboard',n_eng:'หน้าช่าง',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'ระบบจัดการ  Support หลายสาขา'},
+  en:{h_chip:'Multi-brand  Ticket Management',h_t1:'Every  issue,',h_t2:'managed in one place.',h_sub:'Report, track, assign, repair — all in one platform. 7 brands, real-time LINE notifications, GPS tracking, SLA management.',h_b1:'Select Brand',h_b2:'Admin Login',br_label:'BRANDS',br_tle:'Choose your brand',br_desc:'Each brand has s own dedicated report and tracking page wh unique identy.',br_rep:'Report',br_trk:'Track',pv_label:'SYSTEM PREVIEW',pv_tle:'Platform overview',pv_desc:'Three connected systems working together end-to-end.',pv_admin:'Dashboard',pv_admin_d:'Manage tickets, assign engineers, review work, track SLA compliance.',pv_total:'Total tickets',pv_eng:'Engineer Portal',pv_eng_d:'Accept jobs, track GPS, upload photos, subm work reports.',pv_active:'Active engineers',pv_rep:'Report System',pv_rep_d:'Per-brand issue reporting wh auto Ticket ID, SLA, LINE notification.',pv_brands:'Brands supported',q_label:'QUICK ACCESS',q_tle:'System access',q_rep:'Report',q_rep_d:'Subm  repair tickets',q_eng:'Engineer',q_eng_d:'Accept and complete jobs',q_adm:'Admin',q_adm_d:'Manage system and users',n_admin:'Admin Dashboard',n_eng:'Engineer Portal',m_brands:'BRANDS',m_sys:'SYSTEM',footer:'Multi-brand Restaurant  Management'}
 };
-
-
-// ─── FAQ ───
 const FAQS={
   th:[
-    {q:'ระบบนี้ใช้สำหรับอะไร?',a:'IT Support Hub สำหรับแจ้งและจัดการปัญหา IT ของ 7 แบรนด์ รวมกว่า 1,118 สาขาทั่วประเทศ มีระบบมอบหมายช่าง ติดตาม GPS และแจ้งเตือน LINE อัตโนมัติ'},
-    {q:'วิธีแจ้งปัญหาทำอย่างไร?',a:'สแกน QR Code ของสาขา หรือเปิด /report เลือกแบรนด์และสาขา กรอกรายละเอียด แล้วกดส่งรายงาน ระบบจะสร้าง Ticket ID สำหรับติดตามสถานะ'},
+    {q:'ระบบนี้ใช้สำหรับอะไร?',a:'Support สำหรับแจ้งและจัดการปัญหา  ของ 7 แบรนด์ รวมกว่า 1,118 สาขาทั่วประเทศ มีระบบมอบหมายช่าง ติดตาม GPS และแจ้งเตือน LINE อัตโนมัติ'},
+    {q:'วิธีแจ้งปัญหาทำอย่างไร?',a:'สแกน QR Code ของสาขา หรือเปิด /report เลือกแบรนด์และสาขา กรอกรายละเอียด กดส่ง ระบบจะสร้าง Ticket ID สำหรับติดตามสถานะทันที'},
     {q:'ช่างจะได้รับแจ้งผ่านช่องทางใด?',a:'ระบบส่ง notification ผ่าน LINE Bot ทันทีที่มีการมอบหมายงาน ช่างเข้าหน้า /engineer เพื่อดูรายละเอียดและรับงาน'},
     {q:'ติดตาม ticket ได้ที่ไหน?',a:'ใช้ Ticket ID ที่ได้รับ เปิดหน้า /report แท็บ "ติดตาม Ticket" กรอก ID จะเห็น timeline การดำเนินการทั้งหมดแบบ real-time'},
     {q:'SLA คือกี่วัน?',a:'SLA มาตรฐานคือ 7 วันทำการ นับจากวันแจ้งปัญหา Admin สามารถปรับรายเคสตามความเร่งด่วนได้'},
+    {q:'ใครสามารถเข้าใช้งานส่วน Admin ได้?',a:'Admin, Manager และ Superadmin ที่ได้รับสิทธิ์ สามารถเข้าถึงได้ที่ /admin ด้วย Username และ Password ที่กำหนดให้'},
   ],
   en:[
-    {q:'What is this system for?',a:'IT Support Hub manages IT issues across 7 brands with 1,118+ branches. It features engineer assignment, GPS tracking, and automatic LINE notifications.'},
-    {q:'How do I submit a ticket?',a:'Scan the branch QR Code or open /report, select your brand and branch, fill in the details, and submit. You receive a Ticket ID to track progress.'},
-    {q:'How are engineers notified?',a:'The system sends LINE Bot notifications instantly when a job is assigned. Engineers access /engineer to view and accept jobs.'},
-    {q:'Where can I track my ticket?',a:'Use your Ticket ID on /report under Track Ticket tab to see current status and full action timeline in real-time.'},
+    {q:'What is this system for?',a:' Support  manages  issues across 7 brands wh 1,118+ branches. Features engineer assignment, GPS tracking, and automatic LINE notifications.'},
+    {q:'How do I subm a ticket?',a:'Scan the branch QR Code or go to /report, select your brand and branch, fill in details, and subm. You receive a Ticket ID to track progress.'},
+    {q:'How are engineers notified?',a:'The system sends LINE Bot notifications instantly when a job is assigned. Engineers access /engineer to view and accept assignments.'},
+    {q:'Where can I track my ticket?',a:'Use your Ticket ID on /report under the Track Ticket tab to see real-time status and full action timeline.'},
     {q:'What is the SLA?',a:'Standard SLA is 7 business days from submission. Admins can adjust SLA per ticket based on urgency.'},
+    {q:'Who can access the Admin panel?',a:'Admin, Manager, and Superadmin roles can access /admin using credentials assigned by the system administrator.'},
   ]
 };
 function renderFAQ(){
   const list=document.getElementById('faq-list');if(!list)return;
-  const ft=document.getElementById('faq-title');
+  const ft=document.getElementById('faq-tle');
   if(ft)ft.textContent=lang==='th'?'คำถามที่พบบ่อย':'Frequently Asked Questions';
   list.innerHTML='';
   FAQS[lang].forEach(f=>{
-    const el=document.createElement('div');el.className='faq-item';
+    const el=document.createElement('div');el.className='faq-em';
     el.innerHTML=`<div class="faq-h" onclick="this.parentElement.classList.toggle('open')"><span class="faq-q">${f.q}</span><span class="faq-ic">+</span></div><div class="faq-body">${f.a}</div>`;
     list.appendChild(el);
   });
 }
-function applyI18n(){
-  document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(T[lang]?.[k])e.textContent=T[lang][k]});
-  document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
-  document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?(lang==='th'?'Light':'Light'):(lang==='th'?'Dark':'Dark');
-  renderBrands();
-  renderFAQ();
-}
-function togLang(){lang=lang==='th'?'en':'th';localStorage.setItem('hub_lang',lang);applyI18n();}
-function togTheme(){
-  const d=document.documentElement;
-  d.dataset.t=d.dataset.t==='dark'?'':'dark';
-  localStorage.setItem('hub_theme',d.dataset.t);
-  applyI18n();
-}
 function renderBrands(){
-  const grid=document.getElementById('brand-grid');
-  grid.innerHTML='';
+  const grid=document.getElementById('brand-grid');grid.innerHTML='';
   BRANDS.forEach((b,i)=>{
-    const card=document.createElement('div');
-    card.className='bcard';
+    const card=document.createElement('div');card.className='bcard';
     card.style.cssText=`animation:up .4s var(--ease) ${.05+i*.05}s both`;
-    card.innerHTML=`
-      <div class="bc-bg-base"></div>
-      <div class="dw" style="background:${b.c1}"></div>
-      <div class="dw2" style="background:${b.c2}"></div>
-      <div class="bc-badge">${b.p}</div>
-      <div class="t-abbr">${b.p}</div>
-      <div class="bc-body">
-        <div class="bc-prefix" style="color:${b.tc}">${b.p}-XXXXX</div>
-        <div class="bc-name" style="color:${b.tc}">${b.n.replace(/'/g,"&#39;")}</div>
-        <div class="bc-btns">
-          <a href="${b.r}" class="bc-btn pri" style="color:${b.c1}">${T[lang].br_rep||'Report'}</a>
-          <a href="${b.r}#track" class="bc-btn sec">${T[lang].br_trk||'Track'}</a>
-        </div>
-      </div>`;
-    card.addEventListener('touchstart',e=>{
-      card.classList.add('tapped');
-      setTimeout(()=>card.classList.remove('tapped'),1600);
-    },{passive:true});
+    card.innerHTML=`<div class="bc-bg-base"></div><div class="dw" style="background:${b.c1}"></div><div class="dw2" style="background:${b.c2}"></div><div class="bc-badge">${b.p}</div><div class="t-abbr">${b.p}</div><div class="bc-body"><div class="bc-prefix" style="color:${b.tc}">${b.p}-XXXXX</div><div class="bc-name" style="color:${b.tc}">${b.n.replace(/'/g,"&#39;")}</div><div class="bc-btns"><a href="${b.r}" class="bc-btn pri" style="color:${b.c1}">${T[lang].br_rep||'Report'}</a><a href="${b.r}#track" class="bc-btn sec">${T[lang].br_trk||'Track'}</a></div></div>`;
+    card.addEventListener('touchstart',()=>{card.classList.add('tapped');setTimeout(()=>card.classList.remove('tapped'),1600);},{passive:true});
     grid.appendChild(card);
   });
 }
-
-// ═══ MENU ═══
+function renderHow(){
+  const isEn=lang==='en';
+  const t=(thTxt,enTxt)=>isEn?enTxt:thTxt;
+  const s=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt;};
+  s('how-label',t('ขั้นตอนการใช้งาน','HOW  WORKS'));
+  s('how-tle',t('ระบบทำงานยังไง?','How  works'));
+  s('how-desc',t('จากร้านค้าถึงช่างใน 3 ขั้นตอน ตรวจสอบได้ตลอดเวลา','From branch to engineer in 3 steps — trackable at every stage.'));
+  s('how-t1',t('แจ้งปัญหา','Report Issue'));
+  s('how-d1',t('ร้านค้าสแกน QR หรือเปิด /report เลือกแบรนด์ กรอกรายละเอียด ระบบสร้าง Ticket ID ส่ง LINE แจ้ง Admin ทันที','Branch staff scans QR or opens /report, selects brand, fills in details. System creates Ticket ID and notifies Admin via LINE instantly.'));
+  s('how-t2',t('มอบหมายช่าง','Assign Engineer'));
+  s('how-d2',t('Admin รับเรื่อง ตรวจสอบ SLA มอบหมายช่างเทคนิค ระบบ GPS ติดตามตำแหน่งช่างแบบ Real-time','Admin reviews ticket, checks SLA, assigns an engineer. GPS tracking monors engineer location in real-time.'));
+  s('how-t3',t('ซ่อมเสร็จ แจ้งกลับ','Complete & Close'));
+  s('how-d3',t('ช่างถ่ายรูปหลักฐาน ส่งรายงาน Admin ตรวจรับ ปิดงาน LINE แจ้งร้านค้าอัตโนมัติ','Engineer uploads proof photos, subms work report. Admin reviews and closes ticket. LINE notifies the branch.'));
+  s('sc-branches',t('สาขา','Branches'));
+  s('sc-open',t('Ticket เปิดอยู่','Open Tickets'));
+  s('sc-sla',t('วันทำการ SLA','SLA Days'));
+}
+function applyI18n(){
+  document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(T[lang]?.[k])e.textContent=T[lang][k]});
+  document.getElementById('btn-lang').textContent=lang==='th'?'EN':'TH';
+  document.getElementById('btn-theme').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
+  renderBrands();renderFAQ();renderHow();
+}
+function togLang(){lang=lang==='th'?'en':'th';localStorage.setem('hub_lang',lang);applyI18n();}
+function togTheme(){
+  const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';
+  localStorage.setem('hub_theme',d.dataset.t);applyI18n();
+}
 let menuOpen=false;
 function togMenu(){
   menuOpen=!menuOpen;
@@ -377,17 +502,12 @@ function togMenu(){
   document.getElementById('btn-ham').classList.toggle('ham-on',menuOpen);
   document.body.style.overflow=menuOpen?'hidden':'';
 }
-
-// ═══ CLOCK / WEATHER ═══
 setInterval(()=>{
   const n=new Date();
-  document.getElementById('el-time').textContent=n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('el-time').textContent=n.toLocaleTimeString('th-TH',{hour:'2-dig',minute:'2-dig',second:'2-dig'});
   document.getElementById('el-date').textContent=n.toLocaleDateString(lang==='th'?'th-TH':'en-US',{day:'numeric',month:'short'});
 },1000);
-fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7563&longitude=100.5018&current=temperature_2m')
-  .then(r=>r.json()).then(d=>{const t=Math.round(d.current?.temperature_2m);if(t)document.getElementById('el-temp').textContent=t+'\u00B0C';}).catch(()=>{});
-
-// ═══ LIVE STATS ═══
+fetch('https://api.open-meteo.com/v1/forecast?latude=13.7563&longude=100.5018&current=temperature_2m').then(r=>r.json()).then(d=>{const t=Math.round(d.current?.temperature_2m);if(t)document.getElementById('el-temp').textContent=t+'\u00B0C';}).catch(()=>{});
 fetch('/api/tickets').then(r=>r.json()).then(d=>{
   if(d.ok&&d.tickets){
     document.getElementById('stat-tickets').textContent=d.tickets.length;
@@ -396,90 +516,66 @@ fetch('/api/tickets').then(r=>r.json()).then(d=>{
   }
 }).catch(()=>{document.getElementById('stat-tickets').textContent='--';});
 fetch('/api/users').then(r=>r.json()).then(d=>{
-  if(d.ok&&d.users){document.getElementById('stat-engineers').textContent=d.users.filter(u=>u.role==='engineer').length;}
+  if(d.ok&&d.users)document.getElementById('stat-engineers').textContent=d.users.filter(u=>u.role==='engineer').length;
 }).catch(()=>{document.getElementById('stat-engineers').textContent='--';});
-
-// ═══ SCROLL OBSERVER ═══
-const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}}),{threshold:.08});
-document.querySelectorAll('.reveal').forEach(e=>obs.observe(e));
-
-// ═══ TOPBAR SCROLL ═══
-window.addEventListener('scroll',()=>{document.getElementById('topbar').classList.toggle('scrolled',scrollY>20)},{passive:true});
-
-// ═══ PARTICLE SYSTEM ═══
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}}),{threshold:.07});
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r,.reveal-s').forEach(e=>obs.observe(e));
+const progressBar=document.getElementById('scroll-progress');
+window.addEventListener('scroll',()=>{
+  document.getElementById('topbar').classList.toggle('scrolled',scrollY>20);
+  const max=document.documentElement.scrollHeight-innerHeight;
+  progressBar.style.transform=`scaleX(${max>0?scrollY/max:0})`;
+},{passive:true});
+if(window.matchMedia('(hover:hover)').matches){
+  const glow=document.getElementById('cursor-glow');
+  let gx=innerWidth/2,gy=innerHeight/2,tx=gx,ty=gy;
+  document.addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY;});
+  (function animGlow(){gx+=(tx-gx)*.08;gy+=(ty-gy)*.08;glow.style.left=gx+'px';glow.style.top=gy+'px';requestAnimationFrame(animGlow);})();
+}else{document.getElementById('cursor-glow').style.display='none';}
 (function(){
   const cvs=document.getElementById('particles'),ctx=cvs.getContext('2d');
-  let W,H,particles=[],mouse={x:0,y:0},raf;
+  let W,H,particles=[],mouse={x:0,y:0};
   function resize(){W=cvs.width=innerWidth;H=cvs.height=innerHeight;}
-  resize();window.addEventListener('resize',resize);
-
+  resize();window.addEventListener('resize',()=>{resize();createParticles();});
   function createParticles(){
     particles=[];
     const isMobile=W<600;
-    const count=Math.min(Math.floor(W*H/(isMobile?24000:12000)),isMobile?30:80);
-    for(let i=0;i<count;i++){
-      particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5});
-    }
+    const count=Math.min(Math.floor(W*H/(isMobile?26000:13000)),isMobile?25:70);
+    for(let i=0;i<count;i++)particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.4+.4});
   }
   createParticles();
-
   function draw(){
     ctx.clearRect(0,0,W,H);
     const isDark=document.documentElement.dataset.t==='dark';
     const col=isDark?'rgba(240,240,235,':'rgba(10,10,10,';
     particles.forEach(p=>{
       p.x+=p.vx;p.y+=p.vy;
-      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
-      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
-      // Mouse interaction (desktop)
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
       const dx=mouse.x-p.x,dy=mouse.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<180){p.vx+=dx*0.00008;p.vy+=dy*0.00008;}
-      // Dampen
-      p.vx*=.998;p.vy*=.998;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=col+(0.3+p.r*.15)+')';ctx.fill();
+      if(dist<160){p.vx+=dx*.00007;p.vy+=dy*.00007;}
+      p.vx*=.999;p.vy*=.999;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=col+(0.28+p.r*.12)+')';ctx.fill();
     });
-    // Draw connections
-    for(let i=0;i<particles.length;i++){
-      for(let j=i+1;j<particles.length;j++){
-        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
-        const d=dx*dx+dy*dy;
-        if(d<14000){
-          ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);
-          ctx.lineTo(particles[j].x,particles[j].y);
-          ctx.strokeStyle=col+(0.06*(1-d/14000))+')';
-          ctx.lineWidth=.5;ctx.stroke();
-        }
-      }
-    }
-    raf=requestAnimationFrame(draw);
+    for(let i=0;i<particles.length;i++){for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=dx*dx+dy*dy;
+      if(d<12000){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=col+(0.055*(1-d/12000))+')';ctx.lineWidth=.5;ctx.stroke();}
+    }}
+    requestAnimationFrame(draw);
   }
   draw();
-
-  // Desktop: mouse
   document.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
-
-  // Mobile: device orientation
-  if(window.DeviceOrientationEvent){
-    window.addEventListener('deviceorientation',e=>{
-      const tx=(e.gamma||0)/90;
-      const ty=(e.beta||0)/90;
-      particles.forEach(p=>{p.vx+=tx*.006;p.vy+=ty*.006;});
-    });
-  }
+  if(window.DeviceOrientationEvent)window.addEventListener('deviceorientation',e=>{const tx=(e.gamma||0)/90,ty=(e.beta||0)/90;particles.forEach(p=>{p.vx+=tx*.005;p.vy+=ty*.005;});});
 })();
-
-// ═══ INIT ═══
-if(localStorage.getItem('hub_theme')==='dark')document.documentElement.dataset.t='dark';
-if(localStorage.getItem('hub_lang')==='th')lang='th';
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menuOpen){menuOpen=false;document.getElementById('mmenu').classList.remove('open');document.getElementById('btn-ham').classList.remove('ham-on');document.body.style.overflow='';}});
+if(localStorage.getem('hub_theme')==='dark')document.documentElement.dataset.t='dark';
+if(localStorage.getem('hub_lang')==='th')lang='th';
 applyI18n();
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){menuOpen=false;document.getElementById('mmenu').classList.remove('open');document.getElementById('btn-ham').classList.remove('ham-on');document.body.style.overflow='';}});
 </script>
 
 <!-- ⚡ DEV BUILDER — Ctrl+Shift+B -->
 <script>
 /**
- * IT Support Visual Builder — builder-core.js
+ *  Support Visual Builder — builder-core.js
  * Embed into any HTML page. Press Ctrl+Shift+B to activate.
  * Canva/Photoshop-style: every UI atom is independently draggable.
  */
@@ -487,7 +583,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){menuOpen=false;docu
 'use strict';
 
 // ══════════════════════════════════════════════════════════════
-// ATOMIC BLOCK SELECTORS — these become individual drag items
+// ATOMIC BLOCK SELECTORS — these become individual drag ems
 // ══════════════════════════════════════════════════════════════
 const ATOM_SELECTORS = [
   // Stats
@@ -495,18 +591,18 @@ const ATOM_SELECTORS = [
   // Cards
   '.jcard', '.job-card', '.ucard', '.k-card', '.crd',
   // Nav
-  '.navb', '.nav-item', '.tab-btn',
+  '.navb', '.nav-em', '.tab-btn',
   // Rows
   '.tog-row', '.log-i', '.bb', '.drow', '.br-table tr',
   // Sections
   '#gps-status-bar', '.topbar', '.tabs',
-  // Accordion items
-  '.acc-item',
+  // Accordion ems
+  '.acc-em',
   // Topbar buttons
   '.smb', '.tbtn',
   // Misc
   '.pill', '.rbdg', '.stat-l',
-  // Any element with data-block
+  // Any element wh data-block
   '[data-block]',
 ];
 
@@ -547,7 +643,7 @@ function parsePageAtoms(container) {
         if (rect.width < 4 || rect.height < 4) return;
         // Get most specific class name
         const mainClass = el.className && typeof el.className === 'string'
-          ? el.className.split(' ').find(c => c.length > 2 && !['on','open','selected'].includes(c)) || 'element'
+          ? el.className.spl(' ').find(c => c.length > 2 && !['on','open','selected'].includes(c)) || 'element'
           : (el.id || 'element');
         atoms.push({
           uid: 'b' + (STATE.elCounter++),
@@ -562,14 +658,14 @@ function parsePageAtoms(container) {
           visible: true,
           locked: false,
           zIndex: parseInt(window.getComputedStyle(el).zIndex) || 1,
-          opacity: 1,
+          opacy: 1,
           customCSS: '',
         });
       });
     } catch(e) {}
   });
 
-  // Sort by DOM order (y position)
+  // Sort by DOM order (y posion)
   atoms.sort((a, b) => a.y - b.y || a.x - b.x);
   return atoms;
 }
@@ -582,11 +678,11 @@ function getBlockName(el) {
   if (cls.includes('jcard') || cls.includes('job-card')) return '🔧 Job Card';
   if (cls.includes('ucard')) return '👤 User Card';
   if (cls.includes('k-card')) return '🎯 Kanban Card';
-  if (cls.includes('navb') || cls.includes('nav-item')) return '🔗 Nav Item';
+  if (cls.includes('navb') || cls.includes('nav-em')) return '🔗 Nav em';
   if (cls.includes('tab-btn')) return '📑 Tab Button';
   if (cls.includes('tog-row')) return '🔘 Toggle Row';
-  if (cls.includes('log-i')) return '📋 Log Item';
-  if (cls.includes('acc-item')) return '📂 Accordion';
+  if (cls.includes('log-i')) return '📋 Log em';
+  if (cls.includes('acc-em')) return '📂 Accordion';
   if (cls.includes('crd')) return '🗂 Card';
   if (id === 'gps-status-bar') return '📍 GPS Bar';
   if (cls.includes('topbar')) return '⬛ Topbar';
@@ -595,14 +691,14 @@ function getBlockName(el) {
   if (cls.includes('bb')) return '📊 Bar Row';
   if (el.tagName === 'TR') return '📋 Table Row';
   if (el.dataset.block) return el.dataset.block;
-  return el.tagName.toLowerCase() + (id ? '#'+id : '.' + (cls.split(' ')[0] || ''));
+  return el.tagName.toLowerCase() + (id ? '#'+id : '.' + (cls.spl(' ')[0] || ''));
 }
 
 function getBlockIcon(cls) {
   const iconMap = {
     'stat-box':'📊','stat':'📊','jcard':'🔧','job-card':'🔧',
-    'ucard':'👤','k-card':'🎯','navb':'🔗','nav-item':'🔗',
-    'tab-btn':'📑','tog-row':'🔘','log-i':'📋','acc-item':'📂',
+    'ucard':'👤','k-card':'🎯','navb':'🔗','nav-em':'🔗',
+    'tab-btn':'📑','tog-row':'🔘','log-i':'📋','acc-em':'📂',
     'crd':'🗂','topbar':'⬛','tabs':'📑','smb':'🔲','bb':'📈',
     'pill':'🏷','rbdg':'🏅','es':'📊',
   };
@@ -637,7 +733,7 @@ function injectBuilder() {
   document.head.appendChild(style);
 
   // Parse current page atoms
-  const pageName = document.title.split('—')[0].trim() || 'Page';
+  const pageName = document.tle.spl('—')[0].trim() || 'Page';
   const atoms = parsePageAtoms(document.getElementById('app') || document.body);
   const area = document.getElementById('app') || document.body;
   const rect = area.getBoundingClientRect();
@@ -670,7 +766,7 @@ function getBuilderHTML() {
       <span id="__bl_zlbl__">100%</span>
       <button class="__bl_zbtn__" onclick="__BLDR__.zoom(+0.1)">+</button>
     </div>
-    <button class="__bl_tbtn__" onclick="__BLDR__.fitCanvas()">⊡ Fit</button>
+    <button class="__bl_tbtn__" onclick="__BLDR__.fCanvas()">⊡ F</button>
     <button class="__bl_tbtn__" onclick="__BLDR__.toggleDark()">🌙</button>
     <div class="__bl_sep__"></div>
     <button class="__bl_tbtn__ __bl_red__" onclick="__BLDR__.deleteSelected()" id="__bl_del__" style="display:none">✕</button>
@@ -708,7 +804,7 @@ function getBuilderHTML() {
       <div id="__bl_props__">
         <div class="__bl_nosel__"><strong>คลิกเลือก element</strong><br>
         ลากจากรายการซ้ายลง canvas<br>หรือ Re-parse เพื่อโหลดจากหน้าปัจจุบัน<br><br>
-        <span style="font-size:9px;opacity:.5">Shift+click = multi-select<br>Del = ลบ · ⌘D = copy<br>Arrow = ขยับ · Scroll = zoom</span></div>
+        <span style="font-size:9px;opacy:.5">Shift+click = multi-select<br>Del = ลบ · ⌘D = copy<br>Arrow = ขยับ · Scroll = zoom</span></div>
       </div>
       <div id="__bl_layers_wrap__">
         <div class="__bl_phd__">📚 Layers</div>
@@ -724,22 +820,22 @@ function getBuilderHTML() {
 // ══════════════════════════════════════════════════════════════
 function getBuilderCSS() {
   return `
-#__builder__{position:fixed;inset:0;z-index:999999;pointer-events:none;font-family:'Prompt','JetBrains Mono',system-ui,sans-serif;font-size:12px}
-#__bldr_shell__{position:absolute;inset:0;display:grid;grid-template-rows:38px 1fr;background:#0a0a0d;color:#e8e8e8;pointer-events:all;overflow:hidden}
-#__bldr_top__{display:flex;align-items:center;gap:5px;padding:0 10px;background:#070709;border-bottom:1px solid #222}
-.__bl_logo__{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#4d8ef5;padding-right:8px;border-right:1px solid #222;margin-right:4px;white-space:nowrap}
+#__builder__{posion:fixed;inset:0;z-index:999999;pointer-events:none;font-family:'Prompt','JetBrains Mono',system-ui,sans-serif;font-size:12px}
+#__bldr_shell__{posion:absolute;inset:0;display:grid;grid-template-rows:38px 1fr;background:#0a0a0d;color:#e8e8e8;pointer-events:all;overflow:hidden}
+#__bldr_top__{display:flex;align-ems:center;gap:5px;padding:0 10px;background:#070709;border-bottom:1px solid #222}
+.__bl_logo__{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#4d8ef5;padding-right:8px;border-right:1px solid #222;margin-right:4px;whe-space:nowrap}
 .__bl_pages__{display:flex;gap:3px;flex:1;overflow-x:auto}
-.__bl_page_tab__{padding:3px 10px;border-radius:4px;border:1px solid #2a2a35;background:transparent;color:#888;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.__bl_page_tab__{padding:3px 10px;border-radius:4px;border:1px solid #2a2a35;background:transparent;color:#888;font-size:11px;cursor:pointer;whe-space:nowrap;transion:all .15s}
 .__bl_page_tab__:hover{background:#1a1a1f;color:#ccc}
 .__bl_page_tab__.active{background:#4d8ef5;color:#fff;border-color:#4d8ef5}
-.__bl_tbtn__{height:24px;padding:0 8px;border-radius:4px;border:1px solid #2a2a35;background:transparent;color:#888;font-size:11px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;transition:all .12s}
+.__bl_tbtn__{height:24px;padding:0 8px;border-radius:4px;border:1px solid #2a2a35;background:transparent;color:#888;font-size:11px;cursor:pointer;whe-space:nowrap;display:flex;align-ems:center;gap:3px;transion:all .12s}
 .__bl_tbtn__:hover{background:#1a1a1f;color:#e8e8e8;border-color:#3a3a45}
-.__bl_tbtn__.__bl_grn__{background:#16a34a;color:#fff;border-color:#16a34a}.__bl_tbtn__.__bl_grn__:hover{opacity:.85}
+.__bl_tbtn__.__bl_grn__{background:#16a34a;color:#fff;border-color:#16a34a}.__bl_tbtn__.__bl_grn__:hover{opacy:.85}
 .__bl_tbtn__.__bl_red__{color:#ef4444;border-color:#ef4444}.__bl_tbtn__.__bl_red__:hover{background:rgba(239,68,68,.12)}
 .__bl_tbtn__.__bl_close__{color:#888}
 .__bl_sep__{width:1px;height:16px;background:#222;margin:0 2px}
-.__bl_zoom__{display:flex;align-items:center;gap:2px}
-.__bl_zbtn__{width:20px;height:20px;border-radius:3px;border:1px solid #2a2a35;background:transparent;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+.__bl_zoom__{display:flex;align-ems:center;gap:2px}
+.__bl_zbtn__{width:20px;height:20px;border-radius:3px;border:1px solid #2a2a35;background:transparent;color:#888;cursor:pointer;display:flex;align-ems:center;justify-content:center;font-size:12px}
 .__bl_zbtn__:hover{background:#1a1a1f;color:#e8e8e8}
 #__bldr_main__{display:grid;grid-template-columns:200px 1fr 240px;overflow:hidden}
 
@@ -747,26 +843,26 @@ function getBuilderCSS() {
 #__bldr_left__{background:#111115;border-right:1px solid #1e1e25;display:flex;flex-direction:column;overflow:hidden}
 .__bl_phd__{padding:6px 8px;font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid #1e1e25;flex-shrink:0;background:#0d0d11}
 #__bl_atomlist__{padding:4px;overflow-y:auto;flex:1}
-.__bl_atom__{background:#161619;border:1px solid #1e1e25;border-radius:5px;padding:6px 7px;margin-bottom:2px;cursor:grab;display:flex;align-items:center;gap:6px;transition:all .12s}
+.__bl_atom__{background:#161619;border:1px solid #1e1e25;border-radius:5px;padding:6px 7px;margin-bottom:2px;cursor:grab;display:flex;align-ems:center;gap:6px;transion:all .12s}
 .__bl_atom__:hover{background:#1e1e25;border-color:#2e2e3a}
 .__bl_atom__:active{cursor:grabbing;transform:scale(.97)}
 .__bl_atom_icon__{font-size:12px;flex-shrink:0}
-.__bl_atom_name__{font-size:10px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.__bl_atom_name__{font-size:10px;color:#bbb;whe-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .__bl_atom_sz__{font-size:9px;color:#444;font-family:monospace;flex-shrink:0}
 
 /* CANVAS */
-#__bldr_canvas_area__{position:relative;overflow:hidden;background:repeating-linear-gradient(0deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px),repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px);background-color:#0d0d10}
-#__bldr_canvas__{position:absolute;transform-origin:0 0}
-#__bldr_canvas_bg__{position:absolute;pointer-events:none;z-index:0;box-shadow:0 8px 48px rgba(0,0,0,.7)}
-#__bl_selbox__{position:absolute;border:1.5px dashed rgba(77,142,245,.7);background:rgba(77,142,245,.04);pointer-events:none;display:none;z-index:9997}
+#__bldr_canvas_area__{posion:relative;overflow:hidden;background:repeating-linear-gradient(0deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px),repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px);background-color:#0d0d10}
+#__bldr_canvas__{posion:absolute;transform-origin:0 0}
+#__bldr_canvas_bg__{posion:absolute;pointer-events:none;z-index:0;box-shadow:0 8px 48px rgba(0,0,0,.7)}
+#__bl_selbox__{posion:absolute;border:1.5px dashed rgba(77,142,245,.7);background:rgba(77,142,245,.04);pointer-events:none;display:none;z-index:9997}
 
 /* ELEMENTS ON CANVAS */
-.__bl_el__{position:absolute;cursor:move;box-sizing:border-box}
+.__bl_el__{posion:absolute;cursor:move;box-sizing:border-box}
 .__bl_el__:hover{outline:1.5px dashed rgba(77,142,245,.5);outline-offset:1px}
 .__bl_el__.sel{outline:2px solid #4d8ef5!important;outline-offset:1px}
-.__bl_el_lbl__{position:absolute;top:-17px;left:0;background:#4d8ef5;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;white-space:nowrap;pointer-events:none;display:none;z-index:9999;font-family:monospace}
+.__bl_el_lbl__{posion:absolute;top:-17px;left:0;background:#4d8ef5;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;whe-space:nowrap;pointer-events:none;display:none;z-index:9999;font-family:monospace}
 .__bl_el__:hover .__bl_el_lbl__,.__bl_el__.sel .__bl_el_lbl__{display:block}
-.__bl_rh__{display:none;position:absolute;width:7px;height:7px;background:#4d8ef5;border:1.5px solid #fff;border-radius:2px;z-index:100}
+.__bl_rh__{display:none;posion:absolute;width:7px;height:7px;background:#4d8ef5;border:1.5px solid #fff;border-radius:2px;z-index:100}
 .__bl_el__.sel .__bl_rh__{display:block}
 .__bl_rh__.se{bottom:-4px;right:-4px;cursor:se-resize}
 .__bl_rh__.sw{bottom:-4px;left:-4px;cursor:sw-resize}
@@ -781,11 +877,11 @@ function getBuilderCSS() {
 #__bldr_right__{background:#111115;border-left:1px solid #1e1e25;display:flex;flex-direction:column;overflow:hidden}
 #__bl_props__{flex:1;overflow-y:auto;padding:6px}
 .bl_psec{border-bottom:1px solid #1e1e25;margin-bottom:4px}
-.bl_phd2{padding:5px 4px;font-size:9px;color:#555;cursor:pointer;display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:.08em;font-weight:700;user-select:none}
+.bl_phd2{padding:5px 4px;font-size:9px;color:#555;cursor:pointer;display:flex;justify-content:space-between;align-ems:center;text-transform:uppercase;letter-spacing:.08em;font-weight:700;user-select:none}
 .bl_phd2:hover{color:#999}
 .bl_pbody{display:none;padding-bottom:6px}
 .bl_pbody.open{display:block}
-.bl_prow{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.bl_prow{display:flex;align-ems:center;gap:4px;margin-bottom:4px}
 .bl_plbl{font-size:9px;color:#555;min-width:48px;font-family:monospace;flex-shrink:0}
 .bl_pin{flex:1;background:#161619;border:1px solid #1e1e25;border-radius:3px;padding:3px 5px;color:#ccc;font-family:monospace;font-size:10px;outline:none;min-width:0}
 .bl_pin:focus{border-color:#4d8ef5}
@@ -798,11 +894,11 @@ function getBuilderCSS() {
 .__bl_nosel__ strong{color:#666;font-size:12px;display:block;margin-bottom:6px}
 #__bl_layers_wrap__{border-top:1px solid #1e1e25;flex-shrink:0}
 #__bl_layers__{max-height:150px;overflow-y:auto;padding:4px}
-.bl_layer{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;cursor:pointer;transition:background .1s;font-size:10px;color:#666}
+.bl_layer{display:flex;align-ems:center;gap:5px;padding:3px 6px;border-radius:4px;cursor:pointer;transion:background .1s;font-size:10px;color:#666}
 .bl_layer:hover{background:#161619;color:#aaa}
 .bl_layer.sel{background:rgba(77,142,245,.1);color:#ccc}
 .bl_lvis{font-size:10px;width:14px;cursor:pointer;flex-shrink:0;text-align:center}
-.bl_lname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl_lname{flex:1;whe-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bl_llock{font-size:9px;color:#333;cursor:pointer}
 .__bl_ic_code__{display:inline;background:#161619;border:1px solid #1e1e25;border-radius:2px;padding:1px 4px;font-size:9px;font-family:monospace;color:#f59e0b}
 `;
@@ -816,7 +912,7 @@ window.__BLDR__ = {
     STATE.scale = Math.max(0.05, Math.min(4, STATE.scale + delta));
     applyTransform();
   },
-  fitCanvas() { fitCanvas(); },
+  fCanvas() { fCanvas(); },
   toggleDark() {
     const bg = document.getElementById('__bldr_canvas_bg__');
     if (bg) bg.style.background = bg.style.background === 'rgb(10, 10, 10)' ? '#fff' : '#0a0a0a';
@@ -831,7 +927,7 @@ window.__BLDR__ = {
     const container = document.getElementById('app') || document.body;
     const area = container.getBoundingClientRect();
     const newAtoms = parsePageAtoms(container);
-    // Place them at their original positions
+    // Place them at their original posions
     newAtoms.forEach(a => {
       if (!pg.elements.find(e => e.name === a.name)) pg.elements.push(a);
     });
@@ -873,9 +969,9 @@ function renderPageTabs() {
   if (!cont) return;
   cont.innerHTML = Object.keys(STATE.pages).map(name =>
     `<button class="__bl_page_tab__${STATE.currentPage===name?' active':''}"
-      onclick="__BLDR__._switchPage('${name}')">${name}</button>`
+      onclick="__BLDR__._swchPage('${name}')">${name}</button>`
   ).join('');
-  window.__BLDR__._switchPage = (name) => {
+  window.__BLDR__._swchPage = (name) => {
     STATE.currentPage = name;
     STATE.selectedId = null;
     renderBuilder();
@@ -913,7 +1009,7 @@ function renderCanvas() {
 
   // Update canvas bg size
   const bg = document.getElementById('__bldr_canvas_bg__');
-  if (bg) bg.style.cssText = `position:absolute;inset:0;width:${pg.canvasW}px;height:${pg.canvasH}px;background:#fff;pointer-events:none;z-index:0`;
+  if (bg) bg.style.cssText = `posion:absolute;inset:0;width:${pg.canvasW}px;height:${pg.canvasH}px;background:#fff;pointer-events:none;z-index:0`;
 
   const sorted = [...pg.elements].sort((a,b) => (a.zIndex||1) - (b.zIndex||1));
   sorted.forEach(el => {
@@ -921,7 +1017,7 @@ function renderCanvas() {
     const div = document.createElement('div');
     div.className = '__bl_el__' + (STATE.selectedId===el.uid?' sel':'');
     div.id = '__dom_' + el.uid;
-    div.style.cssText = `left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${el.zIndex||1};opacity:${el.opacity||1}`;
+    div.style.cssText = `left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${el.zIndex||1};opacy:${el.opacy||1}`;
     if (el.customCSS) div.style.cssText += ';' + el.customCSS;
     div.innerHTML = `
       <div class="__bl_el_lbl__">${el.icon} ${el.name}</div>
@@ -954,7 +1050,7 @@ function renderProps() {
   if (!ps) return;
   const pg = STATE.pages[STATE.currentPage];
   if (!STATE.selectedId || !pg) {
-    ps.innerHTML = `<div class="__bl_nosel__"><strong>คลิกเลือก element</strong><br>Re-parse เพื่อโหลด atoms จากหน้าปัจจุบัน<br><br><span style="font-size:9px;opacity:.4">Shift+click = multi<br>Del = ลบ · ⌘D = copy</span></div>`;
+    ps.innerHTML = `<div class="__bl_nosel__"><strong>คลิกเลือก element</strong><br>Re-parse เพื่อโหลด atoms จากหน้าปัจจุบัน<br><br><span style="font-size:9px;opacy:.4">Shift+click = multi<br>Del = ลบ · ⌘D = copy</span></div>`;
     return;
   }
   const el = pg.elements.find(x=>x.uid===STATE.selectedId);
@@ -969,8 +1065,8 @@ function renderProps() {
         <span class="bl_plbl" style="margin-left:4px">Y</span><input type="number" class="bl_pin" value="${Math.round(el.y)}" oninput="__BLDR__._sp('${el.uid}','y',+this.value)"></div>
       <div class="bl_prow"><span class="bl_plbl">W</span><input type="number" class="bl_pin" value="${Math.round(el.w)}" oninput="__BLDR__._sp('${el.uid}','w',+this.value)">
         <span class="bl_plbl" style="margin-left:4px">H</span><input type="number" class="bl_pin" value="${Math.round(el.h)}" oninput="__BLDR__._sp('${el.uid}','h',+this.value)"></div>
-      <div class="bl_prow"><span class="bl_plbl">Opacity</span><input type="range" class="bl_pin" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="__BLDR__._sp('${el.uid}','opacity',+this.value)">
-        <span style="font-size:9px;color:#444;min-width:28px">${Math.round((el.opacity||1)*100)}%</span></div>
+      <div class="bl_prow"><span class="bl_plbl">Opacy</span><input type="range" class="bl_pin" min="0" max="1" step=".05" value="${el.opacy||1}" oninput="__BLDR__._sp('${el.uid}','opacy',+this.value)">
+        <span style="font-size:9px;color:#444;min-width:28px">${Math.round((el.opacy||1)*100)}%</span></div>
       <div class="bl_prow"><span class="bl_plbl">Z-Index</span><input type="number" class="bl_pin" value="${el.zIndex||1}" oninput="__BLDR__._sp('${el.uid}','zIndex',+this.value)"></div>
     </div>
   </div>
@@ -1014,7 +1110,7 @@ function applyTransform() {
   const zlbl = document.getElementById('__bl_zlbl__');
   if (zlbl) zlbl.textContent = Math.round(STATE.scale*100)+'%';
 }
-function fitCanvas() {
+function fCanvas() {
   const area = document.getElementById('__bldr_canvas_area__');
   const pg = STATE.pages[STATE.currentPage];
   if (!area || !pg) return;
@@ -1145,7 +1241,7 @@ window.__BLDR__._sp = function(uid, key, val) {
   if (!el) return;
   el[key] = val;
   const dom = document.getElementById('__dom_'+uid);
-  if (dom) { if(key==='x')dom.style.left=val+'px'; if(key==='y')dom.style.top=val+'px'; if(key==='w')dom.style.width=val+'px'; if(key==='h')dom.style.height=val+'px'; if(key==='opacity')dom.style.opacity=val; if(key==='zIndex')dom.style.zIndex=val; }
+  if (dom) { if(key==='x')dom.style.left=val+'px'; if(key==='y')dom.style.top=val+'px'; if(key==='w')dom.style.width=val+'px'; if(key==='h')dom.style.height=val+'px'; if(key==='opacy')dom.style.opacy=val; if(key==='zIndex')dom.style.zIndex=val; }
 };
 window.__BLDR__._sps = function(uid, key, val) {
   const pg = STATE.pages[STATE.currentPage];
@@ -1203,11 +1299,11 @@ async function exportZip() {
       elements: pg.elements.map(el => ({uid:el.uid,name:el.name,x:el.x,y:el.y,w:el.w,h:el.h,zIndex:el.zIndex,visible:el.visible,customCSS:el.customCSS}))
     }])), null, 2);
   zip.file('layout.json', layoutJSON);
-  zip.file('README.txt', `IT Support Visual Builder Export\nGenerated: ${new Date().toLocaleString('th-TH')}\n\nPages: ${Object.keys(STATE.pages).join(', ')}`);
-  const blob = await zip.generateAsync({type:'blob'});
+  zip.file('README.txt', ` Support Visual Builder Export\nGenerated: ${new Date().toLocaleString('th-TH')}\n\nPages: ${Object.keys(STATE.pages).join(', ')}`);
+  const blob = awa zip.generateAsync({type:'blob'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'it-support-layout-' + Date.now() + '.zip';
+  a.download = '-support-layout-' + Date.now() + '.zip';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -1215,20 +1311,20 @@ async function exportZip() {
 function generatePageHTML(name, pg) {
   const sorted = pg.elements.filter(e=>e.visible).sort((a,b)=>(a.zIndex||1)-(b.zIndex||1));
   const body = sorted.map(el => {
-    const css = `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;opacity:${el.opacity||1};z-index:${el.zIndex||1}${el.customCSS?';'+el.customCSS:''}`;
+    const css = `posion:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;opacy:${el.opacy||1};z-index:${el.zIndex||1}${el.customCSS?';'+el.customCSS:''}`;
     return `  <!-- ${el.name} -->\n  <div style="${css}">${el.html}</div>`;
   }).join('\n\n');
   return `<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${name} — IT Support</title>
+<meta name="viewport" content="width=device-width,inial-scale=1">
+<tle>${name} —  Support</tle>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#fff;--bg2:#f6f6f4;--bg3:#edede9;--fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;--border:#e0e0db;--green:#2d7a4f;--sans:'Prompt',sans-serif}
-body{width:${pg.canvasW}px;min-height:${pg.canvasH}px;background:var(--bg);font-family:var(--sans);position:relative}
+body{width:${pg.canvasW}px;min-height:${pg.canvasH}px;background:var(--bg);font-family:var(--sans);posion:relative}
 </style>
 </head>
 <body>
@@ -1304,8 +1400,8 @@ function setupBuilderEvents() {
     document.body.style.cursor='';
   });
 
-  // Fit on load
-  setTimeout(() => { fitCanvas(); STATE.active = true; }, 100);
+  // F on load
+  setTimeout(() => { fCanvas(); STATE.active = true; }, 100);
 }
 
 function moveEl(dx, dy) {
@@ -1329,11 +1425,11 @@ function activate() {
 function injectTriggerButton() {
   const btn = document.createElement('button');
   btn.id = '__bldr_trigger__';
-  btn.title = 'Dev Builder (Ctrl+Shift+B)';
+  btn.tle = 'Dev Builder (Ctrl+Shift+B)';
   btn.textContent = '⚡';
-  btn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:999998;width:36px;height:36px;border-radius:50%;background:#4d8ef5;color:#fff;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(77,142,245,.5);transition:all .2s;opacity:.7';
-  btn.onmouseenter = () => btn.style.opacity='1';
-  btn.onmouseleave = () => btn.style.opacity='.7';
+  btn.style.cssText = 'posion:fixed;bottom:16px;right:16px;z-index:999998;width:36px;height:36px;border-radius:50%;background:#4d8ef5;color:#fff;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(77,142,245,.5);transion:all .2s;opacy:.7';
+  btn.onmouseenter = () => btn.style.opacy='1';
+  btn.onmouseleave = () => btn.style.opacy='.7';
   btn.onclick = activate;
   document.body.appendChild(btn);
 }
