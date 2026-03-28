@@ -1175,7 +1175,7 @@ function renderEngJobList(containerId, list, isActive){
       else if(isDone)   stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
 
       // Check if ticket has GPS coords in location field
-      const gpsMatch=(t.location||'').match(/[(GPS|DB):([-d.]+),([-d.]+)]/);
+      const gpsMatch=(t.location||'').match(/\[(GPS|DB):([-\d.]+),([-\d.]+)\]/);
       const hasGPS=!!(gpsMatch);
 
       return `<div class="job-card" style="animation:up .3s var(--ease) ${i*.04}s both" onclick="openDetail('${rid}')">
