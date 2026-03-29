@@ -77,7 +77,7 @@ app.post('/api/auth/login', (req, res) => {
     const token = createSession(user);
     addLog({ user, action:'login', detail:`เข้าสู่ระบบ (${user.role})` });
     res.json({ ok:true, token, user:{ id:user.id, name:user.name, username:user.username, role:user.role, brand:user.brand } });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.post('/api/auth/logout', requireAuth(), (req, res) => {
@@ -109,7 +109,7 @@ app.get('/api/line-config', requireAuth(['superadmin','admin']), async (req, res
       },
     };
     res.json({ ok:true, config, hasToken:lineConfig.hasToken(), tokenPreview:lineConfig.getTokenPreview() });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
@@ -117,7 +117,7 @@ app.patch('/api/line-config', requireAuth(['superadmin','admin']), async (req, r
     const updated = await lineConfig.updateConfig(req.body);
     addLog({ user:req.user, action:'update_line_config', detail:'อัปเดตค่า LINE Settings' });
     res.json({ ok:true, config:updated });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (req, res) => {
@@ -127,7 +127,7 @@ app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (re
     const result = await lineNotify.push(to, [{ type:'text', text:'Test from IT Support Hub — LINE connection OK' }]);
     addLog({ user:req.user, action:'test_line', detail:`ทดสอบ LINE -> ${to.slice(0,12)}... result=${result.ok}` });
     res.json(result);
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 // ── LINE Diagnostic — ตรวจสอบสถานะ LINE ทั้งหมด ─────────────
@@ -135,7 +135,7 @@ app.get('/api/line/diagnostic', requireAuth(['superadmin','admin']), async (req,
   try {
     const diag = await lineNotify.sendDiagnostic();
     res.json({ ok:true, diagnostic: diag });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -205,9 +205,9 @@ app.post('/api/upload', async (req, res) => {
           timeout: 30000
         });
         res.json(r.data);
-      } catch(e) { res.json({ ok: false, error: e.message }); }
+      } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
     });
-  } catch(e) { res.json({ ok: false, error: e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
 });
 
 // GET /uploads/:filename — proxy image from FastAPI
@@ -235,7 +235,7 @@ app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
     const r = await axios.patch(`${REPAIR_URL}/api/users/${req.params.id}`,
       { ui_preference }, { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' }, timeout: 8000 });
     res.json(r.data);
-  } catch(e) { res.json({ ok: false, error: e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
 });
 
 // PATCH /api/branches/:id — update location (admin+)
@@ -277,12 +277,12 @@ app.get('/api/tickets', async (req, res) => {
     tickets.forEach(t=>{ if(t._recordId&&t.brand) _ticketBrandCache.set(t._recordId,t.brand); });
     global._debugTickets = tickets;
     res.json({ ok:true, tickets });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.get('/api/tickets/:rid', async (req, res) => {
   try { res.json({ ok:true, ticket: await getTicket(req.params.rid) }); }
-  catch(e) { res.json({ ok:false, error:e.message }); }
+  catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 function getBrand(rid, body) { return body?.brand || _ticketBrandCache.get(rid) || null; }
@@ -298,7 +298,7 @@ app.post('/api/tickets', async (req, res) => {
     broadcast('ticket_created', { ticket:t });
     lineNotify.notifyNewTicket(t).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t, log });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 // ── Accept ticket (engineer รับงาน) ────────────────────────
@@ -309,7 +309,7 @@ app.post('/api/tickets/:rid/accept', requireAuth(['engineer','lead_engineer','ad
     addLog({ user:req.user, action:'accept', ticketId:req.params.rid, detail:'รับงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'อยู่ระหว่างดำเนินการ ⚙️', ts:new Date().toISOString() });
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
@@ -330,7 +330,7 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
       lineNotify.notifyRevision(t, eng?.line_user_id).catch(e=>console.error('[LINE]',e.message));
     }
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
@@ -344,7 +344,7 @@ app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager
     const eng = getAllUsers().find(u=>u.name===engineerName);
     lineNotify.notifyAssigned(t, eng?.line_user_id).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
@@ -359,7 +359,7 @@ app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manag
     const users = getAllUsers();
     lineNotify.notifyReassigned(t, users.find(u=>u.name===old?.engineerName)?.line_user_id, users.find(u=>u.name===newEngineerName)?.line_user_id).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
@@ -376,7 +376,7 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_eng
     broadcast('ticket_updated', { recordId:req.params.rid, status:'ตรวจงาน', ts:new Date().toISOString() });
     lineNotify.notifyWorkSubmitted(t).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
@@ -390,7 +390,7 @@ app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer',
     broadcast('ticket_updated', { recordId:req.params.rid, status:status||'ตรวจงาน', ts:new Date().toISOString() });
     lineNotify.notifyWorkSubmitted(t).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager']), async (req, res) => {
@@ -403,7 +403,7 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', ts:new Date().toISOString() });
     lineNotify.notifyTicketClosed(t).catch(e=>console.error('[LINE]',e.message));
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), async (req, res) => {
@@ -413,7 +413,7 @@ app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), as
     addLog({ user:req.user, action:'update', ticketId:req.params.rid, detail:'อัปเดต' });
     broadcast('ticket_updated', { recordId:req.params.rid, ts:new Date().toISOString() });
     res.json({ ok:true, ticket:t });
-  } catch(e) { res.json({ ok:false, error:e.message }); }
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -426,15 +426,15 @@ app.get('/api/logs', requireAuth(['superadmin','admin','manager']), (req, res) =
 app.get('/api/users', requireAuth(['superadmin','admin','manager']), (_, res) => res.json({ ok:true, users:getAllUsers() }));
 app.post('/api/users', requireAuth(['superadmin','admin']), (req, res) => {
   try { const u=createUser(req.body); addLog({user:req.user,action:'create_user',detail:`สร้าง ${u.username}`}); res.json({ok:true,user:u}); }
-  catch(e) { res.json({ok:false,error:e.message}); }
+  catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
 app.patch('/api/users/:id', requireAuth(['superadmin','admin']), (req, res) => {
   try { const u=updateUser(req.params.id,req.body); addLog({user:req.user,action:'update_user',detail:`แก้ไข ${u.username}`}); res.json({ok:true,user:u}); }
-  catch(e) { res.json({ok:false,error:e.message}); }
+  catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
 app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
   try { deleteUser(req.params.id); addLog({user:req.user,action:'delete_user',detail:`ลบ ${req.params.id}`}); res.json({ok:true}); }
-  catch(e) { res.json({ok:false,error:e.message}); }
+  catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -510,7 +510,7 @@ app.get('/debug/env', async (_, res) => {
 
 app.get('/debug/rebuild-fieldmap', async (_,res) => {
   try { await ensureFieldMap(true); const d=await debugSchema(); res.json({ok:true,...d}); }
-  catch(e) { res.json({ok:false,error:e.message}); }
+  catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
 
 app.get('/debug/tables', async (_,res) => {
