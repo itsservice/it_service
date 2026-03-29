@@ -549,7 +549,7 @@ function startGPSTracking(){
       updateGPSBar(true,`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
     },
     err=>{_gpsActive=false;const msgs={1:'ไม่ได้รับอนุญาต GPS',2:'ไม่พบตำแหน่ง',3:'หมดเวลา GPS'};updateGPSBar(false,msgs[err.code]||'GPS ไม่พร้อมใช้งาน');},
-    {enableHighAccuracy:true,maximumAge:30000,timeout:15000}
+    {enableHighAccuracy:false,maximumAge:60000,timeout:8000}
   );
 }
 function updateGPSBar(ok,msg){
@@ -699,7 +699,7 @@ function requestGPSPermission(){
   );
 }
 async function doStartWork(rid){
-  if(!_gpsActive){showGPSPermissionPopup(()=>doStartWork(rid));return;}
+  // GPS เป็น optional — ไม่บล็อกถ้ายังไม่ได้ lock (ใช้ cache ถ้ามี)
   try{
     const startedAt=new Date().toISOString();
     const t=tickets.find(x=>x._recordId===rid);
@@ -708,7 +708,7 @@ async function doStartWork(rid){
     // ส่ง GPS ที่ cache ไว้ด้วย (ไม่ต้องรอ getCurrentPosition)
     if(_lastGPS){body.completed_lat=_lastGPS.lat;body.completed_lng=_lastGPS.lng;}
 
-    // เพิ่ม started_at ถ้ามี (อาจ error ถ้า MySQL ไม่มี column)
+    // ✅ MySQL column started_at มีแล้ว — ส่งได้เลย
     body.started_at=startedAt;
 
     // PATCH status (1 API call เดียว — timeout 15s)
