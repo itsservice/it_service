@@ -606,6 +606,11 @@ function togTheme(){
 async function boot(){
   document.getElementById('login').style.display='none';
   document.getElementById('app').classList.add('on');
+  // ซ่อน eng-stats + view ทันที
+  const es=document.getElementById('eng-stats');if(es){es.style.display='none';es.innerHTML='';}
+  const vw=document.getElementById('view');if(vw){vw.style.display='none';vw.innerHTML='';}
+  // ตั้ง tab เริ่มต้นเป็น dashboard
+  engTab='dashboard';tab='dashboard';
   const u=AUTH.user;
   document.getElementById('sb-name').textContent=u.name;
   document.getElementById('sb-role').textContent=({'superadmin':'Super Admin','manager':'Manager','admin':'Admin','lead_engineer':'Lead Engineer','engineer':'ช่าง IT','guest':'Guest (Demo)'})[u.role]||u.role;
@@ -653,67 +658,8 @@ function startWorkTimers(){
 
 /* ═══ RENDER ══════════════════════════════════════════════════ */
 function render(){
-  const isGuest=AUTH?.user?.role==='guest';
-  const active=tickets.filter(t=>/assigned|accepted|in_progress|ระหว่าง/.test(t.status||''));
-  const review=tickets.filter(t=>/review|revision|ตรวจ/.test(t.status||''));
-  const done=tickets.filter(t=>/completed|เสร็จ/.test(t.status||''));
-
-  document.getElementById('eng-stats').innerHTML=`
-    <div class="es" onclick="switchTab('active')"><div class="es-v">${active.length}</div><div class="es-l">Active</div></div>
-    <div class="es" onclick="switchTab('review')"><div class="es-v">${review.length}</div><div class="es-l">Review</div></div>
-    <div class="es" onclick="switchTab('done')"><div class="es-v">${done.length}</div><div class="es-l">Done</div></div>`;
-
-  updateSidebarNav();
-
-  const view=document.getElementById('view');
-  if(tab==='emergency'){renderEmergency(view);return;}
-
-  const list=tab==='active'?active:tab==='review'?review:done;
-  if(!list.length){
-    view.innerHTML=`<div class="empty"><div class="empty-t">${{active:'ยังไม่มีงานมอบหมาย',review:'ไม่มีงานรอตรวจ',done:'ยังไม่มีงานเสร็จสิ้น'}[tab]||'Empty'}</div></div>`;
-    return;
-  }
-
-  view.innerHTML=list.map((t,i)=>{
-    const rid=esc(t._recordId);
-    const isAssigned=/assigned|มอบหมาย/.test(t.status||'');
-    const isAccepted=/accepted|รับงาน/.test(t.status||'');
-    const isWorking=/in_progress|ระหว่าง/.test(t.status||'');
-    const isReview=/ตรวจ|review/.test(t.status||'');
-    const isDone=/เสร็จ|completed/.test(t.status||'');
-    let sa=t.started_at||t.startedAt||null;
-    if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
-    const hasStarted=isWorking&&!!sa;
-    let stamp='';
-    if(hasStarted)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
-    else if(isReview)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-review">REVIEW</div></div>`;
-    else if(isDone)stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-done">COMPLETE</div></div>`;
-
-    return`<div class="jcard" style="animation-delay:${i*.03}s">
-      ${stamp}
-      ${hasStarted?`<div class="timer-bar"><div class="gps-dot"></div><div class="timer-label">กำลังทำงาน</div><div class="timer-val" id="timer-${esc(t._recordId)}">00:00:00</div></div>`:''}
-      <div class="jc-top">
-        <div style="flex:1"><div class="jc-id">${esc(t.id||'--')}</div><div class="jc-type">${esc(t.type||'-')}</div></div>
-        <span class="pill">${statusLabel(t.status)}</span>
-      </div>
-      <div class="jc-meta">
-        <span>${esc(t.brand||'-')} / ${esc(t.branchCode||'-')}</span>
-        <span>${esc(t.reporter||'-')}</span>
-        <span>${esc(t.sentDate||'-')}</span>
-      </div>
-      ${t.detail?`<div class="jc-detail">${esc(t.detail)}</div>`:''}
-      ${t.workDetail?`<div class="jc-detail" style="border-left:2px solid var(--fg)"><strong>Report:</strong> ${esc(t.workDetail)}</div>`:''}
-      <div class="jc-btns">
-        ${isGuest?`<button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode">🔒 รับงาน</button><button class="jc-b" style="opacity:.4;cursor:not-allowed" title="Demo mode">🔒 เริ่มงาน</button><button class="jc-b" onclick="openDetail('${rid}')">Detail</button>`
-        :`${isAssigned?`<button class="jc-b pri" onclick="doAccept('${rid}')">✅ รับงาน</button>`:''}
-          ${isAccepted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
-          ${isWorking&&!hasStarted?`<button class="jc-b pri" onclick="doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
-          ${hasStarted?`<button class="jc-b" style="opacity:.6;cursor:default">⏱️ กำลังทำอยู่</button><button class="jc-b pri" onclick="openSubmit('${rid}')">✅ Complete</button><button class="jc-b" onclick="openUpload('${rid}')">📷 Photo</button>`:''}
-          <button class="jc-b" onclick="openDetail('${rid}')">Detail</button>`}
-      </div>
-    </div>`;
-  }).join('');
-  startWorkTimers();
+  // V4: redirect ไปใช้ renderEngTab เท่านั้น — ไม่เขียน eng-stats/view อีก
+  if(typeof renderEngTab==='function'){renderEngTab();return;}
 }
 
 /* ═══ EMERGENCY ═══════════════════════════════════════════════ */
