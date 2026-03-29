@@ -416,7 +416,7 @@ a{color:inherit;text-decoration:none}
         <div id="tab-done" class="tab-panel"></div>
         <div id="tab-history" class="tab-panel"></div>
         <div id="tab-settings" class="tab-panel"></div>
-        <div id="view"></div>
+        <div id="view" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -481,8 +481,8 @@ function updateSidebarNav(){
 
 function switchTab(t){
   tab=t;
-  // Sync engTab too
-  if(['active','review','done','history','settings'].includes(t)) engTab=t;
+  // Sync engTab ทุกแท็บ (รวม dashboard + emergency)
+  engTab=t;
   closeSidebar();
   const el=document.getElementById('top-title');
   if(el)el.textContent=TAB_LABELS[t]||t;
@@ -544,6 +544,7 @@ function startGPSTracking(){
   gpsWatch=navigator.geolocation.watchPosition(
     pos=>{
       _gpsActive=true;const{latitude,longitude,accuracy}=pos.coords;
+      _lastGPS={lat:latitude,lng:longitude}; // cache สำหรับนำทางทันที
       api('/api/gps',{method:'POST',body:JSON.stringify({latitude,longitude,accuracy,engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand})});
       updateGPSBar(true,`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
     },
@@ -756,16 +757,44 @@ async function doStartWork(rid){
   try{
     const startedAt=new Date().toISOString();
     const t=tickets.find(x=>x._recordId===rid);
-    // ลอง PATCH กับ started_at ก่อน
-    let d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||'',started_at:startedAt})});
-    // ถ้า 500 → retry ไม่ส่ง started_at (กรณี column ยังไม่มีใน MySQL)
-    if(!d.ok&&(d.error||'').includes('500')){
-      d=await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||''})});
+    const body={status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||''};
+
+    // ส่ง GPS ที่ cache ไว้ด้วย (ไม่ต้องรอ getCurrentPosition)
+    if(_lastGPS){body.completed_lat=_lastGPS.lat;body.completed_lng=_lastGPS.lng;}
+
+    // เพิ่ม started_at ถ้ามี (อาจ error ถ้า MySQL ไม่มี column)
+    body.started_at=startedAt;
+
+    // PATCH status (1 API call เดียว — timeout 15s)
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),15000);
+    let d;
+    try{
+      const r=await fetch(`/api/tickets/${rid}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(AUTH?.token||'')},body:JSON.stringify(body),signal:ctrl.signal});
+      d=await r.json();
+    }catch(e){
+      // Timeout/Network error → retry ไม่ส่ง started_at
+      if(e.name==='AbortError'){
+        delete body.started_at;
+        try{const r2=await fetch(`/api/tickets/${rid}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(AUTH?.token||'')},body:JSON.stringify(body)});d=await r2.json();}
+        catch(_){d={ok:false,error:'Network timeout'};}
+      } else d={ok:false,error:e.message};
     }
-    if(!d.ok)throw new Error(d.error||'Failed');
+    clearTimeout(timer);
+
+    if(!d?.ok)throw new Error(d?.error||'Failed');
+
+    // บันทึก started_at ลง localStorage (สำหรับ timer)
     try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');sv[rid]=startedAt;localStorage.setItem('eng_st_'+(AUTH?.user?.id||'x'),JSON.stringify(sv));}catch(_){}
-    navigator.geolocation.getCurrentPosition(pos=>{api('/api/gps',{method:'POST',body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,ticket_id:rid,engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand})});},()=>{},{enableHighAccuracy:true,timeout:5000});
-    await loadTickets();render();toast('🚀 เริ่มงานแล้ว!');
+
+    // อัปเดต local state ทันที (ไม่ต้องรอ loadTickets)
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',started_at:startedAt}:x);
+    render();
+    toast('🚀 เริ่มงานแล้ว!');
+
+    // Background: ส่ง GPS + reload tickets (fire-and-forget)
+    if(_lastGPS)api('/api/gps',{method:'POST',body:JSON.stringify({latitude:_lastGPS.lat,longitude:_lastGPS.lng,ticket_id:rid,engineer_name:AUTH.user.name,user_id:AUTH.user.id,brand:AUTH.user.brand})}).catch(()=>{});
+    loadTickets().then(render).catch(()=>{});
   }catch(e){toast('Error: '+e.message);}
 }
 
@@ -921,25 +950,21 @@ function openDetail(rid){
 }
 
 // เปิด Google Maps นำทาง จาก GPS ปัจจุบัน → สาขา
+// Cache GPS สำหรับใช้นำทางทันที (ไม่ต้องรอ getCurrentPosition)
+let _lastGPS=null;
 function openBranchMap(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
   const gpsMatch=(t.location||'').match(/\[(GPS|DB):([-\d.]+),([-\d.]+)\]/);
   if(!gpsMatch){toast('ไม่มีข้อมูลพิกัด GPS สาขา');return;}
   const destLat=gpsMatch[2], destLng=gpsMatch[3];
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos=>{
-        const url=`https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${destLat},${destLng}&travelmode=driving`;
-        window.open(url,'_blank');
-      },
-      ()=>{ // fallback: เปิดแค่ตำแหน่งสาขา
-        window.open(`https://www.google.com/maps/search/?api=1&query=${destLat},${destLng}`,'_blank');
-      },
-      {enableHighAccuracy:true,timeout:5000}
-    );
-  } else {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${destLat},${destLng}`,'_blank');
+
+  // ใช้ cached GPS → เปิด Maps ทันที (ไม่ต้องรอ 5 วิ)
+  if(_lastGPS){
+    window.open(`https://www.google.com/maps/dir/?api=1&origin=${_lastGPS.lat},${_lastGPS.lng}&destination=${destLat},${destLng}&travelmode=driving`,'_blank');
+    return;
   }
+  // ถ้าไม่มี cache → เปิด Maps แบบไม่ระบุ origin (Google จะใช้ GPS มือถือเอง)
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`,'_blank');
 }
 let toastT;
 function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
@@ -1339,9 +1364,11 @@ function engTogSet(key,row){
   toast(on?'เปิดใช้งาน':'ปิดใช้งาน');
 }
 
-// Override original render() to use new tabs
+// Override original render() completely — ไม่ให้เขียนลง #view อีก
 const _origRender = render;
 window.render = function(){
+  // ซ่อน #view เก่าเสมอ
+  const v=document.getElementById('view');if(v){v.style.display='none';v.innerHTML='';}
   renderEngTab();
 }
 
