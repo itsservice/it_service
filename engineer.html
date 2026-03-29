@@ -701,7 +701,7 @@ function requestGPSPermission(){
 async function doStartWork(rid){
   // GPS เป็น optional — ไม่บล็อกถ้ายังไม่ได้ lock (ใช้ cache ถ้ามี)
   try{
-    const startedAt=new Date().toISOString();
+    const startedAt=new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
     const t=tickets.find(x=>x._recordId===rid);
     const body={status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||''};
 
