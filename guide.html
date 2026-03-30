@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="th" data-t="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IT Support — Tutorial</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f0ed;--bg2:#fff;--bg3:#f4f4f1;--bg4:#e8e8e4;
+  --fg:#0a0a0a;--fg2:#3a3a38;--fg3:#7a7a75;--fg4:#a8a8a2;
+  --border:#e2e2de;--border2:#c8c8c4;--card:#fff;
+  --green:#2d7a4f;--red:#b83232;--blue:#1d5fa8;--orange:#c05a10;
+  --line-green:#06c755;
+  --sans:"Prompt",sans-serif;--mono:"Prompt",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --s1:0 2px 8px rgba(0,0,0,.07);--s2:0 6px 20px rgba(0,0,0,.11);--s3:0 16px 40px rgba(0,0,0,.16);
+}
+[data-t="dark"]{
+  --bg:#0d0d0c;--bg2:#161615;--bg3:#1e1e1c;--bg4:#282825;
+  --fg:#f0f0eb;--fg2:#b8b8b2;--fg3:#787873;--fg4:#484844;
+  --border:#252522;--border2:#363632;--card:#161615;
+  --green:#4ade80;--red:#f87171;
+}
+html,body{height:100%;background:var(--bg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden;color:var(--fg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes ringPop{0%{box-shadow:0 0 0 0 rgba(251,191,36,.8)}100%{box-shadow:0 0 0 14px rgba(251,191,36,0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* TUTORIAL OVERLAY */
+#tut-ring{position:fixed;pointer-events:none;border:2.5px solid #fbbf24;border-radius:12px;z-index:9998;display:none;animation:ringPop 1.2s infinite}
+#tut-tip{position:fixed;z-index:9999;display:none;max-width:230px;pointer-events:none}
+.tip-bubble{background:var(--fg);color:var(--bg);border-radius:14px;padding:11px 14px;box-shadow:var(--s3)}
+.tip-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;font-family:var(--mono)}
+.tip-text{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.tip-bar{height:3px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden}
+.tip-fill{height:100%;background:#fbbf24;border-radius:2px}
+#tut-arrow{position:fixed;z-index:9997;display:none;font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));animation:bounce 1s infinite}
+#tut-skip{position:fixed;top:56px;right:12px;z-index:9996;display:none;padding:5px 12px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);backdrop-filter:blur(4px)}
+
+/* LINE POPUP */
+#lp{position:fixed;bottom:16px;right:12px;z-index:9990;display:none;width:296px}
+.lp-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--s3)}
+[data-t="dark"] .lp-card{background:#1e1e1c}
+.lp-head{background:var(--line-green);padding:9px 13px;display:flex;align-items:center;gap:8px}
+.lp-ico{width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.lp-name{font-size:12px;font-weight:700;color:#fff;flex:1}
+.lp-t{font-size:10px;color:rgba(255,255,255,.65)}
+.lp-body{padding:10px 13px}
+.lp-msg{font-size:12px;color:var(--fg);line-height:1.55}
+.lp-card-inner{background:var(--bg3);border-radius:8px;padding:8px 10px;margin-top:7px;display:none}
+.lp-tid{font-family:var(--mono);font-weight:700;color:var(--blue);font-size:13px}
+.lp-ttype{font-size:11px;color:var(--fg3)}
+.lp-actions{display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
+.lp-btn{flex:1;padding:6px;border-radius:7px;border:none;background:var(--line-green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:opacity .2s}
+.lp-btn:hover{opacity:.85}
+.lp-btn.sec{background:var(--bg3);color:var(--fg)}
+
+/* LINE CHAT */
+#lc{position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;padding:0 0 0}
+.lc-win{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:460px;height:72vh;display:flex;flex-direction:column;box-shadow:var(--s3)}
+[data-t="dark"] .lc-win{background:#1e1e1c}
+.lc-head{background:var(--line-green);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lc-name{font-size:15px;font-weight:700;color:#fff;flex:1}
+.lc-x{background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;line-height:1}
+.lc-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lc-row{display:flex;gap:8px;align-items:flex-end}
+.lc-row.me{flex-direction:row-reverse}
+.lc-av{width:30px;height:30px;border-radius:50%;background:var(--line-green);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.lc-bubble{background:var(--bg3);border-radius:14px 14px 14px 4px;padding:9px 13px;max-width:75%;font-size:12px;line-height:1.6}
+.lc-bubble.me{background:var(--line-green);color:#fff;border-radius:14px 14px 4px 14px}
+.lc-bubble.card{background:var(--bg3);border-radius:12px;padding:11px;min-width:190px}
+.lc-ch{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.lc-ct{font-size:13px;font-weight:700;margin-bottom:5px}
+.lc-cr{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)}
+.lc-cr:last-child{border:none}
+.lc-cr .k{color:var(--fg3)} .lc-cr .v{font-weight:600}
+.lc-time{font-size:10px;color:var(--fg4);margin-bottom:2px}
+.lc-input{flex-shrink:0;padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.lc-input input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:13px;font-family:var(--sans);outline:none;color:var(--fg)}
+.lc-send{width:36px;height:36px;border-radius:50%;background:var(--line-green);border:none;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+
+/* MAP POPUP */
+#mp{position:fixed;inset:0;z-index:9993;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px}
+.mp-win{background:#fff;border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:var(--s3)}
+[data-t="dark"] .mp-win{background:#1e1e1c}
+.mp-head{background:var(--fg);padding:12px 16px;display:flex;align-items:center;gap:10px}
+.mp-title{font-size:13px;font-weight:700;color:var(--bg);flex:1}
+.mp-x{background:rgba(255,255,255,.15);border:none;color:var(--bg);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px}
+.mp-map{background:#dce8dc;height:220px;position:relative;overflow:hidden}
+.mp-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:28px 28px}
+.mp-info{display:flex;gap:8px;padding:12px}
+.mp-ib{flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px}
+.mp-il{font-size:9px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.mp-iv{font-size:13px;font-weight:700}
+.mp-go{width:calc(100% - 24px);margin:0 12px 12px;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+
+/* TOP NAV */
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:500;display:flex;align-items:center;padding:0 12px;gap:8px}
+[data-t="dark"] #nav{background:rgba(13,13,12,.88)}
+.nav-logo{width:28px;height:28px;background:var(--fg);border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--bg)}
+.nav-label{flex:1;font-size:12px;font-weight:700;letter-spacing:-.02em}
+.nav-label span{display:block;font-size:9px;font-weight:400;color:var(--fg4)}
+.nbtn{padding:4px 9px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nbtn:hover{background:var(--bg3)}
+.nbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+/* APP */
+#app{position:fixed;top:48px;left:0;right:0;bottom:0;overflow:hidden}
+.sc{position:absolute;inset:0;overflow-y:auto;background:var(--bg);display:none}
+.sc.on{display:block}
+
+/* SHARED */
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.t-logo{width:28px;height:28px;background:var(--fg);border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--bg);flex-shrink:0}
+.t-title{font-size:13px;font-weight:800;flex:1;letter-spacing:-.02em}
+.t-sub{font-size:10px;color:var(--fg4);font-family:var(--mono)}
+.smb{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:10px;font-weight:600;cursor:pointer;transition:all .2s}
+.smb:hover{background:var(--bg3)}
+.wrap{max-width:500px;margin:0 auto;padding:14px 14px 60px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:var(--s1)}
+.card-h{font-size:17px;font-weight:800;letter-spacing:-.03em;margin-bottom:3px}
+.card-s{font-size:12px;color:var(--fg3);margin-bottom:14px}
+.fg_{margin-bottom:10px}
+.fg_ label{display:block;font-size:9px;font-weight:700;color:var(--fg4);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+.fg_ input,.fg_ select,.fg_ textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.fg_ input:focus,.fg_ select:focus,.fg_ textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,95,168,.1)}
+.fg_ input::placeholder,.fg_ textarea::placeholder{color:var(--fg4)}
+.fg_ textarea{resize:none;min-height:68px;line-height:1.6}
+.btn{width:100%;padding:12px;background:var(--fg);color:var(--bg);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);box-shadow:0 4px 0 rgba(0,0,0,.2),var(--s1);transition:all .15s;will-change:transform}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 rgba(0,0,0,.2),var(--s2)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:var(--s1)}
+.btn-sec{flex:1;padding:10px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:12px;cursor:pointer;transition:background .2s}
+.btn-sec:hover{background:var(--bg3)}
+.pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono)}
+.p-p{background:#fef3c7;color:#78350f}.p-i{background:#dbeafe;color:#1e3a8a}
+.p-r{background:#f3e8ff;color:#581c87}.p-d{background:#dcfce7;color:#14532d}
+[data-t="dark"] .p-p{background:#451a03;color:#fcd34d}[data-t="dark"] .p-i{background:#0c1a3d;color:#93c5fd}
+.phrow{display:flex;gap:8px;margin-top:6px}
+.phb{width:60px;height:60px;border-radius:9px;border:1.5px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .2s;will-change:transform}
+.phb:hover{border-color:var(--border2);transform:scale(1.06)}
+.phb.has{border-style:solid;border-color:var(--border2)}
+
+/* HOME SCREEN */
+.home{max-width:420px;margin:0 auto;padding:24px 16px}
+.home-icon{font-size:40px;margin-bottom:10px}
+.home-title{font-size:24px;font-weight:800;letter-spacing:-.04em;margin-bottom:4px}
+.home-sub{font-size:12px;color:var(--fg3);margin-bottom:22px;line-height:1.6}
+.rc{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:center;transition:all .2s;box-shadow:var(--s1);will-change:transform}
+.rc:hover{border-color:var(--border2);box-shadow:var(--s2);transform:translateY(-2px)}
+.rc.reporter{border-left:4px solid var(--blue)}
+.rc.engineer{border-left:4px solid var(--green)}
+.rc.admin{border-left:4px solid var(--red)}
+.rc-icon{font-size:28px;width:46px;height:46px;background:var(--bg3);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rc-title{font-size:15px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px}
+.rc-sub{font-size:11px;color:var(--fg3);line-height:1.4}
+.rc-badge{font-size:9px;font-family:var(--mono);color:var(--fg4);margin-top:3px}
+
+/* BRAND GRID */
+.bg_{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.bc_{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.05);will-change:transform}
+.bc_:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--s2)}
+.bc_.on{border-color:var(--fg);background:var(--fg)}
+.bc_.on .bn_{color:var(--bg)}
+.bi_{font-size:26px;margin-bottom:5px;display:block}
+.bn_{font-size:12px;font-weight:700}
+
+/* STATUS TRACK */
+.strack{display:flex;align-items:center;padding:12px 0}
+.st-s{display:flex;flex-direction:column;align-items:center;flex:1}
+.st-c{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--bg3);border:1.5px solid var(--border);color:var(--fg4);transition:all .4s;font-family:var(--mono)}
+.st-c.done{background:var(--green);border-color:var(--green);color:#fff}
+.st-c.active{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.st-l{font-size:9px;color:var(--fg4);margin-top:4px}
+.st-line{flex:1;height:2px;background:var(--border);margin-top:-12px;transition:background .4s}
+.st-line.done{background:var(--green)}
+
+/* ENGINEER LAYOUT */
+.elayout{display:flex;height:calc(100vh - 48px)}
+.esb{width:180px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);padding:8px;overflow-y:auto}
+.ebody{flex:1;overflow-y:auto;padding:0}
+.eu{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:5px}
+.eu-role{font-size:8px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em}
+.eu-name{font-size:13px;font-weight:700}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--fg3);transition:all .2s;will-change:transform}
+.ni:hover{background:var(--bg3);color:var(--fg)}
+.ni.on{background:var(--bg3);color:var(--fg)}
+.niicon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nbadge{margin-left:auto;font-size:9px;background:var(--red);color:#fff;border-radius:10px;padding:1px 5px;font-family:var(--mono)}
+
+/* JOB CARD */
+.jc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04);will-change:transform;position:relative;overflow:hidden}
+.jc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--fg);border-radius:3px 0 0 3px;transform:scaleY(0);transition:transform .2s}
+.jc:hover::before{transform:scaleY(1)}
+.jc:hover{border-color:var(--border2);box-shadow:var(--s2)}
+.jc-id{font-family:var(--mono);font-size:9px;color:var(--fg4);margin-bottom:3px}
+.jc-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.jc-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:7px;font-size:11px;color:var(--fg3)}
+.jcbrow{display:flex;gap:5px;flex-wrap:wrap}
+.jb{padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;will-change:transform}
+.jb:hover{background:var(--bg3);color:var(--fg)}
+.jb.pri{background:var(--fg);color:var(--bg);border-color:var(--fg);box-shadow:0 3px 0 rgba(0,0,0,.2);flex:1}
+.jb.pri:hover{transform:translateY(-1px);box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.jb.pri:active{transform:translateY(2px)}
+.jb.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.jb.green{background:var(--green);color:#fff;border-color:var(--green);flex:1}
+.jb:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.timer-row{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.timer-val{font-family:var(--mono);font-size:18px;font-weight:500}
+.timer-lbl{font-size:11px;color:var(--fg4);flex:1}
+.gpsdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;flex-shrink:0}
+.mf{display:flex;gap:8px;margin-top:12px}
+
+/* ADMIN LAYOUT */
+.alayout{display:flex;height:calc(100vh - 48px)}
+.asb{width:185px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);padding:8px;overflow-y:auto}
+.abody{flex:1;overflow-y:auto;position:relative}
+.au{padding:9px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.arl{font-size:8px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em}
+.aun{font-size:13px;font-weight:700}
+.aN{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--fg3);transition:all .2s}
+.aN:hover{background:var(--bg3);color:var(--fg)}
+.aN.on{background:var(--bg3);color:var(--fg)}
+.abadge{margin-left:auto;font-size:9px;background:var(--red);color:#fff;border-radius:10px;padding:1px 5px;font-family:var(--mono)}
+/* TABLE */
+.tw{padding:12px}
+.tfilters{display:flex;gap:8px;margin-bottom:10px}
+.tf{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--fg2);font-family:var(--sans);cursor:pointer;outline:none}
+.tr{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 13px;margin-bottom:5px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .2s;will-change:transform}
+.tr:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--s2)}
+.tr.sel{border-color:var(--fg)}
+.tr-id{font-family:var(--mono);font-size:9px;color:var(--fg4);width:66px;flex-shrink:0}
+.tr-t{flex:1;font-size:12px;font-weight:600}
+.tr-b{font-size:10px;color:var(--fg3);width:72px;flex-shrink:0}
+/* DRAWER */
+.drw{position:absolute;right:0;top:0;bottom:0;width:286px;background:var(--card);border-left:1px solid var(--border);z-index:15;overflow-y:auto;padding:14px;box-shadow:var(--s3);transform:translateX(100%);will-change:transform}
+.drw.on{transform:translateX(0)}
+.dclose{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:var(--fg4);transition:color .2s}
+.dclose:hover{color:var(--fg)}
+.did{font-family:var(--mono);font-size:9px;color:var(--fg4);margin-bottom:2px}
+.dtitle{font-size:15px;font-weight:800;margin-bottom:6px;letter-spacing:-.02em}
+.dacts{display:flex;gap:5px;margin-bottom:11px}
+.db{flex:1;padding:7px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--fg2);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;will-change:transform}
+.db:hover{background:var(--bg3)}
+.db.pri{background:var(--fg);color:var(--bg);border-color:var(--fg);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.db.pri:hover{transform:translateY(-1px)}
+.db:disabled{opacity:.35;cursor:not-allowed}
+.dsec{font-size:9px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 5px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.drow{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,.04)}
+.dk{color:var(--fg3)}.dv{font-weight:600;max-width:55%;text-align:right}
+.phg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}
+.pht{aspect-ratio:1;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:transform .2s;will-change:transform}
+.pht:hover{transform:scale(1.07)}
+/* STAT BOXES */
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;margin:0}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.snum{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.slbl{font-size:10px;color:var(--fg4);margin-top:2px}
+/* LOG ROW */
+.logrow{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:flex-start}
+.logico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.logtext{font-size:12px;color:var(--fg);line-height:1.5}
+.logmeta{font-size:10px;color:var(--fg4);margin-top:2px;font-family:var(--mono)}
+/* SERVER LOG */
+.srvlog{padding:9px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;line-height:1.5}
+.c-info{color:var(--blue)}.c-ok{color:var(--green)}.c-err{color:var(--red)}.c-warn{color:var(--orange)}
+/* GPS MAP */
+.gmap{background:#dce8dc;height:260px;position:relative;overflow:hidden;margin:12px}
+.gmap-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:28px 28px}
+.gmarker{position:absolute;will-change:transform;cursor:pointer}
+.gpin{width:30px;height:30px;border-radius:50%;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.25);font-size:14px;transition:transform .3s}
+.gpin:hover{transform:scale(1.15)}
+.glabel{font-size:9px;background:#fff;border-radius:3px;padding:1px 5px;margin-top:3px;box-shadow:0 1px 3px rgba(0,0,0,.15);white-space:nowrap;text-align:center}
+/* LINE SETTINGS */
+.lgroup{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.lgico{width:34px;height:34px;border-radius:10px;background:var(--line-green);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.lgname{font-size:12px;font-weight:600;flex:1}
+.lgid{font-size:10px;color:var(--fg4);font-family:var(--mono)}
+.lgst{font-size:10px;font-weight:600;color:var(--green);margin-right:4px}
+.lgbtn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-left:3px}
+.lgbtn:hover{background:var(--bg3)}
+.lgbtn.test{border-color:var(--line-green);color:var(--line-green)}
+/* BRANCH ROW */
+.brow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+.brow:hover{background:var(--bg3)}
+.bcode{font-family:var(--mono);font-size:10px;color:var(--fg4);width:52px;flex-shrink:0}
+.bname{flex:1;font-size:12px;font-weight:600}
+.bbrand{font-size:10px;color:var(--fg3);width:76px;flex-shrink:0}
+/* EMERG */
+.ecat{margin-bottom:12px}
+.echead{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;font-weight:700}
+.ecitems{border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;background:var(--bg3);overflow:hidden}
+.ecitem{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px dashed var(--border);font-size:12px}
+.ecitem:last-child{border:none}
+.ecph{color:var(--blue);font-family:var(--mono);font-weight:600;font-size:12px}
+/* SETTINGS */
+.toggle{width:36px;height:20px;border-radius:10px;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s}
+.toggle.on{background:var(--green)}.toggle.off{background:var(--border2)}
+.toggle-thumb{position:absolute;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s}
+.toggle.on .toggle-thumb{left:18px}.toggle.off .toggle-thumb{left:2px}
+
+/* Centered full-height screens */
+#s-e-login > div:first-child,
+#s-a-login > div:first-child {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 48px);
+}
+
+.ld{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+/* USERS PAGE */
+.ucard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:all .3s}
+.uavatar{width:38px;height:38px;border-radius:50%;background:var(--fg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--bg);flex-shrink:0}
+.uname{font-size:13px;font-weight:700}
+.umeta{font-size:10px;color:var(--fg4);font-family:var(--mono)}
+.ubtn{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-size:11px;transition:all .2s;margin-left:4px}
+.ubtn:hover{background:var(--bg3)}
+.ubtn.del{border-color:var(--red);color:var(--red)}
+.ubtn.del:hover{background:var(--red);color:#fff}
+/* NOTIFY BADGE */
+.notify-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--red);border-radius:50%;border:1.5px solid var(--bg)}
+/* OVERVIEW CHART */
+.chart-row{display:flex;gap:5px;align-items:flex-end;height:64px;padding:0 12px 12px}
+.chart-bar{flex:1;border-radius:4px 4px 0 0;background:var(--blue);opacity:.8;transition:height .4s}
+.chart-lbl{font-size:9px;color:var(--fg4);text-align:center;margin-top:3px}
+</style>
+</head>
+<body>
+
+<!-- TUTORIAL SYSTEM -->
+<div id="tut-ring"></div>
+<div id="tut-tip">
+  <div class="tip-bubble">
+    <div class="tip-label" id="tip-label">ขั้นตอนที่ 1</div>
+    <div class="tip-text" id="tip-text">tip text</div>
+    <div class="tip-bar"><div class="tip-fill" id="tip-fill"></div></div>
+  </div>
+</div>
+<div id="tut-arrow">⬇️</div>
+<button id="tut-skip" onclick="TUT.skip()">SKIP ▶▶</button>
+
+<!-- LINE POPUP -->
+<div id="lp">
+  <div class="lp-card">
+    <div class="lp-head">
+      <div class="lp-ico">🤖</div>
+      <div class="lp-name" id="lp-name">IT Support Bot</div>
+      <div class="lp-t">เมื่อกี้</div>
+    </div>
+    <div class="lp-body">
+      <div class="lp-msg" id="lp-msg"></div>
+      <div class="lp-card-inner" id="lp-inner">
+        <div class="lp-tid" id="lp-tid"></div>
+        <div class="lp-ttype" id="lp-ttype"></div>
+      </div>
+      <div class="lp-actions">
+        <button class="lp-btn sec" onclick="LINE.close()">ปิด</button>
+        <button class="lp-btn" onclick="LINE.openChat()">เปิดแชท LINE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LINE CHAT -->
+<div id="lc" onclick="if(event.target===this)LINE.closeChat()">
+  <div class="lc-win" id="lc-win">
+    <div class="lc-head">
+      <div class="lp-ico">🤖</div>
+      <div class="lc-name" id="lc-name">IT Support Bot</div>
+      <button class="lc-x" onclick="LINE.closeChat()">✕</button>
+    </div>
+    <div class="lc-msgs" id="lc-msgs"></div>
+    <div class="lc-input">
+      <input placeholder="พิมพ์ข้อความ..." id="lc-input" onkeydown="if(event.key===&apos;Enter&apos;)LINE.send()"/>
+      <button class="lc-send" onclick="LINE.send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAP POPUP -->
+<div id="mp" onclick="if(event.target===this)MAP.close()">
+  <div class="mp-win" id="mp-win">
+    <div class="mp-head">
+      <span style="font-size:16px">🗺️</span>
+      <div class="mp-title">นำทางไปสาขา</div>
+      <button class="mp-x" onclick="MAP.close()">✕</button>
+    </div>
+    <div class="mp-map" id="mp-map">
+      <div class="mp-grid"></div>
+      <svg id="mp-svg" style="position:absolute;inset:0;width:100%;height:100%">
+        <path id="mp-path" stroke="var(--blue)" stroke-width="3.5" fill="none" stroke-dasharray="400" stroke-dashoffset="400" stroke-linecap="round"/>
+      </svg>
+      <div class="gmarker" id="mp-a" style="left:14%;top:52%">
+        <div class="gpin" style="background:var(--blue)">👷</div>
+        <div class="glabel">คุณอยู่ที่นี่</div>
+      </div>
+      <div class="gmarker" id="mp-b" style="left:66%;top:18%">
+        <div class="gpin" style="background:var(--red)">🍩</div>
+        <div class="glabel">สาขา 0014</div>
+      </div>
+    </div>
+    <div class="mp-info">
+      <div class="mp-ib"><div class="mp-il">ระยะทาง</div><div class="mp-iv">4.2 กม.</div></div>
+      <div class="mp-ib"><div class="mp-il">เวลา</div><div class="mp-iv">~15 นาที</div></div>
+      <div class="mp-ib"><div class="mp-il">สาขา</div><div class="mp-iv">0014 Siam</div></div>
+    </div>
+    <button class="mp-go" onclick="MAP.start()">เริ่มนำทาง →</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <div class="nav-logo">IT</div>
+  <div class="nav-label" id="nav-label">IT Support<span>Interactive Tutorial</span></div>
+  <div id="nav-btns" style="display:flex;gap:4px">
+    <button class="nbtn" onclick="toggleDark()">🌙</button>
+    <button class="nbtn" onclick="showHome()">⌂ Home</button>
+  </div>
+</div>
+
+<!-- APP SCREENS -->
+<div id="app">
+
+<!-- HOME -->
+<div class="sc on" id="s-home">
+  <div class="home">
+    <div class="home-icon">🛠️</div>
+    <div class="home-title">IT Support System</div>
+    <div class="home-sub">เลือกบทเรียน — กดใช้งานได้อิสระ<br>มีคำแนะนำ 5 วิ บอกว่าต้องกดอะไร</div>
+    <div class="rc reporter" onclick="START.reporter()">
+      <div class="rc-icon">📋</div>
+      <div style="flex:1">
+        <div class="rc-title">ผู้แจ้งปัญหา</div>
+        <div class="rc-sub">แจ้งปัญหา IT ของร้าน<br>ติดตามสถานะ Ticket</div>
+        <div class="rc-badge">5 ขั้นตอน</div>
+      </div>
+      <div style="font-size:18px;color:var(--fg4)">→</div>
+    </div>
+    <div class="rc engineer" onclick="START.engineer()">
+      <div class="rc-icon">🔧</div>
+      <div style="flex:1">
+        <div class="rc-title">ช่างซ่อม IT</div>
+        <div class="rc-sub">รับงาน เริ่มงาน นำทาง<br>ส่งงาน + รูปภาพ</div>
+        <div class="rc-badge">7 เมนู</div>
+      </div>
+      <div style="font-size:18px;color:var(--fg4)">→</div>
+    </div>
+    <div class="rc admin" onclick="START.admin()">
+      <div class="rc-icon">⚙️</div>
+      <div style="flex:1">
+        <div class="rc-title">ผู้ดูแลระบบ</div>
+        <div class="rc-sub">จัดการ Ticket มอบหมายงาน<br>ดูแลระบบทั้งหมด</div>
+        <div class="rc-badge">9 เมนู</div>
+      </div>
+      <div style="font-size:18px;color:var(--fg4)">→</div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTER SCREENS -->
+<div class="sc" id="s-r1">
+  <div class="topbar"><div class="t-logo">RP</div><div class="t-title">แจ้งปัญหา IT</div><div class="t-sub">11:30</div><button class="smb">TH</button></div>
+  <div class="wrap">
+    <div style="display:flex;gap:3px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:6px">
+      <button style="padding:7px 14px;border-radius:7px;border:none;background:var(--bg3);color:var(--fg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)">แจ้งปัญหา</button>
+      <button style="padding:7px 14px;border-radius:7px;border:none;background:transparent;color:var(--fg4);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)" onclick="goTo('s-r4');TUT.step('reporter',3)">ติดตาม Ticket</button>
+    </div>
+    <div class="card">
+      <div class="card-h">เลือกแบรนด์ร้าน</div>
+      <div class="card-s">กดเลือกแบรนด์ของร้านคุณ</div>
+      <div class="bg_">
+        <div class="bc_" id="bc-dunkin" onclick="R.pickBrand(this,'dunkin')"><span class="bi_">🍩</span><div class="bn_">Dunkin&#39;</div></div>
+        <div class="bc_" id="bc-ghc" onclick="R.pickBrand(this,'ghc')"><span class="bi_">☕</span><div class="bn_">Greyhound Cafe&#39;</div></div>
+        <div class="bc_" id="bc-gho" onclick="R.pickBrand(this,'gho')"><span class="bi_">🐕</span><div class="bn_">Greyhound Original</div></div>
+        <div class="bc_" id="bc-abp" onclick="R.pickBrand(this,'abp')"><span class="bi_">🥐</span><div class="bn_">Au Bon Pain</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sc" id="s-r2">
+  <div class="topbar"><div class="t-logo">RP</div><div class="t-title">แจ้งปัญหา IT</div><div class="t-sub">11:31</div></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-h">กรอกรายละเอียด</div>
+      <div class="card-s">ระบุปัญหาให้ละเอียดเพื่อให้ช่างเข้าใจ</div>
+      <div class="fg_"><label>ชื่อผู้แจ้ง *</label><input id="r2-name" placeholder="ชื่อ-นามสกุล" onclick="ty(this,'สมหมาย ใจดี')"/></div>
+      <div class="fg_"><label>เบอร์โทรศัพท์ *</label><input id="r2-ph" placeholder="08x-xxx-xxxx" onclick="ty(this,'081-234-5678')"/></div>
+      <div class="fg_"><label>สาขา *</label><input value="🍩 Dunkin&#39; — สาขา 0014 Siam" readonly style="border-color:var(--fg)"/></div>
+      <div class="fg_"><label>ประเภทปัญหา *</label>
+        <select onclick="this.value='เครื่องชงกาแฟ'">
+          <option value="">-- เลือกประเภท --</option><option>เครื่องชงกาแฟ</option><option>เครื่องซีลแก้ว</option><option>ระบบไฟ</option><option>ประปา</option>
+        </select></div>
+      <div class="fg_"><label>รายละเอียด *</label><textarea id="r2-det" placeholder="อธิบายอาการ..." onclick="ty(this,'เครื่องไม่ทำงาน กดแล้วไม่มีน้ำออก เกิดตั้งแต่เช้า')"></textarea></div>
+      <div class="fg_"><label>รูปภาพ (สูงสุด 3 รูป)</label>
+        <div class="phrow">
+          <div class="phb" style="background:#fee2e2" onclick="gsap.fromTo(this,{scale:.8},{scale:1,duration:.35,ease:'back.out(2)',onComplete:()=>{this.textContent='🖼️';this.classList.add('has')}})">➕</div>
+          <div class="phb" onclick="gsap.fromTo(this,{scale:.8},{scale:1,duration:.35,ease:'back.out(2)',onComplete:()=>{this.textContent='📸';this.classList.add('has')}})">➕</div>
+          <div class="phb" onclick="gsap.fromTo(this,{scale:.8},{scale:1,duration:.35,ease:'back.out(2)',onComplete:()=>{this.textContent='📸';this.classList.add('has')}})">➕</div>
+        </div></div>
+      <button class="btn" id="r2-sub" onclick="R.submit()" style="margin-top:8px">ส่งรายงาน</button>
+    </div>
+  </div>
+</div>
+
+<div class="sc" id="s-r3">
+  <div class="topbar"><div class="t-logo">RP</div><div class="t-title">แจ้งปัญหา IT</div></div>
+  <div class="wrap">
+    <div class="card" style="text-align:center;padding:28px 20px" id="r3-suc">
+      <div id="r3-icon" style="font-size:52px;margin-bottom:10px">✅</div>
+      <div style="font-size:22px;font-weight:800;font-family:var(--mono);letter-spacing:-.02em;margin-bottom:4px">GD-00001</div>
+      <div style="font-size:12px;color:var(--fg3);margin-bottom:16px">แจ้งปัญหาสำเร็จ · บันทึก Ticket ID ไว้!</div>
+      <button class="btn" onclick="goTo('s-r4');TUT.step('reporter',3)">ติดตาม Ticket ของฉัน →</button>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div style="font-size:9px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">สถานะปัจจุบัน</div>
+      <div class="strack">
+        <div class="st-s"><div class="st-c done">✓</div><div class="st-l">รับเรื่อง</div></div>
+        <div class="st-line"></div>
+        <div class="st-s"><div class="st-c">2</div><div class="st-l">มอบหมาย</div></div>
+        <div class="st-line"></div>
+        <div class="st-s"><div class="st-c">3</div><div class="st-l">ดำเนินการ</div></div>
+        <div class="st-line"></div>
+        <div class="st-s"><div class="st-c">4</div><div class="st-l">เสร็จสิ้น</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sc" id="s-r4">
+  <div class="topbar"><div class="t-logo">RP</div><div class="t-title">ติดตาม Ticket</div></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-h">ค้นหา Ticket</div>
+      <div class="card-s">ใส่ Ticket ID ที่ได้รับหลังแจ้งปัญหา</div>
+      <div class="fg_"><label>Ticket ID *</label><input id="r4-input" placeholder="เช่น GD-00001" onclick="ty(this,'GD-00001')"/></div>
+      <button class="btn" id="r4-btn" onclick="R.search()">ค้นหา</button>
+    </div>
+  </div>
+</div>
+
+<div class="sc" id="s-r5">
+  <div class="topbar"><div class="t-logo">RP</div><div class="t-title">ติดตาม Ticket</div></div>
+  <div class="wrap">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><div style="font-family:var(--mono);font-size:10px;color:var(--fg4)">GD-00001 · Dunkin&#39;</div><div style="font-size:16px;font-weight:800;margin-top:2px">เครื่องชงกาแฟ</div></div>
+        <span class="pill p-i">กำลังดำเนินการ</span>
+      </div>
+      <div class="strack" style="margin:14px 0">
+        <div class="st-s"><div class="st-c done">✓</div><div class="st-l">รับเรื่อง</div></div>
+        <div class="st-line done"></div>
+        <div class="st-s"><div class="st-c done">✓</div><div class="st-l">มอบหมาย</div></div>
+        <div class="st-line done"></div>
+        <div class="st-s"><div class="st-c active">⚙️</div><div class="st-l">ดำเนินการ</div></div>
+        <div class="st-line"></div>
+        <div class="st-s"><div class="st-c">4</div><div class="st-l">เสร็จสิ้น</div></div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;font-size:12px">
+        <div style="font-weight:700;margin-bottom:3px">ช่าง 1 กำลังดำเนินการ</div>
+        <div style="color:var(--fg3)">สาขา 0014 · เริ่มงาน 13:45 น.</div>
+      </div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">ประวัติการอัปเดต</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+        <div style="display:flex;gap:8px"><span style="color:var(--fg4);font-family:var(--mono);width:42px;flex-shrink:0">13:45</span><span>ช่าง 1 เริ่มงานแล้ว</span></div>
+        <div style="display:flex;gap:8px"><span style="color:var(--fg4);font-family:var(--mono);width:42px;flex-shrink:0">12:30</span><span>มอบหมายให้ ช่าง 1</span></div>
+        <div style="display:flex;gap:8px"><span style="color:var(--fg4);font-family:var(--mono);width:42px;flex-shrink:0">11:31</span><span>รับเรื่องเรียบร้อย</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINEER SCREENS -->
+<div class="sc" id="s-e-login">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%">
+  <div style="width:44px;height:44px;background:var(--fg);border-radius:12px;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--bg);margin-bottom:14px;box-shadow:var(--s1)">EN</div>
+  <div style="font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:3px">Engineer Portal</div>
+  <div style="font-size:12px;color:var(--fg3);margin-bottom:22px">เข้าสู่ระบบเพื่อดูงานที่ได้รับ</div>
+  <div style="width:100%;max-width:310px;padding:0 16px">
+    <div class="fg_"><label>USERNAME</label><input id="el-u" placeholder="username" onclick="ty(this,'engineer01')"/></div>
+    <div class="fg_"><label>PASSWORD</label><input type="password" id="el-p" placeholder="••••••••" onclick="ty(this,'pass1234')"/></div>
+    <button class="btn" id="el-btn" onclick="E.login()">เข้าสู่ระบบ</button>
+  </div>
+  </div>
+</div>
+
+<div class="sc" id="s-e-main">
+  <div class="elayout">
+    <div class="esb" id="e-sidebar">
+      <div class="eu"><div class="eu-role">ช่างซ่อม IT</div><div class="eu-name">ช่าง 1</div></div>
+      <div class="ni on" id="e-tab-jobs" onclick="E.tab('jobs')"><span class="niicon">🔧</span><span>งานของฉัน</span><span class="nbadge" id="e-jobs-badge">2</span></div>
+      <div class="ni" id="e-tab-dash" onclick="E.tab('dash')"><span class="niicon">📊</span><span>Dashboard</span></div>
+      <div class="ni" id="e-tab-review" onclick="E.tab('review')"><span class="niicon">🔍</span><span>ตรวจงาน</span></div>
+      <div class="ni" id="e-tab-done" onclick="E.tab('done')"><span class="niicon">✅</span><span>เสร็จสิ้น</span></div>
+      <div class="ni" id="e-tab-history" onclick="E.tab('history')"><span class="niicon">📋</span><span>ประวัติ</span></div>
+      <div class="ni" id="e-tab-settings" onclick="E.tab('settings')"><span class="niicon">⚙️</span><span>ตั้งค่า</span></div>
+      <div class="ni" id="e-tab-emerg" onclick="E.tab('emerg')"><span class="niicon">🚨</span><span>ฉุกเฉิน</span></div>
+    </div>
+    <div class="ebody" id="e-body"></div>
+  </div>
+</div>
+
+<!-- ADMIN SCREENS -->
+<div class="sc" id="s-a-login">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%">
+  <div style="width:44px;height:44px;background:var(--fg);border-radius:12px;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--bg);margin-bottom:14px;box-shadow:var(--s1)">IT</div>
+  <div style="font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:3px">Admin Portal</div>
+  <div style="font-size:12px;color:var(--fg3);margin-bottom:22px">เข้าสู่ระบบผู้ดูแล</div>
+  <div style="width:100%;max-width:310px;padding:0 16px">
+    <div class="fg_"><label>USERNAME</label><input id="al-u" placeholder="username" onclick="ty(this,'admin')"/></div>
+    <div class="fg_"><label>PASSWORD</label><input type="password" id="al-p" placeholder="••••••••" onclick="ty(this,'admin1234')"/></div>
+    <button class="btn" id="al-btn" onclick="A.login()">เข้าสู่ระบบ</button>
+  </div>
+  </div>
+</div>
+
+<div class="sc" id="s-a-main">
+  <div class="alayout">
+    <div class="asb">
+      <div class="au"><div class="arl">SUPER ADMIN</div><div class="aun">Admin</div></div>
+      <div class="aN on" id="a-tab-overview" onclick="A.tab('overview')"><span>📊</span><span>Overview</span></div>
+      <div class="aN" id="a-tab-tickets" onclick="A.tab('tickets')"><span>🎫</span><span>Tickets</span><span class="abadge">5</span></div>
+      <div class="aN" id="a-tab-users" onclick="A.tab('users')"><span>👥</span><span>Users</span></div>
+      <div class="aN" id="a-tab-activity" onclick="A.tab('activity')"><span>📝</span><span>Activity Log</span></div>
+      <div class="aN" id="a-tab-gps" onclick="A.tab('gps')"><span>🌍</span><span>GPS Map</span></div>
+      <div class="aN" id="a-tab-line" onclick="A.tab('line')"><span>💬</span><span>LINE Groups</span></div>
+      <div class="aN" id="a-tab-system" onclick="A.tab('system')"><span>🔧</span><span>System</span></div>
+      <div class="aN" id="a-tab-logs" onclick="A.tab('logs')"><span>🖥️</span><span>Server Logs</span></div>
+      <div class="aN" id="a-tab-branches" onclick="A.tab('branches')"><span>🏪</span><span>Branches</span></div>
+    </div>
+    <div class="abody" id="a-body"></div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ══ STATE (single source of truth) ══
+const S = {
+  role: null,
+  eWorking: false,
+  eSubmitting: false,
+  eCurrentTab: 'jobs',
+  aCurrentTab: 'overview',
+  lineHistory: [],
+  lineGroup: 'Admin Group'
+};
+
+// ══ UTILS ══
+const $ = id => document.getElementById(id);
+const goTo = id => {
+  document.querySelectorAll('.sc').forEach(s => s.classList.remove('on'));
+  const el = $(id); if (!el) return;
+  el.classList.add('on');
+  gsap.fromTo(el, {opacity:0,y:8}, {opacity:1,y:0,duration:.28,ease:'power3.out'});
+};
+const ty = (el, val) => {
+  if (!el) return; el.value = '';
+  let i = 0;
+  const t = setInterval(() => { el.value += val[i++]; if (i >= val.length) clearInterval(t); }, 30);
+};
+const ld = btn => { btn.dataset.orig = btn.innerHTML; btn.innerHTML = '<span class="ld"></span>'; btn.disabled = true; };
+const unld = btn => { if (!btn) return; btn.innerHTML = btn.dataset.orig || btn.innerHTML; btn.disabled = false; };
+const toggleDark = () => {
+  const d = document.documentElement;
+  d.setAttribute('data-t', d.getAttribute('data-t') === 'dark' ? 'light' : 'dark');
+  gsap.fromTo(document.body, {opacity:.7}, {opacity:1,duration:.25});
+};
+const showHome = () => {
+  TUT.clear(); LINE.close(); S.role = null;
+  $('nav-label').innerHTML = 'IT Support<span>Interactive Tutorial</span>';
+  $('nav-btns').innerHTML = '<button class="nbtn" onclick="toggleDark()">🌙</button><button class="nbtn" onclick="showHome()">⌂ Home</button>';
+  goTo('s-home');
+  gsap.fromTo('.rc', {opacity:0,y:20}, {opacity:1,y:0,duration:.4,stagger:.1,delay:.1,ease:'power3.out'});
+};
+
+// ══ TUTORIAL ENGINE — rebuilt from scratch ══
+const TUT = {
+  _timer: null,
+  _dur: 5000,
+
+  clear() {
+    clearTimeout(this._timer); this._timer = null;
+    // Remove ring & arrow immediately
+    const ring = $('tut-ring'), tip = $('tut-tip'), arrow = $('tut-arrow'), skip = $('tut-skip');
+    gsap.killTweensOf([ring, tip, arrow]);
+    ring.style.display = 'none';
+    tip.style.display = 'none';
+    arrow.style.display = 'none';
+    skip.style.display = 'none';
+    // Remove any attached click handlers
+    document.querySelectorAll('[data-tut]').forEach(el => {
+      el.removeEventListener('click', el._tutClick);
+      delete el._tutClick;
+      el.removeAttribute('data-tut');
+    });
+    gsap.killTweensOf($('tip-fill'));
+  },
+
+  skip() { this.clear(); },
+
+  show(cfg) {
+    // cfg: { targetId, text, label, arrow:'up'|'down', dur, onTap }
+    this.clear();
+    const { targetId, text, label='', arrow='down', dur=5000, onTap } = cfg;
+    const el = targetId ? $(targetId) : null;
+
+    // Set text
+    $('tip-text').textContent = text;
+    $('tip-label').textContent = label;
+
+    // Position ring + arrow on target
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const ring = $('tut-ring');
+      ring.style.cssText = `left:${rect.left-6}px;top:${rect.top-6}px;width:${rect.width+12}px;height:${rect.height+12}px;display:block`;
+      gsap.fromTo(ring, {scale:.6,opacity:0}, {scale:1,opacity:1,duration:.35,ease:'back.out(2)'});
+
+      // Arrow
+      const aw = $('tut-arrow');
+      const awY = arrow === 'down' ? rect.top - 44 : rect.bottom + 8;
+      aw.textContent = arrow === 'down' ? '⬇️' : '⬆️';
+      aw.style.cssText = `left:${rect.left + rect.width/2 - 13}px;top:${awY}px;display:block`;
+      gsap.fromTo(aw, {opacity:0,y:arrow==='down'?-8:8}, {opacity:1,y:0,duration:.3,ease:'back.out(1.5)'});
+
+      // Position tip bubble
+      const tip = $('tut-tip');
+      const tx = Math.max(8, Math.min(window.innerWidth-242, rect.left + rect.width/2 - 115));
+      const ty_ = arrow === 'down'
+        ? Math.max(56, rect.top - 118)
+        : Math.min(window.innerHeight - 110, rect.bottom + 20);
+      tip.style.cssText = `left:${tx}px;top:${ty_}px;display:block`;
+      gsap.fromTo(tip, {opacity:0,scale:.85,y:arrow==='down'?8:-8}, {opacity:1,scale:1,y:0,duration:.35,ease:'back.out(1.6)'});
+
+      // Click on target: clear ring immediately then run onTap
+      const handler = (e) => {
+        e.stopPropagation();
+        TUT.clear(); // ring gone IMMEDIATELY
+        if (onTap) setTimeout(() => onTap(), 80);
+      };
+      el._tutClick = handler;
+      el.setAttribute('data-tut', '1');
+      el.addEventListener('click', handler, { once: true });
+    } else {
+      // No target — just show tip at bottom center
+      const tip = $('tut-tip');
+      tip.style.cssText = `left:50%;top:auto;bottom:80px;transform:translateX(-50%);display:block`;
+      gsap.fromTo(tip, {opacity:0,y:12}, {opacity:1,y:0,duration:.3,ease:'back.out(1.5)'});
+    }
+
+    // Skip button
+    $('tut-skip').style.display = 'block';
+
+    // Countdown bar
+    $('tip-fill').style.width = '100%';
+    gsap.to($('tip-fill'), { width:'0%', duration: dur/1000, ease:'none' });
+
+    // Auto dismiss after dur
+    this._timer = setTimeout(() => {
+      this.clear();
+      if (onTap) onTap(); // auto advance
+    }, dur);
+  },
+
+  // Named step shortcuts for each role
+  step(role, i) {
+    const steps = TUT_STEPS[role];
+    if (!steps || i >= steps.length) return;
+    const s = steps[i];
+    // Ensure correct screen first
+    if (s.screen) goTo(s.screen);
+    // Small delay so DOM renders before measuring
+    setTimeout(() => {
+      TUT.show({
+        targetId: s.target,
+        text: s.text,
+        label: `ขั้นตอน ${i+1}/${steps.length}`,
+        arrow: s.arrow || 'down',
+        dur: 5000,
+        onTap: s.next || null
+      });
+    }, 320);
+  }
+};
+
+// ══ TUTORIAL STEPS DEFINITIONS ══
+const TUT_STEPS = {
+  reporter: [
+    { screen:'s-r1', target:'bc-dunkin', text:'กดเลือกแบรนด์ของร้านคุณก่อน', arrow:'down',
+      next: () => R.pickBrand($('bc-dunkin'), 'dunkin') },
+    { screen:'s-r2', target:'r2-sub', text:'กรอกข้อมูลครบแล้ว กด "ส่งรายงาน"', arrow:'up',
+      next: () => R.submit() },
+    { screen:'s-r3', target:null, text:'ได้ Ticket ID แล้ว! กด "ติดตาม Ticket" เพื่อเช็คสถานะ', arrow:'down' },
+    { screen:'s-r4', target:'r4-btn', text:'พิมพ์ ID แล้วกด "ค้นหา"', arrow:'up',
+      next: () => R.search() },
+    { screen:'s-r5', target:null, text:'นี่คือสถานะ Ticket — อัปเดตแบบ Real-time', arrow:'down' }
+  ],
+  engineer: [
+    { screen:'s-e-login', target:'el-btn', text:'กรอก Username/Password แล้วกด "เข้าสู่ระบบ"', arrow:'up',
+      next: () => E.login() },
+    { screen:'s-e-main', target:'e-tab-jobs', text:'กด "งานของฉัน" เพื่อดูงานที่ได้รับ', arrow:'down',
+      next: () => E.tab('jobs') },
+    { screen:'s-e-main', target:'e-start-btn', text:'กด "เริ่มงาน" — Timer เริ่มนับ GPS ติดตามทันที', arrow:'up',
+      next: () => E.startWork() },
+    { screen:'s-e-main', target:'e-nav-btn', text:'กด "นำทาง" เพื่อดูเส้นทาง A→B ไปสาขา', arrow:'up',
+      next: () => MAP.open() },
+    { screen:'s-e-main', target:'e-submit-btn', text:'ซ่อมเสร็จแล้ว กด "ส่งงาน"', arrow:'up',
+      next: () => E.showSubmit() },
+    { screen:'s-e-main', target:'e-confirm-btn', text:'กรอกรายละเอียด แนบรูป แล้วกด "ส่งงาน"', arrow:'up',
+      next: () => E.confirmSubmit() }
+  ],
+  admin: [
+    { screen:'s-a-login', target:'al-btn', text:'กด "เข้าสู่ระบบ" เพื่อเข้า Admin Panel', arrow:'up',
+      next: () => A.login() },
+    { screen:'s-a-main', target:'a-tab-tickets', text:'กด "Tickets" เพื่อดูรายการทั้งหมด', arrow:'down',
+      next: () => A.tab('tickets') },
+    { screen:'s-a-main', target:'tr-GD-00001', text:'กด Ticket GD-00001 เพื่อดูรายละเอียด + Assign', arrow:'down',
+      next: () => A.openDrawer('GD-00001') },
+    { screen:'s-a-main', target:'a-assign-btn', text:'กด "Assign" เพื่อมอบหมายช่าง — LINE แจ้งทันที', arrow:'down',
+      next: () => A.assign() },
+    { screen:'s-a-main', target:'a-tab-overview', text:'กด "Overview" เพื่อดู Dashboard ภาพรวม', arrow:'down',
+      next: () => A.tab('overview') },
+    { screen:'s-a-main', target:'a-tab-gps', text:'กด "GPS Map" เพื่อดูตำแหน่งช่างแบบ Real-time', arrow:'down',
+      next: () => A.tab('gps') },
+    { screen:'s-a-main', target:'a-tab-line', text:'กด "LINE Groups" เพื่อตั้งค่ากลุ่ม LINE', arrow:'down',
+      next: () => A.tab('line') }
+  ]
+};
+
+// ══ LINE SYSTEM ══
+const LINE = {
+  _closeTimer: null,
+  history: [],
+
+  push(cfg) {
+    // cfg: { group, msg, ticketId, ticketType, type }
+    clearTimeout(this._closeTimer);
+    const { group='IT Support Bot', msg, ticketId='', ticketType='', type='info' } = cfg;
+    // Store in history
+    this.history.push({ from:'bot', msg, ticketId, ticketType, time: new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) });
+    // Show popup
+    $('lp-name').textContent = group;
+    $('lp-msg').textContent = msg;
+    if (ticketId) {
+      $('lp-inner').style.display = 'block';
+      $('lp-tid').textContent = ticketId;
+      $('lp-ttype').textContent = ticketType;
+    } else {
+      $('lp-inner').style.display = 'none';
+    }
+    const pop = $('lp');
+    pop.style.display = 'block';
+    gsap.fromTo(pop, {x:310,opacity:0}, {x:0,opacity:1,duration:.4,ease:'back.out(1.4)'});
+    this._closeTimer = setTimeout(() => this.close(), 5000);
+  },
+
+  close() {
+    clearTimeout(this._closeTimer);
+    gsap.to($('lp'), {x:310,opacity:0,duration:.3,ease:'power2.in',onComplete:()=>$('lp').style.display='none'});
+  },
+
+  openChat() {
+    this.close();
+    const chat = $('lc'); chat.style.display = 'flex';
+    gsap.fromTo($('lc-win'), {y:'100%',opacity:0}, {y:0,opacity:1,duration:.4,ease:'back.out(1.3)'});
+    this._renderChat();
+  },
+
+  closeChat() {
+    gsap.to($('lc-win'), {y:'100%',opacity:0,duration:.3,ease:'power2.in',onComplete:()=>$('lc').style.display='none'});
+  },
+
+  send() {
+    const input = $('lc-input'); if (!input.value.trim()) return;
+    const msg = input.value.trim(); input.value = '';
+    this.history.push({ from:'me', msg, time: new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) });
+    this._renderChat();
+    // Bot auto reply
+    setTimeout(() => {
+      this.history.push({ from:'bot', msg:'รับทราบครับ 👍', time: new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) });
+      this._renderChat();
+    }, 800);
+  },
+
+  _renderChat() {
+    const container = $('lc-msgs'); container.innerHTML = '';
+    const baseHistory = [
+      { from:'bot', msg:'สวัสดีครับ! 🤖 IT Support Bot พร้อมแจ้งเตือน', time:'--:--' },
+      ...this.history
+    ];
+    baseHistory.forEach((m, i) => {
+      const row = document.createElement('div');
+      row.className = 'lc-row' + (m.from==='me'?' me':'');
+      if (m.from === 'bot') {
+        if (m.ticketId) {
+          row.innerHTML = `<div class="lc-av">🤖</div><div>
+            <div class="lc-time">${m.time}</div>
+            <div class="lc-bubble card">
+              <div class="lc-ch">🎫 TICKET</div>
+              <div class="lc-ct">${m.ticketType}</div>
+              <div class="lc-cr"><span class="k">Ticket ID</span><span class="v">${m.ticketId}</span></div>
+              <div class="lc-cr"><span class="k">ข้อความ</span><span class="v">${m.msg}</span></div>
+            </div></div>`;
+        } else {
+          row.innerHTML = `<div class="lc-av">🤖</div><div><div class="lc-time">${m.time}</div><div class="lc-bubble">${m.msg}</div></div>`;
+        }
+      } else {
+        row.innerHTML = `<div><div class="lc-time" style="text-align:right">${m.time}</div><div class="lc-bubble me">${m.msg}</div></div>`;
+      }
+      container.appendChild(row);
+      gsap.fromTo(row, {opacity:0,x:m.from==='me'?20:-20}, {opacity:1,x:0,duration:.25,delay:i*.05,ease:'power2.out'});
+    });
+    setTimeout(() => container.scrollTop = container.scrollHeight, 300);
+  }
+};
+
+// ══ MAP ══
+const MAP = {
+  open(cb) {
+    $('mp').style.display = 'flex';
+    gsap.fromTo($('mp-win'), {scale:.85,opacity:0}, {scale:1,opacity:1,duration:.4,ease:'back.out(1.6)'});
+    gsap.fromTo($('mp-a'), {scale:0}, {scale:1,duration:.4,ease:'back.out(2)',delay:.2});
+    gsap.fromTo($('mp-b'), {scale:0}, {scale:1,duration:.4,ease:'back.out(2)',delay:.45});
+    const path = $('mp-path');
+    path.setAttribute('d','M 62,195 C 140,160 200,80 290,55');
+    path.style.strokeDashoffset = '400';
+    gsap.to(path, {strokeDashoffset:0,duration:1.4,ease:'power2.out',delay:.6});
+    this._cb = cb || null;
+  },
+  close() {
+    gsap.to($('mp-win'), {scale:.9,opacity:0,duration:.25,onComplete:()=>$('mp').style.display='none'});
+    if (this._cb) { setTimeout(()=>this._cb(),300); this._cb=null; }
+  },
+  start() {
+    this.close();
+    LINE.push({ group:'IT Support Bot', msg:'🚗 ช่าง 1 กำลังเดินทางไปสาขา 0014 Siam Paragon', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+    // Continue tutorial
+    setTimeout(()=>TUT.step('engineer',4), 600);
+  }
+};
+
+// ══ REPORTER ══
+const R = {
+  pickBrand(el, brand) {
+    document.querySelectorAll('.bc_').forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+    gsap.fromTo(el, {scale:.88}, {scale:1,duration:.4,ease:'back.out(2)'});
+    setTimeout(()=>{ goTo('s-r2'); TUT.step('reporter',1); }, 550);
+  },
+  submit() {
+    const btn = $('r2-sub'); ld(btn);
+    setTimeout(()=>{
+      unld(btn);
+      goTo('s-r3');
+      // Animate success icon
+      gsap.fromTo($('r3-icon'), {scale:0,rotation:-180}, {scale:1,rotation:0,duration:.6,ease:'back.out(2)',delay:.1});
+      // LINE notification
+      LINE.push({ group:'Admin Group 👑', msg:'🎫 Ticket ใหม่เข้ามา! ผู้แจ้ง: สมหมาย ใจดี', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+      TUT.step('reporter',2);
+    }, 900);
+  },
+  search() {
+    const btn = $('r4-btn'); ld(btn);
+    setTimeout(()=>{ unld(btn); goTo('s-r5'); TUT.step('reporter',4); }, 700);
+  }
+};
+
+// ══ ENGINEER ══
+let eTimerInt = null, eTimerSec = 0;
+const E = {
+  login() {
+    const btn = $('el-btn'); ld(btn);
+    setTimeout(()=>{
+      unld(btn);
+      goTo('s-e-main');
+      this.tab('jobs');
+      setTimeout(()=>TUT.step('engineer',1), 400);
+    }, 750);
+  },
+  tab(name) {
+    S.eCurrentTab = name;
+    document.querySelectorAll('#e-sidebar .ni').forEach(n=>n.classList.remove('on'));
+    const t = $('e-tab-'+name); if(t) t.classList.add('on');
+    const body = $('e-body'); if(!body) return;
+    body.innerHTML = this._content(name);
+    gsap.fromTo(body, {opacity:0,y:6}, {opacity:1,y:0,duration:.22,ease:'power2.out'});
+    setTimeout(()=>{
+      gsap.fromTo(body.querySelectorAll('.jc,.ni,.logrow,.srvlog,.lgroup,.brow,.ucard,.sbox'),
+        {opacity:0,x:-8},{opacity:1,x:0,duration:.22,stagger:.04,ease:'power2.out'});
+    },50);
+  },
+  _content(name) {
+    const w = S.eWorking, sub = S.eSubmitting;
+    if (name === 'jobs') {
+      if (sub) return this._submitForm();
+      return this._jobsList(w);
+    }
+    if (name === 'dash') return this._dash();
+    if (name === 'review') return this._review();
+    if (name === 'done') return this._doneTab();
+    if (name === 'history') return this._history();
+    if (name === 'settings') return this._settings();
+    if (name === 'emerg') return this._emerg();
+    return '';
+  },
+  _jobsList(working) {
+    const mainJob = working ? `
+      <div class="jc" style="border-color:var(--fg2)">
+        <div class="jc-id">GD-00001 · Dunkin'</div>
+        <div class="jc-title">เครื่องชงกาแฟ</div>
+        <div class="jc-meta"><span class="pill p-i">อยู่ระหว่างดำเนินการ ⚙️</span></div>
+        <div class="timer-row"><div class="gpsdot"></div><div class="timer-lbl">กำลังทำงาน</div><div class="timer-val" id="e-timer">00:00:00</div></div>
+        <div class="jcbrow">
+          <button class="jb green" id="e-submit-btn" onclick="E.showSubmit()">✅ ส่งงาน</button>
+          <button class="jb blue" id="e-nav-btn" onclick="TUT.clear();MAP.open(()=>TUT.step('engineer',4))">🗺️ นำทาง</button>
+          <button class="jb">Detail</button>
+        </div>
+      </div>` : `
+      <div class="jc" id="jc-main">
+        <div class="jc-id">GD-00001 · Dunkin'</div>
+        <div class="jc-title">เครื่องชงกาแฟ</div>
+        <div class="jc-meta"><span class="pill p-p">รอดำเนินการ</span><span>สาขา 0014 · 11:31</span></div>
+        <div class="jcbrow">
+          <button class="jb pri" id="e-start-btn" onclick="TUT.clear();E.startWork()">🚀 เริ่มงาน</button>
+          <button class="jb blue" id="e-nav-btn" onclick="TUT.clear();MAP.open(()=>TUT.step('engineer',4))">🗺️ นำทาง</button>
+          <button class="jb">Detail</button>
+        </div>
+      </div>`;
+    return `<div style="padding:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">งานที่รับมอบหมาย (2)</div>
+      ${mainJob}
+      <div class="jc">
+        <div class="jc-id">GD-00002 · Dunkin'</div>
+        <div class="jc-title">เครื่องซีลแก้ว</div>
+        <div class="jc-meta"><span class="pill p-p">รอดำเนินการ</span><span>สาขา 0023</span></div>
+        <div class="jcbrow">
+          <button class="jb pri">🚀 เริ่มงาน</button>
+          <button class="jb">Detail</button>
+        </div>
+      </div>
+    </div>`;
+  },
+  _submitForm() {
+    return `<div class="wrap" style="padding-top:14px"><div class="card">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:10px">GD-00001 — เครื่องชงกาแฟ</div>
+      <div class="fg_"><label>รายละเอียดงาน *</label><textarea id="e4-wd" placeholder="อธิบายการซ่อม..." onclick="ty(this,'เปลี่ยนปั๊มน้ำและทำความสะอาดหัวชง เครื่องกลับมาทำงานปกติ')"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg_"><label>อุปกรณ์</label><input placeholder="ปั๊มน้ำ x1" onclick="ty(this,'ปั๊มน้ำ x1')"/></div>
+        <div class="fg_"><label>ชั่วโมง ⏱️</label><input value="2.50" type="number"/></div>
+      </div>
+      <div class="fg_"><label>📷 รูปหลังซ่อม (สูงสุด 3)</label>
+        <div class="phrow">
+          <div class="phb has" style="background:#dcfce7">📸</div>
+          <div class="phb" onclick="gsap.fromTo(this,{scale:.8},{scale:1,duration:.3,ease:'back.out(2)',onComplete:()=>{this.textContent='📸';this.classList.add('has')}})">➕</div>
+          <div class="phb" onclick="gsap.fromTo(this,{scale:.8},{scale:1,duration:.3,ease:'back.out(2)',onComplete:()=>{this.textContent='📸';this.classList.add('has')}})">➕</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--fg4);margin-bottom:10px">📍 13.74521, 100.53412</div>
+      <div class="mf">
+        <button class="btn-sec" onclick="S.eSubmitting=false;E.tab('jobs')">ยกเลิก</button>
+        <button class="btn" id="e-confirm-btn" onclick="E.confirmSubmit()" style="flex:2">✅ ส่งงาน</button>
+      </div>
+    </div></div>`;
+  },
+  _dash() {
+    return `<div style="padding:12px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:12px">สวัสดี ช่าง 1 👋</div>
+      <div class="stats3" style="padding:0;margin-bottom:12px">
+        <div class="sbox"><div class="snum" style="color:var(--orange)">2</div><div class="slbl">รอดำเนินการ</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--blue)">${S.eWorking?1:0}</div><div class="slbl">กำลังทำ</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--green)">12</div><div class="slbl">เสร็จแล้ว</div></div>
+      </div>
+      <div class="card" style="padding:14px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px">📊 งาน 7 วันล่าสุด</div>
+        <div style="display:flex;gap:5px;align-items:flex-end;height:60px;margin-bottom:4px">
+          ${[3,7,2,8,5,1,4].map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="width:100%;background:var(--blue);border-radius:3px 3px 0 0;height:${v*7}px;opacity:${i===3?1:.6}"></div>
+            <div style="font-size:8px;color:var(--fg4)">${['จ','อ','พ','พฤ','ศ','ส','อา'][i]}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div style="font-size:11px;font-weight:700;margin-bottom:6px">⏱️ เวลาเฉลี่ยต่องาน</div>
+        <div style="font-size:24px;font-weight:800;color:var(--blue)">2.4 <span style="font-size:13px;color:var(--fg3)">ชั่วโมง</span></div>
+      </div>
+    </div>`;
+  },
+  _review() {
+    return `<div style="padding:12px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:12px;color:var(--fg3)">
+        <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:4px">🔍 ตรวจงาน คืออะไร?</div>
+        หลังกด "ส่งงาน" แล้ว งานมาอยู่ที่นี่รอ Admin ตรวจรูปก่อน/หลัง แล้วปิด Ticket
+      </div>
+      <div class="jc">
+        <div class="jc-id">GD-00003 · Dunkin'</div>
+        <div class="jc-title">เครื่องทำน้ำแข็ง</div>
+        <div class="jc-meta"><span class="pill p-r">ตรวจงาน</span><span>ส่งเมื่อ 14:30</span></div>
+        <div style="font-size:11px;color:var(--fg3);margin-bottom:6px">รอ Admin ตรวจสอบ...</div>
+        <div class="jcbrow"><button class="jb">ดูรายละเอียด</button></div>
+      </div>
+    </div>`;
+  },
+  _doneTab() {
+    return `<div style="padding:12px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:12px;color:var(--fg3)">
+        <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:4px">✅ งานเสร็จสิ้น คืออะไร?</div>
+        งานที่ Admin ปิดแล้ว จะมาอยู่ที่นี่ ดูประวัติงานของตัวเองย้อนหลังได้
+      </div>
+      ${['GD-00050','GD-00049','GD-00048'].map((id,i)=>`
+        <div class="jc">
+          <div class="jc-id">${id} · Dunkin'</div>
+          <div class="jc-title">${['เครื่องชงกาแฟ','เครื่องซีลแก้ว','ระบบไฟ'][i]}</div>
+          <div class="jc-meta"><span class="pill p-d">เสร็จสิ้น ✅</span><span>${['15:30','10:22','09:15'][i]}</span></div>
+        </div>`).join('')}
+    </div>`;
+  },
+  _history() {
+    return `<div style="padding:12px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:4px">📋 ประวัติทั้งหมด</div>
+      <div style="font-size:12px;color:var(--fg3);margin-bottom:12px">ค้นหาและกรองย้อนหลังได้</div>
+      <div class="fg_"><label>ค้นหา</label><input placeholder="Ticket ID หรือประเภท..."/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fg_"><label>จากวันที่</label><input type="date"/></div>
+        <div class="fg_"><label>ถึงวันที่</label><input type="date"/></div>
+      </div>
+      <div style="font-size:10px;color:var(--fg4);margin-bottom:8px;font-family:var(--mono)">พบ 25 รายการ</div>
+      ${['GD-00050','GD-00049','GD-00048','GD-00042','GD-00038'].map((id,i)=>`
+        <div class="jc">
+          <div style="display:flex;justify-content:space-between">
+            <div><div class="jc-id">${id}</div><div class="jc-title">${['เครื่องชงกาแฟ','เครื่องซีลแก้ว','ระบบไฟ','ประปา','เครื่องทำน้ำแข็ง'][i]}</div></div>
+            <span class="pill p-d" style="align-self:flex-start">เสร็จสิ้น</span>
+          </div>
+          <div class="jc-meta"><span>2.5 ชม.</span><span>30 มี.ค. 2569</span></div>
+        </div>`).join('')}
+    </div>`;
+  },
+  _settings() {
+    return `<div class="wrap" style="padding-top:12px"><div class="card">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px">⚙️ ตั้งค่า</div>
+      <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">ข้อมูลบัญชี</div>
+      <div class="fg_"><label>ชื่อแสดง</label><input value="ช่าง 1"/></div>
+      <div class="fg_"><label>LINE User ID</label><input placeholder="Uxxxxxxxxx" value="U1234567890abcdef"/></div>
+      <div class="fg_"><label>เบอร์โทร</label><input value="081-234-5678"/></div>
+      <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 8px">การแจ้งเตือน</div>
+      ${[['LINE Notification','รับแจ้งเมื่อมีงานใหม่',true],['GPS Auto-Track','ส่งพิกัดเมื่อเริ่มงาน',true]].map(([n,s,on])=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div><div style="font-size:13px;font-weight:600">${n}</div><div style="font-size:11px;color:var(--fg3)">${s}</div></div>
+          <div class="toggle ${on?'on':'off'}" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></div>
+        </div>`).join('')}
+      <button class="btn" style="margin-top:12px" onclick="this.textContent='✅ บันทึกแล้ว';setTimeout(()=>this.textContent='บันทึก',2000)">บันทึก</button>
+    </div></div>`;
+  },
+  _emerg() {
+    return `<div style="padding:12px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:4px">🚨 เบอร์ฉุกเฉิน</div>
+      <div style="font-size:12px;color:var(--fg3);margin-bottom:14px">ติดต่อเมื่อเกิดเหตุฉุกเฉิน</div>
+      ${[
+        {cat:'🔥 อัคคีภัย',items:[{n:'สถานีดับเพลิง',p:'199'},{n:'ประกันอาคาร',p:'02-123-4567'}]},
+        {cat:'⚡ ระบบไฟฟ้า',items:[{n:'การไฟฟ้า 24 ชม.',p:'1130'},{n:'ช่างไฟประจำ',p:'081-234-5678'}]},
+        {cat:'💧 ระบบประปา',items:[{n:'การประปา',p:'1125'},{n:'ช่างประปา',p:'082-345-6789'}]},
+        {cat:'🚑 ฉุกเฉินทั่วไป',items:[{n:'กู้ชีพ',p:'1669'},{n:'ตำรวจ',p:'191'}]},
+      ].map(c=>`<div class="ecat">
+        <div class="echead">${c.cat}<span style="font-size:11px;color:var(--fg4)">▼</span></div>
+        <div class="ecitems">
+          ${c.items.map(i=>`<div class="ecitem"><span>${i.n}</span><a href="tel:${i.p}" class="ecph" onclick="event.preventDefault()">${i.p}</a></div>`).join('')}
+        </div>
+      </div>`).join('')}
+    </div>`;
+  },
+  startWork() {
+    S.eWorking = true; S.eSubmitting = false;
+    if (eTimerInt) clearInterval(eTimerInt);
+    eTimerSec = 0;
+    this.tab('jobs');
+    eTimerInt = setInterval(()=>{
+      eTimerSec++;
+      const el = $('e-timer'); if (!el) return;
+      const h=String(Math.floor(eTimerSec/3600)).padStart(2,'0'),
+            m=String(Math.floor(eTimerSec%3600/60)).padStart(2,'0'),
+            s=String(eTimerSec%60).padStart(2,'0');
+      el.textContent=`${h}:${m}:${s}`;
+    },1000);
+    LINE.push({ group:'IT Support Bot', msg:'🚀 ช่าง 1 เริ่มงาน GD-00001 แล้ว', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+    setTimeout(()=>TUT.step('engineer',3),500);
+  },
+  showSubmit() {
+    S.eSubmitting = true;
+    this.tab('jobs');
+    setTimeout(()=>TUT.step('engineer',5), 400);
+  },
+  confirmSubmit() {
+    const btn = $('e-confirm-btn'); if(!btn) return; ld(btn);
+    if (eTimerInt) { clearInterval(eTimerInt); eTimerInt = null; }
+    setTimeout(()=>{
+      S.eWorking = false; S.eSubmitting = false;
+      unld(btn);
+      LINE.push({ group:'Admin Group 👑', msg:'📤 ช่าง 1 ส่งงาน GD-00001 แล้ว รอตรวจสอบ', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+      this.tab('review');
+    }, 900);
+  }
+};
+
+// ══ ADMIN ══
+const A = {
+  login() {
+    const btn = $('al-btn'); ld(btn);
+    setTimeout(()=>{
+      unld(btn);
+      goTo('s-a-main');
+      this.tab('overview');
+      LINE.push({ group:'Admin Group 👑', msg:'🎫 Ticket ใหม่ GD-00001 เข้ามา ผู้แจ้ง: สมหมาย', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+      setTimeout(()=>TUT.step('admin',1), 500);
+    }, 750);
+  },
+  tab(name) {
+    S.aCurrentTab = name;
+    document.querySelectorAll('.asb .aN').forEach(n=>n.classList.remove('on'));
+    const el=$('a-tab-'+name); if(el) el.classList.add('on');
+    const body=$('a-body'); if(!body) return;
+    body.innerHTML = this._content(name);
+    gsap.fromTo(body, {opacity:0,y:6}, {opacity:1,y:0,duration:.22,ease:'power2.out'});
+    setTimeout(()=>{
+      gsap.fromTo(body.querySelectorAll('.tr,.logrow,.srvlog,.lgroup,.brow,.ucard,.sbox'),
+        {opacity:0,x:-8},{opacity:1,x:0,duration:.22,stagger:.04,ease:'power2.out'});
+    },50);
+  },
+  _content(name) {
+    if (name==='overview') return this._overview();
+    if (name==='tickets') return this._tickets();
+    if (name==='users') return this._users();
+    if (name==='activity') return this._activity();
+    if (name==='gps') return this._gps();
+    if (name==='line') return this._line();
+    if (name==='system') return this._system();
+    if (name==='logs') return this._logs();
+    if (name==='branches') return this._branches();
+    return '';
+  },
+  _overview() {
+    return `<div style="padding:12px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:12px">📊 Overview Dashboard</div>
+      <div class="stats3" style="padding:0;margin-bottom:12px">
+        <div class="sbox"><div class="snum" style="color:var(--orange)">5</div><div class="slbl">รอดำเนินการ</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--blue)">3</div><div class="slbl">กำลังทำ</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--green)">68</div><div class="slbl">เสร็จสิ้น</div></div>
+      </div>
+      <div class="card" style="padding:14px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px">📈 งาน 7 วันล่าสุด</div>
+        <div style="display:flex;gap:5px;align-items:flex-end;height:64px">
+          ${[3,7,2,9,5,1,4].map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="width:100%;background:var(--blue);border-radius:3px 3px 0 0;height:${v*6}px;opacity:${i<=4?'.85':'.3'}"></div>
+            <div style="font-size:8px;color:var(--fg4)">${['จ','อ','พ','พฤ','ศ','ส','อา'][i]}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div style="font-size:11px;font-weight:700;margin-bottom:8px">🏆 Engineer Ranking</div>
+        ${[['ช่าง 1',15,"Dunkin'",'🥇'],['ช่าง 2',12,'ALL','🥈']].map(([n,c,b,rank])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:18px">${rank}</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700">${n}</div><div style="font-size:10px;color:var(--fg3)">${b}</div></div>
+            <div style="font-size:16px;font-weight:800;color:var(--green)">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  },
+  _tickets() {
+    const data = [
+      {id:'GD-00001',t:'เครื่องชงกาแฟ',b:"Dunkin'",s:'p'},
+      {id:'GD-00002',t:'เครื่องซีลแก้ว',b:"Dunkin'",s:'p'},
+      {id:'GHC-00001',t:'งานโครงสร้าง',b:'Greyhound',s:'i'},
+      {id:'GD-00003',t:'ระบบไฟ',b:"Dunkin'",s:'r'},
+      {id:'AHC-00001',t:'เครื่องบดกาแฟ',b:'Another Hound',s:'p'},
+    ];
+    return `<div style="position:relative">
+      <div class="tw">
+        <div class="tfilters">
+          <select class="tf"><option>ทุกสถานะ</option><option>รอ</option><option>ดำเนิน</option><option>ตรวจ</option></select>
+          <select class="tf"><option>All Brands</option><option>Dunkin'</option><option>Greyhound</option></select>
+        </div>
+        ${data.map(r=>`<div class="tr" id="tr-${r.id}" onclick="A.openDrawer('${r.id}')">
+          <div class="tr-id">${r.id}</div>
+          <div class="tr-t">${r.t}</div>
+          <div class="tr-b">${r.b}</div>
+          <div style="width:52px;flex-shrink:0"><span class="pill p-${r.s}" style="font-size:9px">${{p:'รอ',i:'ดำเนิน',r:'ตรวจ'}[r.s]}</span></div>
+        </div>`).join('')}
+      </div>
+      <div class="drw" id="a-drw">
+        <button class="dclose" onclick="A.closeDrawer()">✕</button>
+        <div class="did">GD-00001 · Dunkin'</div>
+        <div class="dtitle">เครื่องชงกาแฟ</div>
+        <div style="display:inline-flex;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:600;margin-bottom:11px;background:var(--bg3);font-family:var(--mono)" id="drw-status">รอดำเนินการ ⏱️</div>
+        <div class="dacts">
+          <button class="db pri" id="a-assign-btn" onclick="A.assign()">Assign</button>
+          <button class="db" onclick="">Note</button>
+          <button class="db" id="a-close-btn" style="display:none;background:var(--green);color:#fff;border-color:var(--green)" onclick="A.closeTicket()">Close</button>
+        </div>
+        <div class="dsec">REPORTER</div>
+        <div class="drow"><div class="dk">ชื่อ</div><div class="dv">สมหมาย ใจดี</div></div>
+        <div class="drow"><div class="dk">เบอร์</div><div class="dv">081-234-5678</div></div>
+        <div class="drow"><div class="dk">สาขา</div><div class="dv">0014 Siam</div></div>
+        <div class="dsec">DETAIL</div>
+        <div style="font-size:11px;color:var(--fg2);line-height:1.6;background:var(--bg2);border-radius:7px;padding:8px 10px">เครื่องไม่ทำงาน กดแล้วไม่มีน้ำออก เกิดตั้งแต่เช้า</div>
+        <div class="dsec">📷 รูปผู้แจ้ง</div>
+        <div class="phg"><div class="pht" style="background:#fee2e2">🖼️</div></div>
+        <div class="dsec" id="drw-eng-sec" style="display:none">📸 รูปช่าง</div>
+        <div class="phg" id="drw-eng-ph" style="display:none">
+          <div class="pht" style="background:#dcfce7">📸</div>
+          <div class="pht" style="background:#dcfce7">📸</div>
+        </div>
+      </div>
+    </div>`;
+  },
+  _users() {
+    return `<div style="padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:800">👥 Users</div>
+        <button onclick="this.textContent='✅ Created!';setTimeout(()=>this.textContent='+ Add User',2000);gsap.fromTo(this,{scale:.9},{scale:1,duration:.3,ease:'back.out(2)'})"
+          style="padding:7px 13px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer">+ Add User</button>
+      </div>
+      ${[{n:'Admin',u:'admin',r:'admin',b:'ALL'},{n:'ช่าง 1',u:'engineer01',r:'engineer',b:"Dunkin'"},{n:'ช่าง 2',u:'engineer02',r:'engineer',b:'ALL'}].map(u=>`
+        <div class="ucard" id="ucard-${u.u}">
+          <div class="uavatar">${u.n[0]}</div>
+          <div style="flex:1"><div class="uname">${u.n}</div><div class="umeta">@${u.u} · ${u.r} · ${u.b}</div></div>
+          <button class="ubtn" onclick="this.textContent='✅';setTimeout(()=>this.textContent='✏️',2000)">✏️</button>
+          <button class="ubtn del" onclick="gsap.to(this.closest('.ucard'),{opacity:0,x:-20,height:0,marginBottom:0,padding:0,duration:.4,ease:'power2.in',onComplete:()=>this.closest('.ucard').remove()})">🗑️</button>
+        </div>`).join('')}
+    </div>`;
+  },
+  _activity() {
+    const logs = [
+      {ico:'🎫',bg:'#dbeafe',text:'Admin มอบหมาย GD-00001 ให้ ช่าง 1',t:'13:45:22'},
+      {ico:'🚀',bg:'#dcfce7',text:'ช่าง 1 เริ่มงาน GD-00001',t:'13:50:11'},
+      {ico:'📤',bg:'#f3e8ff',text:'ช่าง 1 ส่งงาน GD-00001 รอตรวจ',t:'15:20:44'},
+      {ico:'✅',bg:'#dcfce7',text:'Admin ปิดงาน GD-00050',t:'12:30:05'},
+      {ico:'👤',bg:'#fef3c7',text:'สร้าง User: engineer03',t:'11:00:00'},
+      {ico:'⚙️',bg:'#f0fdf4',text:'อัปเดต LINE Settings',t:'09:15:30'},
+      {ico:'💬',bg:'#e0f2fe',text:'LINE Test ส่งสำเร็จ — Admin Group',t:'09:00:01'},
+    ];
+    return `<div>
+      <div style="padding:10px 14px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">📝 Activity Log</div>
+      ${logs.map(l=>`<div class="logrow">
+        <div class="logico" style="background:${l.bg}">${l.ico}</div>
+        <div><div class="logtext">${l.text}</div><div class="logmeta">${l.t}</div></div>
+      </div>`).join('')}
+    </div>`;
+  },
+  _gps() {
+    return `<div style="padding:12px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:10px">🌍 GPS Map</div>
+      <div style="font-size:12px;color:var(--fg3);margin-bottom:10px">ดูตำแหน่งช่างแบบ Real-time — คลิกที่ marker เพื่อดูเส้นทาง</div>
+      <div class="gmap" id="gps-map">
+        <div class="gmap-grid"></div>
+        <svg style="position:absolute;inset:0;width:100%;height:100%">
+          <path d="M 80,200 C 140,160 200,110 280,90" stroke="var(--blue)" stroke-width="2.5" fill="none" stroke-dasharray="5,4" opacity=".6"/>
+          <path d="M 150,210 C 210,160 260,100 340,70" stroke="var(--green)" stroke-width="2.5" fill="none" stroke-dasharray="5,4" opacity=".6"/>
+        </svg>
+        <div class="gmarker" style="left:13%;top:58%" onclick="MAP.open()">
+          <div class="gpin" style="background:var(--blue);width:36px;height:36px;border-radius:50%">👷</div>
+          <div class="glabel">ช่าง 1</div>
+        </div>
+        <div class="gmarker" style="left:44%;top:38%" onclick="MAP.open()">
+          <div class="gpin" style="background:var(--green);width:36px;height:36px;border-radius:50%">👷</div>
+          <div class="glabel">ช่าง 2</div>
+        </div>
+        <div class="gmarker" style="left:25%;top:22%">
+          <div class="gpin" style="background:var(--red);border-radius:50% 50% 50% 0;transform:rotate(-45deg)">
+            <span style="transform:rotate(45deg);display:block">🍩</span></div>
+          <div class="glabel">0014</div>
+        </div>
+        <div class="gmarker" style="left:60%;top:12%">
+          <div class="gpin" style="background:var(--orange);border-radius:50% 50% 50% 0;transform:rotate(-45deg)">
+            <span style="transform:rotate(45deg);display:block">☕</span></div>
+          <div class="glabel">GHC-01</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div class="card" style="padding:12px"><div style="font-size:10px;color:var(--fg4);font-weight:700;text-transform:uppercase;letter-spacing:.06em">ช่างออนไลน์</div><div style="font-size:22px;font-weight:800;color:var(--green)">2</div></div>
+        <div class="card" style="padding:12px"><div style="font-size:10px;color:var(--fg4);font-weight:700;text-transform:uppercase;letter-spacing:.06em">กำลังเดินทาง</div><div style="font-size:22px;font-weight:800;color:var(--blue)">1</div></div>
+      </div>
+    </div>`;
+  },
+  _line() {
+    const groups = [
+      {n:'Admin Group',ico:'👑',id:'C1bb66828c2da4533...'},
+      {n:"Dunkin' Group",ico:'🍩',id:'C0d28bf497b45...'},
+      {n:"Greyhound Cafe' Group",ico:'☕',id:'C90e0303af7b3...'},
+      {n:'Au Bon Pain Group',ico:'🥐',id:'C1db1055af232...'},
+      {n:'Funky Fries Group',ico:'🍟',id:'C6684f2c5b01f...'},
+    ];
+    return `<div>
+      <div style="padding:10px 14px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">💬 LINE Groups</div>
+      ${groups.map(g=>`<div class="lgroup">
+        <div class="lgico">${g.ico}</div>
+        <div style="flex:1"><div class="lgname">${g.n}</div><div class="lgid">${g.id}</div></div>
+        <span class="lgst">● Connected</span>
+        <button class="lgbtn test" onclick="A._lineTest('${g.n}',this)">Test</button>
+        <button class="lgbtn" onclick="LINE.openChat()">Chat</button>
+      </div>`).join('')}
+    </div>`;
+  },
+  _lineTest(group, btn) {
+    btn.textContent = '⏳'; btn.disabled = true;
+    setTimeout(()=>{
+      LINE.push({ group, msg:`📡 Test Connection OK ✅ — ${group}` });
+      btn.textContent = '✅ OK'; btn.disabled = false;
+      setTimeout(()=>btn.textContent='Test', 3000);
+    }, 800);
+  },
+  _system() {
+    return `<div class="wrap" style="padding-top:12px">
+      <div class="card">
+        <div style="font-size:14px;font-weight:800;margin-bottom:12px">🔧 System Settings</div>
+        <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">LINE Bot Config</div>
+        <div class="fg_"><label>Channel Access Token</label><input type="password" value="xxxxxxxxxxxxxxxxxxxx"/></div>
+        <div class="fg_"><label>Channel Secret</label><input type="password" value="adb0c832bf0c7e691b"/></div>
+        <button class="btn" style="margin-bottom:14px" onclick="this.textContent='✅ Saved!';setTimeout(()=>this.textContent='บันทึก',2000)">บันทึก</button>
+        <div style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">System Info</div>
+        ${[['Node.js','v20.9.0'],['Region','Singapore (Render)'],['Uptime','3h 24m'],['Memory','15MB / 512MB'],['FastAPI','● Healthy'],['MySQL','● Connected']].map(([k,v])=>`
+          <div class="drow"><div class="dk">${k}</div><div class="dv" style="${v.includes('●')?'color:var(--green)':''}">${v}</div></div>`).join('')}
+      </div>
+    </div>`;
+  },
+  _logs() {
+    const rows=[
+      {c:'c-info',t:'INFO',m:'[Users] Loaded from FastAPI: 3 users'},
+      {c:'c-ok',t:'OK',m:'[LINE] pushed to Ub60fd6a... (Admin Group)'},
+      {c:'c-info',t:'INFO',m:'[Memory] heap=15MB rss=46MB uptime=10201s'},
+      {c:'c-ok',t:'OK',m:'[Keep-alive] ping 09:30 UTC+7'},
+      {c:'c-info',t:'INFO',m:'[SSE] client connected — admin session'},
+      {c:'c-warn',t:'WARN',m:'[GPS] engineer02 timeout — no ping 5min'},
+      {c:'c-ok',t:'OK',m:'[FastAPI] /tickets response 42ms'},
+      {c:'c-info',t:'INFO',m:'🚀 IT Ticket System v2 running on port 10000'},
+    ];
+    return `<div>
+      <div style="padding:10px 14px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">🖥️ Server Logs</div>
+      <div style="padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;gap:8px">
+        <button style="padding:2px 8px;border-radius:4px;background:var(--fg);color:var(--bg);border:none;font-size:10px;font-family:var(--mono);cursor:pointer">All</button>
+        <button style="padding:2px 8px;border-radius:4px;background:none;border:none;font-size:10px;font-family:var(--mono);cursor:pointer;color:var(--red)">Error</button>
+      </div>
+      ${rows.map(r=>`<div class="srvlog"><span class="${r.c}">[${r.t}]</span> ${r.m}</div>`).join('')}
+    </div>`;
+  },
+  _branches() {
+    const data=[
+      {code:'0001',n:"Dunkin' Central World",b:"Dunkin'"},
+      {code:'0014',n:"Dunkin' Siam Paragon",b:"Dunkin'"},
+      {code:'0023',n:"Dunkin' MBK Center",b:"Dunkin'"},
+      {code:'0001',n:"Greyhound Cafe' Thonglor",b:"Greyhound Cafe'"},
+      {code:'0001',n:'Au Bon Pain Asok',b:'Au Bon Pain'},
+    ];
+    return `<div>
+      <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+        <div style="font-size:15px;font-weight:800">🏪 Branches</div>
+        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono)">1,118 สาขา</div>
+      </div>
+      <div style="padding:8px 14px;border-bottom:1px solid var(--border)">
+        <input style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:var(--sans);outline:none;color:var(--fg)" placeholder="🔍 ค้นหาสาขา..."/>
+      </div>
+      ${data.map(b=>`<div class="brow" onclick="MAP.open()">
+        <div class="bcode">${b.code}</div>
+        <div style="flex:1"><div class="bname">${b.n}</div><div style="font-size:10px;color:var(--fg4)">กดดูแผนที่ A→B 🗺️</div></div>
+        <div class="bbrand">${b.b}</div>
+        <div style="font-size:10px;font-weight:600;color:var(--green)">● active</div>
+      </div>`).join('')}
+    </div>`;
+  },
+  openDrawer(id) {
+    document.querySelectorAll('.tr').forEach(r=>r.classList.remove('sel'));
+    const tr = $('tr-'+id); if(tr) tr.classList.add('sel');
+    const drw = $('a-drw'); if(!drw) return;
+    drw.classList.add('on');
+    gsap.fromTo(drw, {x:drw.offsetWidth}, {x:0,duration:.35,ease:'power3.out'});
+    gsap.fromTo(drw.querySelectorAll('.drow,.dacts,.phg'), {opacity:0,x:10}, {opacity:1,x:0,duration:.25,stagger:.04,delay:.2,ease:'power2.out'});
+    setTimeout(()=>TUT.step('admin',3), 450);
+  },
+  closeDrawer() {
+    const drw = $('a-drw'); if(!drw) return;
+    gsap.to(drw, {x:drw.offsetWidth+10,duration:.28,ease:'power3.in',onComplete:()=>drw.classList.remove('on')});
+    document.querySelectorAll('.tr').forEach(r=>r.classList.remove('sel'));
+  },
+  assign() {
+    const btn = $('a-assign-btn'); if(!btn) return; ld(btn);
+    setTimeout(()=>{
+      unld(btn);
+      $('drw-status').textContent = 'มอบหมายแล้ว ✅';
+      $('a-assign-btn').style.display = 'none';
+      $('a-close-btn').style.display = 'block';
+      $('drw-eng-sec').style.display = 'block';
+      $('drw-eng-ph').style.display = 'grid';
+      gsap.fromTo($('drw-eng-ph').querySelectorAll('.pht'),{scale:0},{scale:1,duration:.35,stagger:.08,ease:'back.out(2)'});
+      LINE.push({ group:'ช่าง 1 (LINE Personal)', msg:'👷 คุณได้รับมอบหมายงาน GD-00001 เครื่องชงกาแฟ สาขา 0014', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+      setTimeout(()=>TUT.step('admin',4), 500);
+    }, 900);
+  },
+  closeTicket() {
+    const btn = $('a-close-btn'); if(!btn) return; ld(btn);
+    setTimeout(()=>{
+      unld(btn);
+      this.closeDrawer();
+      LINE.push({ group:"Dunkin' Group 🍩", msg:'✅ ปิดงาน GD-00001 เรียบร้อย เครื่องชงกาแฟ — สาขา 0014', ticketId:'GD-00001', ticketType:'เครื่องชงกาแฟ' });
+      this.tab('tickets');
+    }, 900);
+  }
+};
+
+// ══ ROLE STARTERS ══
+const START = {
+  reporter() {
+    S.role = 'reporter';
+    $('nav-label').innerHTML = 'ผู้แจ้งปัญหา<span>Reporter — กดได้อิสระ</span>';
+    goTo('s-r1');
+    setTimeout(()=>TUT.step('reporter',0), 600);
+  },
+  engineer() {
+    S.role = 'engineer'; S.eWorking = false; S.eSubmitting = false;
+    if (eTimerInt) { clearInterval(eTimerInt); eTimerInt = null; }
+    $('nav-label').innerHTML = 'ช่างซ่อม IT<span>Engineer — กดได้อิสระ</span>';
+    goTo('s-e-login');
+    setTimeout(()=>TUT.step('engineer',0), 600);
+  },
+  admin() {
+    S.role = 'admin';
+    $('nav-label').innerHTML = 'ผู้ดูแลระบบ<span>Admin — กดได้อิสระ</span>';
+    LINE.history = [];
+    goTo('s-a-login');
+    setTimeout(()=>TUT.step('admin',0), 600);
+  }
+};
+
+// ══ INIT ══
+window.addEventListener('load', ()=>{
+  gsap.fromTo('#nav', {y:-60,opacity:0}, {y:0,opacity:1,duration:.5,ease:'power3.out'});
+  gsap.fromTo('.rc', {opacity:0,y:24}, {opacity:1,y:0,duration:.45,stagger:.1,delay:.4,ease:'power3.out'});
+  gsap.fromTo('.home-title,.home-sub,.home-icon', {opacity:0,y:16}, {opacity:1,y:0,duration:.5,stagger:.1,delay:.2,ease:'power3.out'});
+});
+</script>
+</body>
+</html>
