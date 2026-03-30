@@ -17,9 +17,9 @@ const BRAND_KEY_MAP = {
   "Greyhound Original'"  : 'brand_group_greyhound_original',
   "Au Bon Pain"          : 'brand_group_au_bon_pain',
   "Funky Fries"          : 'brand_group_funky_fries',
-  "Bean Hound"           : 'brand_group_greyhound_cafe',
-  "Another Hound Cafe'"  : 'brand_group_greyhound_cafe',
-  "Another Hound Cafe"   : 'brand_group_greyhound_cafe',
+  "Bean Hound"           : 'brand_group_bean_hound',
+  "Another Hound Cafe'"  : 'brand_group_another_hound',
+  "Another Hound Cafe"   : 'brand_group_another_hound',
 };
 
 async function fetchFromMySQL() {
