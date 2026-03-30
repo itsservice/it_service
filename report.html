@@ -463,7 +463,15 @@ function renderForm(){
 
       <div class="fg">
         <label>${l.photos}</label>
-        <input type="file" accept="image/*" multiple id="f-photos" style="font-size:13px"/>
+        <div id="photo-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <label for="f-photos" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border:0.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--fg3);background:var(--bg2)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="3"/></svg>
+            ${lang==='th'?'เลือกรูป':'Choose photos'}
+          </label>
+          <input type="file" accept="image/*" multiple id="f-photos" style="display:none" onchange="previewPhotos(this)"/>
+        </div>
+        <div style="font-size:11px;color:var(--fg3);margin-top:4px">${lang==='th'?'สูงสุด 3 รูป · กดรูปเพื่อลบ':'Max 3 photos · tap to remove'}</div>
       </div>
 
       <button class="sub-btn" id="btn-sub" onclick="doSubmit()">${l.submit}</button>
@@ -667,17 +675,17 @@ async function doSubmit(){
       if(!d.ok)throw new Error(d.error||'Submission failed');
       const ticketId=d.ticket?.id||d.ticketId||'--';
       // Upload photos if any
-      const photoInput=document.getElementById('f-photos');
-      if(photoInput?.files?.length){
-        for(const file of Array.from(photoInput.files).slice(0,3)){
-          try{
-            const fd=new FormData();
-            fd.append('file',file);
-            fd.append('ticket_id',ticketId);
-            await fetch('/api/upload',{method:'POST',body:fd});
-          }catch(_){}
-        }
+      const photos=window._reportPhotos||[];
+      for(const file of photos.slice(0,3)){
+        try{
+          const fd=new FormData();
+          fd.append('file',file);
+          fd.append('ticket_id',ticketId);
+          fd.append('role','reporter');
+          await fetch('/api/upload',{method:'POST',body:fd});
+        }catch(_){}
       }
+      window._reportPhotos=[];
       showSuccess(ticketId);
       return;
     }catch(e){
