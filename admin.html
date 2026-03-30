@@ -1467,17 +1467,55 @@ function openDrw(rid){
     <div class="dsec">Detail</div><div class="dbox">${esc(t.detail||'-')}</div>
     ${t.workDetail?`<div class="dsec">Engineer Report</div><div class="dbox" style="border-left:2px solid var(--fg)"><div style="font-size:11px;font-weight:700;margin-bottom:2px">${esc(t.engineerName||'-')}</div>${esc(t.workDetail)}${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:2px">Parts: ${esc(t.partsUsed)}</div>`:''}${t.workHours?`<div style="font-size:12px;color:var(--fg3)">Hours: ${esc(t.workHours)}</div>`:''}</div>`:''}
     ${(()=>{
-      // Show images from DB
-      let imgs=[];
-      try{imgs=typeof t.images==='string'?JSON.parse(t.images||'[]'):t.images||[];}catch(_){}
-      if(!imgs.length)return '';
-      return `<div class="dsec">รูปภาพ</div><div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0">
-        ${imgs.map(url=>`<img src="${esc(url)}" onclick="window.open('${esc(url)}','_blank')" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onerror="this.style.display='none'">`).join('')}
-      </div>`;
+      // รูปผู้แจ้ง
+      let rImgs=[];
+      try{if(t.images_reporter){const p=typeof t.images_reporter==='string'?JSON.parse(t.images_reporter):t.images_reporter;rImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+      // รูปช่าง
+      let eImgs=[];
+      try{if(t.images_engineer){const p=typeof t.images_engineer==='string'?JSON.parse(t.images_engineer):t.images_engineer;eImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+      const allAdmImgs=[...rImgs,...eImgs];
+      if(!allAdmImgs.length)return '';
+      function makeAdmStrip(imgs,label,color){
+        if(!imgs.length)return'';
+        return`<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${label} (${imgs.length})</div><div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">${imgs.map((img,i)=>`<img src="${img.thumb||img.url}" onclick="openAdmLB(${i},${label==='📷 รูปผู้แจ้ง'?0:rImgs.length})" style="flex-shrink:0;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onerror="this.src='${img.url}'">`).join('')}</div></div>`;
+      }
+      window._admLBImgs=allAdmImgs;
+      return `<div class="dsec">รูปภาพ</div>
+        ${makeAdmStrip(rImgs,'📷 รูปผู้แจ้ง','#E24B4A')}
+        ${makeAdmStrip(eImgs,'🔧 รูปช่าง','#639922')}
+        <div id="adm-lb-bg" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center">
+          <div style="position:relative;max-width:90vw;text-align:center">
+            <img id="adm-lb-img" src="" style="max-width:90vw;max-height:75vh;border-radius:12px;display:block;margin:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px">
+              <button onclick="event.stopPropagation();navAdmLB(-1)" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:16px">←</button>
+              <span id="adm-lb-lbl" style="color:#fff;font-size:12px"></span>
+              <button onclick="event.stopPropagation();navAdmLB(1)" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:16px">→</button>
+            </div>
+          </div>
+        </div>`;
     })()}
     ${t.adminNote?`<div class="dsec">Admin Note</div><div class="dbox">${esc(t.adminNote)}</div>`:''}
   </div>`;
 }
+
+function openAdmLB(i,offset){
+  const imgs=window._admLBImgs||[];
+  const idx=offset+i;
+  window._admLBCur=idx;
+  const lb=document.getElementById('adm-lb-bg');
+  if(!lb)return;
+  lb.style.display='flex';
+  document.getElementById('adm-lb-img').src=imgs[idx].url||imgs[idx];
+  document.getElementById('adm-lb-lbl').textContent=(idx+1)+'/'+imgs.length;
+}
+function navAdmLB(d){
+  const imgs=window._admLBImgs||[];
+  window._admLBCur=(window._admLBCur+d+imgs.length)%imgs.length;
+  const img=imgs[window._admLBCur];
+  document.getElementById('adm-lb-img').src=img.url||img;
+  document.getElementById('adm-lb-lbl').textContent=(window._admLBCur+1)+'/'+imgs.length;
+}
+
 function closeDrw(){document.getElementById('drw-bg').classList.remove('on');document.getElementById('drw').classList.remove('on');}
 async function qStatus(rid,status){try{const t=tickets.find(x=>x._recordId===rid);await api(`/api/tickets/${rid}/status`,{method:'PATCH',body:JSON.stringify({status,brand:t?.brand||''})});tickets=tickets.map(x=>x._recordId===rid?{...x,status}:x);updateBdg();render();toast('Status updated');}catch(e){toast('Error: '+e.message);}}
 
@@ -1488,7 +1526,18 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openAssign(rid){const engs=users.filter(u=>['engineer','lead_engineer'].includes(u.role));openMod(`<div class="mod-t">Assign Engineer</div><div class="fg"><label>Select Engineer</label><select class="sel" id="m-eng" style="width:100%"><option value="">-- Select --</option>${engs.map(e=>`<option value="${esc(e.name)}">${esc(e.name)} [${e.role}] (${esc(e.brand||'-')})</option>`).join('')}</select></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doAssign('${esc(rid)}')">Assign</button></div>`);}
 async function doAssign(rid){const n=document.getElementById('m-eng').value;if(!n)return toast('Select engineer');try{const t=tickets.find(x=>x._recordId===rid);await api(`/api/tickets/${rid}/assign`,{method:'PATCH',body:JSON.stringify({engineerName:n,assignedTo:n,brand:t?.brand||''})});tickets=tickets.map(x=>x._recordId===rid?{...x,engineerName:n,status:'assigned'}:x);closeMod();closeDrw();render();toast('Assigned');}catch(e){toast('Error: '+e.message);}}
-function openClose(rid){openMod(`<div class="mod-t">Close Ticket</div><div class="fg"><label>Review Note</label><textarea id="m-note" placeholder="Review notes..."></textarea></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doClose('${esc(rid)}')">Close Ticket</button></div>`);}
+function openClose(rid){
+  const t=tickets.find(x=>x._recordId===rid);
+  let rImgs=[],eImgs=[];
+  try{if(t?.images_reporter){const p=typeof t.images_reporter==='string'?JSON.parse(t.images_reporter):t.images_reporter;rImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+  try{if(t?.images_engineer){const p=typeof t.images_engineer==='string'?JSON.parse(t.images_engineer):t.images_engineer;eImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+  function strip(imgs,label,color){
+    if(!imgs.length)return'';
+    return`<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:${color};margin-bottom:5px">${label} (${imgs.length})</div><div style="display:flex;gap:6px;overflow-x:auto">${imgs.map(img=>`<img src="${img.thumb||img.url}" onclick="window.open('${img.url}','_blank')" style="flex-shrink:0;width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border)">`).join('')}</div></div>`;
+  }
+  const imgSection=(rImgs.length||eImgs.length)?`<div style="margin-bottom:12px">${strip(rImgs,'📷 รูปผู้แจ้ง','#E24B4A')}${strip(eImgs,'🔧 รูปช่าง','#639922')}</div>`:'';
+  openMod(`<div class="mod-t">Close Ticket</div>${imgSection}<div class="fg"><label>Review Note</label><textarea id="m-note" placeholder="Review notes..."></textarea></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doClose('${esc(rid)}')">Close Ticket</button></div>`);
+}
 async function doClose(rid){const note=(document.getElementById('m-note')?.value||'').trim();try{await api(`/api/tickets/${rid}/close`,{method:'PATCH',body:JSON.stringify({adminNote:note,brand:tickets.find(x=>x._recordId===rid)?.brand||''})});tickets=tickets.map(x=>x._recordId===rid?{...x,status:'completed',adminNote:note,closedBy:AUTH.user.name}:x);closeMod();closeDrw();updateBdg();render();toast('Ticket closed');}catch(e){toast('Error: '+e.message);}}
 function openNote(rid){const t=tickets.find(x=>x._recordId===rid);openMod(`<div class="mod-t">Admin Note</div><div class="fg"><label>Note</label><textarea id="m-anote">${esc(t?.adminNote||'')}</textarea></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doNote('${esc(rid)}')">Save</button></div>`);}
 async function doNote(rid){const note=(document.getElementById('m-anote')?.value||'').trim();try{await api(`/api/tickets/${rid}`,{method:'PATCH',body:JSON.stringify({adminNote:note})});tickets=tickets.map(x=>x._recordId===rid?{...x,adminNote:note}:x);closeMod();openDrw(rid);toast('Saved');}catch(e){toast('Error: '+e.message);}}
