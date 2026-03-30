@@ -468,7 +468,7 @@ const TAB_DEFS=[
 const TAB_LABELS={active:'งานของฉัน',review:'ตรวจงาน',done:'เสร็จสิ้น',emergency:'ฉุกเฉิน'};
 
 function updateSidebarNav(){
-  const active=tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง/.test(t.status||''));
+  const active=tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง|pending|รอดำเนินการ/.test(t.status||''));
   const review=tickets.filter(t=>/ตรวจงาน|review/.test(t.status||''));
   const done=tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
   const counts={active:active.length,review:review.length,done:done.length,history:0,settings:0,emergency:0};
@@ -1026,9 +1026,9 @@ function switchEngTab(t){
 }
 
 function renderEngTab(){
-  const active = tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง/.test(t.status||''));
+  const active = tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง|pending|รอดำเนินการ/.test(t.status||''));
   const review = tickets.filter(t=>/ตรวจงาน|review/.test(t.status||''));
-  const done   = tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
+  const done   = tickets.filter(t=>/เสร็จสิ้น|completed|done/.test(t.status||''));
   const total  = tickets.length;
   const mx = Math.max(total,1);
 
@@ -1055,7 +1055,7 @@ function renderEngTab(){
 }
 function renderEngDashboard(){
   const total=tickets.length;
-  const active=tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง/.test(t.status||''));
+  const active=tickets.filter(t=>/อยู่ระหว่างดำเนินการ|in_progress|assigned|accepted|ระหว่าง|pending|รอดำเนินการ/.test(t.status||''));
   const review=tickets.filter(t=>/ตรวจงาน|review/.test(t.status||''));
   const done=tickets.filter(t=>/เสร็จสิ้น|completed/.test(t.status||''));
   const mx=Math.max(total,1);
@@ -1140,6 +1140,7 @@ function renderEngJobList(containerId, list, isActive){
   setTimeout(()=>{
     el.innerHTML = list.map((t,i)=>{
       const rid = esc(t._recordId);
+      const isPending  = /pending|รอดำเนินการ/.test(t.status||'');
       const isAssigned = /assigned|มอบหมาย/.test(t.status||'');
       const isAccepted = /accepted|รับงาน/.test(t.status||'');
       const isWorking  = /in_progress|ระหว่าง/.test(t.status||'');
@@ -1171,7 +1172,7 @@ function renderEngJobList(containerId, list, isActive){
           ${isGuest
             ? `<button class="jc-b" style="opacity:.4;cursor:not-allowed">🔒 Demo</button>`
             : `${isAssigned?`<button class="jc-b pri" onclick="event.stopPropagation();doAccept('${rid}')">✅ รับงาน</button>`:''}
-               ${isAccepted||isWorking&&!hasStarted?`<button class="jc-b pri" onclick="event.stopPropagation();doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
+               ${isPending||isAccepted||isWorking&&!hasStarted?`<button class="jc-b pri" onclick="event.stopPropagation();doStartWork('${rid}')">🚀 เริ่มงาน</button>`:''}
                ${hasStarted?`<button class="jc-b pri" onclick="event.stopPropagation();openSubmit('${rid}')">✅ ส่งงาน</button>`:''}
                ${hasGPS?`<button class="jc-b" style="color:#1a73e8;border-color:#1a73e8" onclick="event.stopPropagation();openBranchMap('${rid}')">🗺️ นำทาง</button>`:''}
                <button class="jc-b" onclick="event.stopPropagation();openDetail('${rid}')">Detail</button>`}
