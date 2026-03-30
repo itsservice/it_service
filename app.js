@@ -64,6 +64,7 @@ app.get('/report',           noCacheHtml('report.html'));
 app.get('/report/:brand',    noCacheHtml('report.html'));
 app.get('/admin',            noCacheHtml('admin.html'));
 app.get('/engineer',         noCacheHtml('engineer.html'));
+app.get('/guide',            noCacheHtml('guide.html'));
 
 // ── Auth ────────────────────────────────────────────────────
 app.post('/api/auth/login', (req, res) => {
