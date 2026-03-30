@@ -43,9 +43,11 @@ function mapTicket(t) {
     closedBy:     t.closedBy     || t.closed_by    || '',
     completedAt:  t.completedAt  || t.completed_at || '',
     startedAt:    t.startedAt    || t.started_at   || '',
-    completedLat: t.completedLat || t.completed_lat|| null,
-    completedLng: t.completedLng || t.completed_lng|| null,
-    images:       t.images       || null,
+    completedLat:     t.completedLat     || t.completed_lat    || null,
+    completedLng:     t.completedLng     || t.completed_lng    || null,
+    images:           t.images            || null,
+    images_reporter:  t.images_reporter   || null,
+    images_engineer:  t.images_engineer   || null,
   };
 }
 
