@@ -10,11 +10,16 @@ let _cacheExp = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
 const BRAND_KEY_MAP = {
-  "Dunkin'"            : 'brand_group_dunkin',
-  "Greyhound Cafe"     : 'brand_group_greyhound_cafe',
-  "Greyhound Original" : 'brand_group_greyhound_original',
-  "Au Bon Pain"        : 'brand_group_au_bon_pain',
-  "Funky Fries"        : 'brand_group_funky_fries',
+  "Dunkin'"              : 'brand_group_dunkin',
+  "Greyhound Cafe"       : 'brand_group_greyhound_cafe',
+  "Greyhound Cafe'"      : 'brand_group_greyhound_cafe',
+  "Greyhound Original"   : 'brand_group_greyhound_original',
+  "Greyhound Original'"  : 'brand_group_greyhound_original',
+  "Au Bon Pain"          : 'brand_group_au_bon_pain',
+  "Funky Fries"          : 'brand_group_funky_fries',
+  "Bean Hound"           : 'brand_group_greyhound_cafe',
+  "Another Hound Cafe'"  : 'brand_group_greyhound_cafe',
+  "Another Hound Cafe"   : 'brand_group_greyhound_cafe',
 };
 
 async function fetchFromMySQL() {
