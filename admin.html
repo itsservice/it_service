@@ -1259,6 +1259,8 @@ function rLine(){
             {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
             {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
             {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
+            {label:'🐾 Another Hound Cafe Group',key:'anotherHound',ph:'C...'},
+            {label:'🐶 Bean Hound Group',key:'beanHound',ph:'C...'},
           ].map(({label,key,ph})=>`
           <div style="margin-bottom:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
@@ -1293,16 +1295,18 @@ async function loadLineGroups(){
     setVal('adminGroupId',cfg.adminGroupId||'');
     const bg=cfg.brandGroups||{};
     setVal('dunkin',bg["Dunkin'"]||'');
-    setVal('greyhoundCafe',bg['Greyhound Cafe']||'');
-    setVal('greyhoundOriginal',bg['Greyhound Original']||'');
+    setVal('greyhoundCafe',bg["Greyhound Cafe'"]||bg['Greyhound Cafe']||'');
+    setVal('greyhoundOriginal',bg["Greyhound Original'"]||bg['Greyhound Original']||'');
     setVal('auBonPain',bg['Au Bon Pain']||'');
     setVal('funkyFries',bg['Funky Fries']||'');
+    setVal('anotherHound',bg["Another Hound Cafe'"]||bg['Another Hound Cafe']||'');
+    setVal('beanHound',bg['Bean Hound']||'');
     if(msg){msg.innerHTML='<span style="color:var(--green)">✅ โหลดข้อมูลแล้ว</span>';setTimeout(()=>{if(msg)msg.innerHTML='';},2000);}
   }catch(e){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
 }
 async function saveLineGroups(){
   const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
-  const payload={adminGroupId:g('adminGroupId'),brandGroups:{"Dunkin'":g('dunkin'),'Greyhound Cafe':g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries')}};
+  const payload={adminGroupId:g('adminGroupId'),brandGroups:{"Dunkin'":g('dunkin'),"Greyhound Cafe'":g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries'),"Another Hound Cafe'":g('anotherHound'),'Bean Hound':g('beanHound')}};
   try{
     const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
     const msg=document.getElementById('line-msg');
