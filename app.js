@@ -188,25 +188,39 @@ app.get('/api/branches', async (req, res) => {
 
 
 
-// POST /api/upload — proxy to FastAPI upload
+// POST /api/upload — proxy to FastAPI upload (parse multipart to preserve role field)
 app.post('/api/upload', async (req, res) => {
   try {
     const axios = require('axios');
     const FormData = require('form-data');
+    const Busboy = require('busboy');
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
     const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-    // pipe multipart directly
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
-    req.on('end', async () => {
+    const bb = Busboy({ headers: req.headers });
+    const fields = {};
+    let fileBuffer = null, fileName = 'upload.jpg', fileMime = 'image/jpeg';
+    bb.on('field', (name, val) => { fields[name] = val; });
+    bb.on('file', (name, stream, info) => {
+      fileName = info.filename || 'upload.jpg';
+      fileMime = info.mimeType || 'image/jpeg';
+      const chunks = [];
+      stream.on('data', d => chunks.push(d));
+      stream.on('end', () => { fileBuffer = Buffer.concat(chunks); });
+    });
+    bb.on('finish', async () => {
       try {
-        const r = await axios.post(`${REPAIR_URL}/api/upload`, Buffer.concat(chunks), {
-          headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': req.headers['content-type'] },
+        const fd = new FormData();
+        fd.append('file', fileBuffer, { filename: fileName, contentType: fileMime });
+        fd.append('ticket_id', fields.ticket_id || '');
+        fd.append('role', fields.role || 'reporter');
+        const r = await axios.post(`${REPAIR_URL}/api/upload`, fd, {
+          headers: { 'X-API-Key': REPAIR_KEY, ...fd.getHeaders() },
           timeout: 30000
         });
         res.json(r.data);
       } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
     });
+    req.pipe(bb);
   } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
 });
 
