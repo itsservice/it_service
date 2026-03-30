@@ -1841,6 +1841,33 @@ if (document.readyState === 'loading') {
 
 })(); // IIFE end
 
+
+function previewPhotos(input){
+  if(!window._reportPhotos)window._reportPhotos=[];
+  const files=Array.from(input.files);
+  const remaining=3-window._reportPhotos.length;
+  if(remaining<=0){alert('เพิ่มได้สูงสุด 3 รูป');input.value='';return;}
+  files.slice(0,remaining).forEach(f=>window._reportPhotos.push(f));
+  input.value='';
+  renderPhotoPreview();
+}
+function renderPhotoPreview(){
+  const el=document.getElementById('photo-preview');
+  if(!el)return;
+  const photos=window._reportPhotos||[];
+  el.innerHTML=photos.map((f,i)=>{
+    const url=URL.createObjectURL(f);
+    return '<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:0.5px solid var(--border)">'
+      +'<img src="'+url+'" style="width:100%;height:100%;object-fit:cover">'
+      +'<div onclick="removePhoto('+i+')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer">×</div>'
+      +'</div>';
+  }).join('');
+}
+function removePhoto(i){
+  if(!window._reportPhotos)return;
+  window._reportPhotos.splice(i,1);
+  renderPhotoPreview();
+}
 </script>
 </body>
 </html>
