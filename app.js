@@ -367,7 +367,7 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_eng
     const { workDetail, partsUsed, workHours, completed_lat, completed_lng } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
     const brand = getBrand(req.params.rid, req.body);
-    const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const now = new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
     const updates = { workDetail, partsUsed:partsUsed||'', workHours:workHours||'', engineerName:req.user.name, completedAt:now, status:'ตรวจงาน', brand };
     if (completed_lat) updates.completed_lat = completed_lat;
     if (completed_lng) updates.completed_lng = completed_lng;
@@ -384,7 +384,7 @@ app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer',
     const { workDetail, status, engineerName } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
     const brand = getBrand(req.params.rid, req.body);
-    const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const now = new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
     const t = await updateTicket(req.params.rid, { workDetail, engineerName:engineerName||req.user.name, completedAt:now, status:status||'ตรวจงาน', brand });
     addLog({ user:req.user, action:'engineer_submit', ticketId:req.params.rid, detail:`ส่งงาน: ${workDetail.slice(0,50)}` });
     broadcast('ticket_updated', { recordId:req.params.rid, status:status||'ตรวจงาน', ts:new Date().toISOString() });
@@ -397,7 +397,7 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
   try {
     const { adminNote } = req.body || {};
     const brand = getBrand(req.params.rid, req.body);
-    const now = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const now = new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
     const t = await updateTicket(req.params.rid, { status:'เสร็จสิ้น ✅', adminNote:adminNote||'', closedAt:now, closedBy:req.user.name, brand });
     addLog({ user:req.user, action:'close', ticketId:req.params.rid, detail:'ปิดงาน' });
     broadcast('ticket_updated', { recordId:req.params.rid, status:'เสร็จสิ้น ✅', ts:new Date().toISOString() });
