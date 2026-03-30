@@ -817,6 +817,7 @@ async function doSubmit(rid){
       const fd=new FormData();
       fd.append('file',p.file);
       fd.append('ticket_id',rid);
+      fd.append('role','engineer');
       const up=await fetch('/api/upload',{method:'POST',headers:{'Authorization':'Bearer '+(AUTH?.token||'')},body:fd});
       const uj=await up.json();
       if(uj.url) uploadedUrls.push(uj.url);
@@ -874,7 +875,28 @@ function openDetail(rid){
     return'/uploads/'+u;
   }).filter(Boolean);
 
-  const imgHtml=imgList.length?`<div style="margin-top:10px"><div style="font-size:11px;color:var(--fg4);font-weight:700;margin-bottom:6px">📷 รูปภาพ (${imgList.length})</div><div style="display:flex;gap:6px;flex-wrap:wrap">${imgList.map(u=>`<img src="${esc(u)}" onclick="window.open('${esc(u)}','_blank')" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);transition:all .2s" onerror="this.style.display='none'">`).join('')}</div></div>`:'';
+  // รูปผู้แจ้ง
+  let reporterImgs=[];
+  try{if(t.images_reporter){const p=typeof t.images_reporter==='string'?JSON.parse(t.images_reporter):t.images_reporter;reporterImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+  // รูปช่าง
+  let engineerImgs=[];
+  try{if(t.images_engineer){const p=typeof t.images_engineer==='string'?JSON.parse(t.images_engineer):t.images_engineer;engineerImgs=Array.isArray(p)?p.map(x=>typeof x==='object'?x:{url:x,thumb:x}):[];}}catch(_){}
+  // รวมสำหรับ lightbox
+  const allImgs=[...reporterImgs,...engineerImgs];
+  function makeStrip(imgs,label,color,startIdx){
+    if(!imgs.length)return'';
+    const thumbs=imgs.map((img,i)=>`<div onclick="openEngLB(${startIdx+i})" style="flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;cursor:pointer;border:0.5px solid var(--border);position:relative"><img src="${img.thumb||img.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.src='${img.url}'"><span style="position:absolute;bottom:3px;left:3px;font-size:9px;padding:1px 4px;border-radius:3px;background:${color}22;color:${color};font-weight:700">${label}</span></div>`).join('');
+    return`<div style="margin-top:10px"><div style="font-size:11px;color:var(--fg4);font-weight:700;margin-bottom:6px">${label==='ก่อน'?'📷 รูปผู้แจ้ง':'🔧 รูปช่าง'} (${imgs.length})</div><div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">${thumbs}</div></div>`;
+  }
+  const imgHtml=(reporterImgs.length||engineerImgs.length)?
+    makeStrip(reporterImgs,'ก่อน','#E24B4A',0)+
+    makeStrip(engineerImgs,'หลัง','#639922',reporterImgs.length)+
+    `<div id="eng-lb-bg" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;flex-direction:column">
+      <div style="position:relative;max-width:90vw"><img id="eng-lb-img" src="" style="max-width:90vw;max-height:75vh;border-radius:12px;display:block"><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px"><button onclick="event.stopPropagation();navEngLB(-1)" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:16px">←</button><span id="eng-lb-label" style="color:#fff;font-size:12px"></span><button onclick="event.stopPropagation();navEngLB(1)" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:16px">→</button></div></div>
+    </div>`
+  :'';
+  window._engLBImgs=allImgs;
+  window._engLBCur=0;
 
   openMod(`<div class="mod-t">Ticket Detail</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} · <span style="color:var(--fg2)">${esc(t.brand||'')}</span></div>
@@ -898,6 +920,23 @@ function openDetail(rid){
 // เปิด Google Maps นำทาง จาก GPS ปัจจุบัน → สาขา
 // Cache GPS สำหรับใช้นำทางทันที (ไม่ต้องรอ getCurrentPosition)
 let _lastGPS=null;
+
+function openEngLB(i){
+  const imgs=window._engLBImgs||[];
+  if(!imgs.length)return;
+  window._engLBCur=i;
+  const lb=document.getElementById('eng-lb-bg');
+  if(!lb)return;
+  lb.style.display='flex';
+  document.getElementById('eng-lb-img').src=imgs[i].url||imgs[i];
+  document.getElementById('eng-lb-label').textContent=(i+1)+'/'+imgs.length;
+}
+function navEngLB(d){
+  const imgs=window._engLBImgs||[];
+  window._engLBCur=(window._engLBCur+d+imgs.length)%imgs.length;
+  openEngLB(window._engLBCur);
+}
+
 function openBranchMap(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
   const gpsMatch=(t.location||'').match(/\[(GPS|DB):([-\d.]+),([-\d.]+)\]/);
