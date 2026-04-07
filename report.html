@@ -159,6 +159,27 @@ a{color:inherit;text-decoration:none}
 .toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.06);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
 @media(max-width:640px){.g2{grid-template-columns:1fr}.wrap{padding:10px 10px 40px}}
 
+/* ── LOGIN OVERLAY ── */
+#login-overlay{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 24px;max-width:360px;width:100%;animation:up .4s var(--ease)}
+.login-logo{width:44px;height:44px;background:var(--fg);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--bg);margin-bottom:12px}
+.login-err{display:none;font-size:12px;color:var(--red);margin-bottom:10px;text-align:center;padding:8px 12px;background:rgba(184,50,50,.08);border-radius:6px}
+[data-t="dark"] .login-err{background:rgba(248,113,113,.1)}
+/* user tag in topbar */
+.user-tag{font-size:11px;color:var(--fg3);font-family:var(--mono);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* phone error hint */
+.ph-hint{font-size:11px;color:var(--red);margin-top:4px;display:none}
+/* branch track filter */
+.track-mode-row{display:flex;gap:6px;margin-bottom:12px}
+.track-mode-btn{flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--fg3);font-family:var(--display);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.track-mode-btn.on{border-color:var(--fg);background:var(--fg);color:var(--bg)}
+.tklist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.tkitem{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:background .2s}
+.tkitem:hover{background:var(--bg3)}
+.tkitem-id{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:3px}
+.tkitem-type{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:5px}
+.tkitem-meta{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--fg3)}
+
 /* ── SKELETON ── */
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 .sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:1200px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
@@ -204,12 +225,35 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<!-- ── LOGIN OVERLAY ── -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="login-logo">IT</div>
+      <div style="font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">Report IT Issue</div>
+      <div style="font-size:13px;color:var(--fg3)">เข้าสู่ระบบด้วยรหัสพนักงาน</div>
+    </div>
+    <div class="fg">
+      <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสพนักงาน (Username)</label>
+      <input id="login-user" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="fg">
+      <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสผ่าน (Password)</label>
+      <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="sub-btn" id="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
 <div class="top">
   <div class="top-logo" id="top-icon">RP</div>
   <div class="top-t" id="top-t">Report IT Issue</div>
   <div class="top-clock" id="clock">--:--:--</div>
+  <span class="user-tag" id="user-tag" style="display:none"></span>
   <button class="smb" id="btn-lang" onclick="toggleLang()">EN</button>
   <button class="smb" id="btn-theme" onclick="togTheme()">Dark</button>
+  <button class="smb" id="btn-logout" style="display:none;color:var(--red)" onclick="doLogout()">ออกจากระบบ</button>
   <a href="/" class="smb">Home</a>
 </div>
 
@@ -320,6 +364,80 @@ const t=()=>L[lang];
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 
+// ── AUTH STATE ─────────────────────────────────────────────
+let _reporterUser = null;    // logged-in user object
+let _reporterToken = null;   // session token (sessionStorage)
+
+async function doLogin() {
+  const uEl = document.getElementById('login-user');
+  const pEl = document.getElementById('login-pass');
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
+  const u = (uEl?.value||'').trim();
+  const p = (pEl?.value||'').trim();
+  if(!u||!p){showLoginErr('กรุณากรอก Username และ Password');return;}
+  btn.disabled=true; btn.textContent='กำลังเข้าสู่ระบบ...'; err.style.display='none';
+  try{
+    const r = await fetch('/api/auth/login',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p})
+    });
+    const d = await r.json();
+    if(!d.ok){showLoginErr(d.error||'Username หรือ Password ไม่ถูกต้อง');return;}
+    if(d.user.role!=='reporter'){showLoginErr('บัญชีนี้ไม่มีสิทธิ์ใช้งานหน้านี้');return;}
+    _reporterToken = d.token;
+    _reporterUser  = d.user;
+    sessionStorage.setItem('rep_token', d.token);
+    sessionStorage.setItem('rep_user',  JSON.stringify(d.user));
+    onLoginSuccess();
+  }catch(e){
+    showLoginErr('เชื่อมต่อไม่ได้ กรุณาลองใหม่');
+  }finally{
+    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+  }
+}
+
+function showLoginErr(msg){
+  const err=document.getElementById('login-err');
+  if(err){err.textContent=msg;err.style.display='block';}
+}
+
+function onLoginSuccess(){
+  const ov=document.getElementById('login-overlay');
+  if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',300);}
+  // Show user tag in topbar
+  const tag=document.getElementById('user-tag');
+  if(tag){
+    const u=_reporterUser;
+    const display=u.nickname?`${u.name} (${u.nickname})`:u.name;
+    tag.textContent=display; tag.style.display='block';
+  }
+  const logoutBtn=document.getElementById('btn-logout');
+  if(logoutBtn) logoutBtn.style.display='';
+  // Auto-set brand from user.brand
+  if(_reporterUser?.brand){
+    const ub=BRANDS.find(b=>b.n===_reporterUser.brand);
+    if(ub&&!brand) setBrand(ub);
+  }
+}
+
+function doLogout(){
+  _reporterToken=null; _reporterUser=null;
+  sessionStorage.removeItem('rep_token');
+  sessionStorage.removeItem('rep_user');
+  brand=null; selectedBranch=null; gpsCoords=null; gpsState='none';
+  const ov=document.getElementById('login-overlay');
+  if(ov){ov.style.display='flex';ov.style.opacity='1';}
+  const tag=document.getElementById('user-tag');
+  if(tag) tag.style.display='none';
+  const logoutBtn=document.getElementById('btn-logout');
+  if(logoutBtn) logoutBtn.style.display='none';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').style.display='none';
+}
+
+// ── FORM STATE ─────────────────────────────────────────────
 let brand=null;
 let allBranches={};          // nested by brand from /api/branches
 let selectedBranch=null;     // branch object from DB
@@ -434,11 +552,12 @@ function renderForm(){
       <div class="g2">
         <div class="fg">
           <label>${l.reporter} <span class="req">*</span></label>
-          <input id="f-name" placeholder="${l.reporter}"/>
+          <input id="f-name" placeholder="${l.reporter}" value="${esc(_reporterUser?.name||'')}" ${_reporterUser?'readonly style="background:var(--bg3);cursor:not-allowed"':''}/>
         </div>
         <div class="fg">
           <label>${l.phone} <span class="req">*</span></label>
-          <input id="f-phone" type="tel" placeholder="08x-xxx-xxxx"/>
+          <input id="f-phone" type="tel" placeholder="08x-xxx-xxxx" maxlength="10" value="${esc(_reporterUser?.phone||'')}" oninput="validatePhone(this)"/>
+          <div class="ph-hint" id="ph-hint">${lang==='th'?'เบอร์โทรต้องมี 10 หลักเท่านั้น':'Phone must be exactly 10 digits'}</div>
         </div>
       </div>
 
@@ -543,6 +662,7 @@ function filterBranches(q){
 }
 
 function pickBranch(b){
+  if(window._trackBranchPickMode){pickTrackBranch(b);return;}
   selectedBranch=b;
   closeSheet();
   // update button text
@@ -614,6 +734,20 @@ function updateGPSBar(){
 }
 
 // ══ SUBMIT ═════════════════════════════════════════════════
+
+function validatePhone(input){
+  const digits=input.value.replace(/\D/g,'');
+  const hint=document.getElementById('ph-hint');
+  if(!hint)return;
+  if(input.value&&digits.length!==10){
+    hint.style.display='block';
+    input.style.borderColor='var(--red)';
+  }else{
+    hint.style.display='none';
+    input.style.borderColor='';
+  }
+}
+
 const RETRY_MAX=3;
 const RETRY_LABELS_TH=['กำลังส่ง...','ลองใหม่ครั้งที่ 2...','ลองใหม่ครั้งที่ 3...'];
 const RETRY_LABELS_EN=['Submitting...','Retrying (2/3)...','Retrying (3/3)...'];
@@ -643,6 +777,13 @@ async function doSubmit(){
 
   if(!branchCode||!name||!phone||!cat||!detail||!loc){toast(l.required);return;}
   if(detail.length<10){toast(l.detailMin);return;}
+  const phoneDigits=phone.replace(/\D/g,'');
+  if(phoneDigits.length!==10){
+    toast(lang==='th'?'เบอร์โทรต้องมี 10 หลักเท่านั้น':'Phone must be exactly 10 digits');
+    document.getElementById('ph-hint').style.display='block';
+    document.getElementById('f-phone').focus();
+    return;
+  }
 
   if(gpsCoords){
     const tag=`[${gpsCoords.source}:${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}]`;
@@ -742,17 +883,142 @@ function resetForm(){
 }
 
 // ══ TRACK ══════════════════════════════════════════════════
+let trackMode='id'; // 'id' | 'branch'
+let trackBranch=null;
+
 function renderTrack(){
   const l=t();
   document.getElementById('view-track').innerHTML=`
     <div class="tcard">
       <div class="tcard-h">${l.trackTitle}</div>
+      <div class="track-mode-row">
+        <button class="track-mode-btn${trackMode==='id'?' on':''}" onclick="setTrackMode('id')">${lang==='th'?'ค้นหา Ticket ID':'Search by ID'}</button>
+        <button class="track-mode-btn${trackMode==='branch'?' on':''}" onclick="setTrackMode('branch')">${lang==='th'?'ดูตามสาขา':'By Branch'}</button>
+      </div>
+      <div id="trk-mode-content"></div>
+    </div>`;
+  renderTrackModeContent();
+}
+
+function setTrackMode(m){
+  trackMode=m;
+  const btns=document.querySelectorAll('.track-mode-btn');
+  btns.forEach((b,i)=>b.classList.toggle('on',i===(m==='id'?0:1)));
+  renderTrackModeContent();
+}
+
+function renderTrackModeContent(){
+  const l=t();
+  const el=document.getElementById('trk-mode-content');
+  if(!el)return;
+  if(trackMode==='id'){
+    el.innerHTML=`
       <div class="tsrch">
         <input id="trk-id" placeholder="${l.trackPH}" onkeydown="if(event.key==='Enter')doTrack()"/>
         <button onclick="doTrack()">${l.trackBtn}</button>
       </div>
-      <div id="trk-result"></div>
-    </div>`;
+      <div id="trk-result"></div>`;
+  } else {
+    // Branch filter mode
+    const branchLabel=trackBranch
+      ?`<span style="font-family:var(--mono);font-size:12px">${esc(trackBranch.code)}</span> <span style="font-size:12px;color:var(--fg3)">${esc(trackBranch.nameTh||trackBranch.nameEn||'')}</span>`
+      :`<span style="color:var(--fg4)">${lang==='th'?'เลือกสาขา...':'Select branch...'}</span>`;
+    el.innerHTML=`
+      <div style="margin-bottom:10px">
+        <button class="branch-btn${trackBranch?' has-val':''}" onclick="openTrackBranchSheet()" style="margin-bottom:0">
+          <span>${branchLabel}</span>
+          <span class="branch-btn-arrow">▼</span>
+        </button>
+      </div>
+      <div id="trk-branch-result">${trackBranch?'<div style="text-align:center;padding:12px;color:var(--fg4);font-size:13px">กำลังโหลด...</div>':''}</div>`;
+    if(trackBranch) loadBranchTickets(trackBranch.code);
+  }
+}
+
+function openTrackBranchSheet(){
+  // Reuse existing sheet but for track mode
+  window._trackBranchPickMode=true;
+  // If brand selected, open normally; else open all-brand sheet
+  if(brand){
+    openSheet();
+  } else {
+    // Show all branches across all brands
+    document.getElementById('sheet-overlay').classList.add('open');
+    document.getElementById('branch-sheet').classList.add('open');
+    document.getElementById('sheet-search').value='';
+    renderSheetListAll('');
+    setTimeout(()=>document.getElementById('sheet-search').focus(),350);
+  }
+}
+
+function renderSheetListAll(q){
+  const el=document.getElementById('sheet-list');
+  if(!el)return;
+  let allList=[];
+  for(const [bname,blist] of Object.entries(allBranches)){
+    allList=allList.concat(blist.map(b=>({...b,_brand:bname})));
+  }
+  if(q){
+    const lq=q.toLowerCase();
+    allList=allList.filter(b=>(b.code||'').toLowerCase().includes(lq)||(b.nameTh||'').toLowerCase().includes(lq));
+  }
+  if(!allList.length){el.innerHTML=`<div class="sheet-empty">${t().noBranches}</div>`;return;}
+  el.innerHTML=allList.slice(0,100).map(b=>`
+    <div class="sheet-item" onclick="pickTrackBranch(${JSON.stringify(b).replace(/"/g,'&quot;')})">
+      <span class="sheet-item-code">${esc(b.code)}</span>
+      <span class="sheet-item-name">${esc(b.nameTh||b.nameEn||b.code)}</span>
+      <span class="sheet-item-sub">${esc(b._brand||'')}</span>
+    </div>`).join('');
+}
+
+function pickTrackBranch(b){
+  window._trackBranchPickMode=false;
+  trackBranch=b;
+  closeSheet();
+  renderTrackModeContent();
+}
+
+async function loadBranchTickets(branchCode){
+  const el=document.getElementById('trk-branch-result');
+  if(!el)return;
+  try{
+    const headers={'Content-Type':'application/json'};
+    if(_reporterToken)headers['Authorization']='Bearer '+_reporterToken;
+    const d=await fetchWithTimeout('/api/tickets',{headers},15000).then(r=>r.json());
+    if(!d.ok)throw new Error(d.error||'error');
+    const tickets=(d.tickets||[]).filter(tk=>tk.branchCode===branchCode||tk.branchCode===String(branchCode));
+    if(!tickets.length){
+      el.innerHTML=`<div class="empty">${lang==='th'?'ไม่พบ Ticket ของสาขานี้':'No tickets found for this branch'}</div>`;
+      return;
+    }
+    el.innerHTML=`
+      <div style="font-size:11px;color:var(--fg4);margin-bottom:8px;font-family:var(--mono)">${lang==='th'?`พบ ${tickets.length} Ticket`:`Found ${tickets.length} tickets`}</div>
+      <div class="tklist">
+        ${tickets.map(tk=>{
+          const sk=tkStatusKey(tk.status);
+          const scfg=TK_STATUS_CFG[sk]||TK_STATUS_CFG.pending;
+          return`<div class="tkitem" onclick="showBranchTicketDetail('${esc(tk._recordId||'')}','${esc(tk.id||'')}')">
+            <div class="tkitem-id">${esc(tk.id||tk._recordId||'-')}</div>
+            <div class="tkitem-type">${esc(tk.type||'-')}</div>
+            <div class="tkitem-meta">
+              <span class="pill" style="background:${scfg.pillBg};color:${scfg.pillC}">${statusLabel(tk.status)}</span>
+              <span>${esc(tk.sentDate||'-')}</span>
+              ${tk.engineerName?`<span>ช่าง: ${esc(tk.engineerName)}</span>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }catch(e){
+    el.innerHTML=`<div class="empty">${lang==='th'?'โหลดข้อมูลไม่สำเร็จ':'Failed to load: '+e.message}</div>`;
+  }
+}
+
+function showBranchTicketDetail(rid,tid){
+  // Switch to ID mode and search
+  trackMode='id';
+  renderTrack();
+  const input=document.getElementById('trk-id');
+  if(input){input.value=tid;doTrack();}
 }
 
 const TK_STATUS_CFG={
