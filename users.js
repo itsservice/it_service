@@ -22,6 +22,7 @@ function toUser(row) {
     line_user_id:   row.line_user_id || '',
     phone:          row.phone || '',
     email:          row.email || '',
+    nickname:       row.nickname || '',
   };
 }
 
@@ -84,6 +85,7 @@ function getAllUsers() {
     line_user_id:   u.line_user_id,
     phone:          u.phone,
     email:          u.email,
+    nickname:       u.nickname,
     password_plain: u.password_plain,
   }));
 }
@@ -97,7 +99,7 @@ function getUserByUsername(username) {
 }
 
 function createUser(data) {
-  const { name, username, password, role, brand, line_user_id, phone, email } = data;
+  const { name, username, password, role, brand, line_user_id, phone, email, nickname } = data;
   if (!name || !username || !password || !role) throw new Error('Missing fields');
   if (USERS.find(u => u.username === username)) throw new Error('Username already exists');
 
@@ -106,7 +108,7 @@ function createUser(data) {
   const user = {
     id: tmpId, name, username, password: hashed, password_plain: password,
     role, brand: brand || 'ALL', active: 1,
-    line_user_id: line_user_id || '', phone: phone || '', email: email || '',
+    line_user_id: line_user_id || '', phone: phone || '', email: email || '', nickname: nickname || '',
   };
   USERS.push(user);
 
@@ -114,7 +116,7 @@ function createUser(data) {
     axios.post(`${API}/api/users`, {
       username, password, role, brand: brand || null,
       display_name: name, line_user_id: line_user_id || null,
-      phone: phone || null, email: email || null,
+      phone: phone || null, email: email || null, nickname: nickname || null,
     }, { headers: hdr, timeout: 8000 })
     .then(async r => {
       if (r.data.id) {
@@ -184,4 +186,31 @@ function deleteUser(id) {
   }
 }
 
-module.exports = { getAllUsers, getUserById, getUserByUsername, createUser, updateUser, deleteUser };
+// ── REPORTER USERS (from reporters.js) ─────────────────────
+let _reporterCache = null;
+function getReporterList() {
+  if (_reporterCache) return _reporterCache;
+  try {
+    const { getReporterUsers } = require('./reporters');
+    _reporterCache = getReporterUsers();
+    console.log('[Users] Reporters loaded:', _reporterCache.length);
+  } catch(e) {
+    console.warn('[Users] reporters.js not found:', e.message);
+    _reporterCache = [];
+  }
+  return _reporterCache;
+}
+
+function getUserByUsernameAll(username) {
+  // Search staff/engineer/admin first
+  const u = USERS.find(u => u.username === username) || null;
+  if (u) return u;
+  // Then search reporters
+  return getReporterList().find(r => r.username === username) || null;
+}
+
+function getAllReporters() {
+  return getReporterList();
+}
+
+module.exports = { getAllUsers, getUserById, getUserByUsername: getUserByUsernameAll, createUser, updateUser, deleteUser, getAllReporters };
