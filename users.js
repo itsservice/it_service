@@ -209,8 +209,40 @@ function getUserByUsernameAll(username) {
   return getReporterList().find(r => r.username === username) || null;
 }
 
+// Brand groups — multiple brands share one page URL
+const BRAND_PAGE_MAP = {
+  "Dunkin'"          : ["Dunkin'"],
+  "Greyhound Cafe'"  : ["Greyhound Cafe'", "Greyhound Original", "Another Hound Cafe'", "Bean Hound"],
+  "Au Bon Pain"      : ["Au Bon Pain"],
+  "Funky Fries"      : ["Funky Fries"],
+};
+
+// Get list of brands allowed for a given page brand
+function getBrandsForPage(pageBrand) {
+  if (!pageBrand) return null;
+  for (const [key, brands] of Object.entries(BRAND_PAGE_MAP)) {
+    if (brands.includes(pageBrand) || key === pageBrand) return brands;
+  }
+  return [pageBrand];
+}
+
+// Login with brand — resolves duplicate username across brands by page brand
+function getUserByUsernameAndBrand(username, pageBrand) {
+  // Staff/admin first (no brand restriction)
+  const staff = USERS.find(u => u.username === username) || null;
+  if (staff) return staff;
+  const reporters = getReporterList();
+  if (pageBrand) {
+    const allowed = getBrandsForPage(pageBrand);
+    const match = reporters.find(r => r.username === username && allowed.includes(r.brand));
+    if (match) return match;
+  }
+  // Fallback: first reporter with this username
+  return reporters.find(r => r.username === username) || null;
+}
+
 function getAllReporters() {
   return getReporterList();
 }
 
-module.exports = { getAllUsers, getUserById, getUserByUsername: getUserByUsernameAll, createUser, updateUser, deleteUser, getAllReporters };
+module.exports = { getAllUsers, getUserById, getUserByUsername: getUserByUsernameAll, getUserByUsernameAndBrand, createUser, updateUser, deleteUser, getAllReporters };
