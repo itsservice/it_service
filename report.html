@@ -184,6 +184,23 @@ a{color:inherit;text-decoration:none}
 .tkitem-type{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:5px}
 .tkitem-meta{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--fg3)}
 
+/* ── LOGIN FAIL COUNTER ── */
+.login-attempts{font-size:11px;color:var(--fg4);text-align:center;margin-bottom:6px;transition:color .3s}
+.login-attempts.warn{color:#d97706;font-weight:600}
+.login-attempts.danger{color:var(--red);font-weight:700}
+/* ── FORGOT PASSWORD LINK ── */
+.forgot-link{display:block;text-align:center;font-size:12px;color:var(--fg4);margin-top:10px;cursor:pointer;text-decoration:underline;transition:color .2s}
+.forgot-link:hover{color:var(--fg)}
+/* ── CHANGE PASSWORD MODAL ── */
+.chpwd-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .25s;pointer-events:none}
+.chpwd-overlay.open{opacity:1;pointer-events:all}
+.chpwd-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 24px;max-width:360px;width:100%;animation:up .3s var(--ease)}
+.chpwd-title{font-family:var(--display);font-size:16px;font-weight:800;margin-bottom:4px;letter-spacing:-.03em}
+.chpwd-sub{font-size:12px;color:var(--fg3);margin-bottom:20px;line-height:1.6}
+.chpwd-err{display:none;font-size:12px;color:var(--red);margin-bottom:10px;padding:8px 12px;background:rgba(184,50,50,.08);border-radius:6px;text-align:center}
+[data-t="dark"] .chpwd-err{background:rgba(248,113,113,.1)}
+.chpwd-skip{display:block;text-align:center;font-size:12px;color:var(--fg4);margin-top:12px;cursor:pointer;text-decoration:underline}
+.chpwd-skip:hover{color:var(--fg)}
 /* ── SKELETON ── */
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 .sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:1200px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
@@ -239,14 +256,52 @@ a{color:inherit;text-decoration:none}
     </div>
     <div class="fg">
       <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสพนักงาน</label>
-      <input id="login-user" placeholder="เช่น 00000737" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" inputmode="numeric"/>
+      <input id="login-user" placeholder="เช่น G00000002" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
     <div class="fg">
       <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสผ่าน</label>
       <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
+    <div class="login-attempts" id="login-attempts" style="display:none"></div>
     <div class="login-err" id="login-err"></div>
     <button class="sub-btn" id="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <span class="forgot-link" id="forgot-link" style="display:none" onclick="showForgotModal()">ลืมรหัสผ่าน? แจ้ง Admin</span>
+  </div>
+</div>
+
+<!-- ── CHANGE PASSWORD MODAL ── -->
+<div class="chpwd-overlay" id="chpwd-overlay">
+  <div class="chpwd-box">
+    <div class="chpwd-title">🔑 เปลี่ยนรหัสผ่าน</div>
+    <div class="chpwd-sub" id="chpwd-sub">นี่เป็นการเข้าสู่ระบบครั้งแรก<br>ต้องการเปลี่ยนรหัสผ่านตอนนี้ไหม?</div>
+    <div class="chpwd-err" id="chpwd-err"></div>
+    <div class="fg" id="chpwd-old-wrap">
+      <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสผ่านเดิม</label>
+      <input id="chpwd-old" type="password" placeholder="••••••••"/>
+    </div>
+    <div class="fg">
+      <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสผ่านใหม่</label>
+      <input id="chpwd-new" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" onkeydown="if(event.key==='Enter')doChangePassword()"/>
+    </div>
+    <div class="fg">
+      <label style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">ยืนยันรหัสผ่านใหม่</label>
+      <input id="chpwd-confirm" type="password" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" onkeydown="if(event.key==='Enter')doChangePassword()"/>
+    </div>
+    <button class="sub-btn" id="chpwd-btn" onclick="doChangePassword()">บันทึกรหัสผ่านใหม่</button>
+    <span class="chpwd-skip" id="chpwd-skip" onclick="skipChangePassword()">ข้ามก่อน เปลี่ยนทีหลัง</span>
+  </div>
+</div>
+
+<!-- ── FORGOT PASSWORD MODAL ── -->
+<div class="chpwd-overlay" id="forgot-overlay">
+  <div class="chpwd-box">
+    <div class="chpwd-title">🔓 ลืมรหัสผ่าน</div>
+    <div class="chpwd-sub">ยืนยันการแจ้ง Admin ให้ Reset รหัสผ่านของคุณ?<br><br>
+      รหัสพนักงาน: <strong id="forgot-username-display">—</strong>
+    </div>
+    <div class="chpwd-err" id="forgot-err"></div>
+    <button class="sub-btn" id="forgot-btn" onclick="doForgotPassword()">แจ้ง Admin ขอ Reset รหัสผ่าน</button>
+    <span class="chpwd-skip" onclick="closeForgotModal()">ยกเลิก</span>
   </div>
 </div>
 
@@ -369,78 +424,243 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 
 // ── AUTH STATE ─────────────────────────────────────────────
-let _reporterUser = null;    // logged-in user object
-let _reporterToken = null;   // session token (sessionStorage)
+let _reporterUser  = null;   // logged-in user object
+let _reporterToken = null;   // session token
+let _loginFails    = 0;      // failed login counter (JS memory only)
+const _AUTO_RESET_HOURS = [8, 12, 18]; // auto-reset times
 
+// ── Auto-reset password check (08:00, 12:00, 18:00) ────────
+function checkAutoReset() {
+  const pending = sessionStorage.getItem('rep_reset_pending');
+  const user    = sessionStorage.getItem('rep_user_pending_reset');
+  if (!pending || !user) return;
+  const now  = new Date();
+  const h    = now.getHours();
+  const last = parseInt(sessionStorage.getItem('rep_reset_checked') || '0');
+  if (last === h) return;
+  sessionStorage.setItem('rep_reset_checked', h);
+  if (_AUTO_RESET_HOURS.includes(h)) {
+    // Auto-reset: clear pending, let user login with default password
+    sessionStorage.removeItem('rep_reset_pending');
+    sessionStorage.removeItem('rep_user_pending_reset');
+    console.log('[Auth] Auto-reset triggered at', h + ':00');
+  }
+}
+setInterval(checkAutoReset, 60000);
+checkAutoReset();
+
+// ── Login with fail counter ─────────────────────────────────
 async function doLogin() {
   const uEl = document.getElementById('login-user');
   const pEl = document.getElementById('login-pass');
   const btn = document.getElementById('login-btn');
-  const err = document.getElementById('login-err');
-  // Brand is auto-detected from URL — no dropdown needed
-  const _pageBrand = brand ? brand.n : null; // current page brand from detectBrand()
+  const _pageBrand = brand ? brand.n : null;
   const u = (uEl?.value||'').trim();
   const p = (pEl?.value||'').trim();
-  if(!u||!p){showLoginErr('กรุณากรอก รหัสพนักงาน และ รหัสผ่าน');return;}
-  btn.disabled=true; btn.textContent='กำลังเข้าสู่ระบบ...'; err.style.display='none';
-  try{
-    const r = await fetch('/api/auth/login',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:u,password:p,brand:_pageBrand||''})
+  if (!u || !p) { showLoginErr('กรุณากรอก รหัสพนักงาน และ รหัสผ่าน'); return; }
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  document.getElementById('login-err').style.display = 'none';
+  try {
+    const r = await fetch('/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username:u, password:p, brand:_pageBrand||'' })
     });
     const d = await r.json();
-    if(!d.ok){showLoginErr(d.error||'Username หรือ Password ไม่ถูกต้อง');return;}
-    if(d.user.role!=='reporter'){showLoginErr('บัญชีนี้ไม่มีสิทธิ์ใช้งานหน้านี้');return;}
+    if (!d.ok) {
+      _loginFails++;
+      updateFailCounter();
+      showLoginErr(d.error || 'Username หรือ Password ไม่ถูกต้อง');
+      return;
+    }
+    if (d.user.role !== 'reporter') { showLoginErr('บัญชีนี้ไม่มีสิทธิ์ใช้งานหน้านี้'); return; }
+    // Success — reset counter
+    _loginFails = 0;
+    updateFailCounter();
     _reporterToken = d.token;
     _reporterUser  = d.user;
     sessionStorage.setItem('rep_token', d.token);
     sessionStorage.setItem('rep_user',  JSON.stringify(d.user));
-    onLoginSuccess();
-  }catch(e){
+    // Check if first login (password_plain === username default)
+    const isFirstLogin = (d.user.is_default_password === true);
+    if (isFirstLogin) {
+      showChangePasswordModal(true);
+    } else {
+      onLoginSuccess();
+    }
+  } catch(e) {
     showLoginErr('เชื่อมต่อไม่ได้ กรุณาลองใหม่');
-  }finally{
-    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+  } finally {
+    btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
   }
 }
 
-function showLoginErr(msg){
-  const err=document.getElementById('login-err');
-  if(err){err.textContent=msg;err.style.display='block';}
-}
-
-function onLoginSuccess(){
-  const ov=document.getElementById('login-overlay');
-  if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',300);}
-  // Show user tag in topbar
-  const tag=document.getElementById('user-tag');
-  if(tag){
-    const u=_reporterUser;
-    const display=u.nickname?`${u.name} (${u.nickname})`:u.name;
-    tag.textContent=display; tag.style.display='block';
-  }
-  const logoutBtn=document.getElementById('btn-logout');
-  if(logoutBtn) logoutBtn.style.display='';
-  // Auto-set brand from user.brand
-  if(_reporterUser?.brand){
-    const ub=BRANDS.find(b=>b.n===_reporterUser.brand);
-    if(ub&&!brand) setBrand(ub);
+function updateFailCounter() {
+  const el = document.getElementById('login-attempts');
+  const fl = document.getElementById('forgot-link');
+  if (!el) return;
+  if (_loginFails === 0) { el.style.display='none'; if(fl)fl.style.display='none'; return; }
+  el.style.display = 'block';
+  if (_loginFails >= 5) {
+    el.textContent = `ผิด ${_loginFails} ครั้ง — ถ้าจำไม่ได้กดลืมรหัสด้านล่าง`;
+    el.className = 'login-attempts danger';
+    if (fl) fl.style.display = 'block';
+  } else if (_loginFails >= 3) {
+    el.textContent = `ผิดแล้ว ${_loginFails} ครั้ง`;
+    el.className = 'login-attempts warn';
+    if (fl) fl.style.display = 'block';
+  } else {
+    el.textContent = `ผิดแล้ว ${_loginFails} ครั้ง`;
+    el.className = 'login-attempts';
+    if (fl) fl.style.display = 'none';
   }
 }
 
-function doLogout(){
-  _reporterToken=null; _reporterUser=null;
+function showLoginErr(msg) {
+  const err = document.getElementById('login-err');
+  if (err) { err.textContent = msg; err.style.display = 'block'; }
+}
+
+// ── Change Password Modal ───────────────────────────────────
+function showChangePasswordModal(isFirstLogin = false) {
+  const ov  = document.getElementById('chpwd-overlay');
+  const sub = document.getElementById('chpwd-sub');
+  const skip = document.getElementById('chpwd-skip');
+  const oldWrap = document.getElementById('chpwd-old-wrap');
+  if (isFirstLogin) {
+    sub.innerHTML = 'นี่เป็นการเข้าสู่ระบบครั้งแรกด้วยรหัสผ่านเริ่มต้น<br>ต้องการเปลี่ยนรหัสผ่านตอนนี้ไหม?';
+    oldWrap.style.display = 'none'; // ไม่ต้องกรอกรหัสเดิม
+    skip.style.display = 'block';
+  } else {
+    sub.innerHTML = 'กรุณากรอกรหัสผ่านเดิมและตั้งรหัสผ่านใหม่';
+    oldWrap.style.display = '';
+    skip.style.display = 'none';
+  }
+  document.getElementById('chpwd-old').value = '';
+  document.getElementById('chpwd-new').value = '';
+  document.getElementById('chpwd-confirm').value = '';
+  document.getElementById('chpwd-err').style.display = 'none';
+  if (ov) { ov.style.pointerEvents='all'; ov.style.opacity='1'; ov.classList.add('open'); }
+}
+
+async function doChangePassword() {
+  const oldPwd = document.getElementById('chpwd-old').value.trim();
+  const newPwd = document.getElementById('chpwd-new').value.trim();
+  const confirm = document.getElementById('chpwd-confirm').value.trim();
+  const oldWrap = document.getElementById('chpwd-old-wrap');
+  const errEl   = document.getElementById('chpwd-err');
+  const btn     = document.getElementById('chpwd-btn');
+  const needOld = oldWrap.style.display !== 'none';
+
+  function chErr(msg) { errEl.textContent=msg; errEl.style.display='block'; }
+  errEl.style.display = 'none';
+
+  if (needOld && !oldPwd) { chErr('กรุณากรอกรหัสผ่านเดิม'); return; }
+  if (newPwd.length < 6)  { chErr('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+  if (newPwd !== confirm)  { chErr('รหัสผ่านใหม่ไม่ตรงกัน'); return; }
+
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    const r = await fetch('/api/reporter/change-password', {
+      method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+_reporterToken },
+      body: JSON.stringify({ old_password: needOld ? oldPwd : null, new_password: newPwd })
+    });
+    const d = await r.json();
+    if (!d.ok) { chErr(d.error || 'เปลี่ยนรหัสผ่านไม่สำเร็จ'); return; }
+    // Success
+    closeChangePasswordModal();
+    onLoginSuccess();
+  } catch(e) {
+    chErr('เชื่อมต่อไม่ได้ กรุณาลองใหม่');
+  } finally {
+    btn.disabled = false; btn.textContent = 'บันทึกรหัสผ่านใหม่';
+  }
+}
+
+function skipChangePassword() {
+  closeChangePasswordModal();
+  onLoginSuccess();
+}
+
+function closeChangePasswordModal() {
+  const ov = document.getElementById('chpwd-overlay');
+  if (ov) { ov.style.opacity='0'; ov.classList.remove('open'); setTimeout(()=>ov.style.pointerEvents='none',300); }
+}
+
+// ── Forgot Password ─────────────────────────────────────────
+function showForgotModal() {
+  const u = document.getElementById('login-user').value.trim();
+  document.getElementById('forgot-username-display').textContent = u || '(กรอกรหัสพนักงานก่อน)';
+  document.getElementById('forgot-err').style.display = 'none';
+  const ov = document.getElementById('forgot-overlay');
+  if (ov) { ov.style.pointerEvents='all'; ov.style.opacity='1'; ov.classList.add('open'); }
+}
+
+function closeForgotModal() {
+  const ov = document.getElementById('forgot-overlay');
+  if (ov) { ov.style.opacity='0'; ov.classList.remove('open'); setTimeout(()=>ov.style.pointerEvents='none',300); }
+}
+
+async function doForgotPassword() {
+  const u   = document.getElementById('login-user').value.trim();
+  const btn = document.getElementById('forgot-btn');
+  const err = document.getElementById('forgot-err');
+  if (!u) { err.textContent='กรุณากรอกรหัสพนักงานก่อน'; err.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'กำลังส่งคำขอ...';
+  err.style.display = 'none';
+  try {
+    const r = await fetch('/api/reporter/forgot-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: u })
+    });
+    const d = await r.json();
+    if (!d.ok) { err.textContent = d.error||'ไม่พบบัญชีนี้ในระบบ'; err.style.display='block'; return; }
+    closeForgotModal();
+    showLoginErr('✅ แจ้ง Admin เรียบร้อยแล้ว รอ Admin Reset รหัสผ่านให้ครับ');
+    document.getElementById('login-err').style.color = 'var(--green)';
+    document.getElementById('login-err').style.background = 'rgba(45,122,79,.08)';
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อไม่ได้'; err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'แจ้ง Admin ขอ Reset รหัสผ่าน';
+  }
+}
+
+// ── onLoginSuccess ──────────────────────────────────────────
+function onLoginSuccess() {
+  const ov = document.getElementById('login-overlay');
+  if (ov) { ov.style.opacity='0'; setTimeout(()=>ov.style.display='none',300); }
+  // Topbar user tag
+  const tag = document.getElementById('user-tag');
+  if (tag) {
+    const display = _reporterUser.nickname ? `${_reporterUser.name} (${_reporterUser.nickname})` : _reporterUser.name;
+    tag.textContent = display; tag.style.display = 'block';
+  }
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) logoutBtn.style.display = '';
+  // Lock brand from user.brand
+  if (_reporterUser?.brand) {
+    const ub = BRANDS.find(b => b.n === _reporterUser.brand);
+    if (ub) setBrand(ub);
+  }
+}
+
+function doLogout() {
+  _reporterToken = null; _reporterUser = null; _loginFails = 0;
   sessionStorage.removeItem('rep_token');
   sessionStorage.removeItem('rep_user');
-  brand=null; selectedBranch=null; gpsCoords=null; gpsState='none';
-  const ov=document.getElementById('login-overlay');
-  if(ov){ov.style.display='flex';ov.style.opacity='1';}
-  const tag=document.getElementById('user-tag');
-  if(tag) tag.style.display='none';
-  const logoutBtn=document.getElementById('btn-logout');
-  if(logoutBtn) logoutBtn.style.display='none';
-  document.getElementById('login-user').value='';
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-err').style.display='none';
+  brand = null; selectedBranch = null; gpsCoords = null; gpsState = 'none';
+  const ov = document.getElementById('login-overlay');
+  if (ov) { ov.style.display='flex'; ov.style.opacity='1'; }
+  const tag = document.getElementById('user-tag');
+  if (tag) tag.style.display = 'none';
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) logoutBtn.style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-err').style.color = '';
+  document.getElementById('login-err').style.background = '';
+  updateFailCounter();
 }
 
 // ── FORM STATE ─────────────────────────────────────────────
@@ -518,6 +738,11 @@ function showTab(tab){
 function renderForm(){
   const l=t();
   if(!brand){
+    // Reporter logged in → auto-set brand, don't show picker
+    if (_reporterUser?.brand) {
+      const ub = BRANDS.find(b => b.n === _reporterUser.brand);
+      if (ub) { setBrand(ub); return; }
+    }
     document.getElementById('view-report').innerHTML=`
       <div class="fcard">
         <div style="text-align:center;margin-bottom:10px;font-size:13px;color:var(--fg3)">${l.selectBrand}</div>
