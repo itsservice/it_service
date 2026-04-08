@@ -11,18 +11,19 @@ let dbOK = false;
 
 function toUser(row) {
   return {
-    id:             String(row.id),
-    name:           row.name || row.display_name || '',
-    username:       row.username || '',
-    password:       row.password || '',
-    password_plain: row.password_plain || '',
-    role:           row.role || 'engineer',
-    brand:          row.brand || 'ALL',
-    active:         row.active != null ? Number(row.active) : 1,
-    line_user_id:   row.line_user_id || '',
-    phone:          row.phone || '',
-    email:          row.email || '',
-    nickname:       row.nickname || '',
+    id:               String(row.id),
+    name:             row.name || row.display_name || '',
+    username:         row.username || '',
+    password:         row.password || '',
+    password_plain:   row.password_plain || '',
+    role:             row.role || 'engineer',
+    brand:            row.brand || 'ALL',
+    active:           row.active != null ? Number(row.active) : 1,
+    line_user_id:     row.line_user_id || '',
+    phone:            row.phone || '',
+    email:            row.email || '',
+    nickname:         row.nickname || '',
+    reset_requested:  Number(row.reset_requested || 0),
   };
 }
 
@@ -186,30 +187,12 @@ function deleteUser(id) {
   }
 }
 
-// ── REPORTER USERS (from reporters.js) ─────────────────────
-let _reporterCache = null;
-function getReporterList() {
-  if (_reporterCache) return _reporterCache;
-  try {
-    const { getReporterUsers } = require('./reporters');
-    _reporterCache = getReporterUsers();
-    console.log('[Users] Reporters loaded:', _reporterCache.length);
-  } catch(e) {
-    console.warn('[Users] reporters.js not found:', e.message);
-    _reporterCache = [];
-  }
-  return _reporterCache;
-}
-
 function getUserByUsernameAll(username) {
-  // Search staff/engineer/admin first
-  const u = USERS.find(u => u.username === username) || null;
-  if (u) return u;
-  // Then search reporters
-  return getReporterList().find(r => r.username === username) || null;
+  // Search all users in cache (includes reporters from DB)
+  return USERS.find(u => u.username === username) || null;
 }
 
-// Brand groups — multiple brands share one page URL
+// Brand groups — multiple brands share one URL/page
 const BRAND_PAGE_MAP = {
   "Dunkin'"          : ["Dunkin'"],
   "Greyhound Cafe'"  : ["Greyhound Cafe'", "Greyhound Original", "Another Hound Cafe'", "Bean Hound"],
@@ -217,7 +200,6 @@ const BRAND_PAGE_MAP = {
   "Funky Fries"      : ["Funky Fries"],
 };
 
-// Get list of brands allowed for a given page brand
 function getBrandsForPage(pageBrand) {
   if (!pageBrand) return null;
   for (const [key, brands] of Object.entries(BRAND_PAGE_MAP)) {
@@ -226,23 +208,45 @@ function getBrandsForPage(pageBrand) {
   return [pageBrand];
 }
 
-// Login with brand — resolves duplicate username across brands by page brand
+// Brand-aware login — resolve duplicate username across brands
 function getUserByUsernameAndBrand(username, pageBrand) {
-  // Staff/admin first (no brand restriction)
-  const staff = USERS.find(u => u.username === username) || null;
+  // Staff/admin always take priority
+  const staff = USERS.find(u => u.username === username && u.role !== 'reporter');
   if (staff) return staff;
-  const reporters = getReporterList();
+  // Reporter: match username + brand group
   if (pageBrand) {
     const allowed = getBrandsForPage(pageBrand);
-    const match = reporters.find(r => r.username === username && allowed.includes(r.brand));
+    const match = USERS.find(u => u.username === username && u.role === 'reporter' && allowed && allowed.includes(u.brand));
     if (match) return match;
   }
-  // Fallback: first reporter with this username
-  return reporters.find(r => r.username === username) || null;
+  // Fallback: any user with this username
+  return USERS.find(u => u.username === username) || null;
 }
 
 function getAllReporters() {
-  return getReporterList();
+  return USERS
+    .filter(u => u.role === 'reporter' && u.active === 1)
+    .map(u => ({
+      id:              u.id,
+      name:            u.name,
+      username:        u.username,
+      role:            u.role,
+      brand:           u.brand,
+      phone:           u.phone,
+      email:           u.email,
+      nickname:        u.nickname,
+      reset_requested: u.reset_requested,
+      password_plain:  u.password_plain,
+    }));
 }
 
-module.exports = { getAllUsers, getUserById, getUserByUsername: getUserByUsernameAll, getUserByUsernameAndBrand, createUser, updateUser, deleteUser, getAllReporters };
+module.exports = {
+  getAllUsers,
+  getUserById,
+  getUserByUsername: getUserByUsernameAll,
+  getUserByUsernameAndBrand,
+  getAllReporters,
+  createUser,
+  updateUser,
+  deleteUser,
+};
