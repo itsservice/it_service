@@ -3,7 +3,7 @@ const express = require('express');
 const path    = require('path');
 
 const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs } = require('./auth');
-const { getAllUsers, getUserByUsername, createUser, updateUser, deleteUser } = require('./users');
+const { getAllUsers, getUserByUsername, getUserByUsernameAndBrand, getAllReporters, createUser, updateUser, deleteUser } = require('./users');
 const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, invalidateCache } = require('./larkService');
 const larkRouter   = require('./larkWebhook');
 const lineRouter   = require('./lineWebhook');
@@ -64,20 +64,39 @@ app.get('/report',           noCacheHtml('report.html'));
 app.get('/report/:brand',    noCacheHtml('report.html'));
 app.get('/admin',            noCacheHtml('admin.html'));
 app.get('/engineer',         noCacheHtml('engineer.html'));
-app.get('/guide',            noCacheHtml('guide.html'));
 
 // ── Auth ────────────────────────────────────────────────────
 app.post('/api/auth/login', (req, res) => {
   try {
-    const { username, password } = req.body || {};
+    const { username, password, brand } = req.body || {};
     if (!username || !password) return res.json({ ok:false, error:'กรุณากรอก username และ password' });
-    const user = getUserByUsername(username);
+
+    // Brand-aware lookup: resolve duplicate usernames across brands
+    const user = brand
+      ? (getUserByUsernameAndBrand(username, brand) || getUserByUsername(username))
+      : getUserByUsername(username);
+
     if (!user) return res.json({ ok:false, error:`ไม่พบ username "${username}"` });
     if (!user.active) return res.json({ ok:false, error:'บัญชีนี้ถูกระงับ' });
     if (user.password !== hashPwd(password)) return res.json({ ok:false, error:'รหัสผ่านไม่ถูกต้อง' });
+
+    // Check if still using default password (password_plain === username raw code)
+    const isDefaultPwd = user.password_plain && user.password === hashPwd(user.password_plain)
+      && user.password_plain === username.replace(/^[GABPDF]/,'').replace(/^0+/,'');
+
     const token = createSession(user);
     addLog({ user, action:'login', detail:`เข้าสู่ระบบ (${user.role})` });
-    res.json({ ok:true, token, user:{ id:user.id, name:user.name, username:user.username, role:user.role, brand:user.brand } });
+    res.json({
+      ok: true, token,
+      user: {
+        id: user.id, name: user.name, username: user.username,
+        role: user.role, brand: user.brand,
+        phone: user.phone || '', email: user.email || '',
+        nickname: user.nickname || '',
+        is_default_password: !!(user.role === 'reporter' && isDefaultPwd),
+        reset_requested: !!(user.reset_requested),
+      }
+    });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
@@ -568,6 +587,105 @@ app.get('/debug/branches', (_,res) => {
   const result={};
   Object.entries(byBrand).forEach(([b,s])=>{result[b]=[...s].sort();});
   res.json({ok:true,total:tickets.length,branchCodes:result});
+});
+
+// ═══════════════════════════════════════════════════════════
+// REPORTER SELF-SERVICE ENDPOINTS
+// ═══════════════════════════════════════════════════════════
+
+// POST /api/reporter/change-password
+app.post('/api/reporter/change-password', requireAuth(['reporter']), async (req, res) => {
+  try {
+    const { old_password, new_password } = req.body || {};
+    const user = req.user;
+    if (!new_password || new_password.length < 6)
+      return res.json({ ok:false, error:'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
+
+    // If old_password provided → verify it
+    if (old_password !== null && old_password !== undefined) {
+      if (user.password !== hashPwd(old_password))
+        return res.json({ ok:false, error:'รหัสผ่านเดิมไม่ถูกต้อง' });
+    }
+
+    // Update in DB
+    const db = require('./db');
+    await db.query(
+      'UPDATE users SET password=?, password_plain=?, reset_requested=0 WHERE id=?',
+      [hashPwd(new_password), new_password, user.id]
+    );
+    addLog({ user, action:'change_password', detail:'Reporter เปลี่ยนรหัสผ่านด้วยตัวเอง' });
+    res.json({ ok:true });
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
+});
+
+// POST /api/reporter/forgot-password  — ขอ reset (ไม่ต้อง auth)
+app.post('/api/reporter/forgot-password', async (req, res) => {
+  try {
+    const { username } = req.body || {};
+    if (!username) return res.json({ ok:false, error:'กรุณาระบุ username' });
+
+    const user = getUserByUsername(username);
+    if (!user || user.role !== 'reporter')
+      return res.json({ ok:false, error:'ไม่พบบัญชีนี้ในระบบ' });
+
+    // Mark reset_requested in DB
+    const db = require('./db');
+    await db.query('UPDATE users SET reset_requested=1 WHERE id=?', [user.id]);
+
+    // Notify admin via LINE
+    try {
+      const adminGroupId = await lineConfig.getAdminGroupId();
+      if (adminGroupId) {
+        await lineNotify.push(adminGroupId, [{
+          type: 'text',
+          text: `🔑 [ลืมรหัสผ่าน]\nชื่อ: ${user.name}\nUsername: ${username}\nแบรนด์: ${user.brand || '-'}\n\nกรุณา Reset รหัสผ่านใน Admin Panel`
+        }]);
+      }
+    } catch(lineErr) { console.warn('[ForgotPwd] LINE notify failed:', lineErr.message); }
+
+    addLog({ user, action:'forgot_password', detail:`ขอ reset รหัสผ่าน` });
+    res.json({ ok:true });
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
+});
+
+// POST /api/admin/reporter/reset-password  — Admin reset กลับ default
+app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin']), async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    if (!userId) return res.json({ ok:false, error:'ต้องระบุ userId' });
+
+    const db = require('./db');
+    const [rows] = await db.query('SELECT * FROM users WHERE id=? AND role="reporter"', [userId]);
+    if (!rows.length) return res.json({ ok:false, error:'ไม่พบ reporter' });
+
+    const reporter = rows[0];
+    const defaultPwd = reporter.password_plain || reporter.username.replace(/^[GABPDF]/,'').replace(/^0+/,'') || reporter.username;
+
+    await db.query(
+      'UPDATE users SET password=?, password_plain=?, reset_requested=0 WHERE id=?',
+      [hashPwd(defaultPwd), defaultPwd, userId]
+    );
+    addLog({ user:req.user, action:'reset_reporter_password', detail:`Reset รหัสผ่าน ${reporter.username} (${reporter.name})` });
+    res.json({ ok:true, default_password: defaultPwd });
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
+});
+
+// GET /api/admin/reporters  — list reporters for admin panel
+app.get('/api/admin/reporters', requireAuth(['superadmin','admin','manager']), (req, res) => {
+  try {
+    const all = getAllReporters();
+    const { brand, search } = req.query;
+    let list = all;
+    if (brand) list = list.filter(r => r.brand === brand);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        r.username.toLowerCase().includes(q)
+      );
+    }
+    res.json({ ok:true, reporters: list, total: list.length });
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
 // ── Webhooks ────────────────────────────────────────────────
