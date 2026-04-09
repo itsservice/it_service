@@ -208,16 +208,27 @@ function getBrandsForPage(pageBrand) {
   return [pageBrand];
 }
 
-// Brand-aware login — resolve duplicate username across brands
+// Brand-aware login — same username can exist in multiple brands
+// Login page sends brand context → pick correct account
 function getUserByUsernameAndBrand(username, pageBrand) {
-  // Staff/admin always take priority
+  // Staff/admin always take priority (no brand restriction)
   const staff = USERS.find(u => u.username === username && u.role !== 'reporter');
   if (staff) return staff;
-  // Reporter: match username + brand group
+
   if (pageBrand) {
     const allowed = getBrandsForPage(pageBrand);
-    const match = USERS.find(u => u.username === username && u.role === 'reporter' && allowed && allowed.includes(u.brand));
-    if (match) return match;
+    // Exact brand match first
+    const exact = USERS.find(u =>
+      u.username === username && u.role === 'reporter' && u.brand === pageBrand
+    );
+    if (exact) return exact;
+    // Brand group match (GHC group: GHC + AHC + Bean Hound)
+    if (allowed) {
+      const groupMatch = USERS.find(u =>
+        u.username === username && u.role === 'reporter' && allowed.includes(u.brand)
+      );
+      if (groupMatch) return groupMatch;
+    }
   }
   // Fallback: any user with this username
   return USERS.find(u => u.username === username) || null;
