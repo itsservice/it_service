@@ -648,7 +648,19 @@ async function loadTickets(){
     }
   }catch(e){}
 }
-async function doRefresh(){await loadTickets();render();toast('Refreshed');}
+async function doRefresh(){
+  // Sync fresh user data (role/brand อาจถูก admin เปลี่ยน)
+  try{
+    const d=await api('/api/auth/me');
+    if(d.ok&&d.user){
+      AUTH.user={...AUTH.user,...d.user};
+      localStorage.setItem('eng_auth',JSON.stringify(AUTH));
+    }
+  }catch(_){}
+  await loadTickets();
+  render();
+  toast('Refreshed');
+}
 function connectSSE(){
   if(sse)try{sse.close();}catch(_){}
   sse=new EventSource('/api/events');
