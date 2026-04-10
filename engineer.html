@@ -715,12 +715,14 @@ function startClock(){
 function startWorkTimers(){
   if(window._workTimerInterval)clearInterval(window._workTimerInterval);
   window._workTimerInterval=setInterval(()=>{
+    const stKey='eng_st_'+(AUTH?.user?.id||'x');
+    let sv={};try{sv=JSON.parse(localStorage.getItem(stKey)||'{}');}catch(_){}
     tickets.filter(x=>/ระหว่าง/.test(x.status||'')).forEach(t=>{
       const el=document.getElementById('timer-'+t._recordId);if(!el)return;
-      let sa=t.started_at||t.startedAt||null;
-      if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
-      if(!sa)return;
-      const ms=Date.now()-new Date(sa).getTime();if(ms<0)return;
+      // ✅ ใช้ localStorage เท่านั้น — ไม่ใช้ Lark started_at (ป้องกัน timer จาก session เก่า)
+      const sa=sv[t._recordId]||null;
+      if(!sa){el.textContent='00:00:00';return;}
+      const ms=Date.now()-new Date(sa).getTime();if(ms<0){el.textContent='00:00:00';return;}
       const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
       el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     });
@@ -819,8 +821,9 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
-  let autoHours='',sa=t.started_at||t.startedAt||null;
-  if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}}
+  // ✅ ใช้ localStorage เท่านั้น — ไม่ใช้ Lark started_at
+  let autoHours='',sa=null;
+  try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}
   if(sa){const ms=Date.now()-new Date(sa).getTime();if(ms>0)autoHours=(ms/3600000).toFixed(2);}
   openMod(`<div class="mod-t">ส่งงาน / Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
@@ -1253,8 +1256,9 @@ function renderEngJobList(containerId, list, isActive){
       const isWorking  = /in_progress|ระหว่าง/.test(t.status||'');
       const isReview   = /ตรวจ|review/.test(t.status||'');
       const isDone     = /เสร็จ|completed/.test(t.status||'');
-      let sa = t.started_at||t.startedAt||null;
-      if(!sa){try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}}
+      let sa = null;
+      // ✅ localStorage เท่านั้น — ไม่ใช้ Lark's started_at เพื่อป้องกัน timer จาก session เก่า
+      try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[t._recordId])sa=sv[t._recordId];}catch(_){}
       const hasStarted = isWorking&&!!sa;
       let stamp='';
       if(hasStarted) stamp=`<div class="stamp-overlay"><div class="stamp-badge stamp-working">IN PROGRESS</div></div>`;
