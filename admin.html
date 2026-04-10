@@ -712,6 +712,7 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 
 function api(p,o={}){const h={'Content-Type':'application/json',...(o.headers||{})};if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;return fetch(p,{...o,headers:h}).then(r=>r.json()).catch(e=>({ok:false,error:e.message}));}
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
+function cleanBranch(code){return(code||'—').replace(/\s*มี\s*\d+\s*เครื่อง.*/i,'').trim()||'—';}
 
 // ═══ PASSWORD TOGGLE ═══
 function togglePw(){const i=document.getElementById('l-pass'),b=document.getElementById('eye-btn');if(i.type==='password'){i.type='text';b.textContent='HIDE';}else{i.type='password';b.textContent='SHOW';}}
@@ -1670,7 +1671,7 @@ function openDrw(rid){
     <div class="dsec">Status</div>
     <select class="sel" style="width:100%;margin-bottom:10px" onchange="qStatus('${esc(realRid)}',this.value)">${ST.map(s=>`<option${(t.status||'').includes(s)?' selected':''}>${s}</option>`).join('')}</select>
     <div class="dsec">Reporter</div>
-    ${[['Name',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Brand',t.brand],['Branch',t.branchCode],['Location',t.location]].map(([l,v])=>`<div class="drow"><span class="dlbl">${l}</span><span class="dval">${esc(v||'-')}</span></div>`).join('')}
+    ${[['Name',t.reporter],['Phone',t.phone],['Date',t.sentDate],['Brand',t.brand],['Branch',cleanBranch(t.branchCode)],['Location',t.location]].map(([l,v])=>`<div class="drow"><span class="dlbl">${l}</span><span class="dval">${esc(v||'-')}</span></div>`).join('')}
     <div class="dsec">Detail</div><div class="dbox">${esc(t.detail||'-')}</div>
     ${t.workDetail?`<div class="dsec">Engineer Report</div><div class="dbox" style="border-left:2px solid var(--fg)"><div style="font-size:11px;font-weight:700;margin-bottom:2px">${esc(t.engineerName||'-')}</div>${esc(t.workDetail)}${t.partsUsed?`<div style="font-size:12px;color:var(--fg3);margin-top:2px">Parts: ${esc(t.partsUsed)}</div>`:''}${t.workHours?`<div style="font-size:12px;color:var(--fg3)">Hours: ${esc(t.workHours)}</div>`:''}</div>`:''}
     ${(()=>{
