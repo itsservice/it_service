@@ -839,25 +839,7 @@ function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rG
 
 
 // ── Credentials read-only display ──
-function renderCredPanel(){
-  if(!AUTH||!['superadmin','admin','manager'].includes(AUTH.user?.role)) return '';
-  const creds=[
-    {role:'superadmin',user:'superadmin',pass:'super1234'},
-    {role:'admin',     user:'admin',     pass:'admin1234'},
-    {role:'engineer',  user:'engineer1', pass:'eng1234'},
-  ];
-  return `<div class="crd" style="margin-bottom:12px">
-    <div class="crd-h">🔑 Default Credentials (Read-only)</div>
-    <div style="padding:8px 14px;display:flex;flex-wrap:wrap;gap:8px">
-      ${creds.map(cr=>`
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:160px">
-        <div style="font-size:10px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${cr.role}</div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--fg)">👤 ${cr.user}</div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--fg)">🔒 ${cr.pass}</div>
-      </div>`).join('')}
-    </div>
-  </div>`;
-}
+function renderCredPanel(){ return ''; } // removed
 
 function showKpiPopup(filter, label, count){
   const list = filter==='all' ? tickets : tickets.filter(t=>(t.status||'').includes(filter));
@@ -877,39 +859,60 @@ function showKpiPopup(filter, label, count){
       <button class="bp" onclick="closeMod();tF.status='${filter==='all'?'':filter}';tF.p=1;navTo('tickets')">ดูทั้งหมด →</button>
     </div>`);
 }
+// ════ DASHBOARD — Interactive Charts with Filters ═══════════
+const CHART_BRANDS = ["Greyhound Cafe'","Another Hound Cafe'","Bean Hound","Au Bon Pain","Dunkin'","Funky Fries"];
+const dashF = { trend:{days:7,dateFrom:'',dateTo:'',brand:''}, status:{days:30,dateFrom:'',dateTo:'',brand:''}, brandChart:{days:30,dateFrom:'',dateTo:'',brand:''}, eng:{days:30,dateFrom:'',dateTo:'',brand:''} };
+
+function dashDateRange(f) {
+  if(f.dateFrom && f.dateTo) return { from: f.dateFrom, to: f.dateTo };
+  const to = new Date(); const from = new Date();
+  from.setDate(from.getDate() - (f.days || 7));
+  return { from: from.toISOString().slice(0,10), to: to.toISOString().slice(0,10) };
+}
+
+function filterTicketsDash(f) {
+  const { from, to } = dashDateRange(f);
+  return tickets.filter(t => {
+    const d = String(t.sentDate || t.createdAt || '').slice(0,10);
+    const inRange = (!from || d >= from) && (!to || d <= to);
+    const inBrand = !f.brand || t.brand === f.brand;
+    return inRange && inBrand;
+  });
+}
+
+function dashFilterBar(chartKey, f, onApply) {
+  const PRESETS = [7,15,30,90,120];
+  const brandOpts = ['', ...CHART_BRANDS].map(b => `<option value="${esc(b)}" ${f.brand===b?'selected':''}>${b||'ทุกแบรนด์'}</option>`).join('');
+  return `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:8px 12px 4px;border-bottom:1px solid var(--border)">
+    <input type="date" value="${esc(f.dateFrom)}" onchange="dashF['${chartKey}'].dateFrom=this.value;dashF['${chartKey}'].days=0;${onApply}()"
+      style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none"/>
+    <span style="font-size:11px;color:var(--fg4)">ถึง</span>
+    <input type="date" value="${esc(f.dateTo)}" onchange="dashF['${chartKey}'].dateTo=this.value;dashF['${chartKey}'].days=0;${onApply}()"
+      style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none"/>
+    <div style="display:flex;gap:3px">
+      ${PRESETS.map(d=>`<button onclick="dashF['${chartKey}'].days=${d};dashF['${chartKey}'].dateFrom='';dashF['${chartKey}'].dateTo='';${onApply}()"
+        style="padding:3px 7px;border-radius:5px;border:1px solid ${f.days===d&&!f.dateFrom?'var(--fg)':'var(--border)'};background:${f.days===d&&!f.dateFrom?'var(--fg)':'var(--bg2)'};color:${f.days===d&&!f.dateFrom?'var(--bg)':'var(--fg3)'};font-size:11px;font-weight:600;cursor:pointer">${d}ว</button>`).join('')}
+    </div>
+    <select onchange="dashF['${chartKey}'].brand=this.value;${onApply}()"
+      style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none;cursor:pointer">${brandOpts}</select>
+  </div>`;
+}
+
 function rDash(){
-  const total=tickets.length;
+  const pg_el=document.getElementById('pg-dash');
+  if(!pg_el) return;
+
+  // KPI stats (all tickets)
+  const total  =tickets.length;
   const waiting=tickets.filter(x=>/รอ|pending/.test(x.status||'')).length;
   const inprog =tickets.filter(x=>/ระหว่าง|progress/.test(x.status||'')).length;
   const review =tickets.filter(x=>/ตรวจ|review/.test(x.status||'')).length;
   const done   =tickets.filter(x=>/เสร็จ|completed/.test(x.status||'')).length;
   const cancel =tickets.filter(x=>/ยกเลิก|cancel/.test(x.status||'')).length;
 
-  // Brand counts
-  const bc={};tickets.forEach(x=>{const b=x.brand||'Other';bc[b]=(bc[b]||0)+1;});
-  const brandEntries=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
-
-  // 7-day trend
-  const days7=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
-    const iso=d.toISOString().slice(0,10);
-    const lbl=d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit'});
-    const cnt=tickets.filter(t=>{const r=t.sentDate||t.createdAt||t.created_at||'';return String(r).startsWith(iso);}).length;
-    days7.push({lbl,cnt});
-  }
-
-  // Top engineers (by done tickets)
-  const engMap={};
-  tickets.filter(x=>/เสร็จ|completed/.test(x.status||'')).forEach(x=>{
-    const n=x.engineerName||x.assignedTo;if(n){engMap[n]=(engMap[n]||0)+1;}
-  });
-  const topEng=Object.entries(engMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
-
-  // Recent tickets
+  // Recent
   const recent=[...tickets].sort((a,b)=>new Date(b.sentDate||b.createdAt||0)-new Date(a.sentDate||a.createdAt||0)).slice(0,6);
 
-  const pg_el=document.getElementById('pg-dash');
   pg_el.innerHTML=`
   <div class="dash-header">
     <div>
@@ -920,33 +923,38 @@ function rDash(){
   </div>
 
   <div class="dash-grid3" style="margin-bottom:12px">
-    <div class="crd dash-chart-crd" style="grid-column:span 2">
-      <div class="crd-h">📅 Ticket รายวัน (7 วันล่าสุด)</div>
-      <div style="padding:8px 14px 14px;height:180px"><canvas id="chart-trend"></canvas></div>
+    <div class="crd" style="grid-column:span 2">
+      <div class="crd-h" style="display:flex;align-items:center;justify-content:space-between">
+        <span>📅 Ticket รายวัน</span>
+      </div>
+      <div id="dash-filter-trend"></div>
+      <div style="padding:8px 14px 14px;height:200px"><canvas id="chart-trend"></canvas></div>
     </div>
-    <div class="crd dash-chart-crd">
+    <div class="crd">
       <div class="crd-h">⭕ สถานะ</div>
-      <div style="padding:8px 14px 14px;height:180px;display:flex;align-items:center;justify-content:center"><canvas id="chart-status"></canvas></div>
+      <div id="dash-filter-status"></div>
+      <div style="padding:8px 14px 14px;height:200px;display:flex;align-items:center;justify-content:center"><canvas id="chart-status"></canvas></div>
     </div>
   </div>
 
   <div class="dash-grid2" style="margin-bottom:12px">
-    <div class="crd dash-chart-crd">
+    <div class="crd">
       <div class="crd-h">🏷️ Ticket ตามแบรนด์</div>
-      <div style="padding:8px 14px 14px;height:200px"><canvas id="chart-brand"></canvas></div>
+      <div id="dash-filter-brandChart"></div>
+      <div style="padding:8px 14px 14px;height:220px"><canvas id="chart-brand"></canvas></div>
     </div>
-    <div class="crd dash-chart-crd">
+    <div class="crd">
       <div class="crd-h">🏆 Top Engineer (ปิดงาน)</div>
-      <div style="padding:8px 14px 14px;height:200px"><canvas id="chart-eng"></canvas></div>
+      <div id="dash-filter-eng"></div>
+      <div style="padding:8px 14px 14px;height:220px"><canvas id="chart-eng"></canvas></div>
     </div>
   </div>
 
-  ${renderCredPanel()}
   <div class="crd" style="margin-bottom:12px">
     <div class="crd-h">🕐 Ticket ล่าสุด</div>
     <div style="padding:4px 10px">
       ${recent.map(x=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDrw('${esc(x._recordId)}')">
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="openDrw('${esc(x._recordId)}')">
         <span style="font-family:var(--mono);font-size:10px;color:var(--fg4);flex-shrink:0;min-width:72px">${esc(x.id||'--')}</span>
         <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.type||'-')}</span>
         <span style="font-size:11px;color:var(--fg4);flex-shrink:0">${esc(x.brand||'')}</span>
@@ -955,15 +963,14 @@ function rDash(){
     </div>
   </div>`;
 
-  // KPI stats
-  // KPI items — each is clickable to show filtered ticket popup
+  // KPI
   const kpiItems=[
-    {l:'ทั้งหมด',  v:total,  c:'var(--fg)',  filter:'all'},
-    {l:'รอดำเนินการ',v:waiting,c:'#6366f1', filter:'รอ'},
-    {l:'กำลังทำ',  v:inprog, c:'#f59e0b',  filter:'ระหว่าง'},
-    {l:'ตรวจงาน',  v:review, c:'#0ea5e9',  filter:'ตรวจ'},
-    {l:'เสร็จสิ้น',v:done,   c:'#22c55e',  filter:'เสร็จ'},
-    {l:'ยกเลิก',   v:cancel, c:'#ef4444',  filter:'ยกเลิก'},
+    {l:'ทั้งหมด',  v:total,  c:'var(--fg)', filter:'all'},
+    {l:'รอดำเนินการ',v:waiting,c:'#6366f1',filter:'รอ'},
+    {l:'กำลังทำ',  v:inprog, c:'#f59e0b', filter:'ระหว่าง'},
+    {l:'ตรวจงาน',  v:review, c:'#0ea5e9', filter:'ตรวจ'},
+    {l:'เสร็จสิ้น',v:done,   c:'#22c55e', filter:'เสร็จ'},
+    {l:'ยกเลิก',   v:cancel, c:'#ef4444', filter:'ยกเลิก'},
   ];
   document.getElementById('dash-kpis').innerHTML=kpiItems.map(k=>`
     <div class="dash-kpi" style="cursor:pointer" onclick="showKpiPopup('${k.filter}','${k.l}',${k.v})" title="คลิกดูรายละเอียด">
@@ -971,33 +978,103 @@ function rDash(){
       <div class="dash-kpi-l">${k.l}</div>
     </div>`).join('');
 
-  // Wait for DOM then draw charts
-  setTimeout(()=>{
-    const isDk=document.documentElement.dataset.t==='dark';
-    const gridC=isDk?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
-    const txtC=isDk?'#888':'#aaa';
-    const defaults={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridC},ticks:{color:txtC,font:{family:'Prompt',size:10}}},y:{grid:{color:gridC},ticks:{color:txtC,font:{family:'Prompt',size:10},precision:0}}}};
+  // Inject filter bars
+  ['trend','status','brandChart','eng'].forEach(k=>{
+    const el=document.getElementById('dash-filter-'+k);
+    if(el) el.innerHTML=dashFilterBar(k, dashF[k], 'drawDashCharts');
+  });
 
-    // Trend line chart
-    const ctxT=document.getElementById('chart-trend')?.getContext('2d');
-    if(ctxT){ if(window._chartT){window._chartT.destroy();}
-      window._chartT=new Chart(ctxT,{type:'line',data:{labels:days7.map(d=>d.lbl),datasets:[{data:days7.map(d=>d.cnt),borderColor:'#4d8ef5',backgroundColor:'rgba(77,142,245,.12)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#4d8ef5'}]},options:{...defaults,plugins:{...defaults.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' tickets'}}}}});}
+  // Draw charts
+  drawDashCharts();
+}
 
-    // Status donut
-    const ctxS=document.getElementById('chart-status')?.getContext('2d');
-    if(ctxS){ if(window._chartS){window._chartS.destroy();}
-      window._chartS=new Chart(ctxS,{type:'doughnut',data:{labels:['รอ','ทำ','ตรวจ','เสร็จ','ยกเลิก'],datasets:[{data:[waiting,inprog,review,done,cancel],backgroundColor:['#6366f1','#f59e0b','#0ea5e9','#22c55e','#ef4444'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:txtC,font:{family:'Prompt',size:10},boxWidth:10,padding:6}}}}});}
+function drawDashCharts(){
+  // Rebuild filter bars (to update button active states)
+  ['trend','status','brandChart','eng'].forEach(k=>{
+    const el=document.getElementById('dash-filter-'+k);
+    if(el) el.innerHTML=dashFilterBar(k, dashF[k], 'drawDashCharts');
+  });
 
-    // Brand bar chart
-    const ctxB=document.getElementById('chart-brand')?.getContext('2d');
-    if(ctxB){ if(window._chartB){window._chartB.destroy();}
-      window._chartB=new Chart(ctxB,{type:'bar',data:{labels:brandEntries.map(([b])=>b),datasets:[{data:brandEntries.map(([,n])=>n),backgroundColor:brandEntries.map(([b])=>brandColor(b)),borderRadius:6,borderSkipped:false}]},options:{...defaults,indexAxis:'y',plugins:{...defaults.plugins},scales:{x:{...defaults.scales.x},y:{...defaults.scales.y,ticks:{...defaults.scales.y.ticks,font:{family:'Prompt',size:9}}}}}});}
+  const isDk=document.documentElement.dataset.t==='dark';
+  const gridC=isDk?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+  const txtC =isDk?'#888':'#aaa';
+  const animBase={duration:800,easing:'easeInOutQuart'};
+  const base={responsive:true,maintainAspectRatio:false,animation:animBase,
+    plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:gridC},ticks:{color:txtC,font:{family:'Prompt',size:10}}},
+            y:{grid:{color:gridC},ticks:{color:txtC,font:{family:'Prompt',size:10},precision:0}}}};
 
-    // Top engineer bar
-    const ctxE=document.getElementById('chart-eng')?.getContext('2d');
-    if(ctxE){ if(window._chartE){window._chartE.destroy();}
-      window._chartE=new Chart(ctxE,{type:'bar',data:{labels:topEng.map(([n])=>n),datasets:[{data:topEng.map(([,v])=>v),backgroundColor:'#22c55e',borderRadius:6,borderSkipped:false}]},options:{...defaults,indexAxis:'y',plugins:{...defaults.plugins}}});}
-  },500);
+  // ── Trend chart ────────────────────────────────────────────
+  const tF2=dashF.trend;
+  const {from:tFrom,to:tTo}=dashDateRange(tF2);
+  const dayCount=Math.min(Math.max(tF2.days||7,1),180);
+  const daysArr=[];
+  for(let i=dayCount-1;i>=0;i--){
+    const d=new Date(tTo);d.setDate(d.getDate()-i);
+    const iso=d.toISOString().slice(0,10);
+    const lbl=d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit'});
+    const cnt=tickets.filter(t=>{
+      const r=String(t.sentDate||t.createdAt||'').slice(0,10);
+      const brand=!tF2.brand||t.brand===tF2.brand;
+      return r===iso&&brand;
+    }).length;
+    daysArr.push({lbl,cnt});
+  }
+  const ctxT=document.getElementById('chart-trend')?.getContext('2d');
+  if(ctxT){if(window._chartT)window._chartT.destroy();
+    window._chartT=new Chart(ctxT,{type:'line',data:{labels:daysArr.map(d=>d.lbl),
+      datasets:[{data:daysArr.map(d=>d.cnt),borderColor:'#4d8ef5',backgroundColor:'rgba(77,142,245,.12)',
+        fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#4d8ef5',
+        pointHoverRadius:7,pointHoverBackgroundColor:'#2563eb'}]},
+      options:{...base,plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' tickets'}}}}});}
+
+  // ── Status donut ────────────────────────────────────────────
+  const sData=filterTicketsDash(dashF.status);
+  const sW=sData.filter(x=>/รอ|pending/.test(x.status||'')).length;
+  const sI=sData.filter(x=>/ระหว่าง|progress/.test(x.status||'')).length;
+  const sR=sData.filter(x=>/ตรวจ|review/.test(x.status||'')).length;
+  const sD=sData.filter(x=>/เสร็จ|completed/.test(x.status||'')).length;
+  const sC=sData.filter(x=>/ยกเลิก|cancel/.test(x.status||'')).length;
+  const ctxS=document.getElementById('chart-status')?.getContext('2d');
+  if(ctxS){if(window._chartS)window._chartS.destroy();
+    window._chartS=new Chart(ctxS,{type:'doughnut',
+      data:{labels:['รอ','ทำ','ตรวจ','เสร็จ','ยกเลิก'],
+        datasets:[{data:[sW,sI,sR,sD,sC],
+          backgroundColor:['#6366f1','#f59e0b','#0ea5e9','#22c55e','#ef4444'],
+          borderWidth:0,hoverOffset:10}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+        animation:{...animBase,animateRotate:true,animateScale:true},
+        plugins:{legend:{display:true,position:'right',labels:{color:txtC,font:{family:'Prompt',size:10},boxWidth:10,padding:6}}}}});}
+
+  // ── Brand bar ───────────────────────────────────────────────
+  const bData=filterTicketsDash(dashF.brandChart);
+  const bc2={};bData.forEach(x=>{const b=x.brand||'Other';bc2[b]=(bc2[b]||0)+1;});
+  const bEntries=Object.entries(bc2).sort((a,b)=>b[1]-a[1]);
+  const ctxB=document.getElementById('chart-brand')?.getContext('2d');
+  if(ctxB){if(window._chartB)window._chartB.destroy();
+    window._chartB=new Chart(ctxB,{type:'bar',
+      data:{labels:bEntries.map(([b])=>b),
+        datasets:[{data:bEntries.map(([,n])=>n),backgroundColor:bEntries.map(([b])=>brandColor(b)),
+          borderRadius:8,borderSkipped:false,hoverBackgroundColor:bEntries.map(([b])=>brandColor(b)+'dd')}]},
+      options:{...base,indexAxis:'y',animation:{...animBase,delay:(_)=>_.dataIndex*80},
+        plugins:{...base.plugins},scales:{x:{...base.scales.x},
+          y:{...base.scales.y,ticks:{...base.scales.y.ticks,font:{family:'Prompt',size:9}}}}}});}
+
+  // ── Top Engineer bar ────────────────────────────────────────
+  const eData=filterTicketsDash(dashF.eng);
+  const engMap={};
+  eData.filter(x=>/เสร็จ|completed/.test(x.status||'')).forEach(x=>{
+    const n=x.engineerName||x.assignedTo;if(n){engMap[n]=(engMap[n]||0)+1;}
+  });
+  const topEng=Object.entries(engMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const ctxE=document.getElementById('chart-eng')?.getContext('2d');
+  if(ctxE){if(window._chartE)window._chartE.destroy();
+    window._chartE=new Chart(ctxE,{type:'bar',
+      data:{labels:topEng.map(([n])=>n),
+        datasets:[{data:topEng.map(([,v])=>v),backgroundColor:'#22c55e',borderRadius:8,
+          borderSkipped:false,hoverBackgroundColor:'#16a34a'}]},
+      options:{...base,indexAxis:'y',animation:{...animBase,delay:(_)=>_.dataIndex*80},
+        plugins:{...base.plugins}}});}
 }
 
 let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'',sortDir:'asc',p:1};const PP=15;
