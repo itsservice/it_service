@@ -646,7 +646,6 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
     <div class="page on" id="pg-dash"></div>
     <div class="page" id="pg-tickets"></div>
     <div class="page" id="pg-users"></div>
-    <div class="page" id="pg-reporters"></div>
     <div class="page" id="pg-log"></div>
     <div class="page" id="pg-gps"></div>
     <div class="page" id="pg-line"></div>
@@ -697,12 +696,11 @@ const BRAND_COLORS = {
 };
 function brandColor(name){ return BRAND_COLORS[name]||'#888'; }
 
-const PG={dash:'Overview',tickets:'All Tickets',users:'Users',reporters:'Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
+const PG={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
 const NAV_ALL=[
   {id:'dash',ic:'D',lb:'Overview',min:40},
   {id:'tickets',ic:'T',lb:'Tickets',min:40},
   {id:'users',ic:'U',lb:'Users',min:80},
-  {id:'reporters',ic:'R',lb:'Reporters',min:80},
   {id:'log',ic:'L',lb:'Activity Log',min:60},
   {id:'gps',ic:'G',lb:'GPS Map',min:60},
   {id:'line',ic:'L',lb:'LINE Groups',min:100},
@@ -823,7 +821,7 @@ function connectSSE(){
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
-function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,reporters:rReporters,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer,branches:renderBranches}[pg]||rDash)();}catch(e){console.error(e);}}
+function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer,branches:renderBranches}[pg]||rDash)();}catch(e){console.error(e);}}
 
 
 // ── Credentials read-only display ──
@@ -1063,16 +1061,15 @@ function rTickets(){
 function tSort(col){if(tF.sortCol===col){tF.sortDir=tF.sortDir==='asc'?'desc':'asc';}else{tF.sortCol=col;tF.sortDir='asc';}tF.p=1;rTickets();}
 
 // ════════════════════════════════════════════════════════════
-// SHARED TABLE HELPERS
+// USERS & REPORTERS — Unified Paginated Table
 // ════════════════════════════════════════════════════════════
 const REPORTER_BRANDS=["Greyhound Cafe'","Another Hound Cafe'","Bean Hound","Au Bon Pain","Dunkin'","Funky Fries"];
 const BRAND_COLOR={"Greyhound Cafe'":'#0a0a0a',"Another Hound Cafe'":'#6d28d9',"Bean Hound":'#065f46',"Au Bon Pain":'#b45309',"Dunkin'":'#dc2626',"Funky Fries":'#d97706'};
+const ALL_ROLES=['superadmin','admin','manager','lead_engineer','engineer','reporter'];
+const ROLE_ORDER={superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4,reporter:5};
 
-const uF={codeSearch:'',nameSearch:'',brand:'',page:1,perPage:5};
-const rF={codeSearch:'',nameSearch:'',brand:'',page:1,perPage:5};
-
-function uFPage(p){uF.page=p;rUsers();}
-function rFPage(p){rF.page=p;rReporters();}
+const uF={codeSearch:'',nameSearch:'',brand:'',role:'',page:1,perPage:5};
+function uFPage(p){uF.page=p;rUsersTable();}
 
 function buildPager(cur,total,fnName){
   if(total<=1)return '';
@@ -1090,142 +1087,73 @@ function buildPager(cur,total,fnName){
   ].join('');
 }
 
-// ════════════════════════════════════════════════════════════
-// USERS PAGE
-// ════════════════════════════════════════════════════════════
 function rUsers(){
   const el=document.getElementById('pg-users');
-  if(!el) return;
-  // Shell rendered once — input ไม่ถูก reset ทุก keystroke
+  if(!el)return;
+  // Shell rendered once — inputs won't lose focus
   if(!document.getElementById('pg-users-table')){
     el.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <div id="pg-users-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users</div>
+      <div id="pg-users-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users & Reporters</div>
       <button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button>
       <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button>
+      <button class="smb" onclick="loadUsers().then(()=>loadReporters()).then(()=>{const e=document.getElementById('pg-users');if(e)e.innerHTML='';rUsers()})">🔄 Refresh</button>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
       <select id="uF-per" onchange="uF.perPage=+this.value;uF.page=1;rUsersTable()"
         style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
-        ${[5,10,25,50].map(n=>`<option value="${n}" ${uF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
+        ${[5,10,25,50,100].map(n=>`<option value="${n}" ${uF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
       </select>
-      <input id="uF-code" placeholder="รหัสพนักงาน…"
-        oninput="uF.codeSearch=this.value;uF.page=1;rUsersTable()"
-        style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-      <input id="uF-name" placeholder="ค้นหาชื่อ-สกุล…"
-        oninput="uF.nameSearch=this.value;uF.page=1;rUsersTable()"
-        style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <input id="uF-code" placeholder="รหัสพนักงาน…" oninput="uF.codeSearch=this.value;uF.page=1;rUsersTable()"
+        style="width:140px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <input id="uF-name" placeholder="ค้นหาชื่อ-สกุล…" oninput="uF.nameSearch=this.value;uF.page=1;rUsersTable()"
+        style="flex:1;min-width:140px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
       <select id="uF-brand" onchange="uF.brand=this.value;uF.page=1;rUsersTable()"
         style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
         <option value="">เลือกแบรนด์</option>
         ${['ALL',...REPORTER_BRANDS].map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}
       </select>
+      <select id="uF-role" onchange="uF.role=this.value;uF.page=1;rUsersTable()"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+        <option value="">เลือก Role</option>
+        ${ALL_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}
+      </select>
     </div>
     <div id="pg-users-table"></div>`;
   }
-  const t=document.getElementById('pg-users-title');
-  if(t) t.textContent='Users ('+users.length+')';
-  const p=document.getElementById('uF-per');   if(p) p.value=uF.perPage;
-  const br=document.getElementById('uF-brand');if(br) br.value=uF.brand;
+  // Sync select values
+  const p=document.getElementById('uF-per');   if(p)p.value=uF.perPage;
+  const br=document.getElementById('uF-brand');if(br)br.value=uF.brand;
+  const ro=document.getElementById('uF-role'); if(ro)ro.value=uF.role;
   rUsersTable();
 }
 
 function rUsersTable(){
   const el=document.getElementById('pg-users-table');
-  if(!el) return;
-  let list=[...users].sort((a,b)=>({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[a.role]||9)-({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[b.role]||9));
-  if(uF.codeSearch){const q=uF.codeSearch.toLowerCase();list=list.filter(u=>u.username.toLowerCase().includes(q));}
-  if(uF.nameSearch){const q=uF.nameSearch.toLowerCase();list=list.filter(u=>u.name.toLowerCase().includes(q));}
-  if(uF.brand){list=list.filter(u=>u.brand===uF.brand);}
+  if(!el)return;
+
+  // Merge users + reporters into one list
+  const combined=[
+    ...users.map(u=>({...u,_type:'user'})),
+    ...reporters.map(r=>({...r,_type:'reporter',role:'reporter',brand:r.brand||'-'}))
+  ].sort((a,b)=>(ROLE_ORDER[a.role]||9)-(ROLE_ORDER[b.role]||9)||(a.name||'').localeCompare(b.name||''));
+
+  let list=combined;
+  if(uF.codeSearch){const q=uF.codeSearch.toLowerCase();list=list.filter(u=>(u.username||'').toLowerCase().includes(q));}
+  if(uF.nameSearch){const q=uF.nameSearch.toLowerCase();list=list.filter(u=>(u.name||'').toLowerCase().includes(q));}
+  if(uF.brand)list=list.filter(u=>u.brand===uF.brand);
+  if(uF.role)list=list.filter(u=>u.role===uF.role);
+
+  const resetCount=reporters.filter(r=>r.reset_requested).length;
+  const titleEl=document.getElementById('pg-users-title');
+  if(titleEl)titleEl.innerHTML=`Users & Reporters (${combined.length})`
+    +(resetCount>0?` <span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'');
+
   const total=list.length,tp=Math.max(1,Math.ceil(total/uF.perPage));
   uF.page=Math.min(uF.page,tp);
   const page=list.slice((uF.page-1)*uF.perPage,uF.page*uF.perPage);
   const from=total===0?0:(uF.page-1)*uF.perPage+1,to=Math.min(uF.page*uF.perPage,total);
-  el.innerHTML=`
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead>
-        <tr style="border-bottom:2px solid var(--border);background:var(--bg3)">
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:40px">#</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสพนักงาน</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">ชื่อ-สกุล</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">แบรนด์</th>
-          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:70px">แก้ไข</th>
-          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:70px">ลบ</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${page.map((u,i)=>`
-        <tr style="border-bottom:1px solid var(--border);transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-          <td style="padding:10px 12px;color:var(--fg4);font-size:12px;text-align:center">${from+i}</td>
-          <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg2)">${esc(u.username)}</td>
-          <td style="padding:10px 12px;font-weight:600;color:var(--fg)">${esc(u.name)}</td>
-          <td style="padding:10px 12px"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--bg3);color:var(--fg3);font-family:var(--mono)">${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand||u.role)}</span></td>
-          <td style="padding:10px 12px;text-align:center"><button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button></td>
-          <td style="padding:10px 12px;text-align:center">${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:'<span style="color:var(--fg4);font-size:11px">—</span>'}</td>
-        </tr>`).join('')}
-        ${page.length===0?`<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
-      </tbody>
-    </table>
-  </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
-    <span style="font-size:12px;color:var(--fg4)">แสดง ${from}–${to} จาก ${total} รายการ</span>
-    <div style="display:flex;gap:3px;flex-wrap:wrap">${buildPager(uF.page,tp,'uFPage')}</div>
-  </div>`;
-}
 
-// ════════════════════════════════════════════════════════════
-// REPORTERS PAGE
-// ════════════════════════════════════════════════════════════
-function rReporters(){
-  const el=document.getElementById('pg-reporters');
-  if(!el) return;
-  // Shell rendered once — input ไม่ถูก reset ทุก keystroke
-  if(!document.getElementById('pg-reporters-table')){
-    const resetCount=reporters.filter(r=>r.reset_requested).length;
-    el.innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <div id="pg-reporters-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Reporters</div>
-      <button class="smb" onclick="loadReporters().then(()=>{document.getElementById('pg-reporters-table')&&(document.getElementById('pg-reporters').innerHTML='');rReporters()})">🔄 Refresh</button>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <select id="rF-per" onchange="rF.perPage=+this.value;rF.page=1;rReportersTable()"
-        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
-        ${[5,10,25,50,100].map(n=>`<option value="${n}" ${rF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
-      </select>
-      <input id="rF-code" placeholder="รหัสพนักงาน…"
-        oninput="rF.codeSearch=this.value;rF.page=1;rReportersTable()"
-        style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-      <input id="rF-name" placeholder="ค้นหาชื่อ-สกุล…"
-        oninput="rF.nameSearch=this.value;rF.page=1;rReportersTable()"
-        style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-      <select id="rF-brand" onchange="rF.brand=this.value;rF.page=1;rReportersTable()"
-        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
-        <option value="">เลือกแบรนด์</option>
-        ${REPORTER_BRANDS.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}
-      </select>
-    </div>
-    <div id="pg-reporters-table"></div>`;
-  }
-  const resetCount=reporters.filter(r=>r.reset_requested).length;
-  const t=document.getElementById('pg-reporters-title');
-  if(t) t.innerHTML='Reporters ('+reporters.length+')'+(resetCount>0?` <span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'');
-  const p=document.getElementById('rF-per');   if(p) p.value=rF.perPage;
-  const br=document.getElementById('rF-brand');if(br) br.value=rF.brand;
-  rReportersTable();
-}
-
-function rReportersTable(){
-  const el=document.getElementById('pg-reporters-table');
-  if(!el) return;
-  let list=[...reporters];
-  if(rF.codeSearch){const q=rF.codeSearch.toLowerCase();list=list.filter(r=>r.username.toLowerCase().includes(q));}
-  if(rF.nameSearch){const q=rF.nameSearch.toLowerCase();list=list.filter(r=>r.name.toLowerCase().includes(q));}
-  if(rF.brand){list=list.filter(r=>r.brand===rF.brand);}
-  const total=list.length,tp=Math.max(1,Math.ceil(total/rF.perPage));
-  rF.page=Math.min(rF.page,tp);
-  const page=list.slice((rF.page-1)*rF.perPage,rF.page*rF.perPage);
-  const from=total===0?0:(rF.page-1)*rF.perPage+1,to=Math.min(rF.page*rF.perPage,total);
   el.innerHTML=`
   <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -1240,22 +1168,40 @@ function rReportersTable(){
         </tr>
       </thead>
       <tbody>
-        ${page.map((r,i)=>{
-          const isPending=r.reset_requested==1||r.reset_requested===true;
-          const bc=BRAND_COLOR[r.brand]||'#374151';
+        ${page.map((u,i)=>{
+          const isReporter=u._type==='reporter';
+          const isPending=isReporter&&(u.reset_requested==1||u.reset_requested===true);
+          const bc=BRAND_COLOR[u.brand]||'#374151';
           const rowBg=isPending?'rgba(251,191,36,.07)':'';
+          const roleColor={superadmin:'#7c3aed',admin:'#2563eb',manager:'#0891b2',lead_engineer:'#059669',engineer:'#16a34a',reporter:'#d97706'}[u.role]||'#6b7280';
           return `
           <tr style="border-bottom:1px solid var(--border);background:${rowBg};transition:background .12s"
             onmouseover="this.style.background='${isPending?'rgba(251,191,36,.14)':'var(--bg3)'}'"
             onmouseout="this.style.background='${rowBg}'">
             <td style="padding:10px 12px;color:var(--fg4);font-size:12px;text-align:center">${from+i}</td>
             <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap">
-              ${isPending?'<span style="color:#d97706;margin-right:4px" title="ขอ Reset รหัสผ่าน">🔑</span>':''}${esc(r.username)}
+              ${isPending?'<span style="color:#d97706;margin-right:4px" title="ขอ Reset รหัสผ่าน">🔑</span>':''}
+              ${esc(u.username)}
+              <div style="font-size:10px;margin-top:1px"><span style="padding:1px 6px;border-radius:3px;background:${roleColor}18;color:${roleColor};font-weight:700;font-family:var(--mono)">${u.role}</span></div>
             </td>
-            <td style="padding:10px 12px;font-weight:600;color:var(--fg)">${esc(r.name)}</td>
-            <td style="padding:10px 12px"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${bc}18;color:${bc};font-family:var(--mono)">${esc(r.brand||'-')}</span></td>
-            <td style="padding:10px 12px;text-align:center"><button class="uc-b" onclick="openReporterDetail('${esc(r.id)}')">รายละเอียด</button></td>
-            <td style="padding:10px 12px;text-align:center"><button class="uc-b" style="color:#d97706;border-color:#fcd34d" onclick="confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset</button></td>
+            <td style="padding:10px 12px;font-weight:600;color:var(--fg)">${esc(u.name)}</td>
+            <td style="padding:10px 12px">
+              <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${isReporter?bc+'18':'var(--bg3)'};color:${isReporter?bc:'var(--fg3)'};font-family:var(--mono)">
+                ${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand||'-')}
+              </span>
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              ${isReporter
+                ?`<button class="uc-b" onclick="openReporterDetail('${esc(u.id)}')">รายละเอียด</button>`
+                :`<button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button>`}
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              ${isReporter
+                ?`<button class="uc-b" style="color:#d97706;border-color:#fcd34d" onclick="confirmResetPwd('${esc(u.id)}','${esc(u.name)}','${esc(u.username)}')">🔑 Reset</button>`
+                :u.id!==AUTH?.user?.id
+                  ?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`
+                  :'<span style="color:var(--fg4);font-size:11px">—</span>'}
+            </td>
           </tr>`;
         }).join('')}
         ${page.length===0?`<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
@@ -1264,7 +1210,7 @@ function rReportersTable(){
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
     <span style="font-size:12px;color:var(--fg4)">แสดง ${from}–${to} จาก ${total} รายการ</span>
-    <div style="display:flex;gap:3px;flex-wrap:wrap">${buildPager(rF.page,tp,'rFPage')}</div>
+    <div style="display:flex;gap:3px;flex-wrap:wrap">${buildPager(uF.page,tp,'uFPage')}</div>
   </div>`;
 }
 
@@ -1276,18 +1222,12 @@ function openReporterDetail(id){
   showMod(`
     <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px">👤 ${esc(r.name)}</div>
     ${isPending?`<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:4px;padding:3px 8px;margin-bottom:12px">🔑 ขอ Reset รหัสผ่าน</div>`:''}
-    <div style="display:flex;flex-direction:column;gap:0;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-      ${[
-        ['รหัสพนักงาน',`<span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>`],
-        ['ชื่อ-สกุล',esc(r.name)],
-        ['แบรนด์',esc(r.brand||'-')],
-        ['รหัสผ่าน (default)',`<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`],
-        ['สถานะ',isPending?'<span style="color:#d97706;font-weight:600">รอ Reset รหัสผ่าน</span>':'ปกติ'],
-      ].map(([k,v],i)=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i>0?'border-top:1px solid var(--border)':''}">
-        <span style="color:var(--fg4);min-width:120px">${k}</span>
-        <span style="text-align:right">${v}</span>
-      </div>`).join('')}
+    <div style="font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      ${[['รหัสพนักงาน',`<span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>`],
+         ['ชื่อ-สกุล',esc(r.name)],['แบรนด์',esc(r.brand||'-')],
+         ['รหัสผ่าน (default)',`<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`],
+         ['สถานะ',isPending?'<span style="color:#d97706;font-weight:600">รอ Reset รหัสผ่าน</span>':'ปกติ'],
+      ].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i>0?'border-top:1px solid var(--border)':''}"><span style="color:var(--fg4);min-width:120px">${k}</span><span style="text-align:right">${v}</span></div>`).join('')}
     </div>
     <div style="display:flex;gap:6px;margin-top:16px;flex-wrap:wrap">
       ${isPending?`<button class="bp" style="background:#d97706;border-color:#d97706" onclick="closeMod();confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset รหัสผ่าน</button>`:''}
@@ -1321,7 +1261,7 @@ async function doResetReporterPwd(userId,name){
     const r=reporters.find(x=>String(x.id)===String(userId));
     if(r){r.reset_requested=0;r.password_plain=d.default_password||r.username;}
     toast(`✅ Reset รหัสผ่าน ${name} เรียบร้อย (default: ${d.default_password||''})`);
-    rReporters();
+    rUsersTable();
   }catch(e){if(err){err.textContent='เชื่อมต่อไม่ได้';err.style.display='block';}}
   finally{if(btn){btn.disabled=false;btn.textContent='ยืนยัน Reset';}}
 }
@@ -2046,7 +1986,6 @@ const CMD_ITEMS=[
   {ic:'T',label:'All Tickets',desc:'ดู ticket ทั้งหมด',action:()=>navTo('tickets')},
   {ic:'B',label:'Branches',desc:'จัดการสาขา',action:()=>navTo('branches')},
   {ic:'U',label:'Users',desc:'จัดการผู้ใช้',action:()=>navTo('users')},
-  {ic:'R',label:'Reporters',desc:'จัดการ Reporter',action:()=>navTo('reporters')},
   {ic:'G',label:'GPS Map',desc:'แผนที่ GPS',action:()=>navTo('gps')},
   {ic:'L',label:'Activity Log',desc:'ประวัติการใช้งาน',action:()=>navTo('log')},
   {ic:'S',label:'System',desc:'ตั้งค่าระบบ',action:()=>navTo('system')},
@@ -2403,8 +2342,8 @@ function togLang(){
   const btn=document.getElementById('lang-btn');
   if(btn)btn.textContent=_lang==='th'?'TH':'EN';
   // Update page names
-  const PG_TH={dash:'ภาพรวม',tickets:'ตั๋วทั้งหมด',users:'ผู้ใช้งาน',reporters:'Reporters',log:'บันทึกกิจกรรม',gps:'GPS Map',line:'LINE Groups',system:'ตั้งค่าระบบ',server:'Server Logs',branches:'สาขา'};
-  const PG_EN={dash:'Overview',tickets:'All Tickets',users:'Users',reporters:'Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
+  const PG_TH={dash:'ภาพรวม',tickets:'ตั๋วทั้งหมด',users:'Users & Reporters',log:'บันทึกกิจกรรม',gps:'GPS Map',line:'LINE Groups',system:'ตั้งค่าระบบ',server:'Server Logs',branches:'สาขา'};
+  const PG_EN={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
   const map=_lang==='th'?PG_TH:PG_EN;
   window._PG_OVERRIDE=map;
   // Re-render current page title
