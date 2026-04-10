@@ -107,7 +107,8 @@ app.post('/api/auth/logout', requireAuth(), (req, res) => {
 });
 
 app.get('/api/auth/me', requireAuth(), (req, res) => {
-  res.json({ ok:true, user:req.user });
+  // req.user ถูก sync จาก USERS cache แล้วใน getSession
+  res.json({ ok:true, user: req.user });
 });
 
 // ═══════════════════════════════════════════════════════════
