@@ -34,6 +34,19 @@ function getSession(token) {
   if (!s) return null;
   if (Date.now() > s.expires) { sessions.delete(token); return null; }
   s.expires = Date.now() + SESSION_TTL; // sliding expiry
+
+  // ── Sync fresh role/brand from USERS cache ──────────────────
+  // ทำให้การเปลี่ยน brand/role ใน Admin มีผลทันที ไม่ต้อง re-login
+  try {
+    const users = require('./users');
+    const fresh = users.getUserByUsername(s.user.username);
+    if (fresh) {
+      s.user.role  = fresh.role;
+      s.user.brand = fresh.brand;
+      s.user.name  = fresh.name;
+    }
+  } catch(_) {} // ถ้า users.js โหลดไม่ได้ ใช้ค่าเดิม
+
   return s;
 }
 
