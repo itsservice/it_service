@@ -2,7 +2,7 @@
 const express = require('express');
 const path    = require('path');
 
-const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs } = require('./auth');
+const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs, getLogsAsync } = require('./auth');
 const { getAllUsers, getUserByUsername, getUserByUsernameAndBrand, getAllReporters, createUser, updateUser, deleteUser } = require('./users');
 const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, invalidateCache } = require('./larkService');
 const larkRouter   = require('./larkWebhook');
@@ -453,8 +453,18 @@ app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), as
 // ═══════════════════════════════════════════════════════════
 // LOGS / USERS
 // ═══════════════════════════════════════════════════════════
-app.get('/api/logs', requireAuth(['superadmin','admin','manager']), (req, res) => {
-  res.json({ ok:true, logs:getLogs(parseInt(req.query.limit)||100, req.query.ticketId||null) });
+app.get('/api/logs', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const logs = await getLogsAsync({
+      limit:    parseInt(req.query.limit)    || 200,
+      userName: req.query.userName           || null,
+      action:   req.query.action             || null,
+      dateFrom: req.query.dateFrom           || null,
+      dateTo:   req.query.dateTo             || null,
+      ticketId: req.query.ticketId           || null,
+    });
+    res.json({ ok:true, logs });
+  } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
 app.get('/api/users', requireAuth(['superadmin','admin','manager']), (_, res) => res.json({ ok:true, users:getAllUsers() }));
