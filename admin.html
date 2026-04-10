@@ -988,6 +988,30 @@ function rDash(){
   drawDashCharts();
 }
 
+// ── Chart click → ticket popup ──────────────────────────────
+function showChartTickets(list, label){
+  if(!list.length){
+    openMod(`<div class="mod-t">${label}</div>
+      <div style="text-align:center;padding:28px;color:var(--fg4)">ไม่มี Ticket ในช่วงนี้</div>
+      <div class="mod-f"><button class="bo2" onclick="closeMod()">ปิด</button></div>`);
+    return;
+  }
+  const rows=list.slice(0,100).map(t=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''"
+      onclick="closeMod();setTimeout(()=>openDrw('${esc(t._recordId)}'),150)">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--fg4);min-width:82px;flex-shrink:0">${esc(t.id||'--')}</span>
+      <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.type||'-')}</span>
+      <span style="font-size:11px;color:var(--fg4);flex-shrink:0;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.brand||'')}</span>
+      <span class="pill">${statusLabel(t.status)}</span>
+    </div>`).join('');
+  openMod(`<div class="mod-t">${esc(label)} <span style="font-size:13px;color:var(--fg4)">(${list.length})</span></div>
+    <div style="max-height:62vh;overflow-y:auto;margin:0 -16px;padding:0 16px">${rows}</div>
+    <div class="mod-f" style="margin-top:8px">
+      <button class="bo2" onclick="closeMod()">ปิด</button>
+    </div>`);
+}
+
 function drawDashCharts(){
   // Rebuild filter bars (to update button active states)
   ['trend','status','brandChart','eng'].forEach(k=>{
@@ -1026,7 +1050,22 @@ function drawDashCharts(){
       datasets:[{data:daysArr.map(d=>d.cnt),borderColor:'#4d8ef5',backgroundColor:'rgba(77,142,245,.12)',
         fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#4d8ef5',
         pointHoverRadius:7,pointHoverBackgroundColor:'#2563eb'}]},
-      options:{...base,plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' tickets'}}}}});}
+      options:{...base,
+        onClick:(e,el)=>{
+          if(!el.length)return;
+          const idx=el[0].index;
+          const dayIso=new Date(tTo);dayIso.setDate(dayIso.getDate()-(dayCount-1-idx));
+          const iso=dayIso.toISOString().slice(0,10);
+          const lbl=daysArr[idx]?.lbl||iso;
+          const matched=tickets.filter(t=>{
+            const r=String(t.sentDate||t.createdAt||'').slice(0,10);
+            const b=!tF2.brand||t.brand===tF2.brand;
+            return r===iso&&b;
+          });
+          showChartTickets(matched, '📅 '+lbl);
+        },
+        plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' tickets'}}}}});}
+
 
   // ── Status donut ────────────────────────────────────────────
   const sData=filterTicketsDash(dashF.status);
@@ -1037,6 +1076,8 @@ function drawDashCharts(){
   const sC=sData.filter(x=>/ยกเลิก|cancel/.test(x.status||'')).length;
   const ctxS=document.getElementById('chart-status')?.getContext('2d');
   if(ctxS){if(window._chartS)window._chartS.destroy();
+    const statusKeys=['รอ|pending','ระหว่าง|progress','ตรวจ|review','เสร็จ|completed','ยกเลิก|cancel'];
+    const statusLabels2=['รอดำเนินการ','กำลังทำ','ตรวจงาน','เสร็จสิ้น','ยกเลิก'];
     window._chartS=new Chart(ctxS,{type:'doughnut',
       data:{labels:['รอ','ทำ','ตรวจ','เสร็จ','ยกเลิก'],
         datasets:[{data:[sW,sI,sR,sD,sC],
@@ -1044,7 +1085,15 @@ function drawDashCharts(){
           borderWidth:0,hoverOffset:10}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
         animation:{...animBase,animateRotate:true,animateScale:true},
+        onClick:(e,el)=>{
+          if(!el.length)return;
+          const idx=el[0].index;
+          const pattern=new RegExp(statusKeys[idx]);
+          const matched=sData.filter(t=>pattern.test(t.status||''));
+          showChartTickets(matched,'⭕ '+statusLabels2[idx]);
+        },
         plugins:{legend:{display:true,position:'right',labels:{color:txtC,font:{family:'Prompt',size:10},boxWidth:10,padding:6}}}}});}
+
 
   // ── Brand bar ───────────────────────────────────────────────
   const bData=filterTicketsDash(dashF.brandChart);
@@ -1057,8 +1106,16 @@ function drawDashCharts(){
         datasets:[{data:bEntries.map(([,n])=>n),backgroundColor:bEntries.map(([b])=>brandColor(b)),
           borderRadius:8,borderSkipped:false,hoverBackgroundColor:bEntries.map(([b])=>brandColor(b)+'dd')}]},
       options:{...base,indexAxis:'y',animation:{...animBase,delay:(_)=>_.dataIndex*80},
+        onClick:(e,el)=>{
+          if(!el.length)return;
+          const brand=bEntries[el[0].index]?.[0];
+          if(!brand)return;
+          const matched=bData.filter(t=>t.brand===brand);
+          showChartTickets(matched,'🏷️ '+brand);
+        },
         plugins:{...base.plugins},scales:{x:{...base.scales.x},
           y:{...base.scales.y,ticks:{...base.scales.y.ticks,font:{family:'Prompt',size:9}}}}}});}
+
 
   // ── Top Engineer bar ────────────────────────────────────────
   const eData=filterTicketsDash(dashF.eng);
@@ -1074,6 +1131,13 @@ function drawDashCharts(){
         datasets:[{data:topEng.map(([,v])=>v),backgroundColor:'#22c55e',borderRadius:8,
           borderSkipped:false,hoverBackgroundColor:'#16a34a'}]},
       options:{...base,indexAxis:'y',animation:{...animBase,delay:(_)=>_.dataIndex*80},
+        onClick:(e,el)=>{
+          if(!el.length)return;
+          const name=topEng[el[0].index]?.[0];
+          if(!name)return;
+          const matched=eData.filter(t=>/เสร็จ|completed/.test(t.status||'')&&(t.engineerName===name||t.assignedTo===name));
+          showChartTickets(matched,'🏆 '+name);
+        },
         plugins:{...base.plugins}}});}
 }
 
