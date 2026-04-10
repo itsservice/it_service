@@ -881,7 +881,7 @@ function filterTicketsDash(f) {
 }
 
 function dashFilterBar(chartKey, f, onApply) {
-  const PRESETS = [7,15,30,90,120];
+  const PRESETS = [{v:7,l:'7 วัน'},{v:15,l:'15 วัน'},{v:30,l:'30 วัน'},{v:90,l:'90 วัน'},{v:120,l:'120 วัน'}];
   const brandOpts = ['', ...CHART_BRANDS].map(b => `<option value="${esc(b)}" ${f.brand===b?'selected':''}>${b||'ทุกแบรนด์'}</option>`).join('');
   return `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:8px 12px 4px;border-bottom:1px solid var(--border)">
     <input type="date" value="${esc(f.dateFrom)}" onchange="dashF['${chartKey}'].dateFrom=this.value;dashF['${chartKey}'].days=0;${onApply}()"
@@ -889,10 +889,10 @@ function dashFilterBar(chartKey, f, onApply) {
     <span style="font-size:11px;color:var(--fg4)">ถึง</span>
     <input type="date" value="${esc(f.dateTo)}" onchange="dashF['${chartKey}'].dateTo=this.value;dashF['${chartKey}'].days=0;${onApply}()"
       style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none"/>
-    <div style="display:flex;gap:3px">
-      ${PRESETS.map(d=>`<button onclick="dashF['${chartKey}'].days=${d};dashF['${chartKey}'].dateFrom='';dashF['${chartKey}'].dateTo='';${onApply}()"
-        style="padding:3px 7px;border-radius:5px;border:1px solid ${f.days===d&&!f.dateFrom?'var(--fg)':'var(--border)'};background:${f.days===d&&!f.dateFrom?'var(--fg)':'var(--bg2)'};color:${f.days===d&&!f.dateFrom?'var(--bg)':'var(--fg3)'};font-size:11px;font-weight:600;cursor:pointer">${d}ว</button>`).join('')}
-    </div>
+    <select onchange="dashF['${chartKey}'].days=+this.value;dashF['${chartKey}'].dateFrom='';dashF['${chartKey}'].dateTo='';${onApply}()"
+      style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none;cursor:pointer">
+      ${PRESETS.map(p=>`<option value="${p.v}" ${f.days===p.v&&!f.dateFrom?'selected':''}>${p.l}</option>`).join('')}
+    </select>
     <select onchange="dashF['${chartKey}'].brand=this.value;${onApply}()"
       style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--fg);font-family:var(--sans);font-size:11px;outline:none;cursor:pointer">${brandOpts}</select>
   </div>`;
