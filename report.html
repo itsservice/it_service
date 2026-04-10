@@ -1174,16 +1174,10 @@ function renderTrackModeContent(){
         </button>
       </div>
       <div style="margin-bottom:10px">
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${statusOpts.map(s=>`
-          <button onclick="setTrackStatus('${s.v}')"
-            style="padding:6px 12px;border-radius:6px;border:1.5px solid ${trackStatusFilter===s.v?'var(--fg)':'var(--border)'};
-                   background:${trackStatusFilter===s.v?'var(--fg)':'var(--card)'};
-                   color:${trackStatusFilter===s.v?'var(--bg)':'var(--fg3)'};
-                   font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">
-            ${esc(s.l)}
-          </button>`).join('')}
-        </div>
+        <select onchange="setTrackStatus(this.value)"
+          style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;cursor:pointer;transition:all .3s">
+          ${statusOpts.map(s=>`<option value="${s.v}" ${trackStatusFilter===s.v?'selected':''}>${esc(s.l)}</option>`).join('')}
+        </select>
       </div>
       <div id="trk-branch-result">${trackBranch?'<div style="text-align:center;padding:12px;color:var(--fg4);font-size:13px">กำลังโหลด...</div>':''}</div>`;
     if(trackBranch) loadBranchTickets(trackBranch.code);
