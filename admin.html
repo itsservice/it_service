@@ -1062,164 +1062,268 @@ function rTickets(){
 }
 function tSort(col){if(tF.sortCol===col){tF.sortDir=tF.sortDir==='asc'?'desc':'asc';}else{tF.sortCol=col;tF.sortDir='asc';}tF.p=1;rTickets();}
 
+// ════════════════════════════════════════════════════════════
+// USERS PAGE — Paginated Table
+// ════════════════════════════════════════════════════════════
+const uF={search:'',page:1,perPage:25};
+
 function rUsers(){
   const el=document.getElementById('pg-users');
-  if(!users.length){el.innerHTML='<div class="empty"><div class="empty-t">No users</div><button class="empty-b" onclick="loadUsers().then(rUsers)">Reload</button></div>';return;}
-  const sorted=[...users].sort((a,b)=>({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[a.role]||9)-({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[b.role]||9));
-  el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users (${users.length})</div><button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button><button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button></div>
-  <div class="ugrid">${sorted.map(u=>`<div class="ucard"><div class="uc-h"><div class="uc-av">${(u.name||'?').charAt(0).toUpperCase()}</div><div><div class="uc-n">${esc(u.name)}</div><div class="uc-u">@${esc(u.username)}</div></div></div><div class="uc-meta"><span class="rbdg">${u.role}</span><span style="font-size:10px;color:var(--fg4)">${esc(u.brand==='ALL'?'All brands':u.brand||'-')}</span>${u.line_user_id?'<span style="font-size:10px;color:var(--fg4)">LINE</span>':''}</div><div class="uc-btns"><button class="uc-b" onclick="openEditUser('${esc(u.id)}')">Edit</button>${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:''}</div></div>`).join('')}</div>`;
+  if(!el) return;
+
+  const ROLE_ORDER={superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4};
+  let list=[...users].sort((a,b)=>(ROLE_ORDER[a.role]||9)-(ROLE_ORDER[b.role]||9));
+
+  // Filter
+  if(uF.search){
+    const q=uF.search.toLowerCase();
+    list=list.filter(u=>u.name.toLowerCase().includes(q)||u.username.toLowerCase().includes(q)||(u.brand||'').toLowerCase().includes(q));
+  }
+
+  const total=list.length, tp=Math.max(1,Math.ceil(total/uF.perPage));
+  uF.page=Math.min(uF.page,tp);
+  const page=list.slice((uF.page-1)*uF.perPage, uF.page*uF.perPage);
+
+  const pagerBtns=()=>{
+    let h='';
+    h+=`<button class="smb" ${uF.page<=1?'disabled':''} onclick="uF.page--;rUsers()">◀ ก่อนหน้า</button>`;
+    // page numbers (max 7 shown)
+    const start=Math.max(1,uF.page-3), end=Math.min(tp,start+6);
+    for(let i=start;i<=end;i++) h+=`<button class="smb${i===uF.page?' lang-active':''}" onclick="uF.page=${i};rUsers()">${i}</button>`;
+    h+=`<button class="smb" ${uF.page>=tp?'disabled':''} onclick="uF.page++;rUsers()">ถัดไป ▶</button>`;
+    return h;
+  };
+
+  el.innerHTML=`
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users (${total})</div>
+    <button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button>
+    <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button>
+  </div>
+
+  <!-- Filter bar -->
+  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <input id="uF-search" placeholder="ค้นหาชื่อ / username / brand…" value="${esc(uF.search)}"
+      oninput="uF.search=this.value;uF.page=1;rUsers()"
+      style="flex:1;min-width:180px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+    <select onchange="uF.perPage=+this.value;uF.page=1;rUsers()"
+      style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+      ${[10,25,50].map(n=>`<option value="${n}" ${uF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);background:var(--bg3)">
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">#</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">Username</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">ชื่อ-สกุล</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">Role</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">Brand</th>
+          <th style="padding:9px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${page.map((u,i)=>`
+        <tr style="border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+          <td style="padding:9px 12px;color:var(--fg4);font-size:11px">${(uF.page-1)*uF.perPage+i+1}</td>
+          <td style="padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--fg3)">${esc(u.username)}</td>
+          <td style="padding:9px 12px;font-weight:600;color:var(--fg)">${esc(u.name)}</td>
+          <td style="padding:9px 12px"><span class="rbdg">${esc(u.role)}</span></td>
+          <td style="padding:9px 12px;font-size:12px;color:var(--fg3)">${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand||'-')}</td>
+          <td style="padding:9px 12px;text-align:right;white-space:nowrap">
+            <button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button>
+            ${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5;margin-left:4px" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:''}
+          </td>
+        </tr>`).join('')}
+        ${page.length===0?`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pager -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
+    <span style="font-size:12px;color:var(--fg4)">แสดง ${(uF.page-1)*uF.perPage+1}–${Math.min(uF.page*uF.perPage,total)} จาก ${total} รายการ</span>
+    <div style="display:flex;gap:3px;flex-wrap:wrap">${pagerBtns()}</div>
+  </div>`;
 }
 
 // ════════════════════════════════════════════════════════════
-// REPORTERS PAGE
+// REPORTERS PAGE — Paginated Table (virtual render)
 // ════════════════════════════════════════════════════════════
-const REPORTER_BRANDS = ["Greyhound Cafe'","Another Hound Cafe'","Bean Hound","Au Bon Pain","Dunkin'","Funky Fries"];
+const rF={brand:'',search:'',page:1,perPage:25};
+const REPORTER_BRANDS=["Greyhound Cafe'","Another Hound Cafe'","Bean Hound","Au Bon Pain","Dunkin'","Funky Fries"];
+const BRAND_COLOR={"Greyhound Cafe'":'#0a0a0a',"Another Hound Cafe'":'#6d28d9',"Bean Hound":'#065f46',"Au Bon Pain":'#b45309',"Dunkin'":'#dc2626',"Funky Fries":'#d97706'};
 
 function rReporters(){
-  const el = document.getElementById('pg-reporters');
+  const el=document.getElementById('pg-reporters');
   if(!el) return;
 
   // Filter
-  let list = [...reporters];
-  if(reporterFilter.brand) list = list.filter(r => r.brand === reporterFilter.brand);
-  if(reporterFilter.search){
-    const q = reporterFilter.search.toLowerCase();
-    list = list.filter(r => r.name.toLowerCase().includes(q) || r.username.toLowerCase().includes(q));
+  let list=[...reporters];
+  if(rF.brand) list=list.filter(r=>r.brand===rF.brand);
+  if(rF.search){
+    const q=rF.search.toLowerCase();
+    list=list.filter(r=>r.name.toLowerCase().includes(q)||r.username.toLowerCase().includes(q));
   }
 
-  // Pending reset count
-  const resetCount = reporters.filter(r => r.reset_requested).length;
-  const pendingBadge = resetCount > 0
-    ? `<span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>` : '';
+  const resetCount=reporters.filter(r=>r.reset_requested).length;
+  const total=list.length, tp=Math.max(1,Math.ceil(total/rF.perPage));
+  rF.page=Math.min(rF.page,tp);
+  const page=list.slice((rF.page-1)*rF.perPage, rF.page*rF.perPage);
 
-  el.innerHTML = `
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">
-        Reporters (${reporters.length})${pendingBadge}
-      </div>
-      <button class="smb" onclick="loadReporters().then(rReporters)">🔄 Refresh</button>
+  const pagerBtns=()=>{
+    let h='';
+    h+=`<button class="smb" ${rF.page<=1?'disabled':''} onclick="rF.page--;rReporters()">◀ ก่อนหน้า</button>`;
+    const start=Math.max(1,rF.page-3), end=Math.min(tp,start+6);
+    for(let i=start;i<=end;i++) h+=`<button class="smb${i===rF.page?' lang-active':''}" onclick="rF.page=${i};rReporters()">${i}</button>`;
+    h+=`<button class="smb" ${rF.page>=tp?'disabled':''} onclick="rF.page++;rReporters()">ถัดไป ▶</button>`;
+    return h;
+  };
+
+  const pendingBadge=resetCount>0
+    ?`<span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'' ;
+
+  el.innerHTML=`
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">
+      Reporters (${reporters.length})${pendingBadge}
     </div>
+    <button class="smb" onclick="loadReporters().then(rReporters)">🔄 Refresh</button>
+  </div>
 
-    <!-- Filter bar -->
-    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-      <select onchange="reporterFilter.brand=this.value;rReporters()"
-        style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer">
-        <option value="">ทุกแบรนด์ (${reporters.length})</option>
-        ${REPORTER_BRANDS.map(b=>{
-          const n = reporters.filter(r=>r.brand===b).length;
-          return `<option value="${esc(b)}" ${reporterFilter.brand===b?'selected':''}>${esc(b)} (${n})</option>`;
-        }).join('')}
-      </select>
-      <input placeholder="ค้นหาชื่อ / username…" value="${esc(reporterFilter.search)}"
-        oninput="reporterFilter.search=this.value;rReporters()"
-        style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none"/>
-      ${resetCount>0?`<button class="smb" style="border-color:#d97706;color:#d97706" onclick="reporterFilter.brand='';reporterFilter.search='';rReporters()">
-        แสดงทั้งหมด
-      </button>`:''}
-    </div>
-
-    <!-- Cards -->
-    ${list.length===0 ? '<div class="empty"><div class="empty-t">ไม่พบรายชื่อ</div></div>' : `
-    <div class="ugrid" id="reporter-grid">
-      ${list.map(r => {
-        const isPending = r.reset_requested == 1 || r.reset_requested === true;
-        const initials  = (r.name||'?').charAt(0).toUpperCase();
-        const brandColor= {'Greyhound Cafe\'':'#0a0a0a','Another Hound Cafe\'':'#6d28d9','Bean Hound':'#065f46',"Au Bon Pain":'#b45309',"Dunkin'":'#dc2626',"Funky Fries":'#d97706'}[r.brand]||'#374151';
-        return `
-        <div class="ucard${isPending?' reset-pending':''}" id="rcard-${esc(r.id)}">
-          ${isPending?`<div class="reset-badge">🔑 ขอ Reset รหัสผ่าน</div>`:''}
-          <div class="uc-h">
-            <div class="uc-av" style="background:${brandColor}15;color:${brandColor}">${initials}</div>
-            <div style="min-width:0">
-              <div class="uc-n" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</div>
-              <div class="uc-u">${esc(r.username)}</div>
-            </div>
-          </div>
-          <div class="uc-meta">
-            <span class="rbdg" style="background:${brandColor}18;color:${brandColor}">${esc(r.brand||'-')}</span>
-          </div>
-          <div class="uc-btns" style="flex-wrap:wrap;gap:4px">
-            <button class="uc-b" onclick="openReporterDetail('${esc(r.id)}')">รายละเอียด</button>
-            <button class="uc-b" style="color:#d97706;border-color:#fcd34d" onclick="confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset รหัส</button>
-          </div>
-        </div>`;
+  <!-- Filter bar -->
+  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <select onchange="rF.brand=this.value;rF.page=1;rReporters()"
+      style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+      <option value="">ทุกแบรนด์ (${reporters.length})</option>
+      ${REPORTER_BRANDS.map(b=>{
+        const n=reporters.filter(r=>r.brand===b).length;
+        return `<option value="${esc(b)}" ${rF.brand===b?'selected':''}>${esc(b)} (${n})</option>`;
       }).join('')}
-    </div>`}`;
+    </select>
+    <input placeholder="ค้นหารหัส / ชื่อ-สกุล…" value="${esc(rF.search)}"
+      oninput="rF.search=this.value;rF.page=1;rReporters()"
+      style="flex:1;min-width:160px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+    <select onchange="rF.perPage=+this.value;rF.page=1;rReporters()"
+      style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+      ${[10,25,50,100].map(n=>`<option value="${n}" ${rF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
+    </select>
+    ${resetCount>0?`<button class="smb" style="border-color:#d97706;color:#d97706" onclick="rF.brand='';rF.search='';rF.page=1;rReporters()">แสดงทั้งหมด</button>`:''}
+  </div>
+
+  <!-- Table -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);background:var(--bg3)">
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">#</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสพนักงาน</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">ชื่อ-สกุล</th>
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">แบรนด์</th>
+          <th style="padding:9px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${page.map((r,i)=>{
+          const isPending=r.reset_requested==1||r.reset_requested===true;
+          const bc=BRAND_COLOR[r.brand]||'#374151';
+          const rowBg=isPending?'rgba(251,191,36,.07)':'';
+          return `
+          <tr style="border-bottom:1px solid var(--border);background:${rowBg};transition:background .15s"
+              onmouseover="this.style.background='${isPending?'rgba(251,191,36,.13)':'var(--bg2)'}'"
+              onmouseout="this.style.background='${rowBg}'">
+            <td style="padding:9px 12px;color:var(--fg4);font-size:11px">${(rF.page-1)*rF.perPage+i+1}</td>
+            <td style="padding:9px 12px;font-family:var(--mono);font-size:12px;font-weight:600;white-space:nowrap">
+              ${isPending?'<span style="color:#d97706;margin-right:4px">🔑</span>':''}${esc(r.username)}
+            </td>
+            <td style="padding:9px 12px;font-weight:600;color:var(--fg)">${esc(r.name)}</td>
+            <td style="padding:9px 12px">
+              <span style="padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:${bc}18;color:${bc};font-family:var(--mono)">${esc(r.brand||'-')}</span>
+            </td>
+            <td style="padding:9px 12px;text-align:right;white-space:nowrap">
+              <button class="uc-b" onclick="openReporterDetail('${esc(r.id)}')">รายละเอียด</button>
+              <button class="uc-b" style="color:#d97706;border-color:#fcd34d;margin-left:4px"
+                onclick="confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset</button>
+            </td>
+          </tr>`;
+        }).join('')}
+        ${page.length===0?`<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pager -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
+    <span style="font-size:12px;color:var(--fg4)">แสดง ${total===0?0:(rF.page-1)*rF.perPage+1}–${Math.min(rF.page*rF.perPage,total)} จาก ${total} รายการ</span>
+    <div style="display:flex;gap:3px;flex-wrap:wrap">${pagerBtns()}</div>
+  </div>`;
 }
 
 // ── Reporter detail modal ───────────────────────────────────
 function openReporterDetail(id){
-  const r = reporters.find(x=>String(x.id)===String(id));
+  const r=reporters.find(x=>String(x.id)===String(id));
   if(!r) return;
-  const isPending = r.reset_requested==1||r.reset_requested===true;
+  const isPending=r.reset_requested==1||r.reset_requested===true;
   showMod(`
-    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px">
-      👤 ${esc(r.name)}
-    </div>
-    ${isPending?`<div class="reset-badge" style="margin-bottom:12px;font-size:12px">🔑 ขอ Reset รหัสผ่าน</div>`:''}
-    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--fg4)">Username</span>
-        <span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--fg4)">แบรนด์</span>
-        <span style="font-weight:600">${esc(r.brand||'-')}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--fg4)">รหัสผ่าน (plain)</span>
-        <span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0">
-        <span style="color:var(--fg4)">สถานะ</span>
-        <span style="font-weight:600">${isPending?'<span style="color:#d97706">รอ Reset รหัสผ่าน</span>':'ปกติ'}</span>
-      </div>
+    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px">👤 ${esc(r.name)}</div>
+    ${isPending?`<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:4px;padding:3px 8px;margin-bottom:12px">🔑 ขอ Reset รหัสผ่าน</div>`:''}
+    <div style="display:flex;flex-direction:column;gap:0;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      ${[
+        ['รหัสพนักงาน', `<span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>`],
+        ['ชื่อ-สกุล', esc(r.name)],
+        ['แบรนด์', esc(r.brand||'-')],
+        ['รหัสผ่าน (default)', `<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`],
+        ['สถานะ', isPending?'<span style="color:#d97706;font-weight:600">รอ Reset รหัสผ่าน</span>':'ปกติ'],
+      ].map(([k,v],i)=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i>0?'border-top:1px solid var(--border)':''}">
+        <span style="color:var(--fg4);min-width:120px">${k}</span>
+        <span style="text-align:right">${v}</span>
+      </div>`).join('')}
     </div>
     <div style="display:flex;gap:6px;margin-top:16px;flex-wrap:wrap">
       ${isPending?`<button class="bp" style="background:#d97706;border-color:#d97706" onclick="closeMod();confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset รหัสผ่าน</button>`:''}
       <button class="bo" onclick="closeMod()">ปิด</button>
-    </div>
-  `);
+    </div>`);
 }
 
-// ── Confirm Reset Password ──────────────────────────────────
-function confirmResetPwd(id, name, username){
+// ── Confirm + Do Reset Password ─────────────────────────────
+function confirmResetPwd(id,name,username){
   showMod(`
     <div style="font-family:var(--display);font-size:16px;font-weight:800;margin-bottom:8px">🔑 Reset รหัสผ่าน</div>
     <div style="font-size:13px;color:var(--fg3);margin-bottom:16px;line-height:1.7">
       ยืนยัน Reset รหัสผ่านของ<br>
-      <strong style="color:var(--fg)">${esc(name)}</strong> (${esc(username)})<br><br>
-      รหัสผ่านจะถูก Reset กลับเป็น <strong style="font-family:var(--mono);color:var(--fg)">รหัสพนักงาน (default)</strong>
+      <strong style="color:var(--fg)">${esc(name)}</strong>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--fg4)"> (${esc(username)})</span><br><br>
+      รหัสผ่านจะกลับเป็น <strong style="font-family:var(--mono)">รหัสพนักงาน (default)</strong>
     </div>
     <div id="reset-pwd-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px"></div>
     <div style="display:flex;gap:6px">
       <button class="bp" id="reset-pwd-btn" onclick="doResetReporterPwd('${esc(id)}','${esc(name)}')">ยืนยัน Reset</button>
       <button class="bo" onclick="closeMod()">ยกเลิก</button>
-    </div>
-  `);
+    </div>`);
 }
 
-async function doResetReporterPwd(userId, name){
-  const btn = document.getElementById('reset-pwd-btn');
-  const err = document.getElementById('reset-pwd-err');
-  if(btn){ btn.disabled=true; btn.textContent='กำลัง Reset...'; }
+async function doResetReporterPwd(userId,name){
+  const btn=document.getElementById('reset-pwd-btn');
+  const err=document.getElementById('reset-pwd-err');
+  if(btn){btn.disabled=true;btn.textContent='กำลัง Reset...';}
   try{
-    const d = await api('/api/admin/reporter/reset-password',{
-      method:'POST',
-      body: JSON.stringify({ userId })
-    });
-    if(!d.ok){ if(err){err.textContent=d.error||'เกิดข้อผิดพลาด';err.style.display='block';} return; }
+    const d=await api('/api/admin/reporter/reset-password',{method:'POST',body:JSON.stringify({userId})});
+    if(!d.ok){if(err){err.textContent=d.error||'เกิดข้อผิดพลาด';err.style.display='block';}return;}
     closeMod();
-    // Update local state
-    const r = reporters.find(x=>String(x.id)===String(userId));
-    if(r){ r.reset_requested=0; r.password_plain=d.default_password||r.username; }
-    toast(`✅ Reset รหัสผ่าน ${name} เรียบร้อย (default: ${d.default_password||r?.username||''})`);
+    const r=reporters.find(x=>String(x.id)===String(userId));
+    if(r){r.reset_requested=0;r.password_plain=d.default_password||r.username;}
+    toast(`✅ Reset รหัสผ่าน ${name} เรียบร้อย (default: ${d.default_password||''})`);
     rReporters();
   }catch(e){
     if(err){err.textContent='เชื่อมต่อไม่ได้';err.style.display='block';}
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent='ยืนยัน Reset'; }
+    if(btn){btn.disabled=false;btn.textContent='ยืนยัน Reset';}
   }
 }
 
