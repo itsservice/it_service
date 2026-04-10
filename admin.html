@@ -1270,11 +1270,94 @@ async function doResetReporterPwd(userId,name){
   finally{if(btn){btn.disabled=false;btn.textContent='ยืนยัน Reset';}}
 }
 
+// ════ ACTIVITY LOG — DB persistent with filters ════════════════
+const logF={userName:'',action:'',dateFrom:'',dateTo:''};
+
+async function loadLogs(){
+  try{
+    const p=new URLSearchParams({limit:200});
+    if(logF.userName) p.set('userName',logF.userName);
+    if(logF.action)   p.set('action',logF.action);
+    if(logF.dateFrom) p.set('dateFrom',logF.dateFrom);
+    if(logF.dateTo)   p.set('dateTo',logF.dateTo);
+    const d=await api('/api/logs?'+p.toString());
+    if(d.ok) logs=d.logs||[];
+  }catch(e){}
+}
+
 function rLog(){
   const el=document.getElementById('pg-log');
-  if(!logs.length){el.innerHTML='<div class="empty"><div class="empty-t">No activity log</div><button class="empty-b" onclick="loadLogs().then(rLog)">Refresh</button></div>';return;}
-  const aL=a=>({login:'Login',logout:'Logout',create_ticket:'Create Ticket',update_status:'Status Change',assign:'Assign',reassign:'Reassign',engineer_submit:'Engineer Submit',close:'Close Ticket',create_user:'Create User',update_user:'Update User',delete_user:'Delete User',accept:'Accept Job',start_work:'Start Work',update:'Update'}[a]||a);
-  el.innerHTML=`<div style="margin-bottom:10px"><div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">Activity Log (${logs.length})</div></div>`+logs.map(l=>`<div class="log-i"><div class="log-dot"></div><div class="log-b"><div class="log-a">${esc(aL(l.action))} ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:3px">${esc(l.ticketLabel)}</span>`:''}</div><div class="log-m"><span>${esc(l.user?.name||'System')}</span><span>${esc(l.displayTs||'')}</span></div>${l.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:1px">${esc(l.detail)}</div>`:''}</div></div>`).join('');
+  if(!el)return;
+  // Shell — render once
+  if(!document.getElementById('pg-log-list')){
+    const ACTION_OPTS=['','login','logout','create_ticket','update_status','assign','reassign',
+      'engineer_submit','close','create_user','update_user','delete_user','change_password',
+      'forgot_password','reset_reporter_password'];
+    const ACTION_TH={login:'Login',logout:'Logout',create_ticket:'สร้าง Ticket',
+      update_status:'เปลี่ยนสถานะ',assign:'มอบหมาย',reassign:'เปลี่ยนช่าง',
+      engineer_submit:'ช่างส่งงาน',close:'ปิด Ticket',create_user:'สร้าง User',
+      update_user:'แก้ไข User',delete_user:'ลบ User',change_password:'เปลี่ยนรหัสผ่าน',
+      forgot_password:'ลืมรหัสผ่าน',reset_reporter_password:'Reset รหัสผ่าน'};
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div id="pg-log-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Activity Log</div>
+      <button class="smb" onclick="loadLogs().then(rLogList)">🔄 Refresh</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <input id="lF-user" placeholder="ค้นหาชื่อผู้ใช้…" value="${esc(logF.userName)}"
+        oninput="logF.userName=this.value"
+        onkeydown="if(event.key==='Enter')loadLogs().then(rLogList)"
+        style="flex:1;min-width:140px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <select id="lF-action" onchange="logF.action=this.value;loadLogs().then(rLogList)"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+        ${ACTION_OPTS.map(a=>`<option value="${a}" ${logF.action===a?'selected':''}>${a?ACTION_TH[a]||a:'ทุก Action'}</option>`).join('')}
+      </select>
+      <input id="lF-from" type="date" value="${esc(logF.dateFrom)}"
+        onchange="logF.dateFrom=this.value;loadLogs().then(rLogList)"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <span style="font-size:12px;color:var(--fg4)">ถึง</span>
+      <input id="lF-to" type="date" value="${esc(logF.dateTo)}"
+        onchange="logF.dateTo=this.value;loadLogs().then(rLogList)"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <button class="smb" onclick="loadLogs().then(rLogList)">ค้นหา</button>
+      <button class="smb" onclick="logF.userName='';logF.action='';logF.dateFrom='';logF.dateTo='';document.getElementById('lF-user').value='';document.getElementById('lF-action').value='';document.getElementById('lF-from').value='';document.getElementById('lF-to').value='';loadLogs().then(rLogList)">ล้าง</button>
+    </div>
+    <div id="pg-log-list"><div style="text-align:center;padding:20px;color:var(--fg4)">กำลังโหลด...</div></div>`;
+    loadLogs().then(rLogList);
+    return;
+  }
+  rLogList();
+}
+
+function rLogList(){
+  const el=document.getElementById('pg-log-list');
+  if(!el)return;
+  const t=document.getElementById('pg-log-title');
+  if(t) t.textContent=`Activity Log (${logs.length})`;
+  const aL=a=>({login:'Login',logout:'Logout',create_ticket:'สร้าง Ticket',update_status:'เปลี่ยนสถานะ',
+    assign:'มอบหมาย',reassign:'เปลี่ยนช่าง',engineer_submit:'ช่างส่งงาน',close:'ปิด Ticket',
+    create_user:'สร้าง User',update_user:'แก้ไข User',delete_user:'ลบ User',
+    change_password:'เปลี่ยนรหัสผ่าน',forgot_password:'ลืมรหัสผ่าน',
+    reset_reporter_password:'Reset รหัสผ่าน',accept:'รับงาน',start_work:'เริ่มงาน',update:'อัปเดต'}[a]||a);
+  if(!logs.length){
+    el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบ Log</div></div>';
+    return;
+  }
+  el.innerHTML=logs.map(l=>`
+    <div class="log-i">
+      <div class="log-dot"></div>
+      <div class="log-b">
+        <div class="log-a">${esc(aL(l.action))}
+          ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:3px">${esc(l.ticketLabel)}</span>`:''}
+        </div>
+        <div class="log-m">
+          <span style="font-weight:600">${esc(l.user?.name||'System')}</span>
+          <span style="font-size:10px;color:var(--fg4)">${esc(l.user?.role||'')}</span>
+          <span>${esc(l.displayTs||'')}</span>
+        </div>
+        ${l.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:1px">${esc(l.detail)}</div>`:''}
+      </div>
+    </div>`).join('');
 }
 
 // ═══ GPS MAP ═══
