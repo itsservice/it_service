@@ -1095,39 +1095,53 @@ function buildPager(cur,total,fnName){
 // ════════════════════════════════════════════════════════════
 function rUsers(){
   const el=document.getElementById('pg-users');
-  if(!el)return;
+  if(!el) return;
+  // Shell rendered once — input ไม่ถูก reset ทุก keystroke
+  if(!document.getElementById('pg-users-table')){
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div id="pg-users-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users</div>
+      <button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button>
+      <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <select id="uF-per" onchange="uF.perPage=+this.value;uF.page=1;rUsersTable()"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
+        ${[5,10,25,50].map(n=>`<option value="${n}" ${uF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
+      </select>
+      <input id="uF-code" placeholder="รหัสพนักงาน…"
+        oninput="uF.codeSearch=this.value;uF.page=1;rUsersTable()"
+        style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <input id="uF-name" placeholder="ค้นหาชื่อ-สกุล…"
+        oninput="uF.nameSearch=this.value;uF.page=1;rUsersTable()"
+        style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <select id="uF-brand" onchange="uF.brand=this.value;uF.page=1;rUsersTable()"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+        <option value="">เลือกแบรนด์</option>
+        ${['ALL',...REPORTER_BRANDS].map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="pg-users-table"></div>`;
+  }
+  const t=document.getElementById('pg-users-title');
+  if(t) t.textContent='Users ('+users.length+')';
+  const p=document.getElementById('uF-per');   if(p) p.value=uF.perPage;
+  const br=document.getElementById('uF-brand');if(br) br.value=uF.brand;
+  rUsersTable();
+}
 
+function rUsersTable(){
+  const el=document.getElementById('pg-users-table');
+  if(!el) return;
   let list=[...users].sort((a,b)=>({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[a.role]||9)-({superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4}[b.role]||9));
   if(uF.codeSearch){const q=uF.codeSearch.toLowerCase();list=list.filter(u=>u.username.toLowerCase().includes(q));}
   if(uF.nameSearch){const q=uF.nameSearch.toLowerCase();list=list.filter(u=>u.name.toLowerCase().includes(q));}
   if(uF.brand){list=list.filter(u=>u.brand===uF.brand);}
-
   const total=list.length,tp=Math.max(1,Math.ceil(total/uF.perPage));
   uF.page=Math.min(uF.page,tp);
   const page=list.slice((uF.page-1)*uF.perPage,uF.page*uF.perPage);
   const from=total===0?0:(uF.page-1)*uF.perPage+1,to=Math.min(uF.page*uF.perPage,total);
-
   el.innerHTML=`
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Users (${users.length})</div>
-    <button class="smb" style="border-color:#7c3aed;color:#7c3aed" onclick="openRoleGuide()">📖 คู่มือ Role</button>
-    <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openAddUser()">+ Add User</button>
-  </div>
-
-  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-    <select onchange="uF.perPage=+this.value;uF.page=1;rUsers()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
-      ${[5,10,25,50].map(n=>`<option value="${n}" ${uF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
-    </select>
-    <input placeholder="รหัสพนักงาน…" value="${esc(uF.codeSearch)}" oninput="uF.codeSearch=this.value;uF.page=1;rUsers()"
-      style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-    <input placeholder="ค้นหาชื่อ-สกุล…" value="${esc(uF.nameSearch)}" oninput="uF.nameSearch=this.value;uF.page=1;rUsers()"
-      style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-    <select onchange="uF.brand=this.value;uF.page=1;rUsers()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
-      <option value="">เลือกแบรนด์</option>
-      ${['ALL',...REPORTER_BRANDS].map(b=>`<option value="${esc(b)}" ${uF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}
-    </select>
-  </div>
-
   <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead>
@@ -1146,21 +1160,14 @@ function rUsers(){
           <td style="padding:10px 12px;color:var(--fg4);font-size:12px;text-align:center">${from+i}</td>
           <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg2)">${esc(u.username)}</td>
           <td style="padding:10px 12px;font-weight:600;color:var(--fg)">${esc(u.name)}</td>
-          <td style="padding:10px 12px">
-            <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--bg3);color:var(--fg3);font-family:var(--mono)">${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand||u.role)}</span>
-          </td>
-          <td style="padding:10px 12px;text-align:center">
-            <button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button>
-          </td>
-          <td style="padding:10px 12px;text-align:center">
-            ${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:'<span style="color:var(--fg4);font-size:11px">—</span>'}
-          </td>
+          <td style="padding:10px 12px"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--bg3);color:var(--fg3);font-family:var(--mono)">${esc(u.brand==='ALL'?'ทุกแบรนด์':u.brand||u.role)}</span></td>
+          <td style="padding:10px 12px;text-align:center"><button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button></td>
+          <td style="padding:10px 12px;text-align:center">${u.id!==AUTH.user.id?`<button class="uc-b" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelUser('${esc(u.id)}','${esc(u.name)}')">ลบ</button>`:'<span style="color:var(--fg4);font-size:11px">—</span>'}</td>
         </tr>`).join('')}
         ${page.length===0?`<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
       </tbody>
     </table>
   </div>
-
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
     <span style="font-size:12px;color:var(--fg4)">แสดง ${from}–${to} จาก ${total} รายการ</span>
     <div style="display:flex;gap:3px;flex-wrap:wrap">${buildPager(uF.page,tp,'uFPage')}</div>
@@ -1172,42 +1179,54 @@ function rUsers(){
 // ════════════════════════════════════════════════════════════
 function rReporters(){
   const el=document.getElementById('pg-reporters');
-  if(!el)return;
+  if(!el) return;
+  // Shell rendered once — input ไม่ถูก reset ทุก keystroke
+  if(!document.getElementById('pg-reporters-table')){
+    const resetCount=reporters.filter(r=>r.reset_requested).length;
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div id="pg-reporters-title" style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">Reporters</div>
+      <button class="smb" onclick="loadReporters().then(()=>{document.getElementById('pg-reporters-table')&&(document.getElementById('pg-reporters').innerHTML='');rReporters()})">🔄 Refresh</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <select id="rF-per" onchange="rF.perPage=+this.value;rF.page=1;rReportersTable()"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
+        ${[5,10,25,50,100].map(n=>`<option value="${n}" ${rF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
+      </select>
+      <input id="rF-code" placeholder="รหัสพนักงาน…"
+        oninput="rF.codeSearch=this.value;rF.page=1;rReportersTable()"
+        style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <input id="rF-name" placeholder="ค้นหาชื่อ-สกุล…"
+        oninput="rF.nameSearch=this.value;rF.page=1;rReportersTable()"
+        style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      <select id="rF-brand" onchange="rF.brand=this.value;rF.page=1;rReportersTable()"
+        style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
+        <option value="">เลือกแบรนด์</option>
+        ${REPORTER_BRANDS.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="pg-reporters-table"></div>`;
+  }
+  const resetCount=reporters.filter(r=>r.reset_requested).length;
+  const t=document.getElementById('pg-reporters-title');
+  if(t) t.innerHTML='Reporters ('+reporters.length+')'+(resetCount>0?` <span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'');
+  const p=document.getElementById('rF-per');   if(p) p.value=rF.perPage;
+  const br=document.getElementById('rF-brand');if(br) br.value=rF.brand;
+  rReportersTable();
+}
 
+function rReportersTable(){
+  const el=document.getElementById('pg-reporters-table');
+  if(!el) return;
   let list=[...reporters];
   if(rF.codeSearch){const q=rF.codeSearch.toLowerCase();list=list.filter(r=>r.username.toLowerCase().includes(q));}
   if(rF.nameSearch){const q=rF.nameSearch.toLowerCase();list=list.filter(r=>r.name.toLowerCase().includes(q));}
   if(rF.brand){list=list.filter(r=>r.brand===rF.brand);}
-
-  const resetCount=reporters.filter(r=>r.reset_requested).length;
   const total=list.length,tp=Math.max(1,Math.ceil(total/rF.perPage));
   rF.page=Math.min(rF.page,tp);
   const page=list.slice((rF.page-1)*rF.perPage,rF.page*rF.perPage);
   const from=total===0?0:(rF.page-1)*rF.perPage+1,to=Math.min(rF.page*rF.perPage,total);
-  const pendingBadge=resetCount>0?`<span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'';
-
   el.innerHTML=`
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1">
-      Reporters (${reporters.length})${pendingBadge}
-    </div>
-    <button class="smb" onclick="loadReporters().then(rReporters)">🔄 Refresh</button>
-  </div>
-
-  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-    <select onchange="rF.perPage=+this.value;rF.page=1;rReporters()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;min-width:130px">
-      ${[5,10,25,50,100].map(n=>`<option value="${n}" ${rF.perPage===n?'selected':''}>แสดง ${n} รายการ</option>`).join('')}
-    </select>
-    <input placeholder="รหัสพนักงาน…" value="${esc(rF.codeSearch)}" oninput="rF.codeSearch=this.value;rF.page=1;rReporters()"
-      style="width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-    <input placeholder="ค้นหาชื่อ-สกุล…" value="${esc(rF.nameSearch)}" oninput="rF.nameSearch=this.value;rF.page=1;rReporters()"
-      style="flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
-    <select onchange="rF.brand=this.value;rF.page=1;rReporters()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer">
-      <option value="">เลือกแบรนด์</option>
-      ${REPORTER_BRANDS.map(b=>`<option value="${esc(b)}" ${rF.brand===b?'selected':''}>${esc(b)}</option>`).join('')}
-    </select>
-  </div>
-
   <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead>
@@ -1227,29 +1246,22 @@ function rReporters(){
           const rowBg=isPending?'rgba(251,191,36,.07)':'';
           return `
           <tr style="border-bottom:1px solid var(--border);background:${rowBg};transition:background .12s"
-              onmouseover="this.style.background='${isPending?'rgba(251,191,36,.14)':'var(--bg3)'}'"
-              onmouseout="this.style.background='${rowBg}'">
+            onmouseover="this.style.background='${isPending?'rgba(251,191,36,.14)':'var(--bg3)'}'"
+            onmouseout="this.style.background='${rowBg}'">
             <td style="padding:10px 12px;color:var(--fg4);font-size:12px;text-align:center">${from+i}</td>
             <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap">
               ${isPending?'<span style="color:#d97706;margin-right:4px" title="ขอ Reset รหัสผ่าน">🔑</span>':''}${esc(r.username)}
             </td>
             <td style="padding:10px 12px;font-weight:600;color:var(--fg)">${esc(r.name)}</td>
-            <td style="padding:10px 12px">
-              <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${bc}18;color:${bc};font-family:var(--mono)">${esc(r.brand||'-')}</span>
-            </td>
-            <td style="padding:10px 12px;text-align:center">
-              <button class="uc-b" onclick="openReporterDetail('${esc(r.id)}')">รายละเอียด</button>
-            </td>
-            <td style="padding:10px 12px;text-align:center">
-              <button class="uc-b" style="color:#d97706;border-color:#fcd34d" onclick="confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset</button>
-            </td>
+            <td style="padding:10px 12px"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${bc}18;color:${bc};font-family:var(--mono)">${esc(r.brand||'-')}</span></td>
+            <td style="padding:10px 12px;text-align:center"><button class="uc-b" onclick="openReporterDetail('${esc(r.id)}')">รายละเอียด</button></td>
+            <td style="padding:10px 12px;text-align:center"><button class="uc-b" style="color:#d97706;border-color:#fcd34d" onclick="confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')">🔑 Reset</button></td>
           </tr>`;
         }).join('')}
         ${page.length===0?`<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--fg4)">ไม่พบรายชื่อ</td></tr>`:''}
       </tbody>
     </table>
   </div>
-
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
     <span style="font-size:12px;color:var(--fg4)">แสดง ${from}–${to} จาก ${total} รายการ</span>
     <div style="display:flex;gap:3px;flex-wrap:wrap">${buildPager(rF.page,tp,'rFPage')}</div>
