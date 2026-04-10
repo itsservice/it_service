@@ -1240,7 +1240,13 @@ async function loadBranchTickets(branchCode){
     if(_reporterToken)headers['Authorization']='Bearer '+_reporterToken;
     const d=await fetchWithTimeout('/api/tickets',{headers},15000).then(r=>r.json());
     if(!d.ok)throw new Error(d.error||'error');
-    let tickets=(d.tickets||[]).filter(tk=>tk.branchCode===branchCode||tk.branchCode===String(branchCode));
+    // กรองตาม branchCode และ brand (ป้องกัน branchCode ซ้ำข้ามแบรนด์)
+    const currentBrand=_reporterUser?.brand||brand?.n||null;
+    let tickets=(d.tickets||[]).filter(tk=>{
+      const codeMatch=tk.branchCode===branchCode||tk.branchCode===String(branchCode);
+      const brandMatch=!currentBrand||!tk.brand||(tk.brand===currentBrand);
+      return codeMatch && brandMatch;
+    });
     // Apply status filter
     if(trackStatusFilter){
       tickets=tickets.filter(tk=>tkStatusKey(tk.status)===trackStatusFilter);
