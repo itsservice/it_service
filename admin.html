@@ -1132,10 +1132,13 @@ function rUsersTable(){
   const el=document.getElementById('pg-users-table');
   if(!el)return;
 
-  // Merge users + reporters into one list
+  // Merge users + reporters — deduplicate by username (staff takes priority)
+  const staffUsernames=new Set(users.map(u=>u.username));
   const combined=[
     ...users.map(u=>({...u,_type:'user'})),
-    ...reporters.map(r=>({...r,_type:'reporter',role:'reporter',brand:r.brand||'-'}))
+    ...reporters
+      .filter(r=>!staffUsernames.has(r.username))  // ข้ามถ้า username ซ้ำกับ staff
+      .map(r=>({...r,_type:'reporter',role:'reporter',brand:r.brand||'-'}))
   ].sort((a,b)=>(ROLE_ORDER[a.role]||9)-(ROLE_ORDER[b.role]||9)||(a.name||'').localeCompare(b.name||''));
 
   let list=combined;
@@ -1192,7 +1195,7 @@ function rUsersTable(){
             </td>
             <td style="padding:10px 12px;text-align:center">
               ${isReporter
-                ?`<button class="uc-b" onclick="openReporterDetail('${esc(u.id)}')">รายละเอียด</button>`
+                ?`<button class="uc-b" onclick="openReporterDetail('${esc(u.id)}')">แก้ไข</button>`
                 :`<button class="uc-b" onclick="openEditUser('${esc(u.id)}')">แก้ไข</button>`}
             </td>
             <td style="padding:10px 12px;text-align:center">
