@@ -444,6 +444,7 @@ a{color:inherit;text-decoration:none}
 let AUTH=null,tickets=[],tab='active',sse=null,gpsWatch=null,_gpsActive=true; // GPS_DISABLED
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
+function cleanBranch(code){return(code||'—').replace(/\s*มี\s*\d+\s*เครื่อง.*/i,'').trim()||'—';}
 
 /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
 function openSidebar(){
@@ -902,7 +903,7 @@ function openDetail(rid){
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} · <span style="color:var(--fg2)">${esc(t.brand||'')}</span></div>
     ${[
       ['ประเภท', t.type],
-      ['สาขา',   t.branchCode],
+      ['สาขา', cleanBranch(t.branchCode)],
       ['ผู้แจ้ง', t.reporter],
       ['เบอร์',   t.phone],
       ['วันที่',  t.sentDate],
@@ -1204,7 +1205,7 @@ function renderEngJobList(containerId, list, isActive){
         <div class="job-card-title">${esc(t.type||t.category||'-')}</div>
         <div class="job-card-meta">
           <span class="pill">${statusLabel(t.status)}</span>
-          <span style="font-size:11px;color:var(--fg4)">${esc(t.branchCode||'')} · ${esc(t.sentDate||'')}</span>
+          <span style="font-size:11px;color:var(--fg4)">${cleanBranch(t.branchCode)} · ${esc(t.sentDate||'')}</span>
         </div>
         ${t.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:6px;line-height:1.5">${esc(t.detail.substring(0,80))}${t.detail.length>80?'…':''}</div>`:''}
         <div class="jc-btns" style="margin-top:8px">
@@ -1293,7 +1294,7 @@ async function loadEngHistory(){
             <span class="acc-ic">+</span>
           </div>
           <div class="acc-body">
-            สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')}<br>
+            สาขา: ${cleanBranch(t.branchCode)} · ผู้แจ้ง: ${esc(t.reporter||'-')}<br>
             วันที่: ${esc(t.sentDate||'-')} · สถานะ: <b>${statusLabel(t.status)}</b><br>
             ${t.workDetail?`งาน: ${esc(t.workDetail)}<br>`:''}
             ${t.partsUsed?`อุปกรณ์: ${esc(t.partsUsed)}`:''}
@@ -1313,7 +1314,7 @@ async function loadEngHistory(){
             <span class="acc-q">${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})</span>
             <span class="acc-ic">+</span>
           </div>
-          <div class="acc-body">สาขา: ${esc(t.branchCode||'-')} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}</div>
+          <div class="acc-body">สาขา: ${cleanBranch(t.branchCode)} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}</div>
         </div>`).join('')}
       </div>`;
   }
