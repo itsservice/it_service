@@ -625,9 +625,26 @@ async function loadTickets(){
   try{
     const d=await api('/api/tickets');
     if(d.ok){
-      const my=AUTH.user.name,role=AUTH.user.role;
-      const canSeeAll=['lead_engineer','admin','superadmin','manager','guest'].includes(role);
-      tickets=(d.tickets||[]).filter(t=>canSeeAll||t.engineerName===my||t.assignedTo===my||t.assigned_to===my);
+      const my=AUTH.user.name, role=AUTH.user.role, myBrand=AUTH.user.brand;
+      const canSeeAll=['admin','superadmin','manager'].includes(role);
+
+      let list=d.tickets||[];
+
+      // กรอง brand ก่อน (ยกเว้น admin/superadmin/manager เห็นทุก brand)
+      if(!canSeeAll && myBrand && myBrand !== 'ALL'){
+        list=list.filter(t=>!t.brand||t.brand===myBrand);
+      }
+
+      // engineer เห็นเฉพาะงานที่ assigned ให้ตัวเอง + งานที่ยังไม่ assigned (รอรับ) ใน brand ตัวเอง
+      // lead_engineer เห็นทุกงานใน brand ตัวเอง
+      if(!canSeeAll && role==='engineer'){
+        list=list.filter(t=>
+          t.engineerName===my || t.assignedTo===my || t.assigned_to===my ||
+          (!t.engineerName && !t.assignedTo)  // งานรอรับยังไม่ assigned
+        );
+      }
+
+      tickets=list;
     }
   }catch(e){}
 }
