@@ -1116,6 +1116,7 @@ function resetForm(){
 // ══ TRACK ══════════════════════════════════════════════════
 let trackMode='id'; // 'id' | 'branch'
 let trackBranch=null;
+let trackStatusFilter=''; // '' = ทั้งหมด
 
 function renderTrack(){
   const l=t();
@@ -1154,12 +1155,35 @@ function renderTrackModeContent(){
     const branchLabel=trackBranch
       ?`<span style="font-family:var(--mono);font-size:12px">${esc(trackBranch.code)}</span> <span style="font-size:12px;color:var(--fg3)">${esc(trackBranch.nameTh||trackBranch.nameEn||'')}</span>`
       :`<span style="color:var(--fg4)">${lang==='th'?'เลือกสาขา...':'Select branch...'}</span>`;
+
+    const statusOpts=[
+      {v:'',   l:lang==='th'?'ทุกสถานะ':'All Status'},
+      {v:'pending',     l:lang==='th'?'รอดำเนินการ':'Pending'},
+      {v:'assigned',    l:lang==='th'?'มอบหมายช่าง':'Assigned'},
+      {v:'in_progress', l:lang==='th'?'กำลังดำเนินการ':'In Progress'},
+      {v:'review',      l:lang==='th'?'รอตรวจรับ':'Review'},
+      {v:'completed',   l:lang==='th'?'เสร็จสิ้น':'Completed'},
+      {v:'cancelled',   l:lang==='th'?'ยกเลิก':'Cancelled'},
+    ];
+
     el.innerHTML=`
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:8px">
         <button class="branch-btn${trackBranch?' has-val':''}" onclick="openTrackBranchSheet()" style="margin-bottom:0">
           <span>${branchLabel}</span>
           <span class="branch-btn-arrow">▼</span>
         </button>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${statusOpts.map(s=>`
+          <button onclick="setTrackStatus('${s.v}')"
+            style="padding:6px 12px;border-radius:6px;border:1.5px solid ${trackStatusFilter===s.v?'var(--fg)':'var(--border)'};
+                   background:${trackStatusFilter===s.v?'var(--fg)':'var(--card)'};
+                   color:${trackStatusFilter===s.v?'var(--bg)':'var(--fg3)'};
+                   font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">
+            ${esc(s.l)}
+          </button>`).join('')}
+        </div>
       </div>
       <div id="trk-branch-result">${trackBranch?'<div style="text-align:center;padding:12px;color:var(--fg4);font-size:13px">กำลังโหลด...</div>':''}</div>`;
     if(trackBranch) loadBranchTickets(trackBranch.code);
@@ -1209,6 +1233,11 @@ function pickTrackBranch(b){
   renderTrackModeContent();
 }
 
+function setTrackStatus(s){
+  trackStatusFilter=s;
+  renderTrackModeContent();
+}
+
 async function loadBranchTickets(branchCode){
   const el=document.getElementById('trk-branch-result');
   if(!el)return;
@@ -1217,13 +1246,21 @@ async function loadBranchTickets(branchCode){
     if(_reporterToken)headers['Authorization']='Bearer '+_reporterToken;
     const d=await fetchWithTimeout('/api/tickets',{headers},15000).then(r=>r.json());
     if(!d.ok)throw new Error(d.error||'error');
-    const tickets=(d.tickets||[]).filter(tk=>tk.branchCode===branchCode||tk.branchCode===String(branchCode));
+    let tickets=(d.tickets||[]).filter(tk=>tk.branchCode===branchCode||tk.branchCode===String(branchCode));
+    // Apply status filter
+    if(trackStatusFilter){
+      tickets=tickets.filter(tk=>tkStatusKey(tk.status)===trackStatusFilter);
+    }
     if(!tickets.length){
-      el.innerHTML=`<div class="empty">${lang==='th'?'ไม่พบ Ticket ของสาขานี้':'No tickets found for this branch'}</div>`;
+      const emptyMsg=trackStatusFilter
+        ?`${lang==='th'?'ไม่พบ Ticket สถานะนี้ในสาขานี้':'No tickets with this status for this branch'}`
+        :`${lang==='th'?'ไม่พบ Ticket ของสาขานี้':'No tickets found for this branch'}`;
+      el.innerHTML=`<div class="empty">${emptyMsg}</div>`;
       return;
     }
     el.innerHTML=`
-      <div style="font-size:11px;color:var(--fg4);margin-bottom:8px;font-family:var(--mono)">${lang==='th'?`พบ ${tickets.length} Ticket`:`Found ${tickets.length} tickets`}</div>
+      <div style="font-size:11px;color:var(--fg4);margin-bottom:8px;font-family:var(--mono)">${lang==='th'?`พบ ${tickets.length} Ticket`:`Found ${tickets.length} tickets`}${trackStatusFilter?` (${TK_STATUS_CFG[trackStatusFilter]?.label||trackStatusFilter})`:''}
+      </div>
       <div class="tklist">
         ${tickets.map(tk=>{
           const sk=tkStatusKey(tk.status);
