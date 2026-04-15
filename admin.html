@@ -1751,6 +1751,102 @@ function renderGPSEmpty(){
     </div>`;
 }
 
+function showMod(h){openMod(h);}
+
+function rLine(){
+  document.getElementById('pg-line').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📱 LINE Groups</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:3px">ตั้งค่า LINE Group ID สำหรับแต่ละแบรนด์</div>
+    </div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">วิธีหา LINE Group ID</div>
+      <div style="padding:14px;font-size:13px;color:var(--fg2);line-height:1.9">
+        1. เพิ่ม LINE Bot เข้ากลุ่ม<br>
+        2. พิมพ์ <code style="background:var(--bg3);padding:2px 7px;border-radius:5px;font-family:var(--mono)">&nbsp;!groupid&nbsp;</code> ในกลุ่ม<br>
+        3. Bot จะตอบกลับด้วย Group ID (ขึ้นต้นด้วย C...)<br>
+        4. วาง ID ลงในช่องด้านล่าง แล้วกด บันทึก
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="crd" style="max-width:580px">
+      <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
+      <div style="padding:16px">
+        ${(()=>{
+          const isSA=AUTH?.user?.role==='superadmin';
+          return [
+            {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
+            {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
+            {label:'☕ Greyhound Cafe Group',key:'greyhoundCafe',ph:'C...'},
+            {label:'🐕 Greyhound Original Group',key:'greyhoundOriginal',ph:'C...'},
+            {label:'🥐 Au Bon Pain Group',key:'auBonPain',ph:'C...'},
+            {label:'🍟 Funky Fries Group',key:'funkyFries',ph:'C...'},
+            {label:'🐾 Another Hound Cafe Group',key:'anotherHound',ph:'C...'},
+            {label:'🐶 Bean Hound Group',key:'beanHound',ph:'C...'},
+          ].map(({label,key,ph})=>`
+          <div style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <div style="font-size:11.5px;font-weight:700;color:var(--fg2)">${label}</div>
+              ${!isSA?'<span style="font-size:10px;color:var(--fg4);background:var(--bg3);padding:2px 8px;border-radius:20px">🔒 superadmin only</span>':''}
+            </div>
+            <div style="display:flex;gap:6px">
+              <input id="lg-${key}" class="sel" type="password" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono);${!isSA?'opacity:.5;cursor:not-allowed;':''}" placeholder="${ph}" value="" ${!isSA?'readonly':''}/>
+              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" style="min-width:52px;font-size:12px;font-weight:700">Show</button>`:''}
+              <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง" ${!isSA?'disabled style="opacity:.4"':''}>🧪 Test</button>
+            </div>
+          </div>`).join('');
+        })()}
+        <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);padding:9px 18px" onclick="saveLineGroups()">💾 บันทึกทั้งหมด</button>
+          <button class="smb" onclick="loadLineGroups()">🔄 โหลด</button>
+        </div>
+        <div id="line-msg" style="margin-top:8px;font-size:12.5px;min-height:18px"></div>
+      </div>
+    </div>`;
+  loadLineGroups();
+}
+async function loadLineGroups(){
+  const msg=document.getElementById('line-msg');
+  if(msg)msg.innerHTML='<span style="color:var(--fg3)">⏳ กำลังโหลด...</span>';
+  try{
+    const d=await api('/api/line-config');
+    if(!d.ok){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ โหลดไม่สำเร็จ</span>';return;}
+    const cfg=d.config||{},bg=cfg.brandGroups||{};
+    const s=(k,v)=>{const el=document.getElementById('lg-'+k);if(el)el.value=v||'';};
+    s('adminGroupId',cfg.adminGroupId);s('dunkin',bg["Dunkin'"]);s('greyhoundCafe',bg["Greyhound Cafe'"]);
+    s('greyhoundOriginal',bg['Greyhound Original']);s('auBonPain',bg['Au Bon Pain']);
+    s('funkyFries',bg['Funky Fries']);s('anotherHound',bg["Another Hound Cafe'"]);s('beanHound',bg['Bean Hound']);
+    if(msg){msg.innerHTML='<span style="color:var(--green)">✅ โหลดข้อมูลแล้ว</span>';setTimeout(()=>{if(msg)msg.innerHTML='';},2000);}
+  }catch(e){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
+async function saveLineGroups(){
+  const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
+  const payload={adminGroupId:g('adminGroupId'),brandGroups:{"Dunkin'":g('dunkin'),"Greyhound Cafe'":g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries'),"Another Hound Cafe'":g('anotherHound'),'Bean Hound':g('beanHound')}};
+  try{const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});const msg=document.getElementById('line-msg');if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);}catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
+async function testLineGroup(key){
+  const val=document.getElementById('lg-'+key)?.value?.trim();if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
+  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}catch(e){toast('❌ '+e.message);}
+}
+function toggleLgShow(key){const inp=document.getElementById('lg-'+key);const btn=document.getElementById('lg-eye-'+key);if(!inp)return;const show=inp.type==='password';inp.type=show?'text':'password';if(btn)btn.textContent=show?'Hide':'Show';}
+
+function rSystem(){
+  document.getElementById('pg-system').innerHTML=`
+    <div style="padding:12px;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">การแจ้งเตือน</div>
+        ${makeTogRow('LINE Notification','ส่งแจ้งเตือนผ่าน LINE Bot อัตโนมัติ',true,'line_notif')}
+        ${makeTogRow('SSE Real-time','อัพเดท ticket แบบ real-time',true,'sse')}
+        ${makeTogRow('Email Notification','ส่งอีเมลเมื่อมี ticket ใหม่',false,'email_notif')}
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">ระบบ</div>
+        ${makeTogRow('GPS Auto-attach','แนบ GPS location อัตโนมัติ',false,'gps_auto')}
+        ${makeTogRow('SLA Reminder','แจ้งเตือนเมื่อใกล้ครบ SLA',true,'sla_remind')}
+      </div>
+    </div>`;
+}
+
 function rGPS2(){} // alias ไว้ป้องกัน error (ไม่ใช้)
 
 function rServer(){
