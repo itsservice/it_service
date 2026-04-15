@@ -880,7 +880,7 @@ function openSubmit(rid){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
       <div class="fg"><label>อุปกรณ์ที่ใช้</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="เช่น สายแลน, PCB"/></div>
       <div class="fg"><label>ชั่วโมง ${hasTimer?'(อัตโนมัติ)':'(กรอกเอง)'}</label>
-        <input id="m-wh" style="font-family:var(--mono);font-weight:700" value="${hasTimer?msToHours(Date.now()-startMs):esc(t.workHours||'')}" placeholder="0.5" ${hasTimer?'readonly style="background:var(--bg3);font-family:var(--mono);font-weight:700"':''}/>
+        <input id="m-wh" style="font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:.05em;${hasTimer?'background:var(--bg3);':''}text-align:center" value="${hasTimer?msToHMS(Date.now()-startMs):esc(t.workHours||'')}" placeholder="00:00:00" ${hasTimer?'readonly':''}/>
       </div>
     </div>
     <div class="fg">
@@ -905,8 +905,10 @@ function openSubmit(rid){
       const sm=parseInt(document.getElementById('submit-startMs')?.value||'0');
       if(!timerEl){clearInterval(window._submitTimerInterval);return;}
       const ms2=Date.now()-sm;
-      timerEl.textContent=`${String(Math.floor(ms2/3600000)).padStart(2,'0')}:${String(Math.floor((ms2%3600000)/60000)).padStart(2,'0')}:${String(Math.floor((ms2%60000)/1000)).padStart(2,'0')}`;
-      if(whEl&&whEl.readOnly) whEl.value=(ms2/3600000).toFixed(2);
+      const hh=Math.floor(ms2/3600000),mm=Math.floor((ms2%3600000)/60000),ss=Math.floor((ms2%60000)/1000);
+      const hms=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      timerEl.textContent=hms;
+      if(whEl&&whEl.readOnly) whEl.value=hms;
     },1000);
   }
 
