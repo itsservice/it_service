@@ -1517,29 +1517,16 @@ function rLogList(){
 // ═══ GPS MAP ═══
 function rGPS(){
   window._gpsMapInit=false;
-  if(window._gpsAutoRefresh){clearInterval(window._gpsAutoRefresh);window._gpsAutoRefresh=null;}
-  const el=document.getElementById('pg-gps');
-  el.innerHTML=`
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📍 GPS Tracking</div>
-        <div style="font-size:11px;color:var(--fg4);margin-top:2px" id="gps-last-update">กำลังโหลด...</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <div id="gps-auto-badge" style="font-size:10px;background:#22c55e22;color:#16a34a;border:1px solid #22c55e55;border-radius:5px;padding:3px 8px;font-weight:600">● Live</div>
-        <button class="smb" onclick="initGPSMap()">🔄 รีเฟรช</button>
+  document.getElementById('pg-gps').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em">📍 GPS Map</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <span id="gps-last-update" style="font-size:11px;color:var(--fg4)"></span>
+        <button class="smb" onclick="loadGPSMap()">🔄 รีเฟรช</button>
       </div>
     </div>
-
-    <!-- Engineer cards (Life360 style) -->
-    <div id="gps-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px"></div>
-
-    <!-- Map -->
-    <div id="gps-map" style="height:480px;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;background:var(--bg2);box-shadow:0 2px 12px rgba(0,0,0,.08)"></div>
-
-    <!-- Trail list -->
-    <div id="gps-trail" style="margin-top:10px"></div>`;
+    <div id="gps-map" style="height:460px;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--bg2)"></div>
+    <div id="gps-list" style="margin-top:10px"></div>`;
   loadGPSMap();
 }
 
@@ -1555,7 +1542,7 @@ function loadGPSMap(){
     js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
     js.onload=()=>initGPSMap();
     document.head.appendChild(js);
-  } else {
+  }else{
     initGPSMap();
   }
 }
@@ -1564,194 +1551,130 @@ async function initGPSMap(){
   const mapEl=document.getElementById('gps-map');
   if(!mapEl)return;
 
-  // Init map
-  if(!window._gpsMap){
-    const map=L.map('gps-map').setView([13.7563,100.5018],11);
-    window._gpsMap=map;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'© OpenStreetMap',maxZoom:19
-    }).addTo(map);
-    window._gpsMarkers={};
-    window._gpsPolylines={};
-  }
+  // ล้าง map เดิม
+  if(window._gpsMap){window._gpsMap.remove();window._gpsMap=null;}
+  mapEl.innerHTML='';
 
-  // Fetch GPS data
-  let d;
-  try{ d=await api('/api/gps?limit=200'); }catch(e){ d={ok:false}; }
-  if(!d?.ok||!d.locations?.length){
-    renderGPSEmpty();return;
-  }
+  // สร้าง map
+  const map=L.map('gps-map').setView([13.7563,100.5018],11);
+  window._gpsMap=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',maxZoom:19
+  }).addTo(map);
 
+  // อัปเดตเวลา
   const upEl=document.getElementById('gps-last-update');
-  if(upEl)upEl.textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(upEl)upEl.textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH');
 
-  const map=window._gpsMap;
-  const isDk=document.documentElement.dataset.t==='dark';
-  const COLORS=['#4d8ef5','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+  // ดึงข้อมูล GPS จาก API
+  let d;
+  try{ d=await api('/api/gps'); }catch(e){ d={ok:false}; }
 
-  // Group by engineer — latest per engineer first, then history
-  const byEng={};
-  d.locations.forEach(loc=>{
-    const name=loc.engineer_name||'Unknown';
-    if(!byEng[name]) byEng[name]=[];
-    byEng[name].push(loc);
-  });
+  const list=document.getElementById('gps-list');
 
-  // Sort each engineer's history by time desc, latest first
-  Object.keys(byEng).forEach(name=>{
-    byEng[name].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
-  });
-
-  // Render engineer cards (Life360 style)
-  const cardsEl=document.getElementById('gps-cards');
-  if(cardsEl){
-    const engNames=Object.keys(byEng);
-    cardsEl.innerHTML=engNames.map((name,i)=>{
-      const latest=byEng[name][0];
-      const color=COLORS[i%COLORS.length];
-      const minAgo=Math.floor((Date.now()-new Date(latest.updated_at))/60000);
-      const timeAgo=minAgo<1?'เมื่อกี้':minAgo<60?`${minAgo} นาทีที่แล้ว`:minAgo<1440?`${Math.floor(minAgo/60)} ชม.ที่แล้ว`:`${Math.floor(minAgo/1440)} วันที่แล้ว`;
-      const isOnline=minAgo<15;
-      return`<div onclick="focusEngineer('${esc(name)}')" style="background:var(--card);border:1.5px solid ${isOnline?color+'55':'var(--border)'};border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-        <!-- Online dot -->
-        <div style="position:absolute;top:10px;right:10px;width:9px;height:9px;border-radius:50%;background:${isOnline?'#22c55e':'#94a3b8'};box-shadow:${isOnline?'0 0 0 3px #22c55e33':'none'}"></div>
-        <!-- Avatar -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <div style="width:40px;height:40px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px ${color}55">
-            ${name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div style="font-weight:700;font-size:13px;color:var(--fg)">${esc(name)}</div>
-            <div style="font-size:10px;color:var(--fg4)">${esc(latest.brand||'-')}</div>
-          </div>
+  if(!d.ok||!d.locations?.length){
+    // ไม่มี GPS — แสดงรายชื่อช่างแทน
+    if(list)list.innerHTML=`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-family:var(--display);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">👷 รายชื่อช่าง</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">
+          ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)&&u.active!==false).map(u=>`
+          <div style="background:var(--bg2);border-radius:7px;padding:10px;font-size:13px">
+            <div style="font-weight:700">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--fg4);margin-top:2px">${esc(u.brand||'-')}</div>
+            <div style="font-size:10px;color:var(--fg3);margin-top:4px">📍 ยังไม่มีข้อมูล GPS</div>
+          </div>`).join('')}
         </div>
-        <!-- Info rows -->
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div style="font-size:11px;color:var(--fg3)">🕐 ${timeAgo}</div>
-          <div style="font-size:11px;color:var(--fg4);font-family:var(--mono)">${parseFloat(latest.latitude).toFixed(5)}, ${parseFloat(latest.longitude).toFixed(5)}</div>
-          ${latest.ticket_id?`<div style="font-size:11px;color:var(--blue)">🎫 ${esc(latest.ticket_id)}</div>`:''}
-          <div style="font-size:10px;color:${isOnline?'#16a34a':'#94a3b8'};font-weight:600">${isOnline?'● Online':'○ Offline'}</div>
-        </div>
+        <div style="font-size:12px;color:var(--fg4);margin-top:10px">⚠️ GPS จะแสดงเมื่อช่าง Login ผ่าน Engineer Portal และเปิดอนุญาต Location</div>
       </div>`;
-    }).join('');
+    return;
   }
 
-  // Place markers + trail polylines
+  // มีข้อมูล GPS — วาง markers
   const bounds=[];
-  Object.keys(byEng).forEach((name,i)=>{
-    const color=COLORS[i%COLORS.length];
-    const locs=byEng[name];
-    const latest=locs[0];
+  // A1: filter out deleted/inactive users
+  const activeGPS=d.locations.filter(loc=>{
+    const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name||u.username===loc.username);
+    return eng && eng.active!==false && eng.id;
+  });
+  d.locations=activeGPS;
 
-    // Trail polyline (faded)
-    if(locs.length>1){
-      const trail=locs.slice(0,20).map(l=>[l.latitude,l.longitude]);
-      if(window._gpsPolylines[name]){window._gpsPolylines[name].remove();}
-      window._gpsPolylines[name]=L.polyline(trail,{
-        color,weight:3,opacity:.4,dashArray:'6 4'
-      }).addTo(map);
-    }
+  d.locations.forEach(loc=>{
+    const eng=users.find(u=>String(u.id)===String(loc.user_id)||u.name===loc.engineer_name);
+    const name=loc.engineer_name||eng?.name||'?';
+    const updatedTime=loc.updated_at?new Date(loc.updated_at).toLocaleTimeString('th-TH'):'';
 
-    // Trail dots (smaller)
-    locs.slice(1,10).forEach(loc=>{
-      L.circleMarker([loc.latitude,loc.longitude],{
-        radius:4,color,fillColor:color,fillOpacity:.4,weight:1,opacity:.4
-      }).addTo(map)
-      .bindPopup(`<div style="font-family:sans-serif;font-size:12px"><b>${name}</b><br>${new Date(loc.updated_at).toLocaleString('th-TH')}</div>`);
-    });
-
-    // Main marker (current position)
-    const minAgo=Math.floor((Date.now()-new Date(latest.updated_at))/60000);
-    const isOnline=minAgo<15;
     const icon=L.divIcon({
-      html:`<div style="position:relative">
-        <div style="background:${color};color:#fff;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:3px solid #fff;box-shadow:0 2px 14px ${color}88">${name.charAt(0).toUpperCase()}</div>
-        ${isOnline?`<div style="position:absolute;bottom:-1px;right:-1px;width:13px;height:13px;background:#22c55e;border-radius:50%;border:2px solid #fff"></div>`:''}
-        <div style="position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;white-space:nowrap">${esc(name.split(' ')[0])}</div>
-      </div>`,
-      iconSize:[42,42],iconAnchor:[21,21],className:''
+      html:`<div style="background:#2b5ea8;color:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)">${name.charAt(0).toUpperCase()}</div>`,
+      iconSize:[38,38],iconAnchor:[19,19],className:''
     });
 
-    if(window._gpsMarkers[name]){window._gpsMarkers[name].remove();}
-    window._gpsMarkers[name]=L.marker([latest.latitude,latest.longitude],{icon})
+    L.marker([loc.latitude,loc.longitude],{icon})
       .addTo(map)
-      .bindPopup(`<div style="font-family:sans-serif;min-width:180px;padding:4px">
-        <div style="font-weight:800;font-size:14px;margin-bottom:4px">${esc(name)}</div>
-        <div style="font-size:12px;color:#666;margin-bottom:3px">${esc(latest.brand||'-')}</div>
-        ${latest.ticket_id?`<div style="font-size:12px;color:#2b5ea8;margin-bottom:3px">🎫 ${latest.ticket_id}</div>`:''}
-        <div style="font-size:11px;color:#999">🕐 ${new Date(latest.updated_at).toLocaleString('th-TH')}</div>
-        <div style="font-size:10px;color:#bbb;margin-top:2px;font-family:monospace">${parseFloat(latest.latitude).toFixed(5)}, ${parseFloat(latest.longitude).toFixed(5)}</div>
-        <div style="margin-top:6px"><a href="https://maps.google.com/?q=${latest.latitude},${latest.longitude}" target="_blank" style="font-size:11px;color:#2b5ea8">🗺️ เปิด Google Maps</a></div>
-      </div>`);
+      .bindPopup(`
+        <div style="font-family:sans-serif;min-width:150px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:3px">${name}</div>
+          <div style="font-size:12px;color:#666;margin-bottom:3px">${loc.brand||eng?.brand||'-'}</div>
+          ${loc.ticket_id?`<div style="font-size:12px;color:#2b5ea8;margin-bottom:3px">🎫 ${loc.ticket_id}</div>`:''}
+          <div style="font-size:11px;color:#999">🕐 ${updatedTime}</div>
+          <div style="font-size:10px;color:#bbb;margin-top:2px">${parseFloat(loc.latitude).toFixed(5)}, ${parseFloat(loc.longitude).toFixed(5)}</div>
+        </div>`);
 
-    bounds.push([latest.latitude,latest.longitude]);
+    bounds.push([loc.latitude,loc.longitude]);
   });
 
-  // Fit map to all engineers
-  if(bounds.length>0 && !window._gpsMapInit){
-    if(bounds.length===1) map.setView(bounds[0],15);
-    else map.fitBounds(bounds,{padding:[50,50]});
+  if(bounds.length && !window._gpsMapInit){
+    map.fitBounds(bounds,{padding:[40,40]});
     window._gpsMapInit=true;
   }
 
-  // Render trail summary below map
-  const trailEl=document.getElementById('gps-trail');
-  if(trailEl){
-    trailEl.innerHTML=`
-      <div style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">ประวัติตำแหน่ง</div>
-      ${Object.keys(byEng).map((name,i)=>{
-        const color=COLORS[i%COLORS.length];
-        const locs=byEng[name].slice(0,5);
-        return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:28px;height:28px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px">${name.charAt(0).toUpperCase()}</div>
-            <div style="font-weight:700;font-size:13px">${esc(name)}</div>
-            <div style="font-size:10px;color:var(--fg4)">${locs.length} ตำแหน่งล่าสุด</div>
-          </div>
-          ${locs.map((loc,idx)=>`
-            <div onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],17)" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
-              <div style="width:8px;height:8px;border-radius:50%;background:${idx===0?color:'#94a3b8'};flex-shrink:0"></div>
-              <div style="flex:1">
-                <div style="font-size:11px;font-weight:${idx===0?'700':'400'};color:var(--fg)">${new Date(loc.updated_at).toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'})}</div>
-                <div style="font-size:10px;color:var(--fg4);font-family:var(--mono)">${parseFloat(loc.latitude).toFixed(5)}, ${parseFloat(loc.longitude).toFixed(5)}</div>
-              </div>
-              ${loc.ticket_id?`<div style="font-size:10px;color:var(--blue)">🎫${loc.ticket_id}</div>`:''}
-            </div>`).join('')}
-        </div>`;
-      }).join('')}`;
+  // ── NA1: Show engineer list FIRST, then map ──
+  // Scroll to list on load (mobile-friendly)
+  setTimeout(()=>{
+    const listEl=document.getElementById('gps-list');
+    if(listEl)listEl.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 300);
+
+  // Auto-scroll back to top after 5s of no interaction
+  let _gpsIdleTimer=null;
+  function _resetGpsIdle(){
+    clearTimeout(_gpsIdleTimer);
+    _gpsIdleTimer=setTimeout(()=>{
+      const pgEl=document.getElementById('pg-gps');
+      if(pgEl)pgEl.scrollTo({top:0,behavior:'smooth'});
+    },5000);
+  }
+  const _gpsContent=document.getElementById('pg-gps');
+  if(_gpsContent){
+    ['touchstart','touchmove','click','scroll'].forEach(ev=>_gpsContent.addEventListener(ev,_resetGpsIdle,{passive:true}));
+    _resetGpsIdle();
   }
 
-  // Auto-refresh every 30s
-  if(!window._gpsAutoRefresh){
-    window._gpsAutoRefresh=setInterval(()=>{
-      if(document.getElementById('gps-map')) initGPSMap();
-      else{clearInterval(window._gpsAutoRefresh);window._gpsAutoRefresh=null;}
-    },30000);
-  }
-}
-
-function focusEngineer(name){
-  const map=window._gpsMap;
-  if(!map)return;
-  const marker=window._gpsMarkers?.[name];
-  if(marker){
-    map.setView(marker.getLatLng(),16,{animate:true});
-    marker.openPopup();
-    document.getElementById('gps-map')?.scrollIntoView({behavior:'smooth'});
-  }
-}
-
-function renderGPSEmpty(){
-  const list=document.getElementById('gps-cards');
+  // รายการช่างด้านล่าง
   if(list)list.innerHTML=`
-    <div style="grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--fg4)">
-      <div style="font-size:32px;margin-bottom:8px">📍</div>
-      <div style="font-weight:600;margin-bottom:4px">ยังไม่มีข้อมูล GPS</div>
-      <div style="font-size:12px">GPS จะแสดงเมื่อช่าง Login และเปิดอนุญาต Location</div>
+    <div style="font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+      ช่างที่ online (${d.locations.length})
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
+      ${d.locations.map(loc=>{
+        const updatedTime=loc.updated_at?new Date(loc.updated_at).toLocaleTimeString('th-TH'):'';
+        return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:box-shadow .2s"
+          onclick="window._gpsMap?.setView([${loc.latitude},${loc.longitude}],16);document.getElementById('gps-map')?.scrollIntoView({behavior:'smooth'});_resetGpsIdle&&_resetGpsIdle()">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div style="width:30px;height:30px;background:#2b5ea8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">
+              ${(loc.engineer_name||'?').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:13px">${esc(loc.engineer_name||'-')}</div>
+              <div style="font-size:10px;color:var(--fg4)">${esc(loc.brand||'-')}</div>
+            </div>
+          </div>
+          ${loc.ticket_id?`<div style="font-size:11px;color:var(--blue);margin-bottom:2px">🎫 ${esc(loc.ticket_id)}</div>`:''}
+          <div style="font-size:10px;color:var(--fg4)">🕐 ${updatedTime}</div>
+        </div>`;
+      }).join('')}
     </div>`;
 }
-
-function showMod(h){openMod(h);}
 
 function rLine(){
   document.getElementById('pg-line').innerHTML=`
@@ -1773,7 +1696,7 @@ function rLine(){
       <div class="crd-h">LINE Group IDs ตามแบรนด์</div>
       <div style="padding:16px">
         ${(()=>{
-          const isSA=AUTH?.user?.role==='superadmin';
+          const isSA = AUTH?.user?.role==='superadmin';
           return [
             {label:'🔔 Admin Group (รับแจ้งทุก Ticket)',key:'adminGroupId',ph:'C...'},
             {label:"🍩 Dunkin' Group",key:'dunkin',ph:'C...'},
@@ -1791,8 +1714,8 @@ function rLine(){
             </div>
             <div style="display:flex;gap:6px">
               <input id="lg-${key}" class="sel" type="password" style="flex:1;border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--mono);${!isSA?'opacity:.5;cursor:not-allowed;':''}" placeholder="${ph}" value="" ${!isSA?'readonly':''}/>
-              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" style="min-width:52px;font-size:12px;font-weight:700">Show</button>`:''}
-              <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง" ${!isSA?'disabled style="opacity:.4"':''}>🧪 Test</button>
+              ${isSA?`<button class="smb" onclick="toggleLgShow('${key}')" id="lg-eye-${key}" style="min-width:52px;font-size:12px;font-weight:700;letter-spacing:.03em">Show</button>`:''}
+              <button class="smb" onclick="testLineGroup('${key}')" title="ทดสอบส่ง" ${!isSA?'disabled style="opacity:.4;cursor:not-allowed"':''}>🧪 Test</button>
             </div>
           </div>`).join('');
         })()}
@@ -1810,27 +1733,49 @@ async function loadLineGroups(){
   if(msg)msg.innerHTML='<span style="color:var(--fg3)">⏳ กำลังโหลด...</span>';
   try{
     const d=await api('/api/line-config');
-    if(!d.ok){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ โหลดไม่สำเร็จ</span>';return;}
-    const cfg=d.config||{},bg=cfg.brandGroups||{};
-    const s=(k,v)=>{const el=document.getElementById('lg-'+k);if(el)el.value=v||'';};
-    s('adminGroupId',cfg.adminGroupId);s('dunkin',bg["Dunkin'"]);s('greyhoundCafe',bg["Greyhound Cafe'"]);
-    s('greyhoundOriginal',bg['Greyhound Original']);s('auBonPain',bg['Au Bon Pain']);
-    s('funkyFries',bg['Funky Fries']);s('anotherHound',bg["Another Hound Cafe'"]);s('beanHound',bg['Bean Hound']);
+    if(!d.ok){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ โหลดไม่สำเร็จ: '+(d.error||'error')+'</span>';return;}
+    const cfg=d.config||{};
+    // set ทุก field ไม่ว่าค่าจะว่างหรือไม่
+    const setVal=(key,val)=>{const el=document.getElementById('lg-'+key);if(el)el.value=val||'';};
+    setVal('adminGroupId',cfg.adminGroupId||'');
+    const bg=cfg.brandGroups||{};
+    setVal('dunkin',bg["Dunkin'"]||'');
+    setVal('greyhoundCafe',bg["Greyhound Cafe'"]||bg['Greyhound Cafe']||'');
+    setVal('greyhoundOriginal',bg["Greyhound Original'"]||bg['Greyhound Original']||'');
+    setVal('auBonPain',bg['Au Bon Pain']||'');
+    setVal('funkyFries',bg['Funky Fries']||'');
+    setVal('anotherHound',bg["Another Hound Cafe'"]||bg['Another Hound Cafe']||'');
+    setVal('beanHound',bg['Bean Hound']||'');
     if(msg){msg.innerHTML='<span style="color:var(--green)">✅ โหลดข้อมูลแล้ว</span>';setTimeout(()=>{if(msg)msg.innerHTML='';},2000);}
   }catch(e){if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
 }
 async function saveLineGroups(){
   const g=k=>document.getElementById('lg-'+k)?.value?.trim()||'';
   const payload={adminGroupId:g('adminGroupId'),brandGroups:{"Dunkin'":g('dunkin'),"Greyhound Cafe'":g('greyhoundCafe'),'Greyhound Original':g('greyhoundOriginal'),'Au Bon Pain':g('auBonPain'),'Funky Fries':g('funkyFries'),"Another Hound Cafe'":g('anotherHound'),'Bean Hound':g('beanHound')}};
-  try{const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});const msg=document.getElementById('line-msg');if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);}catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+  try{
+    const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});
+    const msg=document.getElementById('line-msg');
+    if(msg)msg.innerHTML=d.ok?'<span style="color:var(--green)">✅ บันทึกแล้ว</span>':'<span style="color:var(--red)">❌ '+(d.error||'error')+'</span>';
+    setTimeout(()=>{const m=document.getElementById('line-msg');if(m)m.innerHTML='';},3000);
+  }catch(e){const msg=document.getElementById('line-msg');if(msg)msg.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
 }
 async function testLineGroup(key){
-  const val=document.getElementById('lg-'+key)?.value?.trim();if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
-  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}catch(e){toast('❌ '+e.message);}
+  const val=document.getElementById('lg-'+key)?.value?.trim();
+  if(!val){toast('กรุณากรอก LINE Group ID ก่อน');return;}
+  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ!':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}
+  catch(e){toast('❌ '+e.message);}
 }
-function toggleLgShow(key){const inp=document.getElementById('lg-'+key);const btn=document.getElementById('lg-eye-'+key);if(!inp)return;const show=inp.type==='password';inp.type=show?'text':'password';if(btn)btn.textContent=show?'Hide':'Show';}
+function toggleLgShow(key){
+  const inp=document.getElementById('lg-'+key);
+  const btn=document.getElementById('lg-eye-'+key);
+  if(!inp)return;
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  if(btn)btn.textContent=show?'Hide':'Show';
+}
 
 function rSystem(){
+  const cfg=window._lineCfg||{};
   document.getElementById('pg-system').innerHTML=`
     <div style="padding:12px;display:flex;flex-direction:column;gap:16px">
       <div>
@@ -1844,7 +1789,20 @@ function rSystem(){
         ${makeTogRow('GPS Auto-attach','แนบ GPS location อัตโนมัติ',false,'gps_auto')}
         ${makeTogRow('SLA Reminder','แจ้งเตือนเมื่อใกล้ครบ SLA',true,'sla_remind')}
       </div>
-    </div>`;
+    </div>
+  \``;
+}
+async function loadLineConfig(){try{const d=await api('/api/line-config');if(d.ok){window._lineCfg=d.config||{};rSystem();}}catch(_){}}
+async function saveLineConfig(){
+  const el=id=>document.getElementById('line-'+id)?.value?.trim()||'';
+  const payload={adminGroupId:el('adminGroupId'),brandGroups:{"Dunkin'":el('dunkin'),'Greyhound Cafe':el('greyhoundCafe'),'Greyhound Original':el('greyhoundOriginal'),'Au Bon Pain':el('auBonPain'),'Funky Fries':el('funkyFries')}};
+  try{const d=await api('/api/line-config',{method:'PATCH',body:JSON.stringify(payload)});const msg=document.getElementById('system-msg');if(msg)msg.textContent=d.ok?'✅ บันทึกแล้ว':'❌ '+(d.error||'error');}
+  catch(e){const msg=document.getElementById('system-msg');if(msg)msg.textContent='❌ '+e.message;}
+}
+async function testLine(key){
+  const val=document.getElementById('line-'+key)?.value?.trim();if(!val){toast('กรุณากรอก LINE ID ก่อน');return;}
+  try{const d=await api('/api/line-config/test',{method:'POST',body:JSON.stringify({to:val})});toast(d.ok?'✅ ส่ง Test สำเร็จ':'❌ '+(d.error||'ส่งไม่สำเร็จ'));}
+  catch(e){toast('❌ '+e.message);}
 }
 
 function rGPS2(){} // alias ไว้ป้องกัน error (ไม่ใช้)
