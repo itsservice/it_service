@@ -588,6 +588,26 @@ function _sendGPSPin(lat,lng,accuracy,type){
   })}).catch(()=>{});
 }
 
+function updateGPSBar(ok, msg){
+  const dot  = document.getElementById('gps-dot');
+  const text = document.getElementById('gps-text');
+  const bar  = document.getElementById('gps-status-bar');
+  if(!dot||!text||!bar) return;
+  if(ok){
+    dot.className='gps-pulse';
+    text.style.color='var(--green)';
+    text.textContent='📍 GPS Active — '+msg;
+    bar.style.background='rgba(45,122,79,.08)';
+    bar.style.borderBottomColor='rgba(45,122,79,.2)';
+  } else {
+    dot.className='gps-pulse off';
+    text.style.color='var(--red)';
+    text.textContent='⚠️ '+msg;
+    bar.style.background='rgba(184,50,50,.06)';
+    bar.style.borderBottomColor='rgba(184,50,50,.15)';
+  }
+}
+
 // Haversine distance (km)
 function _gpsDistance(lat1,lng1,lat2,lng2){
   const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
