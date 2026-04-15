@@ -846,19 +846,23 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
-  let autoHours='',sa=null;
+  let autoHours='',autoDisplay='',sa=null;
   try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}
   if(sa){
     const startMs=typeof sa==='number'?sa:Number(sa)||0;
     const ms=Date.now()-startMs;
-    if(ms>0)autoHours=(ms/3600000).toFixed(2);
+    if(ms>0){
+      autoHours=(ms/3600000).toFixed(2);
+      const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
+      autoDisplay=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
   }
   openMod(`<div class="mod-t">ส่งงาน / Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
     <div class="fg"><label>รายละเอียดงาน *</label><textarea id="m-wd" placeholder="อธิบายการซ่อม/แก้ไขที่ทำ...">${esc(t.workDetail||'')}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
       <div class="fg"><label>อุปกรณ์ที่ใช้</label><input id="m-pt" value="${esc(t.partsUsed||'')}" placeholder="เช่น สายแลน, PCB"/></div>
-      <div class="fg"><label>ชั่วโมง ${autoHours?'⏱️ Auto':''}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
+      <div class="fg"><label>ชั่วโมง ${autoDisplay?`⏱️ AUTO <span style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:700">${autoDisplay}</span>`:'(กรอกเอง)'}</label><input id="m-wh" type="number" step="0.01" value="${autoHours||esc(t.workHours||'')}" placeholder="1.5"/></div>
     </div>
     <div class="fg">
       <label>📷 รูปภาพงาน (สูงสุด 3 รูป)</label>
