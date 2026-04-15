@@ -719,10 +719,12 @@ function startWorkTimers(){
     let sv={};try{sv=JSON.parse(localStorage.getItem(stKey)||'{}');}catch(_){}
     tickets.filter(x=>/ระหว่าง/.test(x.status||'')).forEach(t=>{
       const el=document.getElementById('timer-'+t._recordId);if(!el)return;
-      // ✅ ใช้ localStorage เท่านั้น — ไม่ใช้ Lark started_at (ป้องกัน timer จาก session เก่า)
       const sa=sv[t._recordId]||null;
       if(!sa){el.textContent='00:00:00';return;}
-      const ms=Date.now()-new Date(sa).getTime();if(ms<0){el.textContent='00:00:00';return;}
+      // ✅ รองรับ Unix timestamp (number) และ string — ป้องกัน timezone bug
+      const startMs=typeof sa==='number'?sa:Number(sa)||Date.now();
+      const ms=Date.now()-startMs;
+      if(ms<0){el.textContent='00:00:00';return;}
       const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
       el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     });
@@ -773,12 +775,15 @@ function requestGPSPermission(){
 }
 async function doStartWork(rid){
   try{
-    const startedAt=new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
+    // ✅ เก็บเป็น Unix timestamp (ms) — ป้องกัน timezone bug
+    const startedAtMs = Date.now();
+    // API รับ ISO string
+    const startedAtISO = new Date(startedAtMs).toISOString();
     const t=tickets.find(x=>x._recordId===rid);
     const body={status:'อยู่ระหว่างดำเนินการ ⚙️',brand:t?.brand||''};
 
     if(_lastGPS){body.completed_lat=_lastGPS.lat;body.completed_lng=_lastGPS.lng;}
-    body.started_at=startedAt;
+    body.started_at=startedAtISO;
 
     const ctrl=new AbortController();
     const timer=setTimeout(()=>ctrl.abort(),15000);
@@ -796,16 +801,16 @@ async function doStartWork(rid){
     clearTimeout(timer);
     if(!d?.ok)throw new Error(d?.error||'Failed');
 
-    // ✅ เคลียร์ startedAt เก่าออกก่อน แล้วบันทึกใหม่ — ป้องกัน timer เริ่มจาก session เก่า
+    // ✅ บันทึก Unix ms ลง localStorage — ไม่มีปัญหา timezone
     try{
       const stKey='eng_st_'+(AUTH?.user?.id||'x');
       const sv=JSON.parse(localStorage.getItem(stKey)||'{}');
-      delete sv[rid];                   // ล้างค่าเก่าของ ticket นี้ก่อน
-      sv[rid]=startedAt;               // บันทึก startedAt ใหม่ (Now)
+      delete sv[rid];
+      sv[rid]=startedAtMs;  // Unix timestamp ms
       localStorage.setItem(stKey,JSON.stringify(sv));
     }catch(_){}
 
-    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',started_at:startedAt}:x);
+    tickets=tickets.map(x=>x._recordId===rid?{...x,status:'อยู่ระหว่างดำเนินการ ⚙️',started_at:startedAtISO}:x);
     render();
     toast('🚀 เริ่มงานแล้ว!');
 
@@ -821,10 +826,13 @@ document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod
 
 function openSubmit(rid){
   const t=tickets.find(x=>x._recordId===rid);if(!t)return;
-  // ✅ ใช้ localStorage เท่านั้น — ไม่ใช้ Lark started_at
   let autoHours='',sa=null;
   try{const sv=JSON.parse(localStorage.getItem('eng_st_'+(AUTH?.user?.id||'x'))||'{}');if(sv[rid])sa=sv[rid];}catch(_){}
-  if(sa){const ms=Date.now()-new Date(sa).getTime();if(ms>0)autoHours=(ms/3600000).toFixed(2);}
+  if(sa){
+    const startMs=typeof sa==='number'?sa:Number(sa)||0;
+    const ms=Date.now()-startMs;
+    if(ms>0)autoHours=(ms/3600000).toFixed(2);
+  }
   openMod(`<div class="mod-t">ส่งงาน / Complete Work</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--fg4);margin-bottom:10px">${esc(t.id)} — ${esc(t.type)}</div>
     <div class="fg"><label>รายละเอียดงาน *</label><textarea id="m-wd" placeholder="อธิบายการซ่อม/แก้ไขที่ทำ...">${esc(t.workDetail||'')}</textarea></div>
