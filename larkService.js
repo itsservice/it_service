@@ -178,8 +178,7 @@ async function updateTicket(recordId, data) {
       payload.completed_at = data.completedAt;
 
     // ── Timestamp / GPS fields ──
-    if (data.started_at !== undefined)
-      payload.started_at = data.started_at;
+    // หมายเหตุ: started_at ไม่ส่งไป FastAPI (ยังไม่รองรับ) — เก็บใน localStorage ฝั่ง frontend
     if (data.completed_lat !== undefined)
       payload.completed_lat = parseFloat(data.completed_lat) || null;
     if (data.completed_lng !== undefined)
