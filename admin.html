@@ -1303,58 +1303,203 @@ function _dlTemplate(){
   if(typeof XLSX==='undefined'){toast('กำลังโหลด Excel library...');return;}
   const wb=XLSX.utils.book_new();
 
-  // Sheet 1: Tickets
-  const tCols=['ticket_id','brand','status','branch_code','reporter','phone','type','detail','engineer_name','admin_note'];
-  const tNotes=[['ticket_id','รหัส ticket (เว้นว่างถ้าสร้างใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','รอดำเนินการ / อยู่ระหว่างดำเนินการ / เสร็จสิ้น / ยกเลิก'],['branch_code','รหัสสาขา'],['reporter','ชื่อผู้แจ้ง'],['phone','เบอร์โทร'],['type','ประเภทงาน เช่น งานระบบไฟฟ้า'],['detail','รายละเอียด'],['engineer_name','ชื่อช่าง'],['admin_note','หมายเหตุ admin']];
-  const tWs=XLSX.utils.aoa_to_sheet([tCols,...tickets.slice(0,100).map(t=>[t.id||'',t.brand||'',statusLabel(t.status),cleanBranch(t.branchCode),t.reporter||'',t.phone||'',t.type||'',t.detail||'',t.engineerName||'',t.adminNote||''])]);
-  tWs['!cols']=tCols.map(()=>({wch:20}));
+  // ── Style helpers ──
+  const GRAY='FFD9D9D9'; // locked bg
+  const YELLOW='FFFFFF99'; // editable required
+  const GREEN='FFE2EFDA'; // editable optional
+  const WHITE='FFFFFFFF'; // editable free
+  const HEADER_LOCK='FF4472C4'; // blue header locked
+  const HEADER_FREE='FF70AD47'; // green header editable
+  const RED_FONT='FFFF0000';
+  const WHITE_FONT='FFFFFFFF';
+  const DARK_FONT='FF000000';
+  const GRAY_FONT='FF808080';
+
+  function hStyle(bgHex,fontHex,bold){return{font:{bold:bold!==false,color:{rgb:fontHex||WHITE_FONT},sz:10},fill:{patternType:'solid',fgColor:{rgb:bgHex}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{bottom:{style:'thin',color:{rgb:'FF999999'}}}};}
+  function cStyle(bgHex,locked){return{font:{sz:10,color:{rgb:locked?GRAY_FONT:DARK_FONT}},fill:{patternType:'solid',fgColor:{rgb:bgHex}},protection:{locked:!!locked},alignment:{vertical:'center',wrapText:true},border:{right:{style:'hair',color:{rgb:'FFCCCCCC'}},bottom:{style:'hair',color:{rgb:'FFCCCCCC'}}}};}
+  function noteStyle(){return{font:{sz:9,italic:true,color:{rgb:GRAY_FONT}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{wrapText:true,vertical:'center'}};}
+  function exStyle(bgHex){return{font:{sz:10,color:{rgb:DARK_FONT},italic:true},fill:{patternType:'solid',fgColor:{rgb:bgHex}},alignment:{vertical:'center'},border:{right:{style:'hair',color:{rgb:'FFCCCCCC'}},bottom:{style:'hair',color:{rgb:'FFDDDDDD'}}}};}
+
+  function mkSheet(cols,lockedCols,notesRow,exampleRows,blankCount){
+    // cols = [{key,label,note,locked,required}]
+    const NROWS=notesRow.length+1+exampleRows.length+blankCount;
+    const ws={};
+    const R=(r,c)=>XLSX.utils.encode_cell({r,c});
+
+    // Row 0: หัวข้อ Column (key names — ห้ามแก้)
+    cols.forEach((col,ci)=>{
+      ws[R(0,ci)]={v:col.key,t:'s',s:hStyle(col.locked?HEADER_LOCK:HEADER_FREE,WHITE_FONT,true)};
+    });
+
+    // Row 1: คำอธิบาย (note row)
+    notesRow.forEach((note,ci)=>{
+      ws[R(1,ci)]={v:note||'',t:'s',s:noteStyle()};
+    });
+
+    // Row 2: label สีแดง
+    cols.forEach((col,ci)=>{
+      const lbl=col.locked?'🔒 ห้ามแก้':'✏️ '+(col.required?'จำเป็น':'ไม่บังคับ');
+      ws[R(2,ci)]={v:lbl,t:'s',s:{font:{sz:9,bold:true,color:{rgb:col.locked?'FFCC0000':col.required?'FF007700':GRAY_FONT}},fill:{patternType:'solid',fgColor:{rgb:col.locked?'FFFFECEC':col.required?'FFECFFEC':'FFF9F9F9'}},alignment:{horizontal:'center'}}};
+    });
+
+    // Row 3: ตัวอย่าง header
+    const EXAMPLE_START=3;
+    ws[R(EXAMPLE_START,0)]={v:'— ตัวอย่างข้อมูล (ห้ามลบแถวนี้) —',t:'s',s:{font:{bold:true,sz:10,color:{rgb:'FF444444'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFACD'}}}};
+    for(let ci=1;ci<cols.length;ci++) ws[R(EXAMPLE_START,ci)]={v:'',t:'s',s:{fill:{patternType:'solid',fgColor:{rgb:'FFFFFACD'}}}};
+
+    // Example rows
+    exampleRows.forEach((row,ri)=>{
+      cols.forEach((col,ci)=>{
+        const val=row[col.key]??'';
+        ws[R(EXAMPLE_START+1+ri,ci)]={v:val,t:typeof val==='number'?'n':'s',s:exStyle(col.locked?'FFF0F0F0':'FFFFFACD')};
+      });
+    });
+
+    // Row: ตัวคั่น "เริ่มกรอกข้อมูลที่นี่"
+    const DATA_START=EXAMPLE_START+1+exampleRows.length;
+    ws[R(DATA_START,0)]={v:'↓ เริ่มกรอกข้อมูลใหม่ที่นี่ ↓',t:'s',s:{font:{bold:true,sz:10,color:{rgb:'FF0070C0'}},fill:{patternType:'solid',fgColor:{rgb:'FFDCE6F1'}}}};
+    for(let ci=1;ci<cols.length;ci++) ws[R(DATA_START,ci)]={v:'',t:'s',s:{fill:{patternType:'solid',fgColor:{rgb:'FFDCE6F1'}}}};
+
+    // Blank rows
+    for(let ri=0;ri<blankCount;ri++){
+      cols.forEach((col,ci)=>{
+        ws[R(DATA_START+1+ri,ci)]={v:'',t:'s',s:cStyle(col.locked?GRAY:WHITE,false)};
+      });
+    }
+
+    ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:DATA_START+blankCount,c:cols.length-1}});
+    ws['!cols']=cols.map(col=>({wch:col.w||22}));
+    ws['!rows']=[{hpt:22},{hpt:40},{hpt:18},{hpt:20}];
+    ws['!freeze']={xSplit:0,ySplit:4}; // freeze 4 header rows
+    ws['!protect']={password:'',sheet:true,selectLockedCells:true,selectUnlockedCells:true,formatCells:false,formatColumns:false,formatRows:false,insertColumns:false,insertRows:true,deleteColumns:false,deleteRows:false,sort:false,autoFilter:false};
+    return ws;
+  }
+
+  // ══════════════ TICKETS SHEET ══════════════
+  const tCols=[
+    {key:'ticket_id',   note:'รหัส Ticket จากระบบ — เว้นว่างถ้าสร้างใหม่ / ใส่ถ้าอัปเดต',   locked:false,required:false,w:16},
+    {key:'brand',       note:"Dunkin' / Greyhound Cafe' / Greyhound Original / Au Bon Pain / Funky Fries",locked:false,required:true,w:22},
+    {key:'status',      note:'รอดำเนินการ / อยู่ระหว่างดำเนินการ / ตรวจงาน / เสร็จสิ้น / ยกเลิก',locked:false,required:false,w:28},
+    {key:'branch_code', note:'รหัสสาขา เช่น K.0001 หรือ 0051',                                locked:false,required:false,w:18},
+    {key:'reporter',    note:'ชื่อผู้แจ้งปัญหา',                                               locked:false,required:true,w:20},
+    {key:'phone',       note:'เบอร์โทร เช่น 081-234-5678',                                    locked:false,required:true,w:16},
+    {key:'type',        note:'งานระบบไฟฟ้า / งานประปา / เครื่องทำกาแฟ / เครื่องกรองน้ำ / ฯลฯ',locked:false,required:true,w:26},
+    {key:'detail',      note:'รายละเอียดปัญหาเพิ่มเติม',                                      locked:false,required:false,w:34},
+    {key:'engineer_name',note:'ชื่อช่างที่รับผิดชอบ (ถ้ามี)',                                  locked:false,required:false,w:20},
+    {key:'admin_note',  note:'หมายเหตุสำหรับ Admin',                                           locked:false,required:false,w:24},
+  ];
+  const tEx=[
+    {ticket_id:'',         brand:"Dunkin'",       status:'รอดำเนินการ',  branch_code:'K.0001', reporter:'สมชาย ใจดี',   phone:'081-234-5678', type:'งานระบบไฟฟ้า/แสงสว่าง',   detail:'ไฟดับทั้งโซน A',          engineer_name:'',       admin_note:''},
+    {ticket_id:'',         brand:"Au Bon Pain",   status:'รอดำเนินการ',  branch_code:'0051',   reporter:'สมหญิง รักดี', phone:'089-876-5432', type:'เครื่องทำกาแฟ',             detail:'กดไม่ออก มีเสียงดัง',     engineer_name:'',       admin_note:''},
+    {ticket_id:'GD-00001', brand:"Dunkin'",       status:'เสร็จสิ้น',    branch_code:'K.0002', reporter:'วิชัย ทำงาน',  phone:'062-111-2222', type:'งานระบบปรับอากาศ',          detail:'แอร์ไม่เย็น',             engineer_name:'ช่าง 2', admin_note:'ซ่อมแล้ว'},
+    {ticket_id:'',         brand:"Funky Fries",   status:'รอดำเนินการ',  branch_code:'FF001',  reporter:'มานี เก่งมาก', phone:'095-333-4444', type:'งานประปา',                   detail:'น้ำไม่ไหล ท่อรั่ว',      engineer_name:'',       admin_note:''},
+    {ticket_id:'',         brand:"Greyhound Cafe'",status:'รอดำเนินการ', branch_code:'GHC01',  reporter:'สุดา ดีเลิศ',  phone:'086-555-7777', type:'เครื่องกรองน้ำ/ไส้กรองน้ำ', detail:'น้ำออกน้อยผิดปกติ',       engineer_name:'',       admin_note:''},
+  ];
+  const tWs=mkSheet(tCols,['ticket_id'],[...tCols.map(c=>c.note)],tEx,30);
   XLSX.utils.book_append_sheet(wb,tWs,'Tickets');
 
-  // Sheet 2: Users
-  const uCols=['username','display_name','role','brand','phone','line_user_id','password_new'];
-  const uNotes=[['role','superadmin / admin / manager / lead_engineer / engineer / reporter'],['brand',"ALL หรือ Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['password_new','เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน']];
-  const allU=[...users,...(reporters||[])];
-  const uWs=XLSX.utils.aoa_to_sheet([uCols,...allU.slice(0,200).map(u=>[u.username||'',u.name||'',u.role||'',u.brand||'ALL',u.phone||'',u.line_user_id||'',''])]);
-  uWs['!cols']=uCols.map(()=>({wch:20}));
+  // ══════════════ USERS SHEET ══════════════
+  const uCols=[
+    {key:'username',     note:'รหัสพนักงาน / username — 🔒 ห้ามแก้ ใช้ค้นหาในระบบ',         locked:true, required:false,w:18},
+    {key:'display_name', note:'ชื่อ-นามสกุลที่แสดง',                                         locked:false,required:false,w:22},
+    {key:'role',         note:'superadmin / admin / manager / lead_engineer / engineer / reporter',locked:false,required:false,w:20},
+    {key:'brand',        note:"ALL หรือ Dunkin' / Greyhound Cafe' / Greyhound Original / Au Bon Pain / Funky Fries",locked:false,required:false,w:26},
+    {key:'phone',        note:'เบอร์โทรศัพท์',                                                locked:false,required:false,w:16},
+    {key:'line_user_id', note:'LINE User ID สำหรับแจ้งเตือน (ขึ้นต้นด้วย U...)',              locked:false,required:false,w:30},
+    {key:'password_new', note:'รหัสผ่านใหม่ — เว้นว่างถ้าไม่ต้องการเปลี่ยน',                 locked:false,required:false,w:22},
+  ];
+  const uEx=[
+    {username:'eng001',    display_name:'สมชาย ช่างดี',      role:'engineer',     brand:"Dunkin'",        phone:'081-111-2222', line_user_id:'',              password_new:''},
+    {username:'eng002',    display_name:'สมหญิง ทำดี',       role:'lead_engineer', brand:"Au Bon Pain",    phone:'089-333-4444', line_user_id:'Uabc12345678',  password_new:''},
+    {username:'admin01',   display_name:'ผู้ดูแล ระบบ',      role:'admin',         brand:'ALL',            phone:'062-555-6666', line_user_id:'',              password_new:''},
+    {username:'00001234',  display_name:'วิมล ร้านดี',       role:'reporter',      brand:"Greyhound Cafe'",phone:'',             line_user_id:'',              password_new:''},
+    {username:'00005678',  display_name:'ประจักษ์ สาขา',     role:'reporter',      brand:"Funky Fries",    phone:'',             line_user_id:'',              password_new:''},
+  ];
+  const uWs=mkSheet(uCols,['username'],[...uCols.map(c=>c.note)],uEx,30);
   XLSX.utils.book_append_sheet(wb,uWs,'Users');
 
-  // Sheet 3: Branches
-  const bCols=['id','brand','code','name_th','name_en','ip','phone','location_lat','location_lng','location_name','status'];
-  const bNotes=[['id','ID สาขา (เว้นว่างถ้าเพิ่มใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','active / pending']];
-  const brData=window._allBranches||[];
-  const bWs=XLSX.utils.aoa_to_sheet([bCols,...brData.slice(0,1000).map(b=>[b.id||'',b.brand||'',b.code||'',b.nameTh||'',b.nameEn||'',b.ip||'',b.phone||'',b.location_lat||'',b.location_lng||'',b.location_name||'',b.status||'active'])]);
-  bWs['!cols']=bCols.map(()=>({wch:20}));
+  // ══════════════ BRANCHES SHEET ══════════════
+  const bCols=[
+    {key:'id',            note:'ID สาขาในระบบ — 🔒 ห้ามแก้ เว้นว่างถ้าเพิ่มสาขาใหม่',       locked:true, required:false,w:10},
+    {key:'brand',         note:"Dunkin' / Greyhound Cafe' / Greyhound Original / Au Bon Pain / Funky Fries",locked:false,required:true,w:24},
+    {key:'code',          note:'รหัสสาขา เช่น K.0001 หรือ GHC-01',                            locked:false,required:true,w:16},
+    {key:'name_th',       note:'ชื่อสาขาภาษาไทย',                                             locked:false,required:true,w:28},
+    {key:'name_en',       note:'ชื่อสาขาภาษาอังกฤษ',                                          locked:false,required:false,w:28},
+    {key:'ip',            note:'IP Address ของสาขา เช่น 192.168.1.1',                         locked:false,required:false,w:18},
+    {key:'phone',         note:'เบอร์โทรสาขา',                                                locked:false,required:false,w:16},
+    {key:'location_lat',  note:'พิกัด GPS ละติจูด เช่น 13.756331 (ทศนิยม 6 ตำแหน่ง)',        locked:false,required:false,w:20},
+    {key:'location_lng',  note:'พิกัด GPS ลองจิจูด เช่น 100.501765 (ทศนิยม 6 ตำแหน่ง)',     locked:false,required:false,w:20},
+    {key:'location_name', note:'ที่อยู่/ชื่อย่านสาขา เช่น สยาม กรุงเทพ',                    locked:false,required:false,w:28},
+    {key:'status',        note:'active = เปิดใช้งาน / pending = รออนุมัติ',                   locked:false,required:false,w:16},
+  ];
+  const bEx=[
+    {id:'',   brand:"Dunkin'",        code:'K.0099', name_th:'ครัวลาดพร้าว',      name_en:'Kitchen Lat Phrao',  ip:'172.16.1.100', phone:'02-111-2222', location_lat:13.812345, location_lng:100.612345, location_name:'ลาดพร้าว กรุงเทพ',  status:'active'},
+    {id:'',   brand:"Au Bon Pain",    code:'ABP-099',name_th:'สาขาสยาม',           name_en:'Siam Branch',        ip:'172.16.2.100', phone:'02-333-4444', location_lat:13.745678, location_lng:100.534567, location_name:'สยาม กรุงเทพ',        status:'active'},
+    {id:42,   brand:"Greyhound Cafe'",code:'GHC-09', name_th:'สาขาทองหล่อ',       name_en:'Thonglor Branch',    ip:'172.16.3.100', phone:'02-555-6666', location_lat:13.728901, location_lng:100.584901, location_name:'ทองหล่อ กรุงเทพ',     status:'active'},
+    {id:'',   brand:"Funky Fries",    code:'FF-009', name_th:'สาขาเมกาบางนา',     name_en:'Mega Bangna Branch', ip:'172.16.4.100', phone:'',            location_lat:13.643210, location_lng:100.672100, location_name:'บางนา กรุงเทพ',       status:'pending'},
+    {id:'',   brand:"Dunkin'",        code:'K.0100', name_th:'ครัวรามอินทรา',     name_en:'Kitchen Ram Indra',  ip:'172.16.5.100', phone:'02-777-8888', location_lat:'',        location_lng:'',         location_name:'รามอินทรา กรุงเทพ',   status:'active'},
+  ];
+  const bWs=mkSheet(bCols,['id'],[...bCols.map(c=>c.note)],bEx,50);
   XLSX.utils.book_append_sheet(wb,bWs,'Branches');
 
-  // Sheet 4: Instructions
-  const instrRows=[
-    ['📋 คู่มือการใช้งาน Import/Export Template'],[''],
-    ['วิธีใช้งาน:'],
-    ['1. แก้ไขข้อมูลในแต่ละ Sheet ตามที่ต้องการ'],
-    ['2. กลับมาที่หน้า Admin แล้วกดปุ่ม "📤 Import"'],
-    ['3. เลือกไฟล์ Excel นี้'],
-    ['4. ระบบจะอัปเดตข้อมูลอัตโนมัติ'],[''],
-    ['หมายเหตุ:'],
-    ['- ห้ามแก้ชื่อ column (บรรทัดแรก)'],
-    ['- ห้ามแก้ชื่อ Sheet'],
-    ['- เว้นช่อง id/ticket_id ว่างถ้าต้องการเพิ่มข้อมูลใหม่'],[''],
-    ['รายละเอียดแต่ละ Sheet:'],[''],
-    ['Sheet: Tickets',...Array(3).fill('')],
-    ...([['ticket_id','รหัส ticket (เว้นว่างถ้าสร้างใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','รอดำเนินการ / อยู่ระหว่างดำเนินการ / เสร็จสิ้น / ยกเลิก'],['reporter','ชื่อผู้แจ้ง'],['type','ประเภทงาน เช่น งานระบบไฟฟ้า']].map(r=>['  '+r[0],r[1]])),
-    [''],
-    ['Sheet: Users',...Array(3).fill('')],
-    ...([['username','รหัสพนักงาน / username (ห้ามแก้)'],['role','superadmin / admin / manager / lead_engineer / engineer / reporter'],['brand',"ALL หรือ Dunkin' / Greyhound Cafe' / Au Bon Pain"],['password_new','เว้นว่างถ้าไม่ต้องการเปลี่ยน']].map(r=>['  '+r[0],r[1]])),
-    [''],
-    ['Sheet: Branches',...Array(3).fill('')],
-    ...([['id','ID สาขา (เว้นว่างถ้าเพิ่มใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','active / pending'],['location_lat / lng','พิกัด GPS (ทศนิยม)']].map(r=>['  '+r[0],r[1]])),
+  // ══════════════ คู่มือ SHEET ══════════════
+  const gWs={};
+  const GR=(r,c)=>XLSX.utils.encode_cell({r,c});
+  const gHdr={font:{bold:true,sz:13,color:{rgb:'FFFFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'FF4472C4'}},alignment:{horizontal:'left'}};
+  const gSec={font:{bold:true,sz:11,color:{rgb:'FF4472C4'}}};
+  const gBody={font:{sz:10},alignment:{wrapText:true,vertical:'top'}};
+  const gNote={font:{sz:10,color:{rgb:GRAY_FONT},italic:true},alignment:{wrapText:true}};
+
+  const guide=[
+    [{v:'📋 คู่มือ Import/Export Template — IT Support System',s:gHdr},{v:'',s:gHdr}],
+    [{v:'',s:{}},{v:'',s:{}}],
+    [{v:'วิธีใช้งาน',s:gSec},{v:'',s:{}}],
+    [{v:'1.',s:gBody},{v:'ดาวน์โหลด Template แล้วเปิดใน Excel',s:gBody}],
+    [{v:'2.',s:gBody},{v:'แก้ไขข้อมูลในแต่ละ Sheet ตามต้องการ (ดูสีสัญลักษณ์ด้านล่าง)',s:gBody}],
+    [{v:'3.',s:gBody},{v:'บันทึกไฟล์',s:gBody}],
+    [{v:'4.',s:gBody},{v:'กลับหน้า Admin → กดปุ่ม "📤 Import Excel" → เลือกไฟล์',s:gBody}],
+    [{v:'5.',s:gBody},{v:'ระบบจะอัปเดตข้อมูลอัตโนมัติและแจ้งผล',s:gBody}],
+    [{v:'',s:{}},{v:'',s:{}}],
+    [{v:'สัญลักษณ์สี',s:gSec},{v:'',s:{}}],
+    [{v:'🔵 Header สีน้ำเงิน',s:{font:{sz:10}}},{v:'Column ที่ห้ามแก้ไข (ใช้ค้นหาในระบบ)',s:{font:{sz:10,color:{rgb:'FF003399'}}}}],
+    [{v:'🟢 Header สีเขียว',s:{font:{sz:10}}},{v:'Column ที่แก้ไขได้ — จำเป็นหรือไม่จำเป็น',s:{font:{sz:10,color:{rgb:'FF006600'}}}}],
+    [{v:'🟡 แถวสีเหลือง',s:{font:{sz:10}}},{v:'ตัวอย่างข้อมูล — ดูเป็นแนวทาง ไม่ต้องลบ',s:{font:{sz:10,color:{rgb:'FF886600'}}}}],
+    [{v:'🔵 แถว "เริ่มกรอกข้อมูล"',s:{font:{sz:10}}},{v:'พิมพ์ข้อมูลใหม่ใต้แถวนี้ลงไปเรื่อยๆ',s:{font:{sz:10,color:{rgb:'FF0070C0'}}}}],
+    [{v:'⬜ แถวว่างสีขาว',s:{font:{sz:10}}},{v:'พื้นที่พิมพ์ข้อมูลใหม่ได้เลย',s:{font:{sz:10}}}],
+    [{v:'',s:{}},{v:'',s:{}}],
+    [{v:'ข้อควรระวัง',s:gSec},{v:'',s:{}}],
+    [{v:'❌',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}},{v:'ห้ามเปลี่ยนชื่อ column (บรรทัดแรก) — ระบบใช้ชื่อนี้อ่านข้อมูล',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}}],
+    [{v:'❌',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}},{v:'ห้ามเปลี่ยนชื่อ Sheet (Tickets / Users / Branches)',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}}],
+    [{v:'❌',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}},{v:'ห้ามแก้ column ที่มี 🔒 ห้ามแก้ (ใช้ค้นหา ถ้าแก้จะหาไม่เจอ)',s:{font:{sz:10,color:{rgb:'FFCC0000'}}}}],
+    [{v:'✅',s:{font:{sz:10,color:{rgb:'FF006600'}}}},{v:'เว้น ticket_id / id ว่าง = สร้างข้อมูลใหม่',s:{font:{sz:10,color:{rgb:'FF006600'}}}}],
+    [{v:'✅',s:{font:{sz:10,color:{rgb:'FF006600'}}}},{v:'ใส่ ticket_id / id = อัปเดตข้อมูลเดิม',s:{font:{sz:10,color:{rgb:'FF006600'}}}}],
+    [{v:'✅',s:{font:{sz:10,color:{rgb:'FF006600'}}}},{v:'password_new: เว้นว่าง = ไม่เปลี่ยนรหัสผ่าน',s:{font:{sz:10,color:{rgb:'FF006600'}}}}],
+    [{v:'',s:{}},{v:'',s:{}}],
+    [{v:'Sheet: Tickets — รายละเอียด column',s:gSec},{v:'',s:{}}],
+    [{v:'ticket_id',s:{font:{sz:10,bold:true}}},{v:'รหัส Ticket (เว้นว่าง = สร้างใหม่, ใส่ = อัปเดต)',s:gBody}],
+    [{v:'brand',s:{font:{sz:10,bold:true}}},{v:"Dunkin' / Greyhound Cafe' / Greyhound Original / Au Bon Pain / Funky Fries",s:gBody}],
+    [{v:'status',s:{font:{sz:10,bold:true}}},{v:'รอดำเนินการ / อยู่ระหว่างดำเนินการ / ตรวจงาน / เสร็จสิ้น / ยกเลิก',s:gBody}],
+    [{v:'type',s:{font:{sz:10,bold:true}}},{v:'งานระบบไฟฟ้า / งานประปา / เครื่องทำกาแฟ / เครื่องกรองน้ำ / งานโครงสร้าง / งานระบบปรับอากาศ',s:gBody}],
+    [{v:'',s:{}},{v:'',s:{}}],
+    [{v:'Sheet: Branches — รายละเอียด column',s:gSec},{v:'',s:{}}],
+    [{v:'id',s:{font:{sz:10,bold:true}}},{v:'ID สาขาในระบบ (🔒 ห้ามแก้ — เว้นว่างถ้าเพิ่มสาขาใหม่)',s:gBody}],
+    [{v:'location_lat/lng',s:{font:{sz:10,bold:true}}},{v:'พิกัด GPS ทศนิยม เช่น lat: 13.756331, lng: 100.501765',s:gBody}],
+    [{v:'status',s:{font:{sz:10,bold:true}}},{v:'active = เปิดใช้งาน, pending = รออนุมัติจาก superadmin',s:gBody}],
   ];
-  const instrWs=XLSX.utils.aoa_to_sheet(instrRows);
-  instrWs['!cols']=[{wch:30},{wch:60}];
-  XLSX.utils.book_append_sheet(wb,instrWs,'📋 คู่มือ');
+
+  guide.forEach((row,ri)=>{
+    row.forEach((cell,ci)=>{
+      gWs[GR(ri,ci)]={v:cell.v,t:'s',s:cell.s};
+    });
+  });
+  gWs['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:guide.length-1,c:1}});
+  gWs['!cols']=[{wch:24},{wch:72}];
+  gWs['!rows']=[{hpt:28}];
+  XLSX.utils.book_append_sheet(wb,gWs,'📋 คู่มือ');
 
   const fn=`it_support_template_${new Date().toISOString().slice(0,10)}.xlsx`;
   XLSX.writeFile(wb,fn);
-  toast(`📥 ดาวน์โหลด Template สำเร็จ: ${fn}`);
+  toast(`📥 Template พร้อมแล้ว: ${fn}`);
 }
 
 // ── Import Excel ──
