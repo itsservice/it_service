@@ -248,6 +248,46 @@ a{color:inherit;text-decoration:none}
 .bo2{flex:1;padding:10px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .3s}
 .toast{position:fixed;top:14px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.08);animation:up .2s var(--ease);display:none;color:var(--fg);font-weight:500;transition:all .4s}
 
+/* ═══ HISTORY PAGE (admin-style table + pagination) ═══ */
+.hist-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.hist-title{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--fg)}
+.hist-count{font-size:12px;color:var(--fg3);margin-top:2px}
+.hist-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.hist-sel{background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer;transition:all .3s;appearance:none}
+.hist-sel:focus{border-color:var(--fg)}
+.hist-srch{flex:1;min-width:140px;position:relative}
+.hist-srch input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:7px 10px 7px 28px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:all .3s}
+.hist-srch input:focus{border-color:var(--fg)}
+.hist-srch input::placeholder{color:var(--fg4)}
+.hist-srch .hsi{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--fg4);pointer-events:none}
+.htbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;transition:border-color .4s}
+.htbl{width:100%;border-collapse:collapse;font-size:13px}
+.htbl th{padding:9px 10px;background:var(--bg2);color:var(--fg3);font-weight:700;text-align:left;border-bottom:1px solid var(--border);font-family:var(--display);font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;transition:background .4s,border-color .4s}
+.htbl td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--fg);vertical-align:middle;transition:background .4s,border-color .4s}
+.htbl tr:last-child td{border-bottom:none}
+.htr:hover td{background:var(--bg2);cursor:pointer}
+/* Pagination */
+.pg{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:10px;justify-content:flex-end}
+.pg-btn{padding:5px 9px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.pg-btn:hover:not(:disabled){background:var(--bg2);color:var(--fg);border-color:var(--border2)}
+.pg-btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pg-btn:disabled{opacity:.35;cursor:default}
+.pg-info{font-size:11px;color:var(--fg4);margin-right:4px;font-family:var(--display);flex:1}
+/* Status pills */
+.hs-pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.hs-wait{background:rgba(245,158,11,.15);color:#b45309}.hs-work{background:rgba(99,102,241,.15);color:#4338ca}
+.hs-rev{background:rgba(37,99,235,.15);color:#1d4ed8}.hs-done{background:rgba(22,163,74,.15);color:#15803d}
+.hs-cancel{background:rgba(220,38,38,.15);color:#b91c1c}
+[data-t="dark"] .hs-wait{background:rgba(251,191,36,.12);color:#fbbf24}
+[data-t="dark"] .hs-work{background:rgba(129,140,248,.12);color:#818cf8}
+[data-t="dark"] .hs-rev{background:rgba(96,165,250,.12);color:#60a5fa}
+[data-t="dark"] .hs-done{background:rgba(74,222,128,.12);color:#4ade80}
+[data-t="dark"] .hs-cancel{background:rgba(248,113,113,.12);color:#f87171}
+/* Brand badge */
+.br-badge-sm{padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bg3);color:var(--fg3);white-space:nowrap;transition:all .4s}
+/* Responsive */
+@media(max-width:640px){.htbl thead{display:none}.htr{display:block;margin-bottom:4px;border:1px solid var(--border);border-radius:8px}.htr td{display:block;border:none;padding:4px 10px}.htr td:first-child{padding-top:10px}.htr td:last-child{padding-bottom:10px}.htbl-wrap{border:none}.pg{justify-content:center}}
+
 /* PREVIEW ROLE LOADING OVERLAY */
 #pv-overlay{position:fixed;inset:0;background:#fff;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center}
 [data-t="dark"] #pv-overlay{background:#0a0a0a}
@@ -1392,19 +1432,50 @@ function togEngLang(){
   if(topTitle&&tabMap[engTab])topTitle.textContent=tabMap[engTab];
 }
 
-let _histFrom='', _histTo='';
+let _histFrom='', _histTo='', _histPage=1, _histPerPage=10, _histBrand='', _histSearch='', _histAllData=[];
+const BRANDS_HIST=["Dunkin'","Greyhound Cafe'","Greyhound Original","Au Bon Pain","Funky Fries","Another Hound Cafe'","Bean Hound"];
 
 function renderEngHistory(){
   const el = document.getElementById('tab-history');
-  el.innerHTML = `<div style="padding:4px 0">
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <input type="date" id="hist-from" value="${_histFrom}" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:12px" oninput="_histFrom=this.value;loadEngHistory()">
-      <span style="font-size:12px;color:var(--fg3)">ถึง</span>
-      <input type="date" id="hist-to" value="${_histTo}" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--fg);font-family:var(--sans);font-size:12px" oninput="_histTo=this.value;loadEngHistory()">
-      <button class="smb" onclick="_histFrom='';_histTo='';document.getElementById('hist-from').value='';document.getElementById('hist-to').value='';loadEngHistory()">ทั้งหมด</button>
-      <button class="smb" onclick="loadEngHistory()">🔄</button>
+  el.innerHTML = `<div>
+    <div class="hist-hdr">
+      <div>
+        <div class="hist-title">ประวัติงาน</div>
+        <div class="hist-count" id="hist-count-lbl">กำลังโหลด...</div>
+      </div>
+      <button class="smb" onclick="loadEngHistory()" style="flex-shrink:0">🔄 Refresh</button>
     </div>
-    <div id="hist-list"><div style="color:var(--fg4);text-align:center;padding:20px;font-size:13px">กำลังโหลด...</div></div>
+    <div class="hist-filters">
+      <select class="hist-sel" id="hist-perpage" onchange="_histPerPage=parseInt(this.value);_histPage=1;_renderHistTable()">
+        <option value="5">แสดง 5</option>
+        <option value="10" selected>แสดง 10</option>
+        <option value="25">แสดง 25</option>
+        <option value="50">แสดง 50</option>
+        <option value="100">แสดง 100</option>
+      </select>
+      <input type="date" id="hist-from" value="${_histFrom}"
+        style="padding:7px 8px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;transition:all .3s;appearance:auto;color-scheme:light dark"
+        oninput="_histFrom=this.value;_histPage=1;loadEngHistory()">
+      <span style="font-size:12px;color:var(--fg3)">ถึง</span>
+      <input type="date" id="hist-to" value="${_histTo}"
+        style="padding:7px 8px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;transition:all .3s;appearance:auto;color-scheme:light dark"
+        oninput="_histTo=this.value;_histPage=1;loadEngHistory()">
+      <select class="hist-sel" id="hist-brand" onchange="_histBrand=this.value;_histPage=1;_renderHistTable()">
+        <option value="">ทุกแบรนด์</option>
+        ${BRANDS_HIST.map(b=>`<option value="${esc(b)}"${_histBrand===b?' selected':''}>${esc(b)}</option>`).join('')}
+      </select>
+      <div class="hist-srch">
+        <span class="hsi">🔍</span>
+        <input id="hist-srch" value="${esc(_histSearch)}" placeholder="ค้นหา ID / ประเภท / สาขา..."
+          oninput="_histSearch=this.value;_histPage=1;_renderHistTable()">
+      </div>
+      <button class="hist-sel" style="cursor:pointer;white-space:nowrap;font-weight:600"
+        onclick="_histFrom='';_histTo='';_histBrand='';_histSearch='';_histPage=1;
+          ['hist-from','hist-to','hist-srch'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+          document.getElementById('hist-brand').value='';
+          loadEngHistory()">ทั้งหมด</button>
+    </div>
+    <div id="hist-list"><div style="color:var(--fg4);text-align:center;padding:40px;font-size:13px">กำลังโหลด...</div></div>
   </div>`;
   loadEngHistory();
 }
@@ -1412,58 +1483,113 @@ function renderEngHistory(){
 async function loadEngHistory(){
   const el = document.getElementById('hist-list');
   if(!el) return;
-  el.innerHTML = '<div style="color:var(--fg4);text-align:center;padding:20px;font-size:13px">กำลังโหลด...</div>';
+  el.innerHTML = '<div style="color:var(--fg4);text-align:center;padding:40px;font-size:13px">⏳ กำลังโหลด...</div>';
   try {
-    // NE2: use BOTH name and username to match, strict filter
     const engName = AUTH?.user?.name || '';
     const engUser = AUTH?.user?.username || '';
+    const role = AUTH?.user?.role || '';
+    const canSeeAll = ['admin','superadmin','manager'].includes(role);
     let url = `/api/tickets?limit=500`;
     if(_histFrom) url += `&from=${_histFrom}`;
     if(_histTo)   url += `&to=${_histTo}T23:59:59`;
-    const d = await fetch(url, {headers:{Authorization:`Bearer ${localStorage.getItem('eng_auth')}`}}).then(r=>r.json());
-    // NE2: strict filter — only tickets where engineerName matches logged-in user
-    const allTix = d.tickets||d.data||[];
-    const list = allTix
-      .filter(t => {
-        const en = (t.engineerName||t.engineer_name||t.assignedTo||'').toLowerCase();
-        return en && (en===engName.toLowerCase() || en===engUser.toLowerCase());
-      })
-      .sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
-    if(!list.length){
-      el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบประวัติในช่วงเวลาที่เลือก</div></div>';return;
+    const d = await fetch(url,{headers:{Authorization:`Bearer ${localStorage.getItem('eng_auth')}`}}).then(r=>r.json());
+    let allTix = d.tickets||d.data||[];
+    let list;
+    if(canSeeAll){
+      list = allTix;
+    } else {
+      list = allTix.filter(t=>{
+        const en=(t.engineerName||t.engineer_name||t.assignedTo||'').toLowerCase();
+        return en&&(en===engName.toLowerCase()||en===engUser.toLowerCase());
+      });
     }
-    el.innerHTML = `<div style="font-size:11px;color:var(--fg4);margin-bottom:8px">พบ ${list.length} รายการ</div>
-      <div class="acc-list">${list.map(t=>`
-        <div class="acc-item">
-          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-            <span class="acc-q">${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})</span>
-            <span class="acc-ic">+</span>
-          </div>
-          <div class="acc-body">
-            สาขา: ${cleanBranch(t.branchCode)} · ผู้แจ้ง: ${esc(t.reporter||'-')}<br>
-            วันที่: ${esc(t.sentDate||'-')} · สถานะ: <b>${statusLabel(t.status)}</b><br>
-            ${t.workDetail?`งาน: ${esc(t.workDetail)}<br>`:''}
-            ${t.partsUsed?`อุปกรณ์: ${esc(t.partsUsed)}`:''}
-          </div>
-        </div>`).join('')}
-      </div>`;
+    _histAllData = list.sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
+    _renderHistTable(false);
   } catch(e) {
-    // Fallback to in-memory tickets
     let all = [...tickets].sort((a,b)=>new Date(b.sentDate||0)-new Date(a.sentDate||0));
-    if(_histFrom) all = all.filter(t=>new Date(t.sentDate||0)>=new Date(_histFrom));
-    if(_histTo)   all = all.filter(t=>new Date(t.sentDate||0)<=new Date(_histTo+'T23:59:59'));
-    if(!all.length){el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบประวัติ</div></div>';return;}
-    el.innerHTML = `<div style="font-size:11px;color:var(--fg4);margin-bottom:8px">พบ ${all.length} รายการ (จาก cache)</div>
-      <div class="acc-list">${all.map(t=>`
-        <div class="acc-item">
-          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-            <span class="acc-q">${esc(t.id||t.ticket_id||'--')} — ${esc(t.type||'-')} (${esc(t.brand||'')})</span>
-            <span class="acc-ic">+</span>
-          </div>
-          <div class="acc-body">สาขา: ${cleanBranch(t.branchCode)} · ผู้แจ้ง: ${esc(t.reporter||'-')} · วันที่: ${esc(t.sentDate||'-')} · สถานะ: ${statusLabel(t.status)}</div>
-        </div>`).join('')}
-      </div>`;
+    if(_histFrom) all=all.filter(t=>new Date(t.sentDate||0)>=new Date(_histFrom));
+    if(_histTo)   all=all.filter(t=>new Date(t.sentDate||0)<=new Date(_histTo+'T23:59:59'));
+    _histAllData = all;
+    _renderHistTable(true);
   }
+}
+
+function _histStatusPill(s){
+  const sl=(s||'').toLowerCase();
+  if(/เสร็จ|complete|done/.test(sl))  return`<span class="hs-pill hs-done">${statusLabel(s)}</span>`;
+  if(/ตรวจ|review/.test(sl))          return`<span class="hs-pill hs-rev">${statusLabel(s)}</span>`;
+  if(/ระหว่าง|progress|working/.test(sl)) return`<span class="hs-pill hs-work">${statusLabel(s)}</span>`;
+  if(/ยกเลิก|cancel/.test(sl))        return`<span class="hs-pill hs-cancel">${statusLabel(s)}</span>`;
+  return`<span class="hs-pill hs-wait">${statusLabel(s)||'รอ'}</span>`;
+}
+
+function _renderHistTable(fromCache=false){
+  const el=document.getElementById('hist-list');
+  if(!el)return;
+  // Apply client-side filters
+  let filtered=_histAllData.filter(t=>{
+    if(_histBrand&&t.brand!==_histBrand)return false;
+    if(_histSearch){
+      const q=_histSearch.toLowerCase();
+      const id=(t.id||t.ticket_id||'').toLowerCase();
+      const br=cleanBranch(t.branchCode).toLowerCase();
+      const tp=(t.type||'').toLowerCase();
+      if(!id.includes(q)&&!br.includes(q)&&!tp.includes(q))return false;
+    }
+    return true;
+  });
+  const total=filtered.length;
+  const totalPages=Math.max(1,Math.ceil(total/_histPerPage));
+  if(_histPage>totalPages)_histPage=totalPages;
+  const start=(_histPage-1)*_histPerPage;
+  const pageItems=filtered.slice(start,start+_histPerPage);
+  // Update count
+  const lbl=document.getElementById('hist-count-lbl');
+  if(lbl)lbl.textContent=`พบ ${total} รายการ${fromCache?' (จาก cache)':''}`;
+  if(!total){
+    el.innerHTML=`<div class="empty"><div class="empty-t">ไม่พบประวัติ</div><div class="empty-d">ลองเปลี่ยนตัวกรองหรือช่วงวันที่</div></div>`;
+    return;
+  }
+  const rows=pageItems.map((t,i)=>{
+    const rid=esc(t._recordId||'');
+    const clickFn=rid?`onclick="openDetail('${rid}')"`:'' ;
+    return`<tr class="htr" ${clickFn} style="animation:up .2s var(--ease) ${i*.03}s both">
+      <td style="color:var(--fg4);font-family:var(--display);font-size:11px;font-weight:600">${start+i+1}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--fg4);white-space:nowrap">${esc(t.id||t.ticket_id||'--')}</td>
+      <td style="font-weight:600;color:var(--fg)">${esc(t.type||'-')}</td>
+      <td style="font-size:12px;color:var(--fg2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cleanBranch(t.branchCode))}</td>
+      <td><span class="br-badge-sm">${esc(t.brand||'-')}</span></td>
+      <td>${_histStatusPill(t.status)}</td>
+      <td style="font-size:11px;color:var(--fg4);white-space:nowrap;font-family:var(--mono)">${esc((t.sentDate||'-').slice(0,10))}</td>
+    </tr>`;
+  }).join('');
+  // Pagination
+  let pgHtml='';
+  if(totalPages>1){
+    const btn=(lbl,p,dis=false,active=false)=>
+      `<button class="pg-btn${active?' on':''}" ${dis?'disabled':''} onclick="_histPage=${p};_renderHistTable(${fromCache})">${lbl}</button>`;
+    let pages=[];
+    for(let p=1;p<=totalPages;p++){
+      if(p===1||p===totalPages||Math.abs(p-_histPage)<=2)pages.push(p);
+      else if(Math.abs(p-_histPage)===3&&!pages.includes('…'))pages.push('…');
+    }
+    pgHtml=`<div class="pg">
+      <span class="pg-info">แสดง ${start+1}–${Math.min(start+_histPerPage,total)} จาก ${total}</span>
+      ${btn('หน้าแรกสุด',1,_histPage===1)}
+      ${btn('◄ ก่อนหน้า',_histPage-1,_histPage===1)}
+      ${pages.map(p=>p==='…'?`<span class="pg-btn" style="cursor:default;border-color:transparent;background:transparent">…</span>`:btn(p,p,false,p===_histPage)).join('')}
+      ${btn('ถัดไป ►',_histPage+1,_histPage===totalPages)}
+      ${btn('หน้าสุดท้าย',totalPages,_histPage===totalPages)}
+    </div>`;
+  }
+  el.innerHTML=`<div class="htbl-wrap">
+    <table class="htbl">
+      <thead><tr>
+        <th>#</th><th>รหัส</th><th>ประเภทงาน</th><th>สาขา</th><th>แบรนด์</th><th>สถานะ</th><th>วันที่</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>${pgHtml}`;
 }
 
 function renderEngSettings(){
