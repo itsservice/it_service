@@ -2404,7 +2404,6 @@ async function loadBranches(){
     } else {
       const pg2=document.getElementById('pg-branches');
       if(pg2)pg2.innerHTML=`<div style="padding:24px;text-align:center;color:var(--fg4)">ไม่สามารถโหลดสาขาได้: ${esc(d.error||'unknown')}</div>`;
-  ${EXP.branches}
     }
   }catch(e){
     toast('❌ โหลดสาขาไม่ได้: '+e.message);
@@ -2428,6 +2427,7 @@ async function renderBranches(){
   if(brFilter.q==='pending_only')list=list.filter(b=>b.status==='pending');
   
   document.getElementById('pg-branches').innerHTML=`
+    ${EXP.branches}
     <div style="padding:12px">
       ${pendingCount&&isSup?`<div class="br-pending-banner on">
         <span style="font-size:13px;font-weight:600">⏳ มี ${pendingCount} สาขารออนุมัติ location</span>
