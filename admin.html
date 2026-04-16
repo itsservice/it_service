@@ -969,6 +969,7 @@ function rDash(){
   const recent=[...tickets].sort((a,b)=>new Date(b.sentDate||b.createdAt||0)-new Date(a.sentDate||a.createdAt||0)).slice(0,6);
 
   pg_el.innerHTML=`
+  ${IMP_BAR}
   ${EXP.dash}
   <div class="dash-header">
     <div>
@@ -1222,12 +1223,13 @@ function rTickets(){
   const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
   if(kanbanMode){renderKanban();return;}
   document.getElementById('pg-tickets').innerHTML=`
+  ${IMP_BAR}
     <div class="filters" style="flex-wrap:wrap;gap:6px">
   ${EXP.tickets}
       <div class="srch" style="flex:1;min-width:160px;max-width:340px">
         <span class="si">🔍</span>
         <input style="transition:width .4s ease;width:160px" onfocus="this.style.width='100%'" onblur="this.style.width=this.value?'100%':'160px'"
-          placeholder="Search..." value="${esc(tF.q)}" oninput="tF.q=this.value;tF.p=1;rTickets()"/>
+          placeholder="Search..." value="${esc(tF.q)}" id="t-search-inp" oninput="_tSearch(this.value)"/>
       </div>
       <select class="sel" onchange="tF.status=this.value;tF.p=1;rTickets()">
         <option value="" ${!tF.status?'selected':''}>ทุกสถานะ</option>
@@ -1249,6 +1251,7 @@ function rTickets(){
       <input type="date" class="sel" value="${esc(tF.dateTo)}" onchange="tF.dateTo=this.value;tF.p=1;rTickets()" title="ถึงวันที่" style="max-width:140px"/>
       ${(tF.dateFrom||tF.dateTo||tF.status||tF.brand||tF.engineer||tF.q)?`<button class="smb" onclick="tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:tF.sortCol,sortDir:tF.sortDir,p:1};rTickets()" style="color:var(--red)">✕ ล้างทั้งหมด</button>`:''}
     </div>
+  <div id="t-table-wrap">  
     ${paged.length?`<table class="tbl"><thead><tr>
       <th style="${thStyle}" onclick="tSort('id')">Ticket${sortIcon('id')}</th>
       <th style="${thStyle}" onclick="tSort('type')">Type${sortIcon('type')}</th>
@@ -1271,6 +1274,178 @@ function rTickets(){
     :'<div class="empty"><div class="empty-t">No tickets found</div><div class="empty-d">Adjust filters or wait for new tickets</div></div>'}`;
 }
 function tSort(col){if(tF.sortCol===col){tF.sortDir=tF.sortDir==='asc'?'desc':'asc';}else{tF.sortCol=col;tF.sortDir='asc';}tF.p=1;rTickets();}
+
+// ── Debounced search helpers (fix cursor loss) ──
+let _tSrchTimer=null;
+function _tSearch(val){
+  window._tSearchFocus=true;
+  tF.q=val;tF.p=1;
+  clearTimeout(_tSrchTimer);
+  _tSrchTimer=setTimeout(()=>rTickets(),120);
+}
+let _brSrchTimer=null;
+function _brSearch(val){
+  window._brSearchFocus=true;
+  brFilter.q=val;brPage=0;
+  clearTimeout(_brSrchTimer);
+  _brSrchTimer=setTimeout(()=>{
+    _renderBranchTable();
+    setTimeout(()=>{const el=document.getElementById('br-search-inp');if(el&&window._brSearchFocus){el.focus();el.setSelectionRange(el.value.length,el.value.length);}window._brSearchFocus=false;},0);
+  },120);
+}
+
+// ══════════════════════════════════════════════════════════════
+// IMPORT / EXPORT EXCEL TEMPLATE SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+// ── Download template ──
+function _dlTemplate(){
+  if(typeof XLSX==='undefined'){toast('กำลังโหลด Excel library...');return;}
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Tickets
+  const tCols=['ticket_id','brand','status','branch_code','reporter','phone','type','detail','engineer_name','admin_note'];
+  const tNotes=[['ticket_id','รหัส ticket (เว้นว่างถ้าสร้างใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','รอดำเนินการ / อยู่ระหว่างดำเนินการ / เสร็จสิ้น / ยกเลิก'],['branch_code','รหัสสาขา'],['reporter','ชื่อผู้แจ้ง'],['phone','เบอร์โทร'],['type','ประเภทงาน เช่น งานระบบไฟฟ้า'],['detail','รายละเอียด'],['engineer_name','ชื่อช่าง'],['admin_note','หมายเหตุ admin']];
+  const tWs=XLSX.utils.aoa_to_sheet([tCols,...tickets.slice(0,100).map(t=>[t.id||'',t.brand||'',statusLabel(t.status),cleanBranch(t.branchCode),t.reporter||'',t.phone||'',t.type||'',t.detail||'',t.engineerName||'',t.adminNote||''])]);
+  tWs['!cols']=tCols.map(()=>({wch:20}));
+  XLSX.utils.book_append_sheet(wb,tWs,'Tickets');
+
+  // Sheet 2: Users
+  const uCols=['username','display_name','role','brand','phone','line_user_id','password_new'];
+  const uNotes=[['role','superadmin / admin / manager / lead_engineer / engineer / reporter'],['brand',"ALL หรือ Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['password_new','เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน']];
+  const allU=[...users,...(reporters||[])];
+  const uWs=XLSX.utils.aoa_to_sheet([uCols,...allU.slice(0,200).map(u=>[u.username||'',u.name||'',u.role||'',u.brand||'ALL',u.phone||'',u.line_user_id||'',''])]);
+  uWs['!cols']=uCols.map(()=>({wch:20}));
+  XLSX.utils.book_append_sheet(wb,uWs,'Users');
+
+  // Sheet 3: Branches
+  const bCols=['id','brand','code','name_th','name_en','ip','phone','location_lat','location_lng','location_name','status'];
+  const bNotes=[['id','ID สาขา (เว้นว่างถ้าเพิ่มใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','active / pending']];
+  const brData=window._allBranches||[];
+  const bWs=XLSX.utils.aoa_to_sheet([bCols,...brData.slice(0,1000).map(b=>[b.id||'',b.brand||'',b.code||'',b.nameTh||'',b.nameEn||'',b.ip||'',b.phone||'',b.location_lat||'',b.location_lng||'',b.location_name||'',b.status||'active'])]);
+  bWs['!cols']=bCols.map(()=>({wch:20}));
+  XLSX.utils.book_append_sheet(wb,bWs,'Branches');
+
+  // Sheet 4: Instructions
+  const instrRows=[
+    ['📋 คู่มือการใช้งาน Import/Export Template'],[''],
+    ['วิธีใช้งาน:'],
+    ['1. แก้ไขข้อมูลในแต่ละ Sheet ตามที่ต้องการ'],
+    ['2. กลับมาที่หน้า Admin แล้วกดปุ่ม "📤 Import"'],
+    ['3. เลือกไฟล์ Excel นี้'],
+    ['4. ระบบจะอัปเดตข้อมูลอัตโนมัติ'],[''],
+    ['หมายเหตุ:'],
+    ['- ห้ามแก้ชื่อ column (บรรทัดแรก)'],
+    ['- ห้ามแก้ชื่อ Sheet'],
+    ['- เว้นช่อง id/ticket_id ว่างถ้าต้องการเพิ่มข้อมูลใหม่'],[''],
+    ['รายละเอียดแต่ละ Sheet:'],[''],
+    ['Sheet: Tickets',...Array(3).fill('')],
+    ...([['ticket_id','รหัส ticket (เว้นว่างถ้าสร้างใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','รอดำเนินการ / อยู่ระหว่างดำเนินการ / เสร็จสิ้น / ยกเลิก'],['reporter','ชื่อผู้แจ้ง'],['type','ประเภทงาน เช่น งานระบบไฟฟ้า']].map(r=>['  '+r[0],r[1]])),
+    [''],
+    ['Sheet: Users',...Array(3).fill('')],
+    ...([['username','รหัสพนักงาน / username (ห้ามแก้)'],['role','superadmin / admin / manager / lead_engineer / engineer / reporter'],['brand',"ALL หรือ Dunkin' / Greyhound Cafe' / Au Bon Pain"],['password_new','เว้นว่างถ้าไม่ต้องการเปลี่ยน']].map(r=>['  '+r[0],r[1]])),
+    [''],
+    ['Sheet: Branches',...Array(3).fill('')],
+    ...([['id','ID สาขา (เว้นว่างถ้าเพิ่มใหม่)'],['brand',"Dunkin' / Greyhound Cafe' / Au Bon Pain / Funky Fries"],['status','active / pending'],['location_lat / lng','พิกัด GPS (ทศนิยม)']].map(r=>['  '+r[0],r[1]])),
+  ];
+  const instrWs=XLSX.utils.aoa_to_sheet(instrRows);
+  instrWs['!cols']=[{wch:30},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,instrWs,'📋 คู่มือ');
+
+  const fn=`it_support_template_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb,fn);
+  toast(`📥 ดาวน์โหลด Template สำเร็จ: ${fn}`);
+}
+
+// ── Import Excel ──
+function _openImport(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.xlsx,.xls';
+  inp.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    if(typeof XLSX==='undefined'){toast('กำลังโหลด library...');return;}
+    toast('⏳ กำลังอ่านไฟล์...');
+    const buf=await file.arrayBuffer();
+    const wb2=XLSX.read(buf,{type:'array'});
+    const results={ok:0,fail:0,msgs:[]};
+
+    for(const sheetName of wb2.SheetNames){
+      if(sheetName==='📋 คู่มือ')continue;
+      const rows=XLSX.utils.sheet_to_json(wb2.Sheets[sheetName],{defval:''});
+      if(!rows.length)continue;
+
+      if(sheetName==='Tickets'){
+        for(const r of rows){
+          if(!r.brand&&!r.reporter)continue;
+          try{
+            if(r.ticket_id){
+              await api(`/api/tickets/${r.ticket_id}`,{method:'PATCH',body:JSON.stringify({status:r.status||undefined,admin_note:r.admin_note||undefined,engineer_name:r.engineer_name||undefined})});
+              results.ok++;
+            } else if(r.brand&&r.reporter){
+              await api('/api/tickets',{method:'POST',body:JSON.stringify({brand:r.brand,reporter:r.reporter,phone:r.phone||'',type:r.type||'',detail:r.detail||'',branch_code:r.branch_code||''})});
+              results.ok++;
+            }
+          }catch(e){results.fail++;results.msgs.push('Ticket: '+e.message);}
+        }
+      }
+
+      else if(sheetName==='Users'){
+        for(const r of rows){
+          if(!r.username)continue;
+          const u=users.find(x=>x.username===r.username);
+          const payload={};
+          if(r.role)payload.role=r.role;
+          if(r.brand)payload.brand=r.brand;
+          if(r.display_name)payload.display_name=r.display_name;
+          if(r.phone)payload.phone=r.phone;
+          if(r.line_user_id)payload.line_user_id=r.line_user_id;
+          if(r.password_new)payload.password=r.password_new;
+          if(!Object.keys(payload).length)continue;
+          try{
+            if(u){await api(`/api/users/${u.id}`,{method:'PATCH',body:JSON.stringify(payload)});results.ok++;}
+            else{results.msgs.push(`User ${r.username} ไม่พบในระบบ — ข้าม`);}
+          }catch(e){results.fail++;results.msgs.push('User: '+e.message);}
+        }
+      }
+
+      else if(sheetName==='Branches'){
+        for(const r of rows){
+          if(!r.brand&&!r.code)continue;
+          try{
+            const payload={brand:r.brand,code:r.code,name_th:r.name_th||'',name_en:r.name_en||'',ip:r.ip||'',phone:r.phone||'',location_lat:r.location_lat||null,location_lng:r.location_lng||null,location_name:r.location_name||'',status:r.status||'active',role:AUTH?.user?.role||'',updated_by:AUTH?.user?.name||''};
+            if(r.id){await api(`/api/branches/${r.id}`,{method:'PATCH',body:JSON.stringify(payload)});results.ok++;}
+            else{await api('/api/branches',{method:'POST',body:JSON.stringify({...payload,created_by:AUTH?.user?.name||''})});results.ok++;}
+          }catch(e){results.fail++;results.msgs.push('Branch: '+e.message);}
+        }
+      }
+    }
+
+    // Reload data
+    await Promise.allSettled([loadTickets(),loadUsers(),loadReporters()]);
+    brLoaded=false;
+    render();
+
+    const summary=`✅ สำเร็จ ${results.ok} รายการ${results.fail?' | ❌ ล้มเหลว '+results.fail+' รายการ':''}`;
+    if(results.msgs.length){
+      openMod(`<div class="mod-t">Import สำเร็จ</div>
+        <div style="font-size:13px;color:var(--fg2);margin-bottom:12px">${summary}</div>
+        ${results.msgs.length?`<div style="font-size:12px;color:var(--red);max-height:200px;overflow-y:auto">${results.msgs.map(m=>`<div>• ${esc(m)}</div>`).join('')}</div>`:''}
+        <div class="mod-f"><button class="bp" onclick="closeMod()">ปิด</button></div>`);
+    } else {
+      toast(summary);
+    }
+  };
+  inp.click();
+}
+
+// ── Import/Export bar ──
+const IMP_BAR=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+  <span style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em;margin-right:4px">Import / Export</span>
+  <button class="smb" style="font-size:11px" onclick="_dlTemplate()">📥 ดาวน์โหลด Template</button>
+  <button class="smb" style="font-size:11px;background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="_openImport()">📤 Import Excel</button>
+  <span style="font-size:11px;color:var(--fg4);margin-left:4px">· แก้ข้อมูลใน Excel แล้ว Import กลับ ระบบอัปเดตอัตโนมัติ</span>
+</div>`;
+
 
 // ════════════════════════════════════════════════════════════
 // USERS & REPORTERS — Unified Paginated Table
@@ -2412,6 +2587,49 @@ async function loadBranches(){
   }
 }
 
+
+function _renderBranchTable(){
+  const isSup=AUTH?.user?.role==='superadmin';
+  let list=branches;
+  if(brFilter.brand)list=list.filter(b=>b.brand===brFilter.brand);
+  if(brFilter.q&&brFilter.q!=='pending_only'){
+    const q=brFilter.q.toLowerCase();
+    list=list.filter(b=>(b.name_en||b.nameTh||b.name_th||'').toLowerCase().includes(q)||(b.code||'').toLowerCase().includes(q)||(b.ip||'').includes(q));
+  }
+  if(brFilter.q==='pending_only')list=list.filter(b=>b.status==='pending');
+  const wrap=document.getElementById('br-table-wrap');
+  if(!wrap)return;
+  const total=list.length;
+  const PAGE=100;
+  const paged=list.slice(brPage*PAGE,(brPage+1)*PAGE);
+  wrap.innerHTML=`<div class="br-table-wrap">
+    <table class="br-table">
+      <thead><tr>
+        <th>Code</th><th>Brand</th><th>ชื่อสาขา</th><th>Location</th><th>Status</th><th>Action</th>
+      </tr></thead>
+      <tbody>${paged.map(b=>`<tr onclick="openBranchEdit(${b.id})" style="cursor:pointer">
+        <td style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</td>
+        <td style="font-size:12px">${esc(b.brand||'')}</td>
+        <td><div style="font-weight:500">${esc(b.nameTh||b.name_th||b.nameEn||b.name_en||'')}</div><div style="font-size:10px;color:var(--fg4)">${esc(b.nameEn||b.name_en||'')}</div></td>
+        <td style="font-size:11px">${b.location_lat?`<span style="color:var(--green)">📍 ${parseFloat(b.location_lat).toFixed(4)}, ${parseFloat(b.location_lng||0).toFixed(4)}</span><div style="font-size:10px;color:var(--fg4)">${esc(b.location_name||'')}</div>`:'<span style="color:var(--fg4)">ไม่มีพิกัด</span>'}</td>
+        <td><span class="br-badge ${b.status==='active'?'active':b.status==='pending'?'pending':'inactive'}">${b.status||'active'}</span></td>
+        <td onclick="event.stopPropagation()">
+          <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchEdit(${b.id})">แก้ไข</button>
+          ${isSup&&b.status==='pending'?`<button class="smb" style="font-size:10px;padding:3px 8px;color:var(--green)" onclick="doApproveBranch(${b.id})">อนุมัติ</button>`:''}
+        </td>
+      </tr>`).join('')}
+      ${!paged.length?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--fg4)">ไม่พบสาขา</td></tr>':''}
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--fg4)">
+    <span>แสดง ${paged.length} / ${total} สาขา</span>
+    <div style="display:flex;gap:4px">
+      ${brPage>0?`<button class="smb" onclick="brPage--;_renderBranchTable()">← ก่อนหน้า</button>`:''}
+      ${(brPage+1)*PAGE<total?`<button class="smb" onclick="brPage++;_renderBranchTable()">ถัดไป →</button>`:''}
+    </div>
+  </div>`;
+}
 async function renderBranches(){
   await loadBranches();
   const isSup=AUTH?.user?.role==='superadmin';
@@ -2427,6 +2645,7 @@ async function renderBranches(){
   if(brFilter.q==='pending_only')list=list.filter(b=>b.status==='pending');
   
   document.getElementById('pg-branches').innerHTML=`
+    ${IMP_BAR}
     ${EXP.branches}
     <div style="padding:12px">
       ${pendingCount&&isSup?`<div class="br-pending-banner on">
@@ -2434,7 +2653,7 @@ async function renderBranches(){
         <button class="smb" onclick="brFilter.brand='';brFilter.q='pending_only';renderBranches()">ดูทั้งหมด</button>
       </div>`:''}
       <div class="br-filters">
-        <input class="br-search" placeholder="ค้นหาชื่อ / รหัสสาขา..." value="${esc(brFilter.q)}" oninput="brFilter.q=this.value;brPage=0;renderBranches()">
+        <input class="br-search" placeholder="ค้นหาชื่อ / รหัสสาขา..." value="${esc(brFilter.q)}" id="br-search-inp" oninput="_brSearch(this.value)">
         <select class="br-sel" onchange="brFilter.brand=this.value;brPage=0;renderBranches()">
           <option value="">ทุกแบรนด์</option>
           ${BR_BRANDS.map(b=>`<option value="${b}"${brFilter.brand===b?' selected':''}>${b}</option>`).join('')}
@@ -2528,6 +2747,7 @@ function openBranchModal(id){
       <button onclick="closeMod()" style="padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--fg3);font-size:13px">ยกเลิก</button>
     </div>`;
   mbg.classList.add('on');
+  setTimeout(_renderBranchTable,50);
 }
 
 async function saveBranchLocation(id){
