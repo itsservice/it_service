@@ -528,6 +528,42 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // ═══════════════════════════════════════════════════════════
 // DEBUG
 // ═══════════════════════════════════════════════════════════
+// ─── GPS History (บันทึกเส้นทาง ดูย้อนหลัง) ───────────────────
+app.get('/api/gps/history', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const params = {};
+    if (req.query.engineer_name) params.engineer_name = req.query.engineer_name;
+    if (req.query.user_id)       params.user_id       = req.query.user_id;
+    if (req.query.date_from)     params.date_from     = req.query.date_from;
+    if (req.query.date_to)       params.date_to       = req.query.date_to;
+    if (req.query.session_id)    params.session_id    = req.query.session_id;
+    if (req.query.limit)         params.limit         = Math.min(parseInt(req.query.limit)||2000, 5000);
+    const r = await axios.get(`${FASTAPI_URL}/api/gps/history`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, params, timeout: 15000
+    });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[GPS HISTORY]', e.message);
+    res.json({ ok:false, error:e.message, points:[], sessions:[] });
+  }
+});
+
+app.get('/api/gps/sessions', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const params = {};
+    if (req.query.engineer_name) params.engineer_name = req.query.engineer_name;
+    if (req.query.days) params.days = parseInt(req.query.days)||30;
+    const r = await axios.get(`${FASTAPI_URL}/api/gps/sessions`, {
+      headers: { 'X-API-Key': FASTAPI_KEY }, params, timeout: 10000
+    });
+    res.json(r.data);
+  } catch(e) {
+    res.json({ ok:false, error:e.message, sessions:[] });
+  }
+});
+
 app.get('/debug/gps', async (_, res) => {
   try {
     const axios = require('axios');
