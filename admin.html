@@ -2637,18 +2637,20 @@ function togLang(){
 }
 
 // ══════════════════════════════════════════
-// GPS HISTORY PAGE
+// GPS HISTORY PAGE — Waypoint Selector
 // ══════════════════════════════════════════
-let _ghMap=null, _ghRoute=null, _ghMarkers=[], _ghPoints=[], _ghSessions=[], _ghActiveIdx=-1, _ghPlayTimer=null;
-const GH_COLORS={start:'#22c55e',end:'#ef4444',work:'#f59e0b',transit:'#6366f1',current:'#6c4ab0'};
+let _ghMap=null,_ghRoute=null,_ghMarkers=[],_ghPoints=[],_ghSessions=[],_ghActiveIdx=-1,_ghPlayTimer=null;
+let _ghWaypoints=new Set();
+let _ghFilter='all';
+const GH_MAX_WP=10;
 
 function rGPSHistory(){
   const el=document.getElementById('pg-gpsHistory');
   el.innerHTML=`
   <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <div>
-      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📍 GPS History</div>
-      <div style="font-size:13px;color:var(--fg3);margin-top:2px">เส้นทางช่าง · ดูย้อนหลัง · บันทึกทุก 30 วินาที</div>
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">GPS History</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:2px">เส้นทางช่าง · เลือก Waypoint · เปิดใน Google Maps</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="smb" onclick="_ghExportGPX()">Export GPX</button>
@@ -2679,36 +2681,63 @@ function rGPSHistory(){
   <div class="gh-wrap">
     <div style="position:relative">
       <div id="gh-map"></div>
-      <div class="map-legend-gh" id="gh-legend">
+      <div class="map-legend-gh">
         <div class="ml-row"><div class="ml-dot" style="background:#22c55e;border-color:var(--bg)"></div>เริ่มงาน</div>
-        <div class="ml-row"><div class="ml-line" style="background:#6c4ab0"></div>เส้นทาง</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#f59e0b;border-color:var(--bg)"></div>จุดงาน / Ticket</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#ef4444;border-color:var(--bg)"></div>จุดสุดท้าย</div>
+        <div class="ml-row"><div class="ml-line" style="background:#4285f4"></div>เส้นทาง</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#f59e0b;border-color:var(--bg)"></div>จุดงาน</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#4285f4;border-color:var(--bg)"></div>Waypoint เลือก</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#ef4444;border-color:var(--bg)"></div>ปัจจุบัน</div>
       </div>
     </div>
     <div class="gh-side">
       <div class="gh-head">
         <div class="gh-eng-row">
           <div class="gh-av" id="gh-av">—</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--fg)" id="gh-eng-name">เลือกช่าง</div><div style="font-size:11px;color:var(--fg4)" id="gh-eng-date">—</div></div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--fg)" id="gh-eng-name">เลือกช่าง</div>
+            <div style="font-size:11px;color:var(--fg4)" id="gh-eng-date">—</div>
+          </div>
         </div>
         <div class="gh-stat">
-          <div class="gh-stat-box"><div class="gh-stat-v" id="gh-km">—</div><div class="gh-stat-l">km วันนี้</div></div>
+          <div class="gh-stat-box"><div class="gh-stat-v" id="gh-km">—</div><div class="gh-stat-l">km</div></div>
           <div class="gh-stat-box"><div class="gh-stat-v" id="gh-pts">—</div><div class="gh-stat-l">จุดบันทึก</div></div>
           <div class="gh-stat-box"><div class="gh-stat-v" id="gh-spd">—</div><div class="gh-stat-l">max km/h</div></div>
         </div>
       </div>
-      <div class="gh-tl-label">Timeline เส้นทาง</div>
-      <div class="gh-tl" id="gh-tl"><div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">เลือกช่างและวันที่แล้วกด โหลด</div></div>
+
+      <div style="padding:6px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <select class="gh-sel" style="flex:1;font-size:11px" id="gh-filter-sel" onchange="_ghFilter=this.value;_ghRenderWaypointList()">
+          <option value="all">แสดงทุกจุด</option>
+          <option value="work">เฉพาะจุดงาน</option>
+          <option value="5min">ทุก 5 นาที</option>
+          <option value="10min">ทุก 10 นาที</option>
+        </select>
+        <button class="smb" style="font-size:10px;padding:4px 8px" onclick="_ghAutoSelect()">Auto 10</button>
+        <button class="smb" style="font-size:10px;padding:4px 8px;color:var(--red)" onclick="_ghClearWp()">ล้าง</button>
+      </div>
+
+      <div style="padding:5px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:10px;color:var(--fg4);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <span>คลิกจุดเพื่อเลือก/ยกเลิก (สูงสุด ${GH_MAX_WP} จุด)</span>
+        <span style="font-family:var(--mono);font-weight:700;color:var(--fg)" id="gh-wp-count">0 / ${GH_MAX_WP}</span>
+      </div>
+
+      <div class="gh-tl" id="gh-tl">
+        <div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">เลือกช่างและวันที่แล้วกด โหลด</div>
+      </div>
+
       <div class="gh-foot">
-        <button id="gh-play-btn" onclick="_ghPlayback()">▶ Playback</button>
-        <button class="pri" onclick="_ghOpenGoogleMaps()">Google Maps</button>
+        <div style="display:flex;gap:5px">
+          <button id="gh-play-btn" style="flex:1;padding:7px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg3);cursor:pointer" onclick="_ghPlayback()">▶ Playback</button>
+          <button style="flex:1;padding:7px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg3);cursor:pointer" onclick="_ghExportGPX()">GPX</button>
+        </div>
+        <button id="gh-maps-btn" style="width:100%;padding:9px;border-radius:8px;border:none;background:#1a73e8;color:#fff;font-size:12px;font-weight:700;cursor:pointer" onclick="_ghOpenGoogleMaps()">
+          เปิดใน Google Maps
+        </button>
       </div>
     </div>
   </div>`;
 
-  setTimeout(_ghInitMap, 100);
-  // set default = today
+  setTimeout(_ghInitMap,100);
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('gh-date-from').value=today;
   document.getElementById('gh-date-to').value=today;
@@ -2727,7 +2756,7 @@ function _ghInitMap(){
   if(!el)return;
   _ghMap=L.map('gh-map',{zoomControl:true}).setView([13.73,100.52],11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors',maxZoom:19
+    attribution:'© OpenStreetMap',maxZoom:19
   }).addTo(_ghMap);
   if(_ghPoints.length)_ghRenderMap();
 }
@@ -2737,9 +2766,10 @@ async function _ghLoad(){
   const dateFrom=document.getElementById('gh-date-from')?.value||'';
   const dateTo=document.getElementById('gh-date-to')?.value||'';
   const lbl=document.getElementById('gh-count-lbl');
-  if(lbl)lbl.textContent='⏳ กำลังโหลด...';
   const tl=document.getElementById('gh-tl');
+  if(lbl)lbl.textContent='⏳ กำลังโหลด...';
   if(tl)tl.innerHTML='<div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">⏳ กำลังโหลด...</div>';
+  _ghWaypoints.clear();
 
   let url='/api/gps/history?limit=3000';
   if(engName)  url+=`&engineer_name=${encodeURIComponent(engName)}`;
@@ -2751,37 +2781,41 @@ async function _ghLoad(){
     if(!d.ok)throw new Error(d.error||'API error');
     _ghPoints=d.points||[];
     _ghSessions=d.sessions||[];
-
-    // ถ้าไม่มีข้อมูลจริง → ใช้ mock data (fallback demo)
     if(!_ghPoints.length){
       _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
       _ghSessions=[{engineer_name:engName||'ช่าง 2',session_date:dateFrom,total_km:28.4,point_count:_ghPoints.length,max_speed:62,tickets:['GD-00021','ABP-00006']}];
-      if(lbl)lbl.textContent=`${_ghPoints.length} จุด (demo data — เมื่อมี GPS history จะแสดงข้อมูลจริง)`;
-    } else {
+      if(lbl)lbl.textContent=`${_ghPoints.length} จุด (demo)`;
+    }else{
       if(lbl)lbl.textContent=`${_ghPoints.length} จุด · ${_ghSessions.length} sessions`;
     }
+    _ghAutoSelect();
     _ghUpdateStats();
-    _ghRenderTimeline();
+    _ghRenderWaypointList();
     if(_ghMap)_ghRenderMap();
   }catch(e){
-    if(lbl)lbl.textContent='❌ '+e.message;
-    // Demo fallback
     _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
     _ghSessions=[{engineer_name:engName||'ช่าง 2',total_km:28.4,point_count:_ghPoints.length,max_speed:62}];
-    _ghUpdateStats();_ghRenderTimeline();if(_ghMap)_ghRenderMap();
-    if(lbl)lbl.textContent=`⚠️ ${_ghPoints.length} จุด (demo — API ยังไม่ deploy)`;
+    if(lbl)lbl.textContent=`⚠️ demo (${e.message})`;
+    _ghAutoSelect();
+    _ghUpdateStats();
+    _ghRenderWaypointList();
+    if(_ghMap)_ghRenderMap();
   }
 }
 
 function _ghMockPoints(name,dateStr){
   const base=[
     [13.7308,100.5418,'08:45','สำนักงาน Silom',null,'start'],
-    [13.7380,100.5380,'09:05','เดินทาง',null,'transit'],
-    [13.7420,100.5350,'09:12','GD-00021 Dunkin\' Silom','GD-00021','work'],
-    [13.7440,100.5320,'09:35','เดินทาง',null,'transit'],
+    [13.7360,100.5400,'09:00','เดินทาง',null,'transit'],
+    [13.7380,100.5380,'09:10','เดินทาง',null,'transit'],
+    [13.7420,100.5350,'09:20','GD-00021 Dunkin\' Silom','GD-00021','work'],
+    [13.7440,100.5380,'09:50','เดินทาง',null,'transit'],
+    [13.7460,100.5420,'10:10','เดินทาง',null,'transit'],
     [13.7463,100.5347,'10:30','ABP-00006 Au Bon Pain Siam','ABP-00006','work'],
-    [13.7490,100.5450,'11:15','เดินทาง',null,'transit'],
+    [13.7480,100.5450,'11:00','เดินทาง',null,'transit'],
+    [13.7460,100.5510,'11:20','เดินทาง',null,'transit'],
     [13.7380,100.5590,'11:45','ABP-00007 Au Bon Pain Asoke','ABP-00007','work'],
+    [13.7360,100.5700,'12:10','เดินทาง',null,'transit'],
     [13.7340,100.5800,'12:20','เดินทาง',null,'transit'],
     [13.7308,100.6072,'12:30','GD-00024 Dunkin\' Onnut','GD-00024','work'],
     [13.7308,100.6072,'13:47','ตำแหน่งปัจจุบัน',null,'current'],
@@ -2791,7 +2825,7 @@ function _ghMockPoints(name,dateStr){
     latitude:b[0],longitude:b[1],
     recorded_at:`${dateStr} ${b[2]}:00`,
     ticket_id:b[4],speed:b[5]==='transit'?Math.floor(30+Math.random()*30):0,
-    distance_m:i===0?0:Math.floor(Math.random()*3000+500),
+    distance_m:i===0?0:Math.floor(Math.random()*2000+300),
     session_id:`15_${dateStr}`,_type:b[5],_label:b[3]
   }));
 }
@@ -2800,57 +2834,140 @@ function _ghUpdateStats(){
   const sess=_ghSessions[0]||{};
   const engName=document.getElementById('gh-eng-sel')?.value||sess.engineer_name||'—';
   const dateFrom=document.getElementById('gh-date-from')?.value||'';
-  const av=document.getElementById('gh-av');
-  if(av){av.textContent=(engName||'?').charAt(0).toUpperCase();}
+  const av=document.getElementById('gh-av');if(av)av.textContent=(engName||'?').charAt(0).toUpperCase();
   const en=document.getElementById('gh-eng-name');if(en)en.textContent=engName||'ทุกช่าง';
   const ed=document.getElementById('gh-eng-date');if(ed)ed.textContent=dateFrom||'ทุกวัน';
   const km=_ghSessions.reduce((s,x)=>s+(x.total_km||0),0);
-  document.getElementById('gh-km').textContent=km.toFixed(1);
-  document.getElementById('gh-pts').textContent=_ghPoints.length;
+  const kmEl=document.getElementById('gh-km');if(kmEl)kmEl.textContent=km.toFixed(1);
+  const ptsEl=document.getElementById('gh-pts');if(ptsEl)ptsEl.textContent=_ghPoints.length;
   const spd=Math.max(..._ghSessions.map(x=>x.max_speed||0),0);
-  document.getElementById('gh-spd').textContent=spd||'—';
+  const spdEl=document.getElementById('gh-spd');if(spdEl)spdEl.textContent=spd||'—';
 }
 
-function _ghRenderTimeline(){
+// ── Waypoint logic ──
+function _ghFilteredPoints(){
+  if(_ghFilter==='work') return _ghPoints.filter((p,i)=>i===0||i===_ghPoints.length-1||!!p.ticket_id||p._type==='work'||p._type==='current');
+  if(_ghFilter==='5min'){
+    let last=null;
+    return _ghPoints.filter((p,i)=>{
+      if(i===0||i===_ghPoints.length-1||p.ticket_id)return true;
+      const t=new Date(p.recorded_at||0).getTime();
+      if(!last||t-last>=5*60*1000){last=t;return true;}
+      return false;
+    });
+  }
+  if(_ghFilter==='10min'){
+    let last=null;
+    return _ghPoints.filter((p,i)=>{
+      if(i===0||i===_ghPoints.length-1||p.ticket_id)return true;
+      const t=new Date(p.recorded_at||0).getTime();
+      if(!last||t-last>=10*60*1000){last=t;return true;}
+      return false;
+    });
+  }
+  return _ghPoints;
+}
+
+function _ghToggleWaypoint(realIdx){
+  if(_ghWaypoints.has(realIdx)){
+    _ghWaypoints.delete(realIdx);
+  } else {
+    if(_ghWaypoints.size>=GH_MAX_WP){toast('เลือกได้สูงสุด '+GH_MAX_WP+' จุด');return;}
+    _ghWaypoints.add(realIdx);
+  }
+  _ghRenderWaypointList();
+  _ghRenderMap();
+  _ghUpdateMapsBtn();
+}
+
+function _ghAutoSelect(){
+  _ghWaypoints.clear();
+  if(!_ghPoints.length)return;
+  // เสมอเลือก: first, last, งาน
+  const must=[];
+  _ghPoints.forEach((p,i)=>{
+    if(i===0||i===_ghPoints.length-1||p.ticket_id||p._type==='work'||p._type==='current')
+      must.push(i);
+  });
+  must.forEach(i=>_ghWaypoints.add(i));
+  // ถ้ายังไม่ครบ 10 → เพิ่ม travel กระจาย
+  if(_ghWaypoints.size<GH_MAX_WP){
+    const travel=_ghPoints.map((p,i)=>i).filter(i=>!_ghWaypoints.has(i));
+    const step=Math.max(1,Math.floor(travel.length/(_ghPoints.length<20?_ghPoints.length:GH_MAX_WP-_ghWaypoints.size)));
+    let added=0;
+    travel.forEach((i,ti)=>{
+      if(_ghWaypoints.size>=GH_MAX_WP)return;
+      if(ti%step===0){_ghWaypoints.add(i);added++;}
+    });
+  }
+  _ghRenderWaypointList();
+  if(_ghMap)_ghRenderMap();
+  _ghUpdateMapsBtn();
+}
+
+function _ghClearWp(){
+  _ghWaypoints.clear();
+  _ghRenderWaypointList();
+  if(_ghMap)_ghRenderMap();
+  _ghUpdateMapsBtn();
+}
+
+function _ghUpdateMapsBtn(){
+  const btn=document.getElementById('gh-maps-btn');
+  const cnt=document.getElementById('gh-wp-count');
+  if(cnt)cnt.textContent=`${_ghWaypoints.size} / ${GH_MAX_WP}`;
+  if(btn){
+    const n=_ghWaypoints.size;
+    btn.textContent=n>=2?`เปิดใน Google Maps (${n} จุด)`:'เลือกอย่างน้อย 2 จุด';
+    btn.style.background=n>=2?'#1a73e8':'var(--fg4)';
+    btn.style.cursor=n>=2?'pointer':'default';
+  }
+}
+
+function _ghRenderWaypointList(){
   const tl=document.getElementById('gh-tl');
   if(!tl)return;
-  if(!_ghPoints.length){tl.innerHTML='<div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">ไม่พบข้อมูลในช่วงที่เลือก</div>';return;}
+  if(!_ghPoints.length){tl.innerHTML='<div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">ไม่พบข้อมูล</div>';return;}
 
-  // สร้าง milestone points (จุดสำคัญ: start, work, current)
-  const milestones=_ghPoints.filter((p,i)=>i===0||i===_ghPoints.length-1||p.ticket_id||p._type==='work'||(i>0&&_ghPoints[i-1].ticket_id));
-  if(milestones.length===0)milestones.push(_ghPoints[0]);
-
+  const filtered=_ghFilteredPoints();
   const typeColors={start:'#22c55e',work:'#f59e0b',transit:'#6366f1',current:'#ef4444'};
-  const typeBg={start:'rgba(34,197,94,.15)',work:'rgba(245,158,11,.15)',transit:'rgba(99,102,241,.15)',current:'rgba(239,68,68,.15)'};
-  const typeLabel={start:'เริ่มงาน',work:'งาน',transit:'เดินทาง',current:'ปัจจุบัน'};
+  const typeBg={start:'rgba(34,197,94,.12)',work:'rgba(245,158,11,.12)',transit:'rgba(99,102,241,.08)',current:'rgba(239,68,68,.12)'};
+  const typeLabel={start:'เริ่ม',work:'งาน',transit:'เดินทาง',current:'ปัจจุบัน'};
 
-  tl.innerHTML=`<div style="font-size:10px;color:var(--fg4);margin:4px 0 8px">${_ghPoints.length} จุดบันทึก → แสดง ${milestones.length} จุดสำคัญ</div>`+
-  milestones.map((p,i)=>{
-    const tp=p._type||(p.ticket_id?'work':i===0?'start':i===milestones.length-1?'current':'transit');
+  const header=`<div style="font-size:10px;color:var(--fg4);padding:4px 0 6px;display:flex;justify-content:space-between">
+    <span>แสดง ${filtered.length} / ${_ghPoints.length} จุด</span>
+    <span style="color:var(--fg3)">คลิกเพื่อเลือก</span>
+  </div>`;
+
+  const items=filtered.map((p)=>{
+    const realIdx=_ghPoints.indexOf(p);
+    const tp=p._type||(p.ticket_id?'work':realIdx===0?'start':realIdx===_ghPoints.length-1?'current':'transit');
     const col=typeColors[tp]||'#888';
-    const bg=typeBg[tp]||'rgba(136,136,136,.1)';
+    const bg=typeBg[tp]||'rgba(136,136,136,.08)';
     const time=(p.recorded_at||'').slice(11,16);
-    const label=p._label||(p.ticket_id?`${p.ticket_id}`:'เดินทาง');
-    return `<div class="gh-tl-item" onclick="_ghFocusPoint(${_ghPoints.indexOf(p)})">
-      <div class="gh-tl-node" style="color:${col};background:${col}"></div>
-      <div class="gh-tl-card" id="gh-card-${i}">
-        <div class="gh-tl-time">${time}${p.speed>0?' · '+Math.round(p.speed)+' km/h':''}</div>
-        <div class="gh-tl-title">${esc(label)}</div>
-        ${p.ticket_id?`<div class="gh-tl-sub">Ticket: ${esc(p.ticket_id)}</div>`:''}
-        <span class="gh-badge" style="background:${bg};color:${col}">${typeLabel[tp]||tp}</span>
+    const label=p._label||(p.ticket_id?p.ticket_id:'เดินทาง');
+    const isSelected=_ghWaypoints.has(realIdx);
+    const wpOrder=[..._ghWaypoints].indexOf(realIdx)+1;
+    return `<div onclick="_ghToggleWaypoint(${realIdx})" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .1s;${isSelected?'background:rgba(66,133,244,.07);margin:0 -4px;padding:7px 4px;border-radius:6px;':''}">
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${isSelected?'#4285f4':col};background:${isSelected?'#4285f4':'transparent'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${isSelected?'#fff':col};flex-shrink:0">
+        ${isSelected?wpOrder:''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:5px">
+          ${time}
+          ${p.speed>0?`<span style="font-size:9px;color:var(--fg4)">${Math.round(p.speed)} km/h</span>`:''}
+          <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${bg};color:${col};font-weight:700">${typeLabel[tp]||tp}</span>
+        </div>
+        <div style="font-size:10px;color:var(--fg4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(label.substring(0,32))}</div>
+      </div>
+      <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid ${isSelected?'#4285f4':col};background:${isSelected?'#4285f4':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${isSelected?'<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L4 7L9 1" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
       </div>
     </div>`;
   }).join('');
-  _ghActiveIdx=-1;
-}
 
-function _ghFocusPoint(idx){
-  _ghActiveIdx=idx;
-  const p=_ghPoints[idx];
-  if(!p||!_ghMap)return;
-  _ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],16);
-  if(_ghMarkers[idx])_ghMarkers[idx].openPopup();
-  document.querySelectorAll('.gh-tl-card').forEach(c=>c.classList.remove('active'));
+  tl.innerHTML=header+items;
+  _ghUpdateMapsBtn();
 }
 
 function _ghRenderMap(){
@@ -2860,70 +2977,81 @@ function _ghRenderMap(){
   if(_ghRoute){try{_ghMap.removeLayer(_ghRoute);}catch(_){}}
 
   const latlngs=_ghPoints.map(p=>[parseFloat(p.latitude),parseFloat(p.longitude)]);
-  _ghRoute=L.polyline(latlngs,{color:'#6c4ab0',weight:4,opacity:.8}).addTo(_ghMap);
+  _ghRoute=L.polyline(latlngs,{color:'#4285f4',weight:4,opacity:.8}).addTo(_ghMap);
 
+  const wpArr=[..._ghWaypoints].sort((a,b)=>a-b);
   _ghPoints.forEach((p,i)=>{
     const isFirst=i===0, isLast=i===_ghPoints.length-1;
     const hasTicket=!!p.ticket_id;
-    if(!isFirst&&!isLast&&!hasTicket&&i%5!==0)return;
-    const col=isFirst?'#22c55e':isLast?'#ef4444':hasTicket?'#f59e0b':'#6c4ab0';
-    const sz=isFirst||isLast?16:hasTicket?14:10;
-    const icon=L.divIcon({
-      html:`<div style="width:${sz}px;height:${sz}px;background:${col};border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
-      iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],className:''
-    });
-    const time=(p.recorded_at||'').slice(11,16);
+    const isWP=_ghWaypoints.has(i);
+    if(!isFirst&&!isLast&&!hasTicket&&!isWP&&i%8!==0)return;
+    const wpOrder=wpArr.indexOf(i)+1;
+    const col=isFirst?'#22c55e':isLast?'#ef4444':isWP?'#4285f4':hasTicket?'#f59e0b':'rgba(99,102,241,.6)';
+    const sz=isFirst||isLast?18:isWP?18:hasTicket?14:8;
+    const html=isWP
+      ?`<div style="width:${sz}px;height:${sz}px;background:${col};border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">${wpOrder}</div>`
+      :`<div style="width:${sz}px;height:${sz}px;background:${col};border-radius:50%;border:${sz>=14?'2.5px':'1.5px'} solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`;
+    const icon=L.divIcon({html,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],className:''});
     const m=L.marker([parseFloat(p.latitude),parseFloat(p.longitude)],{icon}).addTo(_ghMap);
-    m.bindPopup(`<div style="font-family:system-ui;min-width:150px">
-      <div style="font-size:10px;color:#888;margin-bottom:2px">${esc(p.recorded_at||'')}</div>
-      <div style="font-size:13px;font-weight:700">${esc(p.engineer_name||'')}</div>
-      ${p.ticket_id?`<div style="font-size:12px;color:#f59e0b;margin-top:2px">Ticket: ${esc(p.ticket_id)}</div>`:''}
-      ${p.speed>0?`<div style="font-size:11px;color:#888">ความเร็ว: ${Math.round(p.speed)} km/h</div>`:''}
-      <div style="font-size:10px;color:#bbb;margin-top:3px">${parseFloat(p.latitude).toFixed(5)}, ${parseFloat(p.longitude).toFixed(5)}</div>
-    </div>`);
-    _ghMarkers.push(m);
+    if(sz>=12){
+      const time=(p.recorded_at||'').slice(11,16);
+      const label=p._label||(p.ticket_id?p.ticket_id:'');
+      m.bindPopup(`<div style="font-family:system-ui;min-width:160px">
+        <div style="font-size:10px;color:#888">${esc(p.recorded_at||'')}</div>
+        <div style="font-size:13px;font-weight:700;margin:2px 0">${esc(p.engineer_name||'')}</div>
+        ${isWP?`<div style="font-size:11px;color:#4285f4;font-weight:700">Waypoint #${wpOrder}</div>`:''}
+        ${p.ticket_id?`<div style="font-size:12px;color:#f59e0b">Ticket: ${esc(p.ticket_id)}</div>`:''}
+        ${label&&!p.ticket_id?`<div style="font-size:11px;color:#555">${esc(label)}</div>`:''}
+        ${p.speed>0?`<div style="font-size:11px;color:#888">${Math.round(p.speed)} km/h</div>`:''}
+        <div style="font-size:10px;color:#bbb;margin-top:3px">${parseFloat(p.latitude).toFixed(5)}, ${parseFloat(p.longitude).toFixed(5)}</div>
+      </div>`);
+      if(i===_ghPoints.length-1)m.openPopup();
+    }
+    m.on('click',()=>_ghToggleWaypoint(i));
+    _ghMarkers[i]=m;
   });
 
-  _ghMap.fitBounds(L.polyline(latlngs).getBounds(),{padding:[30,30]});
-}
-
-function _ghFocusPoint(idx){
-  _ghActiveIdx=idx;
-  const p=_ghPoints[idx];
-  if(!p||!_ghMap)return;
-  _ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],16);
-}
-
-function _ghPlayback(){
-  if(_ghPlayTimer){clearInterval(_ghPlayTimer);_ghPlayTimer=null;document.getElementById('gh-play-btn').textContent='▶ Playback';return;}
-  if(!_ghPoints.length)return;
-  let idx=0;
-  document.getElementById('gh-play-btn').textContent='⏹ หยุด';
-  _ghPlayTimer=setInterval(()=>{
-    if(idx>=_ghPoints.length){clearInterval(_ghPlayTimer);_ghPlayTimer=null;document.getElementById('gh-play-btn').textContent='▶ Playback';return;}
-    const p=_ghPoints[idx];
-    if(_ghMap)_ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],15);
-    idx++;
-  },400);
+  try{_ghMap.fitBounds(L.polyline(latlngs).getBounds(),{padding:[30,30]});}catch(_){}
 }
 
 function _ghOpenGoogleMaps(){
-  if(!_ghPoints.length){toast('ไม่มีข้อมูล GPS');return;}
-  const first=_ghPoints[0], last=_ghPoints[_ghPoints.length-1];
-  const waypts=_ghPoints.filter(p=>p.ticket_id).slice(0,8).map(p=>`${parseFloat(p.latitude).toFixed(5)},${parseFloat(p.longitude).toFixed(5)}`).join('|');
-  const url=`https://www.google.com/maps/dir/?api=1&origin=${first.latitude},${first.longitude}&destination=${last.latitude},${last.longitude}${waypts?`&waypoints=${waypts}`:''}&travelmode=driving`;
+  if(_ghWaypoints.size<2){toast('เลือกอย่างน้อย 2 จุด');return;}
+  const ordered=[..._ghWaypoints].sort((a,b)=>a-b).map(i=>_ghPoints[i]);
+  const pts=ordered.map(p=>`${parseFloat(p.latitude).toFixed(6)},${parseFloat(p.longitude).toFixed(6)}`);
+  const origin=pts[0];
+  const dest=pts[pts.length-1];
+  const waypts=pts.slice(1,-1);
+  let url;
+  if(waypts.length>0){
+    url=`https://www.google.com/maps/dir/${origin}/${waypts.join('/')}/${dest}`;
+  } else {
+    url=`https://www.google.com/maps/dir/${origin}/${dest}`;
+  }
   window.open(url,'_blank');
+  toast(`เปิด Google Maps ${ordered.length} จุดแล้ว`);
+}
+
+function _ghPlayback(){
+  if(_ghPlayTimer){clearInterval(_ghPlayTimer);_ghPlayTimer=null;const b=document.getElementById('gh-play-btn');if(b)b.textContent='▶ Playback';return;}
+  if(!_ghPoints.length)return;
+  let idx=0;
+  const b=document.getElementById('gh-play-btn');if(b)b.textContent='⏹ หยุด';
+  _ghPlayTimer=setInterval(()=>{
+    if(idx>=_ghPoints.length){clearInterval(_ghPlayTimer);_ghPlayTimer=null;const b=document.getElementById('gh-play-btn');if(b)b.textContent='▶ Playback';return;}
+    const p=_ghPoints[idx];
+    if(_ghMap)_ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],15);
+    idx++;
+  },500);
 }
 
 function _ghExportGPX(){
   if(!_ghPoints.length){toast('ไม่มีข้อมูล');return;}
   const eng=_ghPoints[0]?.engineer_name||'engineer';
-  const pts=_ghPoints.map(p=>`    <trkpt lat="${p.latitude}" lon="${p.longitude}"><time>${(p.recorded_at||'').replace(' ','T')}+07:00</time></trkpt>`).join('\n');
-  const gpx=`<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="IT Support GPS History"><metadata><name>${esc(eng)}</name></metadata><trk><name>${esc(eng)}</name><trkseg>\n${pts}\n</trkseg></trk></gpx>`;
+  const pts=_ghPoints.map(p=>`  <trkpt lat="${p.latitude}" lon="${p.longitude}"><time>${(p.recorded_at||'').replace(' ','T')}+07:00</time></trkpt>`).join('\n');
+  const gpx=`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="IT Support GPS"><trk><name>${esc(eng)}</name><trkseg>\n${pts}\n</trkseg></trk></gpx>`;
   const blob=new Blob([gpx],{type:'application/gpx+xml'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`gps_${eng}_${new Date().toISOString().slice(0,10)}.gpx`;
-  a.click();
+  a.download=`gps_${eng}_${new Date().toISOString().slice(0,10)}.gpx`;a.click();
   toast('Export GPX สำเร็จ');
 }
 
@@ -2931,6 +3059,7 @@ function _ghSetToday(){const t=new Date().toISOString().slice(0,10);const f=docu
 function _ghSetYesterday(){const t=new Date();t.setDate(t.getDate()-1);const s=t.toISOString().slice(0,10);const f=document.getElementById('gh-date-from'),to=document.getElementById('gh-date-to');if(f)f.value=s;if(to)to.value=s;_ghLoad();}
 function _ghSet7Days(){const e=new Date().toISOString().slice(0,10);const s=new Date();s.setDate(s.getDate()-6);const f=document.getElementById('gh-date-from'),to=document.getElementById('gh-date-to');if(f)f.value=s.toISOString().slice(0,10);if(to)to.value=e;_ghLoad();}
 function _ghOnEngChange(){_ghLoad();}
+
 
 // ══════════════════════════════════════════
 // HOOK notifications into existing actions
