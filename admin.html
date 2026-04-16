@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Admin — IT Support</title>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -437,6 +438,45 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 .stat-v{font-weight:700}
 
 /* Delete confirm popup fix z-index */
+/* ── GPS HISTORY PAGE ── */
+.gh-wrap{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 120px);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+@media(max-width:900px){.gh-wrap{grid-template-columns:1fr;height:auto}}
+#gh-map{width:100%;height:100%;min-height:500px}
+@media(max-width:900px){#gh-map{min-height:340px}}
+.gh-side{background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+@media(max-width:900px){.gh-side{border-left:none;border-top:1px solid var(--border);max-height:400px}}
+.gh-head{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.gh-eng-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.gh-av{width:34px;height:34px;border-radius:50%;background:var(--fg);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .4s}
+.gh-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.gh-stat-box{background:var(--bg2);border-radius:6px;padding:6px 8px;text-align:center;transition:background .4s}
+.gh-stat-v{font-family:var(--display);font-size:16px;font-weight:700;color:var(--fg)}
+.gh-stat-l{font-size:9px;color:var(--fg4);margin-top:1px}
+.gh-filter{padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.gh-sel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--fg);font-family:var(--sans);outline:none;cursor:pointer;transition:all .3s}
+.gh-sel:focus{border-color:var(--fg)}
+.gh-tl-label{padding:6px 14px 2px;font-size:9px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0}
+.gh-tl{flex:1;overflow-y:auto;padding:0 14px 12px;scrollbar-width:thin}
+.gh-tl-item{position:relative;padding-left:20px;margin-bottom:1px;cursor:pointer}
+.gh-tl-item::before{content:'';position:absolute;left:6px;top:20px;bottom:-1px;width:1px;background:var(--border)}
+.gh-tl-item:last-child::before{display:none}
+.gh-tl-node{position:absolute;left:0;top:11px;width:13px;height:13px;border-radius:50%;border:2px solid var(--bg);box-shadow:0 0 0 1.5px currentColor;z-index:1}
+.gh-tl-card{padding:8px 10px;background:var(--bg2);border-radius:7px;border:1px solid transparent;margin-bottom:1px;transition:all .15s}
+.gh-tl-card:hover{border-color:var(--border2);background:var(--bg3)}
+.gh-tl-card.active{border-color:var(--fg);background:var(--bg)}
+.gh-tl-time{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:2px}
+.gh-tl-title{font-size:12px;font-weight:600;color:var(--fg)}
+.gh-tl-sub{font-size:11px;color:var(--fg3);margin-top:1px}
+.gh-badge{display:inline-flex;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;margin-top:3px}
+.gh-foot{padding:8px 14px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:5px}
+.gh-foot button{flex:1;padding:7px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg3);font-family:var(--sans);cursor:pointer;transition:all .2s}
+.gh-foot button:hover{background:var(--bg2);color:var(--fg)}
+.gh-foot button.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.map-legend-gh{position:absolute;bottom:10px;left:10px;z-index:1000;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:10px;pointer-events:none}
+.ml-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;color:var(--fg3)}
+.ml-row:last-child{margin-bottom:0}
+.ml-line{width:16px;height:3px;border-radius:2px}
+.ml-dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--bg)}
 #del-confirm-bg{z-index:10000!important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -661,6 +701,7 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
     <div class="page" id="pg-users"></div>
     <div class="page" id="pg-log"></div>
     <div class="page" id="pg-gps"></div>
+    <div class="page" id="pg-gps-history"></div>
     <div class="page" id="pg-line"></div>
     <div class="page" id="pg-system"></div>
     <div class="page" id="pg-server"></div>
@@ -709,13 +750,14 @@ const BRAND_COLORS = {
 };
 function brandColor(name){ return BRAND_COLORS[name]||'#888'; }
 
-const PG={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
+const PG={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',gpsHistory:'GPS History',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
 const NAV_ALL=[
   {id:'dash',ic:'D',lb:'Overview',min:40},
   {id:'tickets',ic:'T',lb:'Tickets',min:40},
   {id:'users',ic:'U',lb:'Users',min:80},
   {id:'log',ic:'L',lb:'Activity Log',min:60},
   {id:'gps',ic:'G',lb:'GPS Map',min:60},
+  {id:'gpsHistory',ic:'R',lb:'GPS History',min:60},
   {id:'line',ic:'L',lb:'LINE Groups',min:100},
   {id:'system',ic:'S',lb:'System',min:100},
   {id:'server',ic:'V',lb:'Server Logs',min:100},
@@ -835,7 +877,7 @@ function connectSSE(){
 function startClock(){const t=()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};t();setInterval(t,1000);}
 
 // ═══ RENDER ═══
-function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,line:rLine,system:rSystem,server:rServer,branches:renderBranches}[pg]||rDash)();}catch(e){console.error(e);}}
+function render(){try{({dash:rDash,tickets:rTickets,users:rUsers,log:rLog,gps:rGPS,gpsHistory:rGPSHistory,line:rLine,system:rSystem,server:rServer,branches:renderBranches}[pg]||rDash)();}catch(e){console.error(e);}}
 
 
 // ── Credentials read-only display ──
@@ -2593,6 +2635,302 @@ function togLang(){
   // Re-render to pick up label changes
   render();
 }
+
+// ══════════════════════════════════════════
+// GPS HISTORY PAGE
+// ══════════════════════════════════════════
+let _ghMap=null, _ghRoute=null, _ghMarkers=[], _ghPoints=[], _ghSessions=[], _ghActiveIdx=-1, _ghPlayTimer=null;
+const GH_COLORS={start:'#22c55e',end:'#ef4444',work:'#f59e0b',transit:'#6366f1',current:'#6c4ab0'};
+
+function rGPSHistory(){
+  const el=document.getElementById('pg-gps-history');
+  el.innerHTML=`
+  <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em">📍 GPS History</div>
+      <div style="font-size:13px;color:var(--fg3);margin-top:2px">เส้นทางช่าง · ดูย้อนหลัง · บันทึกทุก 30 วินาที</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="smb" onclick="_ghExportGPX()">Export GPX</button>
+      <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="_ghLoad()">🔄 โหลด</button>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="font-size:11px;color:var(--fg4)">ช่าง:</span>
+      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()">
+        <option value="">ทุกคน</option>
+        ${[...new Set(users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>u.name))].sort().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="font-size:11px;color:var(--fg4)">วันที่:</span>
+      <input type="date" class="gh-sel" id="gh-date-from" style="appearance:auto;color-scheme:light dark" onchange="_ghLoad()">
+      <span style="font-size:11px;color:var(--fg3)">ถึง</span>
+      <input type="date" class="gh-sel" id="gh-date-to" style="appearance:auto;color-scheme:light dark" onchange="_ghLoad()">
+    </div>
+    <button class="smb" onclick="_ghSetToday()">วันนี้</button>
+    <button class="smb" onclick="_ghSetYesterday()">เมื่อวาน</button>
+    <button class="smb" onclick="_ghSet7Days()">7 วัน</button>
+    <div style="margin-left:auto;font-size:11px;color:var(--fg4)" id="gh-count-lbl">—</div>
+  </div>
+
+  <div class="gh-wrap">
+    <div style="position:relative">
+      <div id="gh-map"></div>
+      <div class="map-legend-gh" id="gh-legend">
+        <div class="ml-row"><div class="ml-dot" style="background:#22c55e;border-color:var(--bg)"></div>เริ่มงาน</div>
+        <div class="ml-row"><div class="ml-line" style="background:#6c4ab0"></div>เส้นทาง</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#f59e0b;border-color:var(--bg)"></div>จุดงาน / Ticket</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#ef4444;border-color:var(--bg)"></div>จุดสุดท้าย</div>
+      </div>
+    </div>
+    <div class="gh-side">
+      <div class="gh-head">
+        <div class="gh-eng-row">
+          <div class="gh-av" id="gh-av">—</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--fg)" id="gh-eng-name">เลือกช่าง</div><div style="font-size:11px;color:var(--fg4)" id="gh-eng-date">—</div></div>
+        </div>
+        <div class="gh-stat">
+          <div class="gh-stat-box"><div class="gh-stat-v" id="gh-km">—</div><div class="gh-stat-l">km วันนี้</div></div>
+          <div class="gh-stat-box"><div class="gh-stat-v" id="gh-pts">—</div><div class="gh-stat-l">จุดบันทึก</div></div>
+          <div class="gh-stat-box"><div class="gh-stat-v" id="gh-spd">—</div><div class="gh-stat-l">max km/h</div></div>
+        </div>
+      </div>
+      <div class="gh-tl-label">Timeline เส้นทาง</div>
+      <div class="gh-tl" id="gh-tl"><div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">เลือกช่างและวันที่แล้วกด โหลด</div></div>
+      <div class="gh-foot">
+        <button id="gh-play-btn" onclick="_ghPlayback()">▶ Playback</button>
+        <button class="pri" onclick="_ghOpenGoogleMaps()">Google Maps</button>
+      </div>
+    </div>
+  </div>`;
+
+  setTimeout(_ghInitMap, 100);
+  // set default = today
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('gh-date-from').value=today;
+  document.getElementById('gh-date-to').value=today;
+}
+
+function _ghInitMap(){
+  if(_ghMap){_ghMap.remove();_ghMap=null;}
+  if(typeof L==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload=_ghInitMap;
+    document.head.appendChild(s);
+    return;
+  }
+  const el=document.getElementById('gh-map');
+  if(!el)return;
+  _ghMap=L.map('gh-map',{zoomControl:true}).setView([13.73,100.52],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',maxZoom:19
+  }).addTo(_ghMap);
+  if(_ghPoints.length)_ghRenderMap();
+}
+
+async function _ghLoad(){
+  const engName=document.getElementById('gh-eng-sel')?.value||'';
+  const dateFrom=document.getElementById('gh-date-from')?.value||'';
+  const dateTo=document.getElementById('gh-date-to')?.value||'';
+  const lbl=document.getElementById('gh-count-lbl');
+  if(lbl)lbl.textContent='⏳ กำลังโหลด...';
+  const tl=document.getElementById('gh-tl');
+  if(tl)tl.innerHTML='<div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">⏳ กำลังโหลด...</div>';
+
+  let url='/api/gps/history?limit=3000';
+  if(engName)  url+=`&engineer_name=${encodeURIComponent(engName)}`;
+  if(dateFrom) url+=`&date_from=${dateFrom}`;
+  if(dateTo)   url+=`&date_to=${dateTo}`;
+
+  try{
+    const d=await api(url);
+    if(!d.ok)throw new Error(d.error||'API error');
+    _ghPoints=d.points||[];
+    _ghSessions=d.sessions||[];
+
+    // ถ้าไม่มีข้อมูลจริง → ใช้ mock data (fallback demo)
+    if(!_ghPoints.length){
+      _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
+      _ghSessions=[{engineer_name:engName||'ช่าง 2',session_date:dateFrom,total_km:28.4,point_count:_ghPoints.length,max_speed:62,tickets:['GD-00021','ABP-00006']}];
+      if(lbl)lbl.textContent=`${_ghPoints.length} จุด (demo data — เมื่อมี GPS history จะแสดงข้อมูลจริง)`;
+    } else {
+      if(lbl)lbl.textContent=`${_ghPoints.length} จุด · ${_ghSessions.length} sessions`;
+    }
+    _ghUpdateStats();
+    _ghRenderTimeline();
+    if(_ghMap)_ghRenderMap();
+  }catch(e){
+    if(lbl)lbl.textContent='❌ '+e.message;
+    // Demo fallback
+    _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
+    _ghSessions=[{engineer_name:engName||'ช่าง 2',total_km:28.4,point_count:_ghPoints.length,max_speed:62}];
+    _ghUpdateStats();_ghRenderTimeline();if(_ghMap)_ghRenderMap();
+    if(lbl)lbl.textContent=`⚠️ ${_ghPoints.length} จุด (demo — API ยังไม่ deploy)`;
+  }
+}
+
+function _ghMockPoints(name,dateStr){
+  const base=[
+    [13.7308,100.5418,'08:45','สำนักงาน Silom',null,'start'],
+    [13.7380,100.5380,'09:05','เดินทาง',null,'transit'],
+    [13.7420,100.5350,'09:12','GD-00021 Dunkin\' Silom','GD-00021','work'],
+    [13.7440,100.5320,'09:35','เดินทาง',null,'transit'],
+    [13.7463,100.5347,'10:30','ABP-00006 Au Bon Pain Siam','ABP-00006','work'],
+    [13.7490,100.5450,'11:15','เดินทาง',null,'transit'],
+    [13.7380,100.5590,'11:45','ABP-00007 Au Bon Pain Asoke','ABP-00007','work'],
+    [13.7340,100.5800,'12:20','เดินทาง',null,'transit'],
+    [13.7308,100.6072,'12:30','GD-00024 Dunkin\' Onnut','GD-00024','work'],
+    [13.7308,100.6072,'13:47','ตำแหน่งปัจจุบัน',null,'current'],
+  ];
+  return base.map((b,i)=>({
+    id:i+1,user_id:'15',engineer_name:name,brand:'ALL',
+    latitude:b[0],longitude:b[1],
+    recorded_at:`${dateStr} ${b[2]}:00`,
+    ticket_id:b[4],speed:b[5]==='transit'?Math.floor(30+Math.random()*30):0,
+    distance_m:i===0?0:Math.floor(Math.random()*3000+500),
+    session_id:`15_${dateStr}`,_type:b[5],_label:b[3]
+  }));
+}
+
+function _ghUpdateStats(){
+  const sess=_ghSessions[0]||{};
+  const engName=document.getElementById('gh-eng-sel')?.value||sess.engineer_name||'—';
+  const dateFrom=document.getElementById('gh-date-from')?.value||'';
+  const av=document.getElementById('gh-av');
+  if(av){av.textContent=(engName||'?').charAt(0).toUpperCase();}
+  const en=document.getElementById('gh-eng-name');if(en)en.textContent=engName||'ทุกช่าง';
+  const ed=document.getElementById('gh-eng-date');if(ed)ed.textContent=dateFrom||'ทุกวัน';
+  const km=_ghSessions.reduce((s,x)=>s+(x.total_km||0),0);
+  document.getElementById('gh-km').textContent=km.toFixed(1);
+  document.getElementById('gh-pts').textContent=_ghPoints.length;
+  const spd=Math.max(..._ghSessions.map(x=>x.max_speed||0),0);
+  document.getElementById('gh-spd').textContent=spd||'—';
+}
+
+function _ghRenderTimeline(){
+  const tl=document.getElementById('gh-tl');
+  if(!tl)return;
+  if(!_ghPoints.length){tl.innerHTML='<div style="text-align:center;padding:32px;color:var(--fg4);font-size:13px">ไม่พบข้อมูลในช่วงที่เลือก</div>';return;}
+
+  // สร้าง milestone points (จุดสำคัญ: start, work, current)
+  const milestones=_ghPoints.filter((p,i)=>i===0||i===_ghPoints.length-1||p.ticket_id||p._type==='work'||(i>0&&_ghPoints[i-1].ticket_id));
+  if(milestones.length===0)milestones.push(_ghPoints[0]);
+
+  const typeColors={start:'#22c55e',work:'#f59e0b',transit:'#6366f1',current:'#ef4444'};
+  const typeBg={start:'rgba(34,197,94,.15)',work:'rgba(245,158,11,.15)',transit:'rgba(99,102,241,.15)',current:'rgba(239,68,68,.15)'};
+  const typeLabel={start:'เริ่มงาน',work:'งาน',transit:'เดินทาง',current:'ปัจจุบัน'};
+
+  tl.innerHTML=`<div style="font-size:10px;color:var(--fg4);margin:4px 0 8px">${_ghPoints.length} จุดบันทึก → แสดง ${milestones.length} จุดสำคัญ</div>`+
+  milestones.map((p,i)=>{
+    const tp=p._type||(p.ticket_id?'work':i===0?'start':i===milestones.length-1?'current':'transit');
+    const col=typeColors[tp]||'#888';
+    const bg=typeBg[tp]||'rgba(136,136,136,.1)';
+    const time=(p.recorded_at||'').slice(11,16);
+    const label=p._label||(p.ticket_id?`${p.ticket_id}`:'เดินทาง');
+    return `<div class="gh-tl-item" onclick="_ghFocusPoint(${_ghPoints.indexOf(p)})">
+      <div class="gh-tl-node" style="color:${col};background:${col}"></div>
+      <div class="gh-tl-card" id="gh-card-${i}">
+        <div class="gh-tl-time">${time}${p.speed>0?' · '+Math.round(p.speed)+' km/h':''}</div>
+        <div class="gh-tl-title">${esc(label)}</div>
+        ${p.ticket_id?`<div class="gh-tl-sub">Ticket: ${esc(p.ticket_id)}</div>`:''}
+        <span class="gh-badge" style="background:${bg};color:${col}">${typeLabel[tp]||tp}</span>
+      </div>
+    </div>`;
+  }).join('');
+  _ghActiveIdx=-1;
+}
+
+function _ghFocusPoint(idx){
+  _ghActiveIdx=idx;
+  const p=_ghPoints[idx];
+  if(!p||!_ghMap)return;
+  _ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],16);
+  if(_ghMarkers[idx])_ghMarkers[idx].openPopup();
+  document.querySelectorAll('.gh-tl-card').forEach(c=>c.classList.remove('active'));
+}
+
+function _ghRenderMap(){
+  if(!_ghMap||!_ghPoints.length)return;
+  _ghMarkers.forEach(m=>{try{_ghMap.removeLayer(m);}catch(_){}});
+  _ghMarkers=[];
+  if(_ghRoute){try{_ghMap.removeLayer(_ghRoute);}catch(_){}}
+
+  const latlngs=_ghPoints.map(p=>[parseFloat(p.latitude),parseFloat(p.longitude)]);
+  _ghRoute=L.polyline(latlngs,{color:'#6c4ab0',weight:4,opacity:.8}).addTo(_ghMap);
+
+  _ghPoints.forEach((p,i)=>{
+    const isFirst=i===0, isLast=i===_ghPoints.length-1;
+    const hasTicket=!!p.ticket_id;
+    if(!isFirst&&!isLast&&!hasTicket&&i%5!==0)return;
+    const col=isFirst?'#22c55e':isLast?'#ef4444':hasTicket?'#f59e0b':'#6c4ab0';
+    const sz=isFirst||isLast?16:hasTicket?14:10;
+    const icon=L.divIcon({
+      html:`<div style="width:${sz}px;height:${sz}px;background:${col};border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
+      iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],className:''
+    });
+    const time=(p.recorded_at||'').slice(11,16);
+    const m=L.marker([parseFloat(p.latitude),parseFloat(p.longitude)],{icon}).addTo(_ghMap);
+    m.bindPopup(`<div style="font-family:system-ui;min-width:150px">
+      <div style="font-size:10px;color:#888;margin-bottom:2px">${esc(p.recorded_at||'')}</div>
+      <div style="font-size:13px;font-weight:700">${esc(p.engineer_name||'')}</div>
+      ${p.ticket_id?`<div style="font-size:12px;color:#f59e0b;margin-top:2px">Ticket: ${esc(p.ticket_id)}</div>`:''}
+      ${p.speed>0?`<div style="font-size:11px;color:#888">ความเร็ว: ${Math.round(p.speed)} km/h</div>`:''}
+      <div style="font-size:10px;color:#bbb;margin-top:3px">${parseFloat(p.latitude).toFixed(5)}, ${parseFloat(p.longitude).toFixed(5)}</div>
+    </div>`);
+    _ghMarkers.push(m);
+  });
+
+  _ghMap.fitBounds(L.polyline(latlngs).getBounds(),{padding:[30,30]});
+}
+
+function _ghFocusPoint(idx){
+  _ghActiveIdx=idx;
+  const p=_ghPoints[idx];
+  if(!p||!_ghMap)return;
+  _ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],16);
+}
+
+function _ghPlayback(){
+  if(_ghPlayTimer){clearInterval(_ghPlayTimer);_ghPlayTimer=null;document.getElementById('gh-play-btn').textContent='▶ Playback';return;}
+  if(!_ghPoints.length)return;
+  let idx=0;
+  document.getElementById('gh-play-btn').textContent='⏹ หยุด';
+  _ghPlayTimer=setInterval(()=>{
+    if(idx>=_ghPoints.length){clearInterval(_ghPlayTimer);_ghPlayTimer=null;document.getElementById('gh-play-btn').textContent='▶ Playback';return;}
+    const p=_ghPoints[idx];
+    if(_ghMap)_ghMap.setView([parseFloat(p.latitude),parseFloat(p.longitude)],15);
+    idx++;
+  },400);
+}
+
+function _ghOpenGoogleMaps(){
+  if(!_ghPoints.length){toast('ไม่มีข้อมูล GPS');return;}
+  const first=_ghPoints[0], last=_ghPoints[_ghPoints.length-1];
+  const waypts=_ghPoints.filter(p=>p.ticket_id).slice(0,8).map(p=>`${parseFloat(p.latitude).toFixed(5)},${parseFloat(p.longitude).toFixed(5)}`).join('|');
+  const url=`https://www.google.com/maps/dir/?api=1&origin=${first.latitude},${first.longitude}&destination=${last.latitude},${last.longitude}${waypts?`&waypoints=${waypts}`:''}&travelmode=driving`;
+  window.open(url,'_blank');
+}
+
+function _ghExportGPX(){
+  if(!_ghPoints.length){toast('ไม่มีข้อมูล');return;}
+  const eng=_ghPoints[0]?.engineer_name||'engineer';
+  const pts=_ghPoints.map(p=>`    <trkpt lat="${p.latitude}" lon="${p.longitude}"><time>${(p.recorded_at||'').replace(' ','T')}+07:00</time></trkpt>`).join('\n');
+  const gpx=`<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="IT Support GPS History"><metadata><name>${esc(eng)}</name></metadata><trk><name>${esc(eng)}</name><trkseg>\n${pts}\n</trkseg></trk></gpx>`;
+  const blob=new Blob([gpx],{type:'application/gpx+xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`gps_${eng}_${new Date().toISOString().slice(0,10)}.gpx`;
+  a.click();
+  toast('Export GPX สำเร็จ');
+}
+
+function _ghSetToday(){const t=new Date().toISOString().slice(0,10);const f=document.getElementById('gh-date-from'),to=document.getElementById('gh-date-to');if(f)f.value=t;if(to)to.value=t;_ghLoad();}
+function _ghSetYesterday(){const t=new Date();t.setDate(t.getDate()-1);const s=t.toISOString().slice(0,10);const f=document.getElementById('gh-date-from'),to=document.getElementById('gh-date-to');if(f)f.value=s;if(to)to.value=s;_ghLoad();}
+function _ghSet7Days(){const e=new Date().toISOString().slice(0,10);const s=new Date();s.setDate(s.getDate()-6);const f=document.getElementById('gh-date-from'),to=document.getElementById('gh-date-to');if(f)f.value=s.toISOString().slice(0,10);if(to)to.value=e;_ghLoad();}
+function _ghOnEngChange(){_ghLoad();}
 
 // ══════════════════════════════════════════
 // HOOK notifications into existing actions
