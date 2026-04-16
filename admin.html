@@ -701,7 +701,7 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
     <div class="page" id="pg-users"></div>
     <div class="page" id="pg-log"></div>
     <div class="page" id="pg-gps"></div>
-    <div class="page" id="pg-gps-history"></div>
+    <div class="page" id="pg-gpsHistory"></div>
     <div class="page" id="pg-line"></div>
     <div class="page" id="pg-system"></div>
     <div class="page" id="pg-server"></div>
@@ -2643,7 +2643,7 @@ let _ghMap=null, _ghRoute=null, _ghMarkers=[], _ghPoints=[], _ghSessions=[], _gh
 const GH_COLORS={start:'#22c55e',end:'#ef4444',work:'#f59e0b',transit:'#6366f1',current:'#6c4ab0'};
 
 function rGPSHistory(){
-  const el=document.getElementById('pg-gps-history');
+  const el=document.getElementById('pg-gpsHistory');
   el.innerHTML=`
   <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <div>
