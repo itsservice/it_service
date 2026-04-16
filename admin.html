@@ -1316,7 +1316,7 @@ function _dlTemplate(){
   const GRAY_FONT='FF808080';
 
   function hStyle(bgHex,fontHex,bold){return{font:{bold:bold!==false,color:{rgb:fontHex||WHITE_FONT},sz:10},fill:{patternType:'solid',fgColor:{rgb:bgHex}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{bottom:{style:'thin',color:{rgb:'FF999999'}}}};}
-  function cStyle(bgHex,locked){return{font:{sz:10,color:{rgb:locked?GRAY_FONT:DARK_FONT}},fill:{patternType:'solid',fgColor:{rgb:bgHex}},protection:{locked:!!locked},alignment:{vertical:'center',wrapText:true},border:{right:{style:'hair',color:{rgb:'FFCCCCCC'}},bottom:{style:'hair',color:{rgb:'FFCCCCCC'}}}};}
+  function cStyle(bgHex,locked){return{font:{sz:10,color:{rgb:locked?GRAY_FONT:DARK_FONT}},fill:{patternType:'solid',fgColor:{rgb:bgHex}},alignment:{vertical:'center',wrapText:true},border:{right:{style:'hair',color:{rgb:'FFCCCCCC'}},bottom:{style:'hair',color:{rgb:'FFCCCCCC'}}}};}
   function noteStyle(){return{font:{sz:9,italic:true,color:{rgb:GRAY_FONT}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{wrapText:true,vertical:'center'}};}
   function exStyle(bgHex){return{font:{sz:10,color:{rgb:DARK_FONT},italic:true},fill:{patternType:'solid',fgColor:{rgb:bgHex}},alignment:{vertical:'center'},border:{right:{style:'hair',color:{rgb:'FFCCCCCC'}},bottom:{style:'hair',color:{rgb:'FFDDDDDD'}}}};}
 
@@ -1338,7 +1338,7 @@ function _dlTemplate(){
 
     // Row 2: label สีแดง
     cols.forEach((col,ci)=>{
-      const lbl=col.locked?'🔒 ห้ามแก้':'✏️ '+(col.required?'จำเป็น':'ไม่บังคับ');
+      const lbl=col.locked?'⚠️ อย่าแก้ — ใช้ค้นหาในระบบ':'✏️ '+(col.required?'จำเป็น':'ไม่บังคับ');
       ws[R(2,ci)]={v:lbl,t:'s',s:{font:{sz:9,bold:true,color:{rgb:col.locked?'FFCC0000':col.required?'FF007700':GRAY_FONT}},fill:{patternType:'solid',fgColor:{rgb:col.locked?'FFFFECEC':col.required?'FFECFFEC':'FFF9F9F9'}},alignment:{horizontal:'center'}}};
     });
 
@@ -1371,7 +1371,6 @@ function _dlTemplate(){
     ws['!cols']=cols.map(col=>({wch:col.w||22}));
     ws['!rows']=[{hpt:22},{hpt:40},{hpt:18},{hpt:20}];
     ws['!freeze']={xSplit:0,ySplit:4}; // freeze 4 header rows
-    ws['!protect']={password:'',sheet:true,selectLockedCells:true,selectUnlockedCells:true,formatCells:false,formatColumns:false,formatRows:false,insertColumns:false,insertRows:true,deleteColumns:false,deleteRows:false,sort:false,autoFilter:false};
     return ws;
   }
 
