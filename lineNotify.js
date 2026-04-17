@@ -4,7 +4,7 @@ const axios = require('axios');
 const lc    = require('./lineConfig');
 
 const LINE_PUSH = 'https://api.line.me/v2/bot/message/push';
-const APP_URL   = process.env.APP_URL || 'https://it-service-56im.onrender.com';
+const APP_URL   = (process.env.APP_URL || 'https://it-service-56im.onrender.com').replace(/\/+$/,'');
 
 function getToken() {
   return process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
@@ -177,7 +177,7 @@ function cardAdmin_Closed(ticket) {
           ...(ticket.adminNote ? [row('หมายเหตุ', ticket.adminNote.slice(0,80), '#555555')] : []),
           row('วันที่/เวลา', dt,                               '#888888'),
           sep(),
-          linkBtn('🖥️  ดูรายละเอียดใน Admin', `${APP_URL}/admin`, '#0d6efd'),
+          linkBtn('🔍  ดูรายละเอียดงาน (Report)', `${APP_URL}/report`, '#0d6efd'),
         ]
       }
     }
@@ -277,23 +277,107 @@ function cardReporter_Done(ticket) {
   };
 }
 
+
+// ══════════════════════════════════════════
+// CARD: BRAND GROUP — Ticket ใหม่ (ปุ่ม → Report)
+// ══════════════════════════════════════════
+function cardBrand_NewTicket(ticket) {
+  const dt = fmtDate(ticket.sentDate || ticket.createdAt) || nowTH();
+  return {
+    type:'flex', altText:`🎫 Ticket ใหม่ ${ticket.id||''} — ${ticket.type||''}`,
+    contents:{
+      type:'bubble', size:'kilo',
+      header: hdrBox('🎫','Ticket ใหม่',`${ticket.id||'-'} · ${ticket.brand||'-'}`,'#0d1117'),
+      body:{
+        type:'box', layout:'vertical', paddingAll:'14px', spacing:'none',
+        contents:[
+          { type:'text', text:ticket.type||'-', weight:'bold', size:'md', color:'#111111', wrap:true },
+          { type:'text', text:(ticket.detail||'-').slice(0,120), size:'xs', color:'#555555', margin:'sm', wrap:true },
+          sep(),
+          row('เลข Ticket',  ticket.id||'-',        '#1a73e8'),
+          row('หัวข้องาน',   ticket.type||'-',       '#333333'),
+          row('รายละเอียด', (ticket.detail||'-').slice(0,80), '#555555'),
+          row('แบรนด์',      ticket.brand||'-',      '#333333'),
+          row('สาขา',        ticket.branchCode||'-', '#333333'),
+          row('ผู้แจ้ง',     ticket.reporter||'-',   '#333333'),
+          row('เบอร์',       ticket.phone||'-',      '#333333'),
+          row('วันที่/เวลา', dt,                     '#888888'),
+          sep(),
+          linkBtn('🔍  ติดตามสถานะงาน (Report)', `${APP_URL}/report`, '#0891b2'),
+        ]
+      }
+    }
+  };
+}
+
+// ══════════════════════════════════════════
+// CARD: BRAND GROUP — ปิดงาน (ปุ่ม → Report)
+// ══════════════════════════════════════════
+function cardBrand_Closed(ticket) {
+  const dt = fmtDate(ticket.closedAt) || nowTH();
+  return {
+    type:'flex', altText:`✅ งานเสร็จสิ้น ${ticket.id||''}`,
+    contents:{
+      type:'bubble', size:'kilo',
+      header: hdrBox('✅','งานเสร็จสิ้นแล้ว',`${ticket.id||'-'} · ${ticket.brand||'-'}`,'#07120d'),
+      body:{
+        type:'box', layout:'vertical', paddingAll:'14px', spacing:'none',
+        contents:[
+          { type:'text', text:ticket.type||'-', weight:'bold', size:'md', color:'#111111', wrap:true },
+          { type:'text', text:(ticket.detail||'-').slice(0,100), size:'xs', color:'#555555', margin:'sm', wrap:true },
+          sep(),
+          row('เลข Ticket',  ticket.id||'-',                  '#1a73e8'),
+          row('หัวข้องาน',   ticket.type||'-',                 '#333333'),
+          row('รายละเอียด', (ticket.detail||'-').slice(0,80),  '#555555'),
+          row('แบรนด์',      ticket.brand||'-',                '#333333'),
+          row('สาขา',        ticket.branchCode||'-',           '#333333'),
+          row('ช่าง',        ticket.engineerName||'-',         '#16a34a'),
+          row('ปิดโดย',      ticket.closedBy||'-',             '#333333'),
+          ...(ticket.adminNote ? [row('หมายเหตุ', ticket.adminNote.slice(0,80), '#555555')] : []),
+          row('วันที่/เวลา', dt,                               '#888888'),
+          sep(),
+          linkBtn('🔍  ดูรายละเอียดงาน (Report)', `${APP_URL}/report`, '#0d6efd'),
+        ]
+      }
+    }
+  };
+}
+
 // ══════════════════════════════════════════
 // PUBLIC FUNCTIONS
 // ══════════════════════════════════════════
 
-// 1. Ticket ใหม่ → Brand Group เท่านั้น (ตาม Flow: Reporter แจ้ง → แจ้ง Line แบรนด์)
+// 1. Reporter แจ้งปัญหา →
+//    (1) Brand Group       → card + ปุ่ม Report
+//    (2) Admin personal    → card + ปุ่ม Admin (ตามแบรนด์)
+//    (3) Admin Group       → card + ปุ่ม Admin
 async function notifyNewTicket(ticket) {
   const tasks = [];
-  // ส่งเข้า Brand Group ก่อน
+
+  // (1) Brand Group — ปุ่ม Report
   const brandGroup = await lc.getBrandGroupId(ticket.brand||'');
   if (brandGroup) {
-    tasks.push(push(brandGroup, [cardAdmin_NewTicket(ticket)]));
+    tasks.push(push(brandGroup, [cardBrand_NewTicket(ticket)]));
   } else {
-    // Fallback: ถ้าไม่มี brand group ให้ส่ง admin group แทน
-    const adminGroup = await lc.getAdminGroupId();
-    if (adminGroup) tasks.push(push(adminGroup, [cardAdmin_NewTicket(ticket)]));
-    else console.warn('[LINE] notifyNewTicket: no brand group or admin group for', ticket.brand);
+    console.warn('[LINE] notifyNewTicket: no brand group for', ticket.brand);
   }
+
+  // (2) Admin personal ทุกคน — ปุ่ม Admin
+  const adminIds = await lc.getAdminUserIds();
+  if (adminIds.length) {
+    adminIds.forEach(id => tasks.push(push(id, [cardAdmin_NewTicket(ticket)])));
+  } else {
+    console.warn('[LINE] notifyNewTicket: no admin personal LINE IDs');
+  }
+
+  // (3) Admin Group — ปุ่ม Admin
+  const adminGroup = await lc.getAdminGroupId();
+  if (adminGroup) {
+    tasks.push(push(adminGroup, [cardAdmin_NewTicket(ticket)]));
+  } else {
+    console.warn('[LINE] notifyNewTicket: no admin group');
+  }
+
   await Promise.allSettled(tasks);
 }
 
@@ -323,16 +407,16 @@ async function notifyWorkSubmitted(ticket) {
   await Promise.allSettled(tasks);
 }
 
-// 4. Admin ปิดงาน → Brand Group เท่านั้น (ตาม Flow: แอดมินกดจบ → แจ้ง Line แบรนด์)
+// 4. Admin ปิดงาน → Brand Group เท่านั้น — ปุ่ม Report
 async function notifyTicketClosed(ticket) {
   const tasks = [];
   const brandGroup = await lc.getBrandGroupId(ticket.brand||'');
   if (brandGroup) {
-    tasks.push(push(brandGroup, [cardAdmin_Closed(ticket)]));
+    tasks.push(push(brandGroup, [cardBrand_Closed(ticket)]));
   } else {
     // Fallback: ถ้าไม่มี brand group ให้ส่ง admin group แทน
     const adminGroup = await lc.getAdminGroupId();
-    if (adminGroup) tasks.push(push(adminGroup, [cardAdmin_Closed(ticket)]));
+    if (adminGroup) tasks.push(push(adminGroup, [cardBrand_Closed(ticket)]));
     else console.warn('[LINE] notifyTicketClosed: no brand group or admin group for', ticket.brand);
   }
   await Promise.allSettled(tasks);
@@ -355,6 +439,7 @@ module.exports = {
   notifyTicketClosed, notifyAssigned,
   notifyRevision, notifyReassigned,
   cardAdmin_NewTicket, cardAdmin_WorkSubmitted, cardAdmin_Closed,
+  cardBrand_NewTicket, cardBrand_Closed,
   cardEngineer_Assigned,
   cardReporter_Received, cardReporter_Done,
 };
