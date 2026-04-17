@@ -2818,7 +2818,7 @@ async function kDrop(e,colId){
 // ══════════════════════════════════════════
 // BRANCHES PAGE
 // ══════════════════════════════════════════
-let branches=[],brFilter={brand:'',q:'',sortCol:'code',sortDir:'asc'},brLoaded=false,brPage=0;
+let branches=[],brFilter={brand:'',q:'',sortCol:'code',sortDir:'asc',pp:5},brLoaded=false,brPage=0;
 const BR_BRANDS=["Dunkin'","Greyhound Cafe'","Greyhound Original","Au Bon Pain","Funky Fries","Another Hound Cafe'","Bean Hound"];
 
 async function loadBranches(){
@@ -2877,7 +2877,7 @@ function _renderBranchTable(){
   const wrap=document.getElementById('br-table-wrap');
   if(!wrap)return;
   const total=list.length;
-  const PAGE=100;
+  const PAGE=brFilter.pp;
   const paged=list.slice(brPage*PAGE,(brPage+1)*PAGE);
   wrap.innerHTML=`<div class="br-table-wrap">
     <table class="br-table">
@@ -2904,13 +2904,22 @@ function _renderBranchTable(){
       </tbody>
     </table>
   </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--fg4)">
-    <span>แสดง ${paged.length} / ${total} สาขา</span>
-    <div style="display:flex;gap:4px">
-      ${brPage>0?`<button class="smb" onclick="brPage--;_renderBranchTable()">← ก่อนหน้า</button>`:''}
-      ${(brPage+1)*PAGE<total?`<button class="smb" onclick="brPage++;_renderBranchTable()">ถัดไป →</button>`:''}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg4)">
+      <span>แสดง</span>
+      <select class="sel" style="padding:3px 6px;font-size:12px;width:auto" onchange="brFilter.pp=+this.value;brPage=0;_renderBranchTable()">
+        ${[5,10,15,25,50,100].map(n=>`<option value="${n}"${brFilter.pp===n?' selected':''}>${n} รายการ</option>`).join('')}
+      </select>
+      <span>จาก ${total} สาขา</span>
     </div>
-  </div>`;
+    <div style="display:flex;align-items:center;gap:3px;font-size:12px">
+      <button class="smb" style="padding:3px 8px" onclick="brPage=0;_renderBranchTable()" ${brPage===0?'disabled':''}>«</button>
+      <button class="smb" style="padding:3px 8px" onclick="brPage--;_renderBranchTable()" ${brPage===0?'disabled':''}>‹ ก่อนหน้า</button>
+      ${(()=>{let btns='';const tp=Math.ceil(total/PAGE);const R=2;const start=Math.max(0,brPage-R),end=Math.min(tp-1,brPage+R);if(start>0)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;for(let i=start;i<=end;i++)btns+=`<button class="smb" style="padding:3px 8px;${i===brPage?'background:var(--fg);color:var(--bg);':''}" onclick="brPage=${i};_renderBranchTable()">${i+1}</button>`;if(end<tp-1)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;return btns;})()}
+      <button class="smb" style="padding:3px 8px" onclick="brPage++;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>ถัดไป ›</button>
+      <button class="smb" style="padding:3px 8px" onclick="brPage=Math.ceil(total/PAGE)-1;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>»</button>
+    </div>
+  </div>\`;
 }
 async function renderBranches(){
   await loadBranches();
@@ -2949,7 +2958,7 @@ async function renderBranches(){
             <th>Code</th><th>Brand</th><th>ชื่อสาขา</th>
             <th>Location</th><th>Status</th><th>Action</th>
           </tr></thead>
-          <tbody>${list.slice(brPage*100,(brPage+1)*100).map(b=>`
+          <tbody>${list.slice(brPage*brFilter.pp,(brPage+1)*brFilter.pp).map(b=>`
             <tr onclick="openBranchModal('${b.id}')">
               <td><span style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</span></td>
               <td><span style="font-size:11px">${esc(b.brand||'')}</span></td>
@@ -2965,8 +2974,8 @@ async function renderBranches(){
       </div>
       ${list.length>100?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px">
         <button class="smb" onclick="brPage=Math.max(0,brPage-1);renderBranches()" ${brPage===0?'disabled':''}>← ก่อนหน้า</button>
-        <span style="font-size:12px;color:var(--fg4)">หน้า ${brPage+1}/${Math.ceil(list.length/100)} (${list.length} สาขา)</span>
-        <button class="smb" onclick="brPage=Math.min(Math.ceil(list.length/100)-1,brPage+1);renderBranches()" ${brPage>=Math.ceil(list.length/100)-1?'disabled':''}>ถัดไป →</button>
+        <span style="font-size:12px;color:var(--fg4)">หน้า ${brPage+1}/${Math.ceil(list.length/brFilter.pp)} (${list.length} สาขา)</span>
+        <button class="smb" onclick="brPage=Math.min(Math.ceil(list.length/brFilter.pp)-1,brPage+1);renderBranches()" ${brPage>=Math.ceil(list.length/brFilter.pp)-1?'disabled':''}>ถัดไป →</button>
       </div>`:''}
     </div>`;
 }
