@@ -2919,7 +2919,7 @@ function _renderBranchTable(){
       <button class="smb" style="padding:3px 8px" onclick="brPage++;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>ถัดไป ›</button>
       <button class="smb" style="padding:3px 8px" onclick="brPage=Math.ceil(total/PAGE)-1;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>»</button>
     </div>
-  </div>\`;
+  </div>`;
 }
 async function renderBranches(){
   await loadBranches();
