@@ -281,13 +281,19 @@ function cardReporter_Done(ticket) {
 // PUBLIC FUNCTIONS
 // ══════════════════════════════════════════
 
-// 1. Ticket ใหม่ → Admin Group + Reporter (ถ้ามี line_user_id)
+// 1. Ticket ใหม่ → Brand Group เท่านั้น (ตาม Flow: Reporter แจ้ง → แจ้ง Line แบรนด์)
 async function notifyNewTicket(ticket) {
   const tasks = [];
-  const groupId = await lc.getAdminGroupId();
-  if (groupId) tasks.push(push(groupId, [cardAdmin_NewTicket(ticket)]));
-  else console.warn('[LINE] notifyNewTicket: no admin group');
-  if (ticket.line_user_id) tasks.push(push(ticket.line_user_id, [cardReporter_Received(ticket)]));
+  // ส่งเข้า Brand Group ก่อน
+  const brandGroup = await lc.getBrandGroupId(ticket.brand||'');
+  if (brandGroup) {
+    tasks.push(push(brandGroup, [cardAdmin_NewTicket(ticket)]));
+  } else {
+    // Fallback: ถ้าไม่มี brand group ให้ส่ง admin group แทน
+    const adminGroup = await lc.getAdminGroupId();
+    if (adminGroup) tasks.push(push(adminGroup, [cardAdmin_NewTicket(ticket)]));
+    else console.warn('[LINE] notifyNewTicket: no brand group or admin group for', ticket.brand);
+  }
   await Promise.allSettled(tasks);
 }
 
@@ -297,24 +303,38 @@ async function notifyAssigned(ticket, engineerLineId) {
   await push(engineerLineId, [cardEngineer_Assigned(ticket)]);
 }
 
-// 3. ช่างส่งงาน → Admin LINE ส่วนตัวทุกคน
+// 3. ช่างส่งงาน → Admin personal (ทุกคน) + Admin Group (2 ที่)
 async function notifyWorkSubmitted(ticket) {
+  const tasks = [];
+  // 3a. ส่งไลน์ส่วนตัวแอดมินทุกคน
   const adminIds = await lc.getAdminUserIds();
-  if (!adminIds.length) { console.warn('[LINE] notifyWorkSubmitted: no admin_user_id'); return; }
-  await Promise.allSettled(adminIds.map(id => push(id, [cardAdmin_WorkSubmitted(ticket)])));
+  if (adminIds.length) {
+    adminIds.forEach(id => tasks.push(push(id, [cardAdmin_WorkSubmitted(ticket)])));
+  } else {
+    console.warn('[LINE] notifyWorkSubmitted: no admin personal LINE IDs');
+  }
+  // 3b. ส่งเข้า Admin Group ด้วย
+  const adminGroup = await lc.getAdminGroupId();
+  if (adminGroup) {
+    tasks.push(push(adminGroup, [cardAdmin_WorkSubmitted(ticket)]));
+  } else {
+    console.warn('[LINE] notifyWorkSubmitted: no admin group');
+  }
+  await Promise.allSettled(tasks);
 }
 
-// 4. Admin ปิดงาน → Brand Group + Reporter
+// 4. Admin ปิดงาน → Brand Group เท่านั้น (ตาม Flow: แอดมินกดจบ → แจ้ง Line แบรนด์)
 async function notifyTicketClosed(ticket) {
   const tasks = [];
-  const groupId = await lc.getBrandGroupId(ticket.brand||'');
-  if (groupId) {
-    tasks.push(push(groupId, [cardAdmin_Closed(ticket)]));
+  const brandGroup = await lc.getBrandGroupId(ticket.brand||'');
+  if (brandGroup) {
+    tasks.push(push(brandGroup, [cardAdmin_Closed(ticket)]));
   } else {
+    // Fallback: ถ้าไม่มี brand group ให้ส่ง admin group แทน
     const adminGroup = await lc.getAdminGroupId();
     if (adminGroup) tasks.push(push(adminGroup, [cardAdmin_Closed(ticket)]));
+    else console.warn('[LINE] notifyTicketClosed: no brand group or admin group for', ticket.brand);
   }
-  if (ticket.line_user_id) tasks.push(push(ticket.line_user_id, [cardReporter_Done(ticket)]));
   await Promise.allSettled(tasks);
 }
 
