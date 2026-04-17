@@ -794,15 +794,31 @@ function togglePw(){const i=document.getElementById('l-pass'),b=document.getElem
 // ═══ AUTH ═══
 async function tryAuto(){const s=localStorage.getItem('adm_auth');if(!s)return false;try{const{token}=JSON.parse(s);const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});if(d.ok&&['superadmin','admin','manager','it_services'].includes(d.user.role)){AUTH={token,user:d.user};return true;}}catch(_){}localStorage.removeItem('adm_auth');return false;}
 
-document.getElementById('btn-login').onclick=async()=>{
-  const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
-  const err=document.getElementById('l-err'),btn=document.getElementById('btn-login');
-  err.textContent='';if(!u||!p){err.textContent='Enter username and password';return;}
-  btn.disabled=true;btn.textContent='Connecting...';
-  try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});if(!d.ok)throw new Error(d.error||'Login failed');if(!['superadmin','admin','manager','it_services'].includes(d.user.role))throw new Error('Insufficient permissions');AUTH={token:d.token,user:d.user};localStorage.setItem('adm_auth',JSON.stringify(AUTH));boot();}
-  catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
-};
-['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
+// ═══ LOGIN HANDLER ═══
+function setupLoginHandler(){
+  const btn=document.getElementById('btn-login');
+  if(!btn)return;
+  btn.onclick=async()=>{
+    const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
+    const err=document.getElementById('l-err');
+    err.textContent='';
+    if(!u||!p){err.textContent='Enter username and password';return;}
+    btn.disabled=true;btn.textContent='Connecting...';
+    try{
+      const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
+      if(!d.ok)throw new Error(d.error||'Login failed');
+      AUTH={token:d.token,user:d.user};
+      localStorage.setItem('adm_auth',JSON.stringify(AUTH));
+      boot();
+    }
+    catch(e){err.textContent=e.message;}
+    finally{btn.disabled=false;btn.textContent='Login';}
+  };
+  ['l-user','l-pass'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.onkeydown=e=>{if(e.key==='Enter')btn.click();};
+  });
+}
 function logout(){api('/api/auth/logout',{method:'POST'}).catch(()=>{});AUTH=null;localStorage.removeItem('adm_auth');location.reload();}
 function togTheme(){const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';localStorage.setItem('adm_theme',d.dataset.t);document.getElementById('theme-btn').textContent=d.dataset.t==='dark'?'Light':'Dark';}
 if(localStorage.getItem('adm_theme')==='dark'){document.documentElement.dataset.t='dark';}
@@ -2648,7 +2664,16 @@ document.addEventListener('click',e=>{
 
 let toastT;function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2500);}
 
-(async()=>{if(await tryAuto().catch(()=>false))boot();})();
+// ═══ INITIALIZATION ═══
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    setupLoginHandler();
+    tryAuto().catch(()=>false).then(authed=>{if(authed)boot();});
+  });
+}else{
+  setupLoginHandler();
+  tryAuto().catch(()=>false).then(authed=>{if(authed)boot();});
+}
 
 // ══════════════════════════════════════════
 // SKELETON LOADER
