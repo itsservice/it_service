@@ -1198,7 +1198,7 @@ function drawDashCharts(){
         plugins:{...base.plugins}}});}
 }
 
-let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'',sortDir:'asc',p:1};const PP=15;
+let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'sentDate',sortDir:'desc',p:1,pp:15};
 function rTickets(){
   const brands=[...new Set(tickets.map(x=>x.brand).filter(Boolean))].sort();
   const engineers=[...new Set(tickets.map(x=>x.engineerName).filter(Boolean))].sort();
@@ -1217,15 +1217,18 @@ function rTickets(){
       return tF.sortDir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);
     });
   }
-  const tp=Math.max(1,Math.ceil(data.length/PP));tF.p=Math.min(tF.p,tp);
-  const paged=data.slice((tF.p-1)*PP,tF.p*PP);
-  const sortIcon=col=>tF.sortCol===col?(tF.sortDir==='asc'?' ↑':' ↓'):'';
+  const tp=Math.max(1,Math.ceil(data.length/tF.pp));tF.p=Math.min(tF.p,tp);
+  const paged=data.slice((tF.p-1)*tF.pp,tF.p*tF.pp);
+  const sortIcon=col=>tF.sortCol===col?`<span style="color:var(--blue);margin-left:3px">${tF.sortDir==='asc'?'↑':'↓'}</span>`:'<span style="color:var(--fg4);margin-left:3px;opacity:.4">↕</span>';
   const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
   if(kanbanMode){renderKanban();return;}
   document.getElementById('pg-tickets').innerHTML=`
   ${IMP_BAR}
     <div class="filters" style="flex-wrap:wrap;gap:6px">
   ${EXP.tickets}
+      <select class="sel" style="min-width:120px" onchange="tF.pp=+this.value;tF.p=1;rTickets()">
+        ${[5,10,15,25,50,100].map(n=>`<option value="${n}"${tF.pp===n?' selected':''}>${n} รายการ</option>`).join('')}
+      </select>
       <div class="srch" style="flex:1;min-width:160px;max-width:340px">
         <span class="si">🔍</span>
         <input style="transition:width .4s ease;width:160px" onfocus="this.style.width='100%'" onblur="this.style.width=this.value?'100%':'160px'"
@@ -1267,9 +1270,21 @@ function rTickets(){
       <td><span class="pill">${statusLabel(x.status)}</span></td>
       <td style="font-size:12px;color:var(--fg3)">${esc(x.sentDate||'-')}</td>
     </tr>`).join('')}</tbody></table>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--fg4)">
-      <span>${data.length} items | page ${tF.p}/${tp}</span>
-      <div style="display:flex;gap:3px">${tF.p>1?`<button class="smb" onclick="tF.p--;rTickets()">Prev</button>`:''} ${tF.p<tp?`<button class="smb" onclick="tF.p++;rTickets()">Next</button>`:''}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg4)">
+        <span>แสดง</span>
+        <select class="sel" style="padding:3px 6px;font-size:12px;width:auto" onchange="tF.pp=+this.value;tF.p=1;rTickets()">
+          ${[5,10,15,25,50,100].map(n=>`<option value="${n}"${tF.pp===n?' selected':''}>${n} รายการ</option>`).join('')}
+        </select>
+        <span>จาก ${data.length} รายการ</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;font-size:12px">
+        <button class="smb" style="padding:3px 8px" onclick="tF.p=1;rTickets()" ${tF.p===1?'disabled':''}>«</button>
+        <button class="smb" style="padding:3px 8px" onclick="tF.p--;rTickets()" ${tF.p===1?'disabled':''}>‹ ก่อน</button>
+        ${(()=>{let btns='';const R=2;const start=Math.max(1,tF.p-R),end=Math.min(tp,tF.p+R);if(start>1)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;for(let i=start;i<=end;i++)btns+=`<button class="smb" style="padding:3px 8px;${i===tF.p?'background:var(--fg);color:var(--bg);':''}font-weight:${i===tF.p?'700':'400'}" onclick="tF.p=${i};rTickets()">${i}</button>`;if(end<tp)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;return btns;})()}
+        <button class="smb" style="padding:3px 8px" onclick="tF.p++;rTickets()" ${tF.p===tp?'disabled':''}>ถัดไป ›</button>
+        <button class="smb" style="padding:3px 8px" onclick="tF.p=tp;rTickets()" ${tF.p===tp?'disabled':''}>»</button>
+      </div>
     </div>`
     :'<div class="empty"><div class="empty-t">No tickets found</div><div class="empty-d">Adjust filters or wait for new tickets</div></div>'}`;
 }
@@ -1684,6 +1699,13 @@ function rUsersTable(){
   if(titleEl)titleEl.innerHTML=`Users & Reporters (${combined.length})`
     +(resetCount>0?` <span style="background:#d97706;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">🔑 ${resetCount} รอ Reset</span>`:'');
 
+  // Sort
+  if(uF.sortCol){
+    list=[...list].sort((a,b)=>{
+      let av=String(a[uF.sortCol]||'').toLowerCase(),bv=String(b[uF.sortCol]||'').toLowerCase();
+      return uF.sortDir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);
+    });
+  }
   const total=list.length,tp=Math.max(1,Math.ceil(total/uF.perPage));
   uF.page=Math.min(uF.page,tp);
   const page=list.slice((uF.page-1)*uF.perPage,uF.page*uF.perPage);
@@ -1694,12 +1716,12 @@ function rUsersTable(){
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead>
         <tr style="border-bottom:2px solid var(--border);background:var(--bg3)">
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:40px">#</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">รหัสพนักงาน</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">ชื่อ-สกุล</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em">แบรนด์</th>
-          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:80px">แก้ไข</th>
-          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;width:80px">ลบ</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:40px">#</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap" onclick="uSort('username')">รหัสพนักงาน ${uF.sortCol==='username'?`<span style="color:var(--blue);margin-left:2px">${uF.sortDir==='asc'?'↑':'↓'}</span>`:`<span style="opacity:.3;margin-left:2px">↕</span>`}</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap" onclick="uSort('name')">ชื่อ-สกุล ${uF.sortCol==='name'?`<span style="color:var(--blue);margin-left:2px">${uF.sortDir==='asc'?'↑':'↓'}</span>`:`<span style="opacity:.3;margin-left:2px">↕</span>`}</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap" onclick="uSort('brand')">แบรนด์ ${uF.sortCol==='brand'?`<span style="color:var(--blue);margin-left:2px">${uF.sortDir==='asc'?'↑':'↓'}</span>`:`<span style="opacity:.3;margin-left:2px">↕</span>`}</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:80px">แก้ไข</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:80px">ลบ</th>
         </tr>
       </thead>
       <tbody>
@@ -2370,7 +2392,7 @@ async function doNote(rid){const note=(document.getElementById('m-anote')?.value
 function openAddUser(){openMod(`<div class="mod-t">Add User</div>${uForm({})}<div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doAddUser()">Add</button></div>`);}
 function openEditUser(id){const u=users.find(x=>x.id===id);if(!u)return;openMod(`<div class="mod-t">Edit ${esc(u.name)}</div>${uForm(u)}<div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doEditUser('${esc(id)}')">Save</button></div>`);}
 function toggleEye(id,btn){const i=document.getElementById(id);const show=i.type==='password';i.type=show?'text':'password';btn.textContent=show?'HIDE':'SHOW';}
-function uForm(u){const BR=["ALL","Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];const ROLES=['superadmin','admin','manager','lead_engineer','engineer'];return`<div class="fg"><label>Name</label><input id="uf-n" value="${esc(u.name||'')}"/></div><div class="fg"><label>Username</label><input id="uf-u" value="${esc(u.username||'')}" ${u.id?'disabled':''}/></div>${u.id?`<div class="fg"><label>Current Password</label><div style="position:relative"><input id="uf-cur" type="password" value="${esc(u.password_plain||'')}" readonly style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-cur',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div>`:''}<div class="fg"><label>${u.id?'New Password (blank = no change)':'Password'}</label><div style="position:relative"><input id="uf-p" type="password" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-p',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><div class="fg"><label>Role</label><select class="sel" id="uf-r" style="width:100%">${ROLES.map(r=>`<option${u.role===r?' selected':''}>${r}</option>`).join('')}</select></div><div class="fg"><label>Brand</label><select class="sel" id="uf-b" style="width:100%">${BR.map(b=>`<option${u.brand===b?' selected':''}>${esc(b)}</option>`).join('')}</select></div></div><div class="fg"><label>LINE User ID</label><input id="uf-line" value="${esc(u.line_user_id||'')}" placeholder="For personal LINE notifications"/></div><div class="fg"><label>Phone</label><input id="uf-ph" value="${esc(u.phone||'')}" placeholder="08x-xxx-xxxx"/></div>`;}
+function uForm(u){const BR=["ALL","Dunkin'","Greyhound Cafe","Greyhound Original","Au Bon Pain","Funky Fries"];const ROLES=['superadmin','admin','manager','lead_engineer','engineer','reporter'];return`<div class="fg"><label>Name</label><input id="uf-n" value="${esc(u.name||'')}"/></div><div class="fg"><label>Username</label><input id="uf-u" value="${esc(u.username||'')}" ${u.id?'disabled':''}/></div>${u.id?`<div class="fg"><label>Current Password</label><div style="position:relative"><input id="uf-cur" type="password" value="${esc(u.password_plain||'')}" readonly style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-cur',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div>`:''}<div class="fg"><label>${u.id?'New Password (blank = no change)':'Password'}</label><div style="position:relative"><input id="uf-p" type="password" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 40px 9px 10px;color:var(--fg);font-size:13px;outline:none"/><button onclick="toggleEye('uf-p',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--fg3)">SHOW</button></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><div class="fg"><label>Role</label><select class="sel" id="uf-r" style="width:100%">${ROLES.map(r=>`<option${u.role===r?' selected':''}>${r}</option>`).join('')}</select></div><div class="fg"><label>Brand</label><select class="sel" id="uf-b" style="width:100%">${BR.map(b=>`<option${u.brand===b?' selected':''}>${esc(b)}</option>`).join('')}</select></div></div><div class="fg"><label>LINE User ID</label><input id="uf-line" value="${esc(u.line_user_id||'')}" placeholder="For personal LINE notifications"/></div><div class="fg"><label>Phone</label><input id="uf-ph" value="${esc(u.phone||'')}" placeholder="08x-xxx-xxxx"/></div>`;}
 async function doAddUser(){const n=document.getElementById('uf-n').value.trim(),u=document.getElementById('uf-u').value.trim(),p=document.getElementById('uf-p').value;if(!n||!u||!p)return toast('Fill all required fields');try{const d=await api('/api/users',{method:'POST',body:JSON.stringify({name:n,username:u,password:p,role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()})});if(!d.ok)throw new Error(d.error);users.push(d.user);closeMod();render();toast('User added');}catch(e){toast('Error: '+e.message);}}
 async function doEditUser(id){const data={name:document.getElementById('uf-n').value.trim(),role:document.getElementById('uf-r').value,brand:document.getElementById('uf-b').value,line_user_id:document.getElementById('uf-line').value.trim(),phone:document.getElementById('uf-ph').value.trim()};const p=document.getElementById('uf-p').value;if(p)data.password=p;try{const d=await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify(data)});if(!d.ok)throw new Error(d.error);users=users.map(u=>u.id===id?{...u,...d.user}:u);closeMod();render();toast('Saved');}catch(e){toast('Error: '+e.message);}}
 function confirmDelUser(id,name){
@@ -2695,7 +2717,7 @@ async function kDrop(e,colId){
 // ══════════════════════════════════════════
 // BRANCHES PAGE
 // ══════════════════════════════════════════
-let branches=[],brFilter={brand:'',q:''},brLoaded=false,brPage=0;
+let branches=[],brFilter={brand:'',q:'',sortCol:'code',sortDir:'asc'},brLoaded=false,brPage=0;
 const BR_BRANDS=["Dunkin'","Greyhound Cafe'","Greyhound Original","Au Bon Pain","Funky Fries","Another Hound Cafe'","Bean Hound"];
 
 async function loadBranches(){
@@ -2732,6 +2754,7 @@ async function loadBranches(){
 }
 
 
+function brSort(col){if(brFilter.sortCol===col){brFilter.sortDir=brFilter.sortDir==='asc'?'desc':'asc';}else{brFilter.sortCol=col;brFilter.sortDir='asc';}brPage=0;_renderBranchTable();}
 function _renderBranchTable(){
   const isSup=AUTH?.user?.role==='superadmin';
   let list=branches;
@@ -2741,6 +2764,14 @@ function _renderBranchTable(){
     list=list.filter(b=>(b.name_en||b.nameTh||b.name_th||'').toLowerCase().includes(q)||(b.code||'').toLowerCase().includes(q)||(b.ip||'').includes(q));
   }
   if(brFilter.q==='pending_only')list=list.filter(b=>b.status==='pending');
+  // Sort
+  if(brFilter.sortCol){
+    list=[...list].sort((a,b)=>{
+      let av=String(a[brFilter.sortCol]||'').toLowerCase(),bv=String(b[brFilter.sortCol]||'').toLowerCase();
+      return brFilter.sortDir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);
+    });
+  }
+  const brSI=col=>brFilter.sortCol===col?`<span style="color:var(--blue);margin-left:2px">${brFilter.sortDir==='asc'?'↑':'↓'}</span>`:'<span style="opacity:.3;margin-left:2px">↕</span>';
   const wrap=document.getElementById('br-table-wrap');
   if(!wrap)return;
   const total=list.length;
@@ -2748,8 +2779,13 @@ function _renderBranchTable(){
   const paged=list.slice(brPage*PAGE,(brPage+1)*PAGE);
   wrap.innerHTML=`<div class="br-table-wrap">
     <table class="br-table">
-      <thead><tr>
-        <th>Code</th><th>Brand</th><th>ชื่อสาขา</th><th>Location</th><th>Status</th><th>Action</th>
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;background:var(--bg3)" onclick="brSort('code')">Code ${brSI('code')}</th>
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;background:var(--bg3)" onclick="brSort('brand')">Brand ${brSI('brand')}</th>
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;background:var(--bg3)" onclick="brSort('nameTh')">ชื่อสาขา ${brSI('nameTh')}</th>
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;background:var(--bg3)">Location</th>
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;background:var(--bg3)" onclick="brSort('status')">Status ${brSI('status')}</th>
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;background:var(--bg3)">Action</th>
       </tr></thead>
       <tbody>${paged.map(b=>`<tr onclick="openBranchEdit(${b.id})" style="cursor:pointer">
         <td style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</td>
