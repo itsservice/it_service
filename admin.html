@@ -19,6 +19,24 @@
   --display:'Prompt',sans-serif;--sans:'Prompt',sans-serif;--mono:'Prompt',monospace;
   --ease:cubic-bezier(.22,.61,.36,1);--sidebar:240px
 }
+
+/* MOBILE RESPONSIVE FIXES */
+@media (max-width:768px){
+  :root{ --sidebar:0px; }
+  .side{ position:fixed; left:-260px; top:0; bottom:0; width:260px !important; z-index:1000; transition:left .3s var(--ease); box-shadow:var(--shadow2); }
+  .side.open{ left:0 !important; }
+  .main{ margin-left:0 !important; width:100% !important; }
+  .content{ padding:12px !important; }
+  .dash-grid3, .dash-grid2, .ugrid{ grid-template-columns:1fr !important; }
+  .top-clock, .status-dot, .top span:not(.notif-badge){ display:none; }
+  .top-t{ font-size:16px !important; }
+  .lcard{ width:95% !important; max-width:340px; padding:24px 16px !important; }
+  .gh-wrap{ flex-direction:column !important; height:auto !important; }
+  .gh-side{ width:100% !important; height:400px !important; border-left:none !important; border-top:1px solid var(--border); }
+  #gh-map{ height:300px !important; }
+  .top{ padding:8px 12px !important; gap:8px !important; }
+  .menub{ display:flex !important; }
+}
 [data-t="dark"]{
   --bg:#0c0c0c;--bg2:#161616;--bg3:#1c1c1a;--bg4:#262624;
   --fg:#eee;--fg2:#bbb;--fg3:#777;--fg4:#555;
@@ -652,9 +670,9 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 <div id="login">
 <div class="lcard">
 <div class="lcard-logo"><div class="lcard-icon">IT</div><div class="lcard-t">Admin Portal</div><div class="lcard-s">IT Support Management System</div></div>
-<div class="lf"><label>Username</label><div class="input-wrap"><input id="l-user" placeholder="username" autocomplete="username"/></div></div>
-<div class="lf"><label>Password</label><div class="input-wrap"><input type="password" id="l-pass" placeholder="password" autocomplete="current-password"/><button class="eye-btn" onclick="togglePw()" id="eye-btn">SHOW</button></div></div>
-<button class="lbtn" id="btn-login">Login</button>
+<div class="lf"><label>${_t('user')}</label><div class="input-wrap"><input id="l-user" placeholder="${_t('user')}" autocomplete="username"/></div></div>
+<div class="lf"><label>${_t('pass')}</label><div class="input-wrap"><input type="password" id="l-pass" placeholder="${_t('pass')}" autocomplete="current-password"/><button class="eye-btn" onclick="togglePw()" id="eye-btn">SHOW</button></div></div>
+<button class="lbtn" id="btn-login">${_t('login')}</button>
 <div class="lerr" id="l-err"></div>
 <div class="llinks"><a href="/">Home</a><a href="/report">Report</a><a href="/engineer">Engineer</a></div>
 </div></div>
@@ -719,10 +737,10 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
       </button>
     </div>
 
-    <a href="/">Home</a>
+    <a href="/" style="font-size:12px;color:var(--fg4);text-align:center;margin-bottom:8px">← Home</a>
     <div style="display:flex;gap:3px">
-      <button onclick="togTheme()" style="flex:1" id="theme-btn">Dark</button>
-      <button onclick="logout()" style="flex:1">Logout</button>
+      <button onclick="togTheme()" style="flex:1;font-size:11px" id="theme-btn">${_t('theme')}</button>
+      <button onclick="logout()" style="flex:1;font-size:11px;background:var(--red);color:white;border:none">${_t('logout')}</button>
     </div>
   </div>
 </aside>
@@ -730,16 +748,16 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
   <div class="top" style="box-shadow:0 2px 8px rgba(0,0,0,.04);padding:12px 16px;gap:12px">
     <button class="menub" onclick="togSide()" title="เมนู">☰</button>
     <div style="flex:1">
-      <div class="top-t" id="top-t" style="animation:slideInLeft .4s var(--ease)">Overview</div>
+      <div class="top-t" id="top-t" style="animation:slideInLeft .4s var(--ease)">${_t('overview')}</div>
     </div>
     <div class="top-clock" id="clock" style="font-family:var(--mono);font-size:12px;padding:4px 10px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)">--:--:--</div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="status-dot offline" id="dot" style="animation:pulse 2s infinite"></div>
-      <span style="font-size:10px;color:var(--fg4);font-weight:600">System</span>
+      <span style="font-size:10px;color:var(--fg4);font-weight:600">SYSTEM</span>
     </div>
-    <button class="smb" id="btn-rf" onclick="doRefresh()" title="โหลดข้อมูลใหม่">🔄</button>
-    <button class="smb" onclick="openCmd()" title="ค้นหา (⌘K)">🔍</button>
-    <button class="smb" id="lang-btn" onclick="togLang()" title="สลับภาษา">🌐</button>
+    <button class="smb" id="btn-rf" onclick="doRefresh()" title="${_t('refresh')}">🔄</button>
+    <button class="smb" onclick="openCmd()" title="${_t('search')} (⌘K)">🔍</button>
+    <button class="smb" id="lang-btn" onclick="togLang()" title="Switch Language">🌐 ${LANG}</button>
     <button class="smb" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน" style="position:relative">
       🔔<span class="notif-badge" id="notif-badge" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;display:none">0</span>
     </button>
@@ -788,6 +806,25 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 <script>
 let AUTH=null,tickets=[],logs=[],users=[],reporters=[],reporterFilter={brand:'',search:''},pg='dash',sse=null;
 let logF={userName:'',action:'',dateFrom:'',dateTo:'',sortCol:'ts',sortDir:'desc',pp:5,page:1};
+
+// ═══ I18N SYSTEM ═══
+let LANG = localStorage.getItem('adm_lang') || 'TH';
+const T = {
+  TH: {
+    overview: 'ภาพรวม', tickets: 'รายการแจ้งซ่อม', users: 'ผู้ใช้งาน', log: 'ประวัติกิจกรรม', gps: 'แผนที่ GPS', gpsHistory: 'ประวัติเส้นทาง',
+    line: 'กลุ่ม LINE', system: 'ตั้งค่าระบบ', branches: 'สาขา', logout: 'ออกจากระบบ', theme: 'ธีม', refresh: 'รีเฟรช',
+    search: 'ค้นหา...', welcome: 'สวัสดี', today: 'วันนี้', yesterday: 'เมื่อวาน', last7: '7 วันที่ผ่านมา',
+    engineer: 'ช่าง', date: 'วันที่', load: 'กำลังโหลด...', login: 'เข้าสู่ระบบ', user: 'ชื่อผู้ใช้งาน', pass: 'รหัสผ่าน'
+  },
+  EN: {
+    overview: 'Overview', tickets: 'Tickets', users: 'Users', log: 'Activity Log', gps: 'GPS Map', gpsHistory: 'GPS History',
+    line: 'LINE Groups', system: 'System Settings', branches: 'Branches', logout: 'Logout', theme: 'Theme', refresh: 'Refresh',
+    search: 'Search...', welcome: 'Welcome', today: 'Today', yesterday: 'Yesterday', last7: 'Last 7 Days',
+    engineer: 'Engineer', date: 'Date', load: 'Loading...', login: 'Login', user: 'Username', pass: 'Password'
+  }
+};
+function _t(k){ return T[LANG][k] || k; }
+function togLang(){ LANG = LANG === 'TH' ? 'EN' : 'TH'; localStorage.setItem('adm_lang', LANG); location.reload(); }
 // ── Brand color palette ──
 const BRAND_COLORS = {
   "Dunkin'"           : '#FF6B00',
@@ -802,16 +839,16 @@ function brandColor(name){ return BRAND_COLORS[name]||'#888'; }
 
 const PG={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',gpsHistory:'GPS History',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
 const NAV_ALL=[
-  {id:'dash',     ic:'D', lb:'Overview',      min:40,  roles:null},
-  {id:'tickets',  ic:'T', lb:'Tickets',        min:40,  roles:null},
-  {id:'users',    ic:'U', lb:'Users',          min:60,  roles:null},
-  {id:'log',      ic:'L', lb:'Activity Log',   min:60,  roles:['superadmin','manager']},
-  {id:'gps',      ic:'G', lb:'GPS Map',        min:60,  roles:null},
-  {id:'gpsHistory',ic:'R',lb:'GPS History',    min:60,  roles:['superadmin','manager']},
-  {id:'line',     ic:'L', lb:'LINE Groups',    min:100, roles:['superadmin']},
-  {id:'system',   ic:'S', lb:'System',         min:100, roles:['superadmin']},
-  {id:'server',   ic:'V', lb:'Server Logs',    min:100, roles:['superadmin']},
-  {id:'branches', ic:'B', lb:'Branches',       min:60,  roles:null}
+  {id:'dash',     ic:'📊', lb: _t('overview'),   min:40,  roles:null},
+  {id:'tickets',  ic:'🎫', lb: _t('tickets'),    min:40,  roles:null},
+  {id:'users',    ic:'👥', lb: _t('users'),      min:60,  roles:null},
+  {id:'log',      ic:'📜', lb: _t('log'),        min:60,  roles:['superadmin','manager']},
+  {id:'gps',      ic:'📍', lb: _t('gps'),        min:60,  roles:null},
+  {id:'gpsHistory',ic:'🛣️', lb: _t('gpsHistory'), min:60,  roles:['superadmin','manager']},
+  {id:'line',     ic:'💬', lb: _t('line'),       min:100, roles:['superadmin']},
+  {id:'system',   ic:'⚙️', lb: _t('system'),     min:100, roles:['superadmin']},
+  {id:'server',   ic:'🖥️', lb: 'Server Logs',    min:100, roles:['superadmin']},
+  {id:'branches', ic:'🏢', lb: _t('branches'),   min:60,  roles:null}
 ];
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -877,8 +914,9 @@ async function boot(){
 
   document.getElementById('app').classList.add('on');
   document.getElementById('s-name').textContent=AUTH.user.name;
-  const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager'};
+  const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager',engineer:'Engineer',lead_engineer:'Lead Engineer'};
   document.getElementById('s-role').textContent=rl[AUTH.user.role]||AUTH.user.role;
+  document.getElementById('lang-btn').textContent = '🌐 ' + LANG;
   buildNav();startClock();connectSSE();
   initPreviewRole();
 
@@ -915,9 +953,26 @@ function buildNav(){
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>navTo(b.dataset.p));
 }
 
-function navTo(p){pg=p;document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));document.getElementById('pg-'+p)?.classList.add('on');document.getElementById('top-t').textContent=PG[p]||p;document.querySelectorAll('.navb').forEach(b=>b.classList.toggle('on',b.dataset.p===p));closeSide();render();}
-function togSide(){document.getElementById('side').classList.toggle('open');document.getElementById('ov').classList.toggle('on');}
-function closeSide(){document.getElementById('side').classList.remove('open');document.getElementById('ov').classList.remove('on');}
+function navTo(p){
+  pg=p;
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));
+  document.getElementById('pg-'+p)?.classList.add('on');
+  const navItem = NAV_ALL.find(n=>n.id===p);
+  document.getElementById('top-t').textContent = navItem ? navItem.lb : p;
+  document.querySelectorAll('.navb').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  closeSide();
+  render();
+}
+function togSide(){
+  const s = document.getElementById('side');
+  const o = document.getElementById('ov');
+  s.classList.toggle('open');
+  o.classList.toggle('on');
+}
+function closeSide(){
+  document.getElementById('side').classList.remove('open');
+  document.getElementById('ov').classList.remove('on');
+}
 
 // ═══ DATA ═══
 async function loadTickets(){try{const d=await api('/api/tickets');if(d.ok)tickets=d.tickets||[];updateBdg();}catch(e){}}
@@ -3287,11 +3342,11 @@ function rGPSHistory(){
   </div>
 
   <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <div style="display:flex;align-items:center;gap:5px">
-      <span style="font-size:11px;color:var(--fg4)">ช่าง:</span>
-      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()">
-        <option value="">ทุกคน</option>
-        ${[...new Set(users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>u.name))].sort().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
+    <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:150px">
+      <span style="font-size:11px;color:var(--fg4)">${_t('engineer')}:</span>
+      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()" style="flex:1;font-weight:700;border-color:var(--fg);background:var(--bg2)">
+        <option value="">-- เลือกช่าง --</option>
+        ${users.filter(u=>['engineer','lead_engineer'].includes(u.role)).sort((a,b)=>a.name.localeCompare(b.name)).map(u=>`<option value="${esc(u.id)}">${esc(u.name)} (${esc(u.brand)})</option>`).join('')}
       </select>
     </div>
     <div style="display:flex;align-items:center;gap:5px">
