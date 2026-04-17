@@ -114,7 +114,7 @@ app.get('/api/auth/me', requireAuth(), (req, res) => {
 // ═══════════════════════════════════════════════════════════
 // LINE SETTINGS API
 // ═══════════════════════════════════════════════════════════
-app.get('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
+app.get('/api/line-config', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const flat = await lineConfig.getConfig();
     const config = {
@@ -133,7 +133,7 @@ app.get('/api/line-config', requireAuth(['superadmin','admin']), async (req, res
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/line-config', requireAuth(['superadmin','admin']), async (req, res) => {
+app.patch('/api/line-config', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const updated = await lineConfig.updateConfig(req.body);
     addLog({ user:req.user, action:'update_line_config', detail:'อัปเดตค่า LINE Settings' });
@@ -141,7 +141,7 @@ app.patch('/api/line-config', requireAuth(['superadmin','admin']), async (req, r
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (req, res) => {
+app.post('/api/line-config/test', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const { to } = req.body || {};
     if (!to) return res.json({ ok:false, error:'กรุณาระบุ LINE ID ที่ต้องการทดสอบ' });
@@ -152,10 +152,30 @@ app.post('/api/line-config/test', requireAuth(['superadmin','admin']), async (re
 });
 
 // ── LINE Diagnostic — ตรวจสอบสถานะ LINE ทั้งหมด ─────────────
-app.get('/api/line/diagnostic', requireAuth(['superadmin','admin']), async (req, res) => {
+app.get('/api/line/diagnostic', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const diag = await lineNotify.sendDiagnostic();
     res.json({ ok:true, diagnostic: diag });
+  } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
+});
+
+// LINE Quota — ดึงจาก LINE Messaging API
+app.get('/api/line/quota', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
+  try {
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
+    if (!token) return res.json({ ok:false, error:'No LINE token' });
+    const axios = require('axios');
+    const headers = { Authorization: `Bearer ${token}` };
+    const [qRes, uRes] = await Promise.all([
+      axios.get('https://api.line.me/v2/bot/message/quota', { headers, timeout:8000 }),
+      axios.get('https://api.line.me/v2/bot/message/quota/consumption', { headers, timeout:8000 }),
+    ]);
+    res.json({
+      ok: true,
+      type:       qRes.data?.type,
+      limit:      qRes.data?.value ?? 0,
+      totalUsage: uRes.data?.totalUsage ?? 0,
+    });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
@@ -337,7 +357,7 @@ app.post('/api/tickets', async (req, res) => {
 });
 
 // ── Accept ticket (engineer รับงาน) ────────────────────────
-app.post('/api/tickets/:rid/accept', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
+app.post('/api/tickets/:rid/accept', requireAuth(['engineer','lead_engineer','admin','superadmin','manager','it_services']), async (req, res) => {
   try {
     const brand = getBrand(req.params.rid, req.body);
     const t = await updateTicket(req.params.rid, { status:'อยู่ระหว่างดำเนินการ ⚙️', engineerName:req.user.name, assignedTo:req.user.name, brand });
@@ -368,7 +388,7 @@ app.patch('/api/tickets/:rid/status', requireAuth(), async (req, res) => {
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const { engineerName, assignedTo } = req.body || {};
     if (!engineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่าง' });
@@ -382,7 +402,7 @@ app.patch('/api/tickets/:rid/assign', requireAuth(['superadmin','admin','manager
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const { newEngineerName } = req.body || {};
     if (!newEngineerName) return res.json({ ok:false, error:'กรุณาระบุชื่อช่างใหม่' });
@@ -397,7 +417,7 @@ app.patch('/api/tickets/:rid/reassign', requireAuth(['superadmin','admin','manag
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_engineer','admin','superadmin','manager','it_services']), async (req, res) => {
   try {
     const { workDetail, partsUsed, workHours, completed_lat, completed_lng } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
@@ -414,7 +434,7 @@ app.patch('/api/tickets/:rid/engineer-submit', requireAuth(['engineer','lead_eng
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer','admin','superadmin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer','admin','superadmin','manager','it_services']), async (req, res) => {
   try {
     const { workDetail, status, engineerName } = req.body || {};
     if (!workDetail) return res.json({ ok:false, error:'กรุณากรอกรายละเอียดงาน' });
@@ -428,7 +448,7 @@ app.patch('/api/tickets/:rid/engineer', requireAuth(['engineer','lead_engineer',
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const { adminNote } = req.body || {};
     const brand = getBrand(req.params.rid, req.body);
@@ -441,7 +461,7 @@ app.patch('/api/tickets/:rid/close', requireAuth(['superadmin','admin','manager'
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const brand = getBrand(req.params.rid, req.body);
     const t = await updateTicket(req.params.rid, { ...req.body, brand });
@@ -454,7 +474,7 @@ app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager']), as
 // ═══════════════════════════════════════════════════════════
 // LOGS / USERS
 // ═══════════════════════════════════════════════════════════
-app.get('/api/logs', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.get('/api/logs', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const logs = await getLogsAsync({
       limit:    parseInt(req.query.limit)    || 200,
@@ -468,12 +488,12 @@ app.get('/api/logs', requireAuth(['superadmin','admin','manager']), async (req, 
   } catch(e) { res.json({ ok:false, error:e.message }); }
 });
 
-app.get('/api/users', requireAuth(['superadmin','admin','manager']), (_, res) => res.json({ ok:true, users:getAllUsers() }));
-app.post('/api/users', requireAuth(['superadmin','admin']), (req, res) => {
+app.get('/api/users', requireAuth(['superadmin','admin','manager','it_services']), (_, res) => res.json({ ok:true, users:getAllUsers() }));
+app.post('/api/users', requireAuth(['superadmin','admin','it_services']), (req, res) => {
   try { const u=createUser(req.body); addLog({user:req.user,action:'create_user',detail:`สร้าง ${u.username}`}); res.json({ok:true,user:u}); }
   catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
-app.patch('/api/users/:id', requireAuth(['superadmin','admin']), (req, res) => {
+app.patch('/api/users/:id', requireAuth(['superadmin','admin','it_services']), (req, res) => {
   try { const u=updateUser(req.params.id,req.body); addLog({user:req.user,action:'update_user',detail:`แก้ไข ${u.username}`}); res.json({ok:true,user:u}); }
   catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
@@ -512,7 +532,7 @@ app.post('/api/gps', requireAuth(), async (req, res) => {
   }
 });
 
-app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.get('/api/gps', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const axios = require('axios');
     const r = await axios.get(`${FASTAPI_URL}/api/gps`, {
@@ -529,7 +549,7 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager']), async (req, r
 // DEBUG
 // ═══════════════════════════════════════════════════════════
 // ─── GPS History (บันทึกเส้นทาง ดูย้อนหลัง) ───────────────────
-app.get('/api/gps/history', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.get('/api/gps/history', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const axios = require('axios');
     const params = {};
@@ -549,7 +569,7 @@ app.get('/api/gps/history', requireAuth(['superadmin','admin','manager']), async
   }
 });
 
-app.get('/api/gps/sessions', requireAuth(['superadmin','admin','manager']), async (req, res) => {
+app.get('/api/gps/sessions', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
     const axios = require('axios');
     const params = {};
@@ -696,7 +716,7 @@ app.post('/api/reporter/forgot-password', async (req, res) => {
 });
 
 // POST /api/admin/reporter/reset-password  — Admin reset กลับ default
-app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin']), async (req, res) => {
+app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const { userId } = req.body || {};
     if (!userId) return res.json({ ok:false, error:'ต้องระบุ userId' });
@@ -718,7 +738,7 @@ app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin'
 });
 
 // GET /api/admin/reporters  — list reporters for admin panel
-app.get('/api/admin/reporters', requireAuth(['superadmin','admin','manager']), (req, res) => {
+app.get('/api/admin/reporters', requireAuth(['superadmin','admin','manager','it_services']), (req, res) => {
   try {
     const all = getAllReporters();
     const { brand, search } = req.query;
