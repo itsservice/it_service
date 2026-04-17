@@ -1330,7 +1330,7 @@ function rTickets(){
       <div style="display:flex;align-items:center;gap:3px;font-size:12px">
         <button class="smb" style="padding:3px 8px" onclick="tF.p=1;rTickets()" ${tF.p===1?'disabled':''}>«</button>
         <button class="smb" style="padding:3px 8px" onclick="tF.p--;rTickets()" ${tF.p===1?'disabled':''}>‹ ก่อน</button>
-        ${(()=>{let btns='';const R=2;const start=Math.max(1,tF.p-R),end=Math.min(tp,tF.p+R);if(start>1)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;for(let i=start;i<=end;i++)btns+=`<button class="smb" style="padding:3px 8px;${i===tF.p?'background:var(--fg);color:var(--bg);':''}font-weight:${i===tF.p?'700':'400'}" onclick="tF.p=${i};rTickets()">${i}</button>`;if(end<tp)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;return btns;})()}
+        <span style="font-size:12px;color:var(--fg4);padding:0 6px">หน้า ${tF.p} / ${tp}</span>
         <button class="smb" style="padding:3px 8px" onclick="tF.p++;rTickets()" ${tF.p===tp?'disabled':''}>ถัดไป ›</button>
         <button class="smb" style="padding:3px 8px" onclick="tF.p=tp;rTickets()" ${tF.p===tp?'disabled':''}>»</button>
       </div>
@@ -2915,7 +2915,7 @@ function _renderBranchTable(){
     <div style="display:flex;align-items:center;gap:3px;font-size:12px">
       <button class="smb" style="padding:3px 8px" onclick="brPage=0;_renderBranchTable()" ${brPage===0?'disabled':''}>«</button>
       <button class="smb" style="padding:3px 8px" onclick="brPage--;_renderBranchTable()" ${brPage===0?'disabled':''}>‹ ก่อนหน้า</button>
-      ${(()=>{let btns='';const tp=Math.ceil(total/PAGE);const R=2;const start=Math.max(0,brPage-R),end=Math.min(tp-1,brPage+R);if(start>0)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;for(let i=start;i<=end;i++)btns+=`<button class="smb" style="padding:3px 8px;${i===brPage?'background:var(--fg);color:var(--bg);':''}" onclick="brPage=${i};_renderBranchTable()">${i+1}</button>`;if(end<tp-1)btns+=`<span style="color:var(--fg4);padding:0 4px">…</span>`;return btns;})()}
+      <span style="font-size:12px;color:var(--fg4);padding:0 8px">หน้า ${brPage+1} / ${Math.ceil(total/PAGE)}</span>
       <button class="smb" style="padding:3px 8px" onclick="brPage++;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>ถัดไป ›</button>
       <button class="smb" style="padding:3px 8px" onclick="brPage=Math.ceil(total/PAGE)-1;_renderBranchTable()" ${(brPage+1)*PAGE>=total?'disabled':''}>»</button>
     </div>
