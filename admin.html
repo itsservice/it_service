@@ -658,6 +658,11 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
           <span style="flex:1">admin</span>
           <span style="font-size:9px;padding:2px 6px;border-radius:99px;background:#3b82f622;color:#3b82f6;font-weight:700">Admin</span>
         </button>
+<button class="prev-ropt" data-role="it_services" data-page="Admin" onclick="pickPreviewRole(this,'it_services','Admin')" style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:11.5px;color:var(--fg);font-family:var(--sans);text-align:left;width:100%;transition:background .12s">
+          <div style="width:7px;height:7px;border-radius:50%;background:#3b82f6;flex-shrink:0"></div>
+          <span style="flex:1">it_services</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:99px;background:#3b82f622;color:#3b82f6;font-weight:700">Admin</span>
+        </button>
         <button class="prev-ropt" data-role="lead_engineer" data-page="Engineer" onclick="pickPreviewRole(this,'lead_engineer','Engineer')" style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:11.5px;color:var(--fg);font-family:var(--sans);text-align:left;width:100%;transition:background .12s">
           <div style="width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0"></div>
           <span style="flex:1">lead_engineer</span>
@@ -751,6 +756,7 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 
 <script>
 let AUTH=null,tickets=[],logs=[],users=[],reporters=[],reporterFilter={brand:'',search:''},pg='dash',sse=null;
+let logF={userName:'',action:'',dateFrom:'',dateTo:'',sortCol:'ts',sortDir:'desc',pp:5,page:1};
 // ── Brand color palette ──
 const BRAND_COLORS = {
   "Dunkin'"           : '#FF6B00',
@@ -765,16 +771,16 @@ function brandColor(name){ return BRAND_COLORS[name]||'#888'; }
 
 const PG={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',gpsHistory:'GPS History',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
 const NAV_ALL=[
-  {id:'dash',ic:'D',lb:'Overview',min:40},
-  {id:'tickets',ic:'T',lb:'Tickets',min:40},
-  {id:'users',ic:'U',lb:'Users',min:80},
-  {id:'log',ic:'L',lb:'Activity Log',min:60},
-  {id:'gps',ic:'G',lb:'GPS Map',min:60},
-  {id:'gpsHistory',ic:'R',lb:'GPS History',min:60},
-  {id:'line',ic:'L',lb:'LINE Groups',min:100},
-  {id:'system',ic:'S',lb:'System',min:100},
-  {id:'server',ic:'V',lb:'Server Logs',min:100},
-  {id:'branches',ic:'B',lb:'Branches',min:60}
+  {id:'dash',     ic:'D', lb:'Overview',      min:40,  roles:null},
+  {id:'tickets',  ic:'T', lb:'Tickets',        min:40,  roles:null},
+  {id:'users',    ic:'U', lb:'Users',          min:60,  roles:null},
+  {id:'log',      ic:'L', lb:'Activity Log',   min:60,  roles:['superadmin','manager']},
+  {id:'gps',      ic:'G', lb:'GPS Map',        min:60,  roles:null},
+  {id:'gpsHistory',ic:'R',lb:'GPS History',    min:60,  roles:['superadmin','manager']},
+  {id:'line',     ic:'L', lb:'LINE Groups',    min:100, roles:['superadmin']},
+  {id:'system',   ic:'S', lb:'System',         min:100, roles:['superadmin']},
+  {id:'server',   ic:'V', lb:'Server Logs',    min:100, roles:['superadmin']},
+  {id:'branches', ic:'B', lb:'Branches',       min:60,  roles:null}
 ];
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -786,14 +792,14 @@ function cleanBranch(code){return(code||'—').replace(/\s*มี\s*\d+\s*เค
 function togglePw(){const i=document.getElementById('l-pass'),b=document.getElementById('eye-btn');if(i.type==='password'){i.type='text';b.textContent='HIDE';}else{i.type='password';b.textContent='SHOW';}}
 
 // ═══ AUTH ═══
-async function tryAuto(){const s=localStorage.getItem('adm_auth');if(!s)return false;try{const{token}=JSON.parse(s);const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});if(d.ok&&['superadmin','admin','manager'].includes(d.user.role)){AUTH={token,user:d.user};return true;}}catch(_){}localStorage.removeItem('adm_auth');return false;}
+async function tryAuto(){const s=localStorage.getItem('adm_auth');if(!s)return false;try{const{token}=JSON.parse(s);const d=await api('/api/auth/me',{headers:{'Authorization':'Bearer '+token}});if(d.ok&&['superadmin','admin','manager','it_services'].includes(d.user.role)){AUTH={token,user:d.user};return true;}}catch(_){}localStorage.removeItem('adm_auth');return false;}
 
 document.getElementById('btn-login').onclick=async()=>{
   const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
   const err=document.getElementById('l-err'),btn=document.getElementById('btn-login');
   err.textContent='';if(!u||!p){err.textContent='Enter username and password';return;}
   btn.disabled=true;btn.textContent='Connecting...';
-  try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});if(!d.ok)throw new Error(d.error||'Login failed');if(!['superadmin','admin','manager'].includes(d.user.role))throw new Error('Insufficient permissions');AUTH={token:d.token,user:d.user};localStorage.setItem('adm_auth',JSON.stringify(AUTH));boot();}
+  try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});if(!d.ok)throw new Error(d.error||'Login failed');if(!['superadmin','admin','manager','it_services'].includes(d.user.role))throw new Error('Insufficient permissions');AUTH={token:d.token,user:d.user};localStorage.setItem('adm_auth',JSON.stringify(AUTH));boot();}
   catch(e){err.textContent=e.message;}finally{btn.disabled=false;btn.textContent='Login';}
 };
 ['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
@@ -856,8 +862,8 @@ async function boot(){
 }
 
 function buildNav(){
-  const level={superadmin:100,admin:80,manager:60}[AUTH.user.role]||0;
-  const items=NAV_ALL.filter(n=>level>=n.min);
+  const level=ROLE_LEVEL[AUTH?.user?.role||'']||0;
+  const items=NAV_ALL.filter(n=>(level>=n.min)&&(!n.roles||n.roles.includes(AUTH?.user?.role)));
   document.getElementById('s-nav').innerHTML=items.map(n=>`<button class="navb${pg===n.id?' on':''}" data-p="${n.id}"><span class="ni">${n.ic}</span><span>${n.lb}</span>${n.id==='tickets'?'<span class="bdg" id="nav-bdg" style="display:none">0</span>':''}</button>`).join('');
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>navTo(b.dataset.p));
 }
@@ -953,6 +959,35 @@ function dashFilterBar(chartKey, f, onApply) {
   </div>`;
 }
 
+
+// ── Role permission helpers ──────────────────────────────────
+function canEdit()      { return ['superadmin','admin','manager','it_services'].includes(AUTH?.user?.role); }
+function canSeePassword(){ return AUTH?.user?.role==='superadmin'; }
+function canDeleteUser(){ return ['superadmin'].includes(AUTH?.user?.role); }
+function canApprove()   { return ['superadmin','manager'].includes(AUTH?.user?.role); }
+function canSeeLog()    { return ['superadmin','manager'].includes(AUTH?.user?.role); }
+function isITServices() { return ['admin','it_services'].includes(AUTH?.user?.role); }
+function isSuperAdmin() { return AUTH?.user?.role==='superadmin'; }
+function myBrand()      { return AUTH?.user?.brand==='ALL'?null:AUTH?.user?.brand; }
+
+async function loadLineQuota(){
+  try{
+    const d = await api('/api/line/quota');
+    const bar = document.getElementById('line-quota-bar');
+    if(!bar) return;
+    if(!d.ok){ bar.style.display='none'; return; }
+    bar.style.display='flex';
+    const used  = d.totalUsage || 0;
+    const total = d.limit      || 0;
+    const pct   = total>0 ? Math.round(used/total*100) : 0;
+    const b = document.getElementById('lq-bar');
+    if(b){ b.style.width=Math.min(pct,100)+'%'; b.style.background=pct>90?'var(--red)':pct>70?'var(--yellow)':'var(--blue)'; }
+    const ul=document.getElementById('lq-used-label'); if(ul) ul.textContent=`ส่งไปแล้ว ${used.toLocaleString()} messages`;
+    const tl=document.getElementById('lq-total-label'); if(tl) tl.textContent=`Limit ${total.toLocaleString()}`;
+    const pl=document.getElementById('lq-pct'); if(pl) pl.textContent=`${pct}%`;
+  }catch(e){ console.warn('[LINE quota]',e.message); }
+}
+
 function rDash(){
   const pg_el=document.getElementById('pg-dash');
   if(!pg_el) return;
@@ -971,6 +1006,20 @@ function rDash(){
   pg_el.innerHTML=`
   ${IMP_BAR}
   ${EXP.dash}
+  <div id="line-quota-bar" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">LINE Quota</span>
+    <div style="flex:1;min-width:200px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+        <span style="color:var(--fg3)" id="lq-used-label">—</span>
+        <span style="color:var(--fg4)" id="lq-total-label">—</span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div id="lq-bar" style="height:100%;background:var(--blue);border-radius:3px;transition:width .5s;width:0%"></div>
+      </div>
+    </div>
+    <span id="lq-pct" style="font-size:13px;font-weight:700;color:var(--fg);min-width:40px;text-align:right">—</span>
+    <button class="smb" style="font-size:11px;padding:4px 10px" onclick="loadLineQuota()">↻ refresh</button>
+  </div>
   <div class="dash-header">
     <div>
       <div class="dash-title">Overview Dashboard</div>
@@ -1198,7 +1247,7 @@ function drawDashCharts(){
         plugins:{...base.plugins}}});}
 }
 
-let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'sentDate',sortDir:'desc',p:1,pp:15};
+let tF={status:'',brand:'',engineer:'',q:'',dateFrom:'',dateTo:'',sortCol:'sentDate',sortDir:'desc',p:1,pp:5};
 function rTickets(){
   const brands=[...new Set(tickets.map(x=>x.brand).filter(Boolean))].sort();
   const engineers=[...new Set(tickets.map(x=>x.engineerName).filter(Boolean))].sort();
@@ -1583,6 +1632,7 @@ function _openImport(){
     await Promise.allSettled([loadTickets(),loadUsers(),loadReporters()]);
     brLoaded=false;
     render();
+  loadLineQuota();
 
     const summary=`✅ สำเร็จ ${results.ok} รายการ${results.fail?' | ❌ ล้มเหลว '+results.fail+' รายการ':''}`;
     if(results.msgs.length){
@@ -1611,8 +1661,11 @@ const IMP_BAR=`<div style="display:flex;align-items:center;gap:6px;margin-bottom
 // ════════════════════════════════════════════════════════════
 const REPORTER_BRANDS=["Greyhound Cafe'","Another Hound Cafe'","Bean Hound","Au Bon Pain","Dunkin'","Funky Fries"];
 const BRAND_COLOR={"Greyhound Cafe'":'#0a0a0a',"Another Hound Cafe'":'#6d28d9',"Bean Hound":'#065f46',"Au Bon Pain":'#b45309',"Dunkin'":'#dc2626',"Funky Fries":'#d97706'};
-const ALL_ROLES=['superadmin','admin','manager','lead_engineer','engineer','reporter'];
-const ROLE_ORDER={superadmin:0,admin:1,manager:2,lead_engineer:3,engineer:4,reporter:5};
+const ALL_ROLES=['superadmin','admin','manager','it_services','lead_engineer','engineer','reporter'];
+const ROLE_ORDER={superadmin:0,admin:1,manager:2,it_services:3,lead_engineer:4,engineer:5,reporter:6};
+// Level: 100=superadmin, 80=manager, 70=it_services, 60=admin, 50=lead_engineer, 40=engineer/reporter
+const ROLE_LEVEL={superadmin:100,manager:80,it_services:70,admin:60,lead_engineer:50,engineer:40,reporter:10};
+function roleLevel(r){return ROLE_LEVEL[r]||0;}
 
 const uF={codeSearch:'',nameSearch:'',brand:'',role:'',page:1,perPage:5};
 function uFPage(p){uF.page=p;rUsersTable();}
@@ -1730,7 +1783,7 @@ function rUsersTable(){
           const isPending=isReporter&&(u.reset_requested==1||u.reset_requested===true);
           const bc=BRAND_COLOR[u.brand]||'#374151';
           const rowBg=isPending?'rgba(251,191,36,.07)':'';
-          const roleColor={superadmin:'#7c3aed',admin:'#2563eb',manager:'#0891b2',lead_engineer:'#059669',engineer:'#16a34a',reporter:'#d97706'}[u.role]||'#6b7280';
+          const roleColor={superadmin:'#7c3aed',admin:'#2563eb',manager:'#0891b2',it_services:'#0f766e',lead_engineer:'#059669',engineer:'#16a34a',reporter:'#d97706'}[u.role]||'#6b7280';
           return `
           <tr style="border-bottom:1px solid var(--border);background:${rowBg};transition:background .12s"
             onmouseover="this.style.background='${isPending?'rgba(251,191,36,.14)':'var(--bg3)'}'"
@@ -1782,7 +1835,7 @@ function openReporterDetail(id){
     <div style="font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
       ${[['รหัสพนักงาน',`<span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>`],
          ['ชื่อ-สกุล',esc(r.name)],['แบรนด์',esc(r.brand||'-')],
-         ['รหัสผ่าน (default)',`<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`],
+         ...(canSeePassword()?[['รหัสผ่าน (default)',`<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`]]:[['รหัสผ่าน','<span style="color:var(--fg4)">— (เฉพาะ Super Admin)</span>']]),
          ['สถานะ',isPending?'<span style="color:#d97706;font-weight:600">รอ Reset รหัสผ่าน</span>':'ปกติ'],
       ].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i>0?'border-top:1px solid var(--border)':''}"><span style="color:var(--fg4);min-width:120px">${k}</span><span style="text-align:right">${v}</span></div>`).join('')}
     </div>
@@ -1824,7 +1877,7 @@ async function doResetReporterPwd(userId,name){
 }
 
 // ════ ACTIVITY LOG — DB persistent with filters ════════════════
-const logF={userName:'',action:'',dateFrom:'',dateTo:''};
+// logF defined above with pp
 
 async function loadLogs(){
   try{
@@ -1883,35 +1936,83 @@ function rLog(){
   rLogList();
 }
 
+const _aL=a=>({login:'Login',logout:'Logout',create_ticket:'สร้าง Ticket',update_status:'เปลี่ยนสถานะ',
+  assign:'มอบหมาย',reassign:'เปลี่ยนช่าง',engineer_submit:'ช่างส่งงาน',close:'ปิด Ticket',
+  create_user:'สร้าง User',update_user:'แก้ไข User',delete_user:'ลบ User',
+  change_password:'เปลี่ยนรหัสผ่าน',forgot_password:'ลืมรหัสผ่าน',
+  reset_reporter_password:'Reset รหัสผ่าน',accept:'รับงาน',start_work:'เริ่มงาน',update:'อัปเดต'}[a]||a);
+
+function lSort(col){if(logF.sortCol===col){logF.sortDir=logF.sortDir==='asc'?'desc':'asc';}else{logF.sortCol=col;logF.sortDir='desc';}logF.page=1;rLogList();}
+
 function rLogList(){
   const el=document.getElementById('pg-log-list');
   if(!el)return;
   const t=document.getElementById('pg-log-title');
   if(t) t.textContent=`Activity Log (${logs.length})`;
-  const aL=a=>({login:'Login',logout:'Logout',create_ticket:'สร้าง Ticket',update_status:'เปลี่ยนสถานะ',
-    assign:'มอบหมาย',reassign:'เปลี่ยนช่าง',engineer_submit:'ช่างส่งงาน',close:'ปิด Ticket',
-    create_user:'สร้าง User',update_user:'แก้ไข User',delete_user:'ลบ User',
-    change_password:'เปลี่ยนรหัสผ่าน',forgot_password:'ลืมรหัสผ่าน',
-    reset_reporter_password:'Reset รหัสผ่าน',accept:'รับงาน',start_work:'เริ่มงาน',update:'อัปเดต'}[a]||a);
-  if(!logs.length){
-    el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบ Log</div></div>';
-    return;
+  if(!logs.length){el.innerHTML='<div class="empty"><div class="empty-t">ไม่พบ Log</div></div>';return;}
+
+  // Sort
+  let data=[...logs];
+  if(logF.sortCol){
+    data.sort((a,b)=>{
+      let av='',bv='';
+      if(logF.sortCol==='ts') {av=a.displayTs||a.ts||'';bv=b.displayTs||b.ts||'';}
+      else if(logF.sortCol==='user') {av=(a.user?.name||'').toLowerCase();bv=(b.user?.name||'').toLowerCase();}
+      else if(logF.sortCol==='action') {av=a.action||'';bv=b.action||'';}
+      return logF.sortDir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);
+    });
   }
-  el.innerHTML=logs.map(l=>`
-    <div class="log-i">
-      <div class="log-dot"></div>
-      <div class="log-b">
-        <div class="log-a">${esc(aL(l.action))}
-          ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:3px">${esc(l.ticketLabel)}</span>`:''}
-        </div>
-        <div class="log-m">
-          <span style="font-weight:600">${esc(l.user?.name||'System')}</span>
-          <span style="font-size:10px;color:var(--fg4)">${esc(l.user?.role||'')}</span>
-          <span>${esc(l.displayTs||'')}</span>
-        </div>
-        ${l.detail?`<div style="font-size:12px;color:var(--fg3);margin-top:1px">${esc(l.detail)}</div>`:''}
-      </div>
-    </div>`).join('');
+
+  const tp=Math.max(1,Math.ceil(data.length/logF.pp));
+  logF.page=Math.min(logF.page,tp);
+  const paged=data.slice((logF.page-1)*logF.pp, logF.page*logF.pp);
+  const lSI=col=>logF.sortCol===col?`<span style="color:var(--blue);margin-left:2px">${logF.sortDir==='asc'?'↑':'↓'}</span>`:'<span style="opacity:.3;margin-left:2px">↕</span>';
+  const thS='padding:8px 12px;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;text-align:left;background:var(--bg3)';
+
+  el.innerHTML=`
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--fg4)">แสดง</span>
+    <select class="sel" style="padding:3px 6px;font-size:12px;width:auto" onchange="logF.pp=+this.value;logF.page=1;rLogList()">
+      ${[5,10,15,25,50,100].map(n=>`<option value="${n}"${logF.pp===n?' selected':''}>${n} รายการ</option>`).join('')}
+    </select>
+    <span style="font-size:12px;color:var(--fg4)">จาก ${data.length} รายการ</span>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="${thS}" onclick="lSort('ts')">วันที่/เวลา ${lSI('ts')}</th>
+        <th style="${thS}" onclick="lSort('user')">ผู้ใช้ ${lSI('user')}</th>
+        <th style="${thS}" onclick="lSort('action')">Action ${lSI('action')}</th>
+        <th style="${thS}">Ticket / รายละเอียด</th>
+      </tr></thead>
+      <tbody>
+      ${paged.map((l,i)=>`<tr style="border-bottom:1px solid var(--border);${i%2===0?'':'background:var(--bg3)'}">
+        <td style="padding:8px 12px;font-size:11px;color:var(--fg4);white-space:nowrap;font-family:var(--mono)">${esc(l.displayTs||l.ts||'-')}</td>
+        <td style="padding:8px 12px">
+          <div style="font-weight:600;font-size:12px">${esc(l.user?.name||'System')}</div>
+          <div style="font-size:10px;color:var(--fg4)">${esc(l.user?.role||'')}</div>
+        </td>
+        <td style="padding:8px 12px">
+          <span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--bg2);border:1px solid var(--border)">${esc(_aL(l.action))}</span>
+        </td>
+        <td style="padding:8px 12px">
+          ${l.ticketLabel?`<span style="font-family:var(--mono);font-size:11px;color:var(--blue)">${esc(l.ticketLabel)}</span> `:''}
+          ${l.detail?`<span style="font-size:12px;color:var(--fg3)">${esc(l.detail)}</span>`:''}
+        </td>
+      </tr>`).join('')}
+      ${!paged.length?'<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--fg4)">ไม่พบ Log</td></tr>':''}
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px">
+    <span style="font-size:12px;color:var(--fg4)">หน้า ${logF.page} / ${tp}</span>
+    <div style="display:flex;gap:3px">
+      <button class="smb" style="padding:3px 8px" onclick="logF.page=1;rLogList()" ${logF.page===1?'disabled':''}>«</button>
+      <button class="smb" style="padding:3px 8px" onclick="logF.page--;rLogList()" ${logF.page===1?'disabled':''}>‹</button>
+      <button class="smb" style="padding:3px 8px" onclick="logF.page++;rLogList()" ${logF.page===tp?'disabled':''}>›</button>
+      <button class="smb" style="padding:3px 8px" onclick="logF.page=tp;rLogList()" ${logF.page===tp?'disabled':''}>»</button>
+    </div>
+  </div>`;
 }
 
 // ═══ GPS MAP ═══
@@ -2757,6 +2858,7 @@ async function loadBranches(){
 function brSort(col){if(brFilter.sortCol===col){brFilter.sortDir=brFilter.sortDir==='asc'?'desc':'asc';}else{brFilter.sortCol=col;brFilter.sortDir='asc';}brPage=0;_renderBranchTable();}
 function _renderBranchTable(){
   const isSup=AUTH?.user?.role==='superadmin';
+  const isManager=AUTH?.user?.role==='manager';
   let list=branches;
   if(brFilter.brand)list=list.filter(b=>b.brand===brFilter.brand);
   if(brFilter.q&&brFilter.q!=='pending_only'){
