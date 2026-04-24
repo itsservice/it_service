@@ -3484,7 +3484,9 @@ function _ghRenderWaypointList(){
     const tp=p._type||(p.ticket_id?'work':realIdx===0?'start':realIdx===_ghPoints.length-1?'current':'transit');
     const col=typeColors[tp]||'#888';
     const bg=typeBg[tp]||'rgba(136,136,136,.08)';
-    const time=(p.recorded_at||'').slice(11,16);
+    const recAt=p.recorded_at||'';
+    const dateStr=recAt.slice(0,10);
+    const time=recAt.slice(11,16);
     const label=p._label||(p.ticket_id?p.ticket_id:'เดินทาง');
     const isSelected=_ghWaypoints.has(realIdx);
     const wpOrder=[..._ghWaypoints].indexOf(realIdx)+1;
@@ -3494,7 +3496,8 @@ function _ghRenderWaypointList(){
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:5px">
-          ${time}
+          <span style="font-size:12px;font-weight:700">${time}</span>
+          ${dateStr?`<span style="font-size:9px;color:var(--blue);background:rgba(37,99,235,.08);padding:1px 5px;border-radius:3px;font-weight:600">${dateStr}</span>`:''}
           ${p.speed>0?`<span style="font-size:9px;color:var(--fg4)">${Math.round(p.speed)} km/h</span>`:''}
           <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${bg};color:${col};font-weight:700">${typeLabel[tp]||tp}</span>
         </div>
