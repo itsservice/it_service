@@ -3331,24 +3331,34 @@ async function _ghLoad(){
     _ghPoints=d.points||[];
     _ghSessions=d.sessions||[];
     if(!_ghPoints.length){
-      _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
-      _ghSessions=[{engineer_name:engName||'ช่าง 2',session_date:dateFrom,total_km:28.4,point_count:_ghPoints.length,max_speed:62,tickets:['GD-00021','ABP-00006']}];
-      if(lbl)lbl.textContent=`${_ghPoints.length} จุด (demo)`;
-    }else{
-      if(lbl)lbl.textContent=`${_ghPoints.length} จุด · ${_ghSessions.length} sessions`;
+      if(lbl)lbl.textContent=engName?'ไม่พบข้อมูล GPS':'กรุณาเลือกช่าง';
+      const tl=document.getElementById('gh-tl');
+      if(tl)tl.innerHTML=`<div style="text-align:center;padding:32px 14px;color:var(--fg4)">
+        <div style="font-size:28px;margin-bottom:8px">📭</div>
+        <div style="font-size:13px;font-weight:600;color:var(--fg3);margin-bottom:4px">ไม่พบข้อมูล GPS</div>
+        ${engName
+  ? `<div style="font-size:11px">ช่าง: <b>${esc(engName)}</b><br>วันที่: <b>${esc(dateFrom||'-')}</b> ถึง <b>${esc(dateTo||'-')}</b></div>
+     <div style="font-size:10px;color:var(--fg4);margin-top:8px">ช่างต้องเปิด GPS ผ่าน Engineer Portal</div>`
+  : `<div style="font-size:12px;color:var(--blue);font-weight:600;margin-top:6px">← กรุณาเลือกช่างก่อน</div>`
+}
+        <div style="font-size:10px;color:var(--fg4);margin-top:8px">ช่างต้องเปิด GPS ผ่าน Engineer Portal</div>
+      </div>`;
+      _ghUpdateMapsBtn();
+      return;
     }
+    if(lbl)lbl.textContent=`${_ghPoints.length} จุด · ${_ghSessions.length} sessions`;
     _ghAutoSelect();
     _ghUpdateStats();
     _ghRenderWaypointList();
     if(_ghMap)_ghRenderMap();
   }catch(e){
-    _ghPoints=_ghMockPoints(engName||'ช่าง 2',dateFrom||new Date().toISOString().slice(0,10));
-    _ghSessions=[{engineer_name:engName||'ช่าง 2',total_km:28.4,point_count:_ghPoints.length,max_speed:62}];
-    if(lbl)lbl.textContent=`⚠️ demo (${e.message})`;
-    _ghAutoSelect();
-    _ghUpdateStats();
-    _ghRenderWaypointList();
-    if(_ghMap)_ghRenderMap();
+    console.error('[GPS History]',e.message);
+    if(lbl)lbl.textContent=`❌ โหลดไม่ได้: ${e.message}`;
+    const tl=document.getElementById('gh-tl');
+    if(tl)tl.innerHTML=`<div style="text-align:center;padding:24px;color:var(--red);font-size:13px">
+      ❌ ไม่สามารถโหลดข้อมูล GPS ได้<br>
+      <span style="font-size:11px;color:var(--fg4)">${esc(e.message)}</span>
+    </div>`;
   }
 }
 
