@@ -3518,15 +3518,6 @@ function rGPSHistory(){
 
   <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <div style="display:flex;align-items:center;gap:5px">
-      <span style="font-size:11px;color:var(--fg4)">ช่าง:</span>
-      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()" style="flex:1;min-width:160px;font-weight:600;border:1.5px solid var(--border);background:var(--bg2)">
-        <option value="">-- เลือกช่าง --</option>
-        ${users.filter(u=>['engineer','lead_engineer'].includes(u.role))
-          .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
-          .map(u=>`<option value="${esc(u.name)}">${esc(u.name)}${u.brand&&u.brand!=='ALL'?' ('+esc(u.brand)+')':''}</option>`).join('')}
-      </select>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px">
       <span style="font-size:11px;color:var(--fg4)">วันที่:</span>
       <input type="date" class="gh-sel" id="gh-date-from" style="appearance:auto;color-scheme:light dark" onchange="_ghLoad()">
       <span style="font-size:11px;color:var(--fg3)">ถึง</span>
@@ -3551,14 +3542,21 @@ function rGPSHistory(){
     </div>
     <div class="gh-side">
       <div class="gh-head">
-        <div class="gh-eng-row">
-          <div class="gh-av" id="gh-av">—</div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--fg)" id="gh-eng-name">เลือกช่าง</div>
-            <div style="font-size:11px;color:var(--fg4)" id="gh-eng-date">—</div>
+        <div class="gh-eng-row" style="align-items:flex-start">
+          <div class="gh-av" id="gh-av" style="font-size:18px;font-weight:800;margin-top:6px">—</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:9px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">เลือกช่าง</div>
+            <select id="gh-eng-sel" onchange="_ghOnEngChange()"
+              style="width:100%;padding:7px 10px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none">
+              <option value="">-- เลือกช่าง --</option>
+              ${users.filter(u=>['engineer','lead_engineer'].includes(u.role))
+                .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+                .map(u=>`<option value="${esc(u.name)}">${esc(u.name)}${u.brand&&u.brand!=='ALL'?' ('+esc(u.brand)+')':''}</option>`).join('')}
+            </select>
+            <div style="font-size:10px;color:var(--fg4);margin-top:4px" id="gh-eng-date">เลือกช่างและวันที่แล้วกด โหลด</div>
           </div>
         </div>
-        <div class="gh-stat">
+        <div class="gh-stat" style="margin-top:8px">
           <div class="gh-stat-box"><div class="gh-stat-v" id="gh-km">—</div><div class="gh-stat-l">km</div></div>
           <div class="gh-stat-box"><div class="gh-stat-v" id="gh-pts">—</div><div class="gh-stat-l">จุดบันทึก</div></div>
           <div class="gh-stat-box"><div class="gh-stat-v" id="gh-spd">—</div><div class="gh-stat-l">max km/h</div></div>
