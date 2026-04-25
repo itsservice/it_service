@@ -916,7 +916,7 @@ function showKpiPopup(filter, label, count){
       ${rows||'<div style="text-align:center;padding:24px;color:var(--fg4)">ไม่มีข้อมูล</div>'}
     </div>
     <div class="mod-f" style="margin-top:8px">
-      <button class="bo2" onclick="closeMod()">ปิด</button>
+      <button class="bo" onclick="closeMod()">ปิด</button>
       <button class="bp" onclick="closeMod();tF.status='${filter==='all'?'':filter}';tF.p=1;document.getElementById('t-table-wrap')?.remove();document.getElementById('t-pager-wrap')?.remove();navTo('tickets')">ดูทั้งหมด →</button>
     </div>`);
 }
@@ -1099,7 +1099,7 @@ function showChartTickets(list, label){
   if(!list.length){
     openMod(`<div class="mod-t">${label}</div>
       <div style="text-align:center;padding:28px;color:var(--fg4)">ไม่มี Ticket ในช่วงนี้</div>
-      <div class="mod-f"><button class="bo2" onclick="closeMod()">ปิด</button></div>`);
+      <div class="mod-f"><button class="bo" onclick="closeMod()">ปิด</button></div>`);
     return;
   }
   const rows=list.slice(0,100).map(t=>`
@@ -1114,7 +1114,7 @@ function showChartTickets(list, label){
   openMod(`<div class="mod-t">${esc(label)} <span style="font-size:13px;color:var(--fg4)">(${list.length})</span></div>
     <div style="max-height:62vh;overflow-y:auto;margin:0 -16px;padding:0 16px">${rows}</div>
     <div class="mod-f" style="margin-top:8px">
-      <button class="bo2" onclick="closeMod()">ปิด</button>
+      <button class="bo" onclick="closeMod()">ปิด</button>
     </div>`);
 }
 
@@ -3137,14 +3137,14 @@ function _renderBranchTable(){
         <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;user-select:none;white-space:nowrap;background:var(--bg3)" onclick="brSort('status')">Status ${brSI('status')}</th>
         <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;background:var(--bg3)">Action</th>
       </tr></thead>
-      <tbody>${paged.map(b=>`<tr onclick="openBranchEdit(${b.id})" style="cursor:pointer">
+      <tbody>${paged.map(b=>`<tr onclick="openBranchModal('${b.id}')" style="cursor:pointer">
         <td style="font-family:var(--mono);font-size:11px">${esc(b.code||'')}</td>
         <td style="font-size:12px">${esc(b.brand||'')}</td>
         <td><div style="font-weight:500">${esc(b.nameTh||b.name_th||b.nameEn||b.name_en||'')}</div><div style="font-size:10px;color:var(--fg4)">${esc(b.nameEn||b.name_en||'')}</div></td>
         <td style="font-size:11px">${b.location_lat?`<span style="color:var(--green)">📍 ${parseFloat(b.location_lat).toFixed(4)}, ${parseFloat(b.location_lng||0).toFixed(4)}</span><div style="font-size:10px;color:var(--fg4)">${esc(b.location_name||'')}</div>`:'<span style="color:var(--fg4)">ไม่มีพิกัด</span>'}</td>
         <td><span class="br-badge ${b.status==='active'?'active':b.status==='pending'?'pending':'inactive'}">${b.status||'active'}</span></td>
         <td onclick="event.stopPropagation()">
-          <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchEdit(${b.id})">แก้ไข</button>
+          <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchModal('${b.id}')">แก้ไข</button>
           ${isSup&&b.status==='pending'?`<button class="smb" style="font-size:10px;padding:3px 8px;color:var(--green)" onclick="doApproveBranch(${b.id})">อนุมัติ</button>`:''}
         </td>
       </tr>`).join('')}
@@ -3218,6 +3218,83 @@ function openBranchMap(lat,lng,name){
   }
 }
 
+
+// ══════════════════════════════════════════
+// PARSE GOOGLE MAPS LINK → lat/lng
+// ══════════════════════════════════════════
+function parseGoogleMapsLink(url){
+  // Patterns: @lat,lng | q=lat,lng | /place/.../lat,lng | ll=lat,lng
+  const patterns = [
+    /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+    /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+    /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+    /\/(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+    /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
+    /place\/.*\/(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+  ];
+  for(const re of patterns){
+    const m = url.match(re);
+    if(m){
+      const lat=parseFloat(m[1]), lng=parseFloat(m[2]);
+      if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180) return {lat,lng};
+    }
+  }
+  return null;
+}
+
+function ntPasteGMaps(){
+  const inp=document.getElementById('br-gmaps-inp');
+  const latEl=document.getElementById('br-lat');
+  const lngEl=document.getElementById('br-lng');
+  const msgEl=document.getElementById('br-parse-msg');
+  if(!inp||!latEl||!lngEl||!msgEl)return;
+  const val=inp.value.trim();
+  if(!val){msgEl.textContent='';return;}
+  const parsed=parseGoogleMapsLink(val);
+  if(parsed){
+    latEl.value=parsed.lat.toFixed(6);
+    lngEl.value=parsed.lng.toFixed(6);
+    msgEl.innerHTML=`<span style="color:var(--green)">✅ แปลงสำเร็จ: ${parsed.lat.toFixed(6)}, ${parsed.lng.toFixed(6)}</span>`;
+    inp.value='';
+    ntUpdateBranchMapPreview();
+  }else{
+    msgEl.innerHTML=`<span style="color:var(--red)">❌ ไม่พบพิกัดในลิงก์ ลองคัดลอกลิงก์ใหม่</span>`;
+  }
+}
+
+function ntUpdateBranchMapPreview(){
+  const lat=parseFloat(document.getElementById('br-lat')?.value);
+  const lng=parseFloat(document.getElementById('br-lng')?.value);
+  const preview=document.getElementById('br-map-preview');
+  if(!preview)return;
+  if(isNaN(lat)||isNaN(lng)){preview.innerHTML='<div style="text-align:center;color:var(--fg4);font-size:12px;padding-top:40px">📍 กรอกพิกัดเพื่อดูแผนที่</div>';return;}
+  preview.innerHTML=`<div id="br-mini-map" style="width:100%;height:200px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"></div>`;
+  setTimeout(()=>{
+    if(typeof L==='undefined')return;
+    const el=document.getElementById('br-mini-map');
+    if(!el||el._leaflet_id)return;
+    const map=L.map('br-mini-map').setView([lat,lng],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+    let marker=L.marker([lat,lng],{draggable:true}).addTo(map);
+    marker.on('dragend',e=>{
+      const pos=e.target.getLatLng();
+      const latEl=document.getElementById('br-lat');
+      const lngEl=document.getElementById('br-lng');
+      if(latEl)latEl.value=pos.lat.toFixed(6);
+      if(lngEl)lngEl.value=pos.lng.toFixed(6);
+    });
+    map.on('click',e=>{
+      const pos=e.latlng;
+      marker.setLatLng(pos);
+      const latEl=document.getElementById('br-lat');
+      const lngEl=document.getElementById('br-lng');
+      if(latEl)latEl.value=pos.lat.toFixed(6);
+      if(lngEl)lngEl.value=pos.lng.toFixed(6);
+    });
+  },100);
+}
+
+
 function openBranchModal(id){
   const b=branches.find(x=>String(x.id)===String(id));
   if(!b)return;
@@ -3225,45 +3302,70 @@ function openBranchModal(id){
   const mod=document.getElementById('mod');
   const mbg=document.getElementById('mod-bg');
   mod.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--fg4);margin-bottom:3px">${esc(b.code||'')} · ${esc(b.brand||'')}</div>
-        <div style="font-size:16px;font-weight:700">${esc(b.name_en||b.nameTh||'')}</div>
+        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);margin-bottom:2px">${esc(b.code||'')} · ${esc(b.brand||'')}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--fg)">${esc(b.nameTh||b.name_en||'')}</div>
+        ${b.name_en?`<div style="font-size:11px;color:var(--fg4)">${esc(b.name_en)}</div>`:''}
       </div>
-      <button onclick="closeMod()" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--fg3);font-size:12px">✕</button>
+      <button class="smb" onclick="closeMod()">✕ ปิด</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+
+    ${isSup?`
+    <!-- Google Maps paste -->
+    <div style="margin-bottom:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:6px">📎 วาง Google Maps Link</div>
+      <div style="display:flex;gap:6px">
+        <input id="br-gmaps-inp" placeholder="วาง https://maps.app.goo.gl/... หรือลิงก์ Google Maps"
+          style="flex:1;padding:7px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none"
+          onpaste="setTimeout(ntPasteGMaps,10)" oninput="ntPasteGMaps()"/>
+        <button class="smb" onclick="ntPasteGMaps()" style="padding:7px 12px;font-size:12px">แปลง</button>
+      </div>
+      <div id="br-parse-msg" style="font-size:11px;margin-top:4px;min-height:14px"></div>
+    </div>`:''
+    }
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div>
         <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Latitude</div>
-        <input id="br-lat" type="number" step="any" value="${b.location_lat||''}" 
-          style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-          ${isSup?'':'disabled'} placeholder="เช่น 13.7563">
+        <input id="br-lat" type="number" step="any" value="${b.location_lat||''}"
+          onchange="ntUpdateBranchMapPreview()"
+          style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+          ${isSup?'':'disabled'} placeholder="เช่น 13.756331">
       </div>
       <div>
         <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Longitude</div>
         <input id="br-lng" type="number" step="any" value="${b.location_lng||''}"
-          style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-          ${isSup?'':'disabled'} placeholder="เช่น 100.5018">
+          onchange="ntUpdateBranchMapPreview()"
+          style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+          ${isSup?'':'disabled'} placeholder="เช่น 100.501765">
       </div>
     </div>
-    <div style="margin-bottom:14px">
+    <div style="margin-bottom:10px">
       <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Location Name</div>
       <input id="br-locname" value="${esc(b.location_name||'')}"
-        style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-        ${isSup?'':'disabled'} placeholder="ชื่อสถานที่ / ที่อยู่">
+        style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
+        ${isSup?'':'disabled'} placeholder="ชื่อสถานที่ / ที่อยู่ เช่น สยาม กรุงเทพ">
     </div>
-    ${b.location_lat&&b.location_lng?`<div style="margin-bottom:14px">
-      <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${b.location_lat},${b.location_lng}" 
-        style="width:100%;height:140px;border:1px solid var(--border);border-radius:8px" frameborder="0" loading="lazy"></iframe>
-    </div>`:''}
-    <div style="display:flex;gap:8px">
+
+    <!-- Map preview: click to pin -->
+    <div id="br-map-preview" style="margin-bottom:12px;min-height:${b.location_lat?'200px':'60px'}">
+      ${b.location_lat&&b.location_lng
+        ?`<div id="br-mini-map" style="width:100%;height:200px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"></div>`
+        :`<div style="text-align:center;color:var(--fg4);font-size:12px;padding:16px;background:var(--bg2);border-radius:8px;border:1px dashed var(--border)">📍 กรอกพิกัดหรือวาง Google Maps link เพื่อดูแผนที่<br><span style="font-size:10px">คลิกบนแผนที่เพื่อปักหมุด</span></div>`}
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
       ${isSup
-        ?`<button onclick="saveBranchLocation('${b.id}')" style="flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">บันทึก</button>`
-        :`<button onclick="submitBranchApproval('${b.id}')" style="flex:1;padding:10px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">ส่งขออนุมัติ</button>`}
-      <button onclick="closeMod()" style="padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--fg3);font-size:13px">ยกเลิก</button>
+        ?`<button class="bp" onclick="saveBranchLocation('${b.id}')">💾 บันทึก</button>`
+        :`<button class="bp" onclick="submitBranchApproval('${b.id}')">📤 ส่งขออนุมัติ</button>`}
+      <button class="bo" onclick="closeMod()">ยกเลิก</button>
     </div>`;
   mbg.classList.add('on');
-  setTimeout(_renderBranchTable,50);
+  setTimeout(()=>{
+    _renderBranchTable();
+    if(b.location_lat&&b.location_lng) ntUpdateBranchMapPreview();
+  },50);
 }
 
 async function saveBranchLocation(id){
@@ -3417,9 +3519,11 @@ function rGPSHistory(){
   <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <div style="display:flex;align-items:center;gap:5px">
       <span style="font-size:11px;color:var(--fg4)">ช่าง:</span>
-      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()">
-        <option value="">ทุกคน</option>
-        ${[...new Set(users.filter(u=>['engineer','lead_engineer'].includes(u.role)).map(u=>u.name))].sort().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
+      <select class="gh-sel" id="gh-eng-sel" onchange="_ghOnEngChange()" style="flex:1;min-width:160px;font-weight:600;border:1.5px solid var(--border);background:var(--bg2)">
+        <option value="">-- เลือกช่าง --</option>
+        ${users.filter(u=>['engineer','lead_engineer'].includes(u.role))
+          .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+          .map(u=>`<option value="${esc(u.name)}">${esc(u.name)}${u.brand&&u.brand!=='ALL'?' ('+esc(u.brand)+')':''}</option>`).join('')}
       </select>
     </div>
     <div style="display:flex;align-items:center;gap:5px">
@@ -4012,10 +4116,10 @@ function expServer(type){
 // ── Export toolbar HTML generator ──
 function _expBar(buttons, pgId){
   const uid='expdd_'+Math.random().toString(36).slice(2,7);
-  return `<div class="exp-bar">
-    <span class="exp-label">Export</span>
+  return `<div style="display:inline-flex;align-items:center;gap:6px">
+    <span style="font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em">Export</span>
     <div style="position:relative;display:inline-block">
-      <button class="smb" style="display:flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;background:var(--fg);color:var(--bg);border-color:var(--fg)"
+      <button class="smb" style="display:flex;align-items:center;gap:4px;padding:5px 10px;font-size:12px;font-weight:600;background:var(--fg);color:var(--bg);border-color:var(--fg)"
         onclick="(function(el){const d=document.getElementById('${uid}');d.style.display=d.style.display==='block'?'none':'block';document.addEventListener('click',function h(e){if(!el.parentElement.contains(e.target)){d.style.display='none';document.removeEventListener('click',h);}},{once:true,capture:true});})(this)">
         ⬇️ Export <span style="font-size:9px;opacity:.7">▾</span>
       </button>
