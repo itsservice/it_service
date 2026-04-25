@@ -3345,8 +3345,10 @@ function ntUpdateBranchMapPreview(){
         if(lngEl)lngEl.value=pos.lng.toFixed(6);
         _brMarker.bindPopup(`📍 ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`).openPopup();
       });
-      // Force resize after render
-      setTimeout(()=>_brMap.invalidateSize(),200);
+      // Force resize multiple times to handle animation
+      setTimeout(()=>{_brMap.invalidateSize();},100);
+      setTimeout(()=>{_brMap.invalidateSize();},400);
+      setTimeout(()=>{_brMap.invalidateSize();},800);
     }catch(e){console.warn('[map init]',e.message);}
   };
   setTimeout(()=>tryInit(0),150);
@@ -3422,8 +3424,9 @@ function openBranchModal(id){
   if(_brMap){try{_brMap.remove();}catch(e){}; _brMap=null; _brMarker=null;}
   setTimeout(()=>{
     _renderBranchTable();
-    ntUpdateBranchMapPreview();
   },50);
+  // Delay map init more to let modal animation complete
+  setTimeout(()=>ntUpdateBranchMapPreview(),300);
 }
 
 async function saveBranchLocation(id){
