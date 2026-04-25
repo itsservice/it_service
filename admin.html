@@ -1258,6 +1258,10 @@ function rTickets(){
     const engineers=[...new Set(tickets.map(x=>x.engineerName).filter(Boolean))].sort();
     el.innerHTML=`
     ${IMP_BAR}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em" id="t-title-lbl">All Tickets</div>
+      <button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:700;padding:7px 14px;font-size:12px" onclick="openNewTicket()">+ สร้าง Ticket</button>
+    </div>
     <div class="filters" id="t-filter-bar" style="flex-wrap:wrap;gap:6px">
       ${EXP.tickets}
       <select class="sel" style="min-width:120px" id="t-pp-sel" onchange="tF.pp=+this.value;tF.p=1;_rTicketsTable()">
@@ -1330,6 +1334,8 @@ function _rTicketsTable(){
   const cb=document.getElementById('t-clear-btn');
   if(cb)cb.style.display=(tF.status||tF.brand||tF.engineer||tF.q||tF.dateFrom||tF.dateTo)?'':'none';
 
+  const tLbl=document.getElementById('t-title-lbl');
+  if(tLbl)tLbl.textContent=`All Tickets (${data.length})`;
   const tp=Math.max(1,Math.ceil(data.length/tF.pp));tF.p=Math.min(tF.p,tp);
   const paged=data.slice((tF.p-1)*tF.pp,tF.p*tF.pp);
   const sI=col=>tF.sortCol===col?`<span style="color:var(--blue);margin-left:3px">${tF.sortDir==='asc'?'↑':'↓'}</span>`:'<span style="color:var(--fg4);margin-left:3px;opacity:.4">↕</span>';
@@ -1373,6 +1379,148 @@ function _rTicketsTable(){
       <button class="smb" style="padding:3px 8px" onclick="tF.p=tp;_rTicketsTable()" ${tF.p===tp?'disabled':''}>»</button>
     </div>
   </div>`;
+}
+
+
+
+// ══════════════════════════════════════════
+// CREATE NEW TICKET (Admin)
+// ══════════════════════════════════════════
+const TICKET_TYPES_LIST = [
+  'งานระบบไฟฟ้า/แสงสว่าง',
+  'งานระบบปรับอากาศ',
+  'งานระบบประปา/ท่อน้ำ',
+  'งานโครงสร้าง/งานก่อสร้าง',
+  'เครื่องทำน้ำร้อน',
+  'เครื่องกรองน้ำ/ไส้กรองน้ำ',
+  'เครื่องทำความเย็น/ตู้แช่/ตู้เย็น',
+  'เครื่องชีลแก้ว',
+  'เครื่องทำกาแฟ',
+  'เครื่องล้างจาน',
+  'งานซ่อมแซมอุปกรณ์ครัว',
+  'ระบบ POS/IT',
+  'กล้องวงจรปิด/ระบบรักษาความปลอดภัย',
+  'อื่นๆ',
+];
+
+function openNewTicket(){
+  const engOpts = users.filter(u=>['engineer','lead_engineer'].includes(u.role))
+    .map(u=>`<option value="${esc(u.name)}">${esc(u.name)} (${esc(u.brand||'-')})</option>`).join('');
+  const brandOpts = BR_BRANDS.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('');
+  const typeOpts = TICKET_TYPES_LIST.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+
+  openMod(`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:22px">🎫</div>
+      <div><div class="mod-t" style="margin-bottom:0">สร้าง Ticket ใหม่</div><div style="font-size:11px;color:var(--fg4)">Admin สร้างโดย ${esc(AUTH?.user?.name||'')}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="fg" style="grid-column:span 2">
+        <label>แบรนด์ <span style="color:var(--red)">*</span></label>
+        <select class="sel" id="nt-brand" style="width:100%" onchange="ntLoadBranches(this.value)">
+          <option value="">-- เลือกแบรนด์ --</option>${brandOpts}
+        </select>
+      </div>
+      <div class="fg" style="grid-column:span 2">
+        <label>สาขา <span style="color:var(--red)">*</span></label>
+        <select class="sel" id="nt-branch" style="width:100%">
+          <option value="">-- เลือกแบรนด์ก่อน --</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>ชื่อผู้แจ้ง <span style="color:var(--red)">*</span></label>
+        <input id="nt-reporter" placeholder="ชื่อ-นามสกุล" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      </div>
+      <div class="fg">
+        <label>เบอร์โทรศัพท์</label>
+        <input id="nt-phone" placeholder="08x-xxx-xxxx" type="tel" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"/>
+      </div>
+      <div class="fg" style="grid-column:span 2">
+        <label>ประเภทงาน <span style="color:var(--red)">*</span></label>
+        <select class="sel" id="nt-type" style="width:100%">
+          <option value="">-- เลือกประเภทงาน --</option>${typeOpts}
+        </select>
+      </div>
+      <div class="fg" style="grid-column:span 2">
+        <label>รายละเอียดปัญหา <span style="color:var(--red)">*</span></label>
+        <textarea id="nt-detail" placeholder="อธิบายปัญหาโดยละเอียด เช่น เกิดขึ้นเมื่อไหร่ อาการเป็นยังไง..." style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;min-height:80px;resize:vertical;line-height:1.6"></textarea>
+      </div>
+      <div class="fg">
+        <label>มอบหมายช่าง (ถ้ามี)</label>
+        <select class="sel" id="nt-engineer" style="width:100%">
+          <option value="">-- ยังไม่มอบหมาย --</option>${engOpts}
+        </select>
+      </div>
+      <div class="fg">
+        <label>ระดับความเร่งด่วน</label>
+        <select class="sel" id="nt-priority" style="width:100%">
+          <option value="normal">🟡 ปกติ</option>
+          <option value="urgent">🔴 ด่วน</option>
+          <option value="low">🟢 ไม่เร่งด่วน</option>
+        </select>
+      </div>
+      <div class="fg" style="grid-column:span 2">
+        <label>หมายเหตุ Admin</label>
+        <textarea id="nt-note" placeholder="หมายเหตุภายในสำหรับทีม admin..." style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;min-height:50px;resize:vertical;line-height:1.6"></textarea>
+      </div>
+    </div>
+    <div id="nt-err" style="color:var(--red);font-size:12px;margin-top:4px;min-height:16px"></div>
+    <div class="mod-f" style="margin-top:12px">
+      <button class="bo" onclick="closeMod()">ยกเลิก</button>
+      <button class="bp" id="nt-submit-btn" onclick="doCreateTicket()">🎫 สร้าง Ticket</button>
+    </div>`);
+}
+
+async function ntLoadBranches(brand){
+  const sel=document.getElementById('nt-branch');
+  if(!sel)return;
+  if(!brand){sel.innerHTML='<option value="">-- เลือกแบรนด์ก่อน --</option>';return;}
+  sel.innerHTML='<option value="">⏳ กำลังโหลด...</option>';
+  if(!brLoaded)await loadBranches();
+  const list=branches.filter(b=>b.brand===brand&&b.status==='active')
+    .sort((a,b)=>(a.code||'').localeCompare(b.code||''));
+  if(list.length){
+    sel.innerHTML='<option value="">-- เลือกสาขา --</option>'+
+      list.map(b=>`<option value="${esc(b.code||'')}">
+        ${esc(b.code||'')} — ${esc(b.nameTh||b.name_en||'')}</option>`).join('');
+  }else{
+    sel.innerHTML='<option value="">ไม่พบสาขาในแบรนด์นี้</option>';
+  }
+}
+
+async function doCreateTicket(){
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  const brand=g('nt-brand'),reporter=g('nt-reporter'),type=g('nt-type'),detail=g('nt-detail');
+  const errEl=document.getElementById('nt-err'),btn=document.getElementById('nt-submit-btn');
+  const missing=[];
+  if(!brand)missing.push('แบรนด์');
+  if(!reporter)missing.push('ชื่อผู้แจ้ง');
+  if(!type)missing.push('ประเภทงาน');
+  if(!detail)missing.push('รายละเอียด');
+  if(missing.length){if(errEl)errEl.textContent='⚠️ กรุณากรอก: '+missing.join(', ');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ กำลังสร้าง...';}
+  if(errEl)errEl.textContent='';
+  try{
+    const payload={
+      brand,reporter,phone:g('nt-phone'),type,detail,
+      branch_code:g('nt-branch'),admin_note:g('nt-note'),
+      priority:g('nt-priority')||'normal',
+      created_by:AUTH?.user?.name||'admin',
+    };
+    const eng=g('nt-engineer');
+    if(eng)payload.engineer_name=eng;
+    const d=await api('/api/tickets',{method:'POST',body:JSON.stringify(payload)});
+    if(!d.ok)throw new Error(d.error||'สร้าง Ticket ไม่สำเร็จ');
+    closeMod();
+    await loadTickets();
+    _rTicketsTable();
+    toast(`✅ สร้าง Ticket ${d.ticket?.id||''} สำเร็จ!`);
+    addNotif(`🎫 Ticket ใหม่: ${esc(type)} (${esc(brand)})`,'success');
+  }catch(e){
+    if(errEl)errEl.textContent='❌ '+e.message;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🎫 สร้าง Ticket';}
+  }
 }
 
 
