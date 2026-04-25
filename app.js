@@ -764,4 +764,46 @@ setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); } catch(e) { console.warn('[App]',e.message); }
 }, 3000);
 
+// ── Resolve short Google Maps URL → extract lat/lng ──────────
+app.get('/api/resolve-gmaps', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.json({ ok: false, error: 'No URL provided' });
+    
+    const axios = require('axios');
+    // Follow redirects to get the final URL
+    const response = await axios.get(url, {
+      maxRedirects: 10,
+      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; IT-Support-Bot/1.0)' },
+      validateStatus: () => true,
+    });
+    
+    const finalUrl = response.request?.res?.responseUrl || response.config?.url || url;
+    
+    // Try patterns to extract lat/lng from final URL
+    const patterns = [
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
+      /\/(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+    ];
+    
+    for (const re of patterns) {
+      const m = finalUrl.match(re);
+      if (m) {
+        const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          return res.json({ ok: true, lat, lng, finalUrl });
+        }
+      }
+    }
+    
+    res.json({ ok: false, error: 'ไม่พบพิกัดในลิงก์', finalUrl });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = app;
