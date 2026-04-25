@@ -2698,7 +2698,25 @@ function openMod(h){document.getElementById('mod').innerHTML=h;document.getEleme
 function closeMod(){document.getElementById('mod-bg').classList.remove('on');}
 document.getElementById('mod-bg').onclick=e=>{if(e.target.id==='mod-bg')closeMod();};
 
-function openAssign(rid){const engs=users.filter(u=>['engineer','lead_engineer'].includes(u.role));openMod(`<div class="mod-t">Assign Engineer</div><div class="fg"><label>Select Engineer</label><select class="sel" id="m-eng" style="width:100%"><option value="">-- Select --</option>${engs.map(e=>`<option value="${esc(e.name)}">${esc(e.name)} [${e.role}] (${esc(e.brand||'-')})</option>`).join('')}</select></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doAssign('${esc(rid)}')">Assign</button></div>`);}
+function openAssign(rid){
+  const t=tickets.find(x=>x._recordId===rid);
+  const tBrand=t?.brand||'';
+  // Filter engineers by ticket brand (or ALL)
+  const engs=users.filter(u=>
+    ['engineer','lead_engineer'].includes(u.role)&&
+    (!tBrand||u.brand===tBrand||u.brand==='ALL')
+  ).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const currentEng=t?.engineerName||'';
+  openMod(`<div class="mod-t">Assign Engineer</div>
+  ${tBrand?`<div style="font-size:11px;color:var(--fg4);margin-bottom:10px;padding:6px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--blue)">
+    🏷️ แบรนด์: <strong>${esc(tBrand)}</strong> — แสดงเฉพาะช่างที่ดูแลแบรนด์นี้
+  </div>`:''}
+  <div class="fg"><label>Select Engineer</label><select class="sel" id="m-eng" style="width:100%">
+    <option value="">-- Select --</option>
+    ${engs.map(e=>`<option value="${esc(e.name)}" ${currentEng===e.name?'selected':''}>
+      ${esc(e.name)} [${e.role}]${e.brand==='ALL'?' 🌐':' ('+esc(e.brand||'-')+')'}</option>`).join('')}
+    ${!engs.length?'<option disabled>⚠️ ไม่มีช่างสำหรับแบรนด์นี้</option>':''}
+  </select></div><div class="mod-f"><button class="bo" onclick="closeMod()">Cancel</button><button class="bp" onclick="doAssign('${esc(rid)}')">Assign</button></div>`);}
 async function doAssign(rid){const n=document.getElementById('m-eng').value;if(!n)return toast('Select engineer');try{const t=tickets.find(x=>x._recordId===rid);await api(`/api/tickets/${rid}/assign`,{method:'PATCH',body:JSON.stringify({engineerName:n,assignedTo:n,brand:t?.brand||''})});tickets=tickets.map(x=>x._recordId===rid?{...x,engineerName:n,status:'assigned'}:x);closeMod();closeDrw();render();toast('Assigned');}catch(e){toast('Error: '+e.message);}}
 function openClose(rid){
   const t=tickets.find(x=>x._recordId===rid);
