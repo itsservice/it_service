@@ -1406,9 +1406,8 @@ const TICKET_TYPES_LIST = [
 async function openNewTicket(){
   // Ensure users loaded
   if(!users.length) await loadUsers();
-  const engOpts = users.filter(u=>['engineer','lead_engineer'].includes(u.role))
-    .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
-    .map(u=>`<option value="${esc(u.name)}">${esc(u.name)} (${esc(u.brand||'-')})</option>`).join('');
+  // Engineers loaded dynamically on brand change - start empty
+  const engOpts = '';
   const brandOpts = BR_BRANDS.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('');
   const typeOpts = TICKET_TYPES_LIST.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
 
@@ -1420,7 +1419,7 @@ async function openNewTicket(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div class="fg" style="grid-column:span 2">
         <label>แบรนด์ <span style="color:var(--red)">*</span></label>
-        <select class="sel" id="nt-brand" style="width:100%" onchange="ntLoadBranches(this.value)">
+        <select class="sel" id="nt-brand" style="width:100%" onchange="ntLoadBranches(this.value);ntLoadEngineers(this.value)">
           <option value="">-- เลือกแบรนด์ --</option>${brandOpts}
         </select>
       </div>
@@ -1451,10 +1450,9 @@ async function openNewTicket(){
       <div class="fg">
         <label>มอบหมายช่าง (ถ้ามี)</label>
         <select class="sel" id="nt-engineer" style="width:100%">
-          <option value="">-- ยังไม่มอบหมาย --</option>
-          ${engOpts || '<option disabled>⚠️ ยังไม่มีช่างในระบบ</option>'}
+          <option value="">-- เลือกแบรนด์ก่อน --</option>
         </select>
-        ${engOpts?'<div style="font-size:10px;color:var(--fg4);margin-top:3px">📲 ช่างจะได้รับการแจ้งเตือนผ่าน LINE อัตโนมัติ</div>':''}
+        <div style="font-size:10px;color:var(--fg4);margin-top:3px">📲 ช่างที่เลือกจะได้รับแจ้งเตือนผ่าน LINE อัตโนมัติ</div>
       </div>
       <div class="fg">
         <label>ระดับความเร่งด่วน</label>
@@ -1474,6 +1472,27 @@ async function openNewTicket(){
       <button class="bo" onclick="closeMod()">ยกเลิก</button>
       <button class="bp" id="nt-submit-btn" onclick="doCreateTicket()">🎫 สร้าง Ticket</button>
     </div>`);
+}
+
+function ntLoadEngineers(brand){
+  const sel=document.getElementById('nt-engineer');
+  if(!sel)return;
+  if(!brand){
+    sel.innerHTML='<option value="">-- เลือกแบรนด์ก่อน --</option>';
+    return;
+  }
+  // Filter engineers: brand match OR brand=ALL
+  const list=users.filter(u=>
+    ['engineer','lead_engineer'].includes(u.role)&&
+    (u.brand===brand||u.brand==='ALL')
+  ).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+  if(list.length){
+    sel.innerHTML='<option value="">-- ยังไม่มอบหมาย --</option>'+
+      list.map(u=>`<option value="${esc(u.name)}">${esc(u.name)}${u.brand==='ALL'?' (ทุกแบรนด์)':' ('+esc(u.brand)+')'}</option>`).join('');
+  }else{
+    sel.innerHTML='<option value="">ไม่มีช่างสำหรับแบรนด์นี้</option>';
+  }
 }
 
 async function ntLoadBranches(brand){
