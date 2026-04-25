@@ -3223,7 +3223,6 @@ function openBranchMap(lat,lng,name){
 // PARSE GOOGLE MAPS LINK → lat/lng
 // ══════════════════════════════════════════
 function parseGoogleMapsLink(url){
-  // Patterns: @lat,lng | q=lat,lng | /place/.../lat,lng | ll=lat,lng
   const patterns = [
     /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
     /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
@@ -3242,7 +3241,11 @@ function parseGoogleMapsLink(url){
   return null;
 }
 
-function ntPasteGMaps(){
+function isShortGMapsUrl(url){
+  return /maps\.app\.goo\.gl|goo\.gl\/maps/i.test(url);
+}
+
+async function ntPasteGMaps(){
   const inp=document.getElementById('br-gmaps-inp');
   const latEl=document.getElementById('br-lat');
   const lngEl=document.getElementById('br-lng');
@@ -3250,6 +3253,8 @@ function ntPasteGMaps(){
   if(!inp||!latEl||!lngEl||!msgEl)return;
   const val=inp.value.trim();
   if(!val){msgEl.textContent='';return;}
+
+  // Try parsing directly first (full URL)
   const parsed=parseGoogleMapsLink(val);
   if(parsed){
     latEl.value=parsed.lat.toFixed(6);
@@ -3257,9 +3262,30 @@ function ntPasteGMaps(){
     msgEl.innerHTML=`<span style="color:var(--green)">✅ แปลงสำเร็จ: ${parsed.lat.toFixed(6)}, ${parsed.lng.toFixed(6)}</span>`;
     inp.value='';
     ntUpdateBranchMapPreview();
-  }else{
-    msgEl.innerHTML=`<span style="color:var(--red)">❌ ไม่พบพิกัดในลิงก์ ลองคัดลอกลิงก์ใหม่</span>`;
+    return;
   }
+
+  // Short URL → call backend to resolve
+  if(isShortGMapsUrl(val)){
+    msgEl.innerHTML='<span style="color:var(--fg4)">⏳ กำลังแปลงลิงก์สั้น...</span>';
+    try{
+      const d=await api('/api/resolve-gmaps?url='+encodeURIComponent(val));
+      if(d.ok&&d.lat&&d.lng){
+        latEl.value=d.lat.toFixed(6);
+        lngEl.value=d.lng.toFixed(6);
+        msgEl.innerHTML=`<span style="color:var(--green)">✅ แปลงสำเร็จ: ${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span>`;
+        inp.value='';
+        ntUpdateBranchMapPreview();
+      }else{
+        msgEl.innerHTML=`<span style="color:var(--red)">❌ ${d.error||'แปลงไม่ได้'}</span>`;
+      }
+    }catch(e){
+      msgEl.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`;
+    }
+    return;
+  }
+
+  msgEl.innerHTML=`<span style="color:var(--red)">❌ ไม่พบพิกัดในลิงก์ — ลองใช้ลิงก์แบบเต็มจาก Google Maps</span>`;
 }
 
 function ntUpdateBranchMapPreview(){
@@ -3318,7 +3344,7 @@ function openBranchModal(id){
       <div style="display:flex;gap:6px">
         <input id="br-gmaps-inp" placeholder="วาง https://maps.app.goo.gl/... หรือลิงก์ Google Maps"
           style="flex:1;padding:7px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none"
-          onpaste="setTimeout(ntPasteGMaps,10)" oninput="ntPasteGMaps()"/>
+          onpaste="setTimeout(()=>ntPasteGMaps(),50)" oninput="if(this.value.length>10)ntPasteGMaps()"/>
         <button class="smb" onclick="ntPasteGMaps()" style="padding:7px 12px;font-size:12px">แปลง</button>
       </div>
       <div id="br-parse-msg" style="font-size:11px;margin-top:4px;min-height:14px"></div>
