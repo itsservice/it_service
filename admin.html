@@ -511,7 +511,8 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 .gmaps-convert-btn:hover{opacity:.85}
 .gmaps-msg{font-size:11px;margin-top:5px;min-height:14px;font-weight:500}
 .gmaps-msg.ok{color:var(--green)}.gmaps-msg.err{color:var(--red)}.gmaps-msg.loading{color:var(--fg4)}
-.map-preview-wrap{border-radius:10px;overflow:hidden;border:1.5px solid var(--border);min-height:200px;background:var(--bg3);margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+.map-preview-wrap{border-radius:10px;overflow:hidden;border:1.5px solid var(--border);background:var(--bg3);margin-bottom:12px;position:relative}
+.map-hint-inner{display:flex;align-items:center;justify-content:center;min-height:200px;text-align:center;color:var(--fg4);font-size:12px;padding:24px;line-height:1.8}
 .map-hint-inner{text-align:center;color:var(--fg4);font-size:12px;padding:24px;line-height:1.8}
 .close-btn-sm{padding:5px 10px;border:1.5px solid var(--border);background:transparent;border-radius:7px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
 .close-btn-sm:hover{background:var(--red);border-color:var(--red);color:#fff}
@@ -3356,7 +3357,7 @@ function ntUpdateBranchMapPreview(){
 
   // Create fresh map div
   if(_brMap){try{_brMap.remove();}catch(e){}; _brMap=null; _brMarker=null;}
-  preview.innerHTML='<div id="br-mini-map" style="width:100%;height:220px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border)"></div>';
+  preview.innerHTML='<div id="br-mini-map" style="width:100%;height:240px;display:block;border-radius:8px"></div>';
 
   // Wait for DOM + Leaflet
   const tryInit=(attempt)=>{
@@ -3389,10 +3390,10 @@ function ntUpdateBranchMapPreview(){
         if(lngEl)lngEl.value=pos.lng.toFixed(6);
         _brMarker.bindPopup(`📍 ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`).openPopup();
       });
-      // Force resize multiple times to handle animation
-      setTimeout(()=>{_brMap.invalidateSize();},100);
-      setTimeout(()=>{_brMap.invalidateSize();},400);
-      setTimeout(()=>{_brMap.invalidateSize();},800);
+      // Force resize multiple times
+      [100,300,600,1200].forEach(t=>setTimeout(()=>{
+        if(_brMap){_brMap.invalidateSize();}
+      },t));
     }catch(e){console.warn('[map init]',e.message);}
   };
   setTimeout(()=>tryInit(0),150);
@@ -3484,11 +3485,9 @@ async function saveBranchLocation(id){
   },8000);
   
   try{
-    // Wake up Render if sleeping (health ping)
-    if(btn)btn.innerHTML='⏳ กำลังเชื่อมต่อ...';
-    await api('/api/health',{},15000).catch(()=>{});  // ignore error, just wake
-    if(btn)btn.innerHTML='💾 กำลังบันทึก...';
-    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})},30000);
+    if(btn)btn.textContent='💾 กำลังบันทึก...';
+    // Use long timeout — Render free tier may take 30-60s to wake up
+    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})},60000);
     if(!d.ok)throw new Error(d.error||'บันทึกไม่สำเร็จ');
     branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name}:b);
     if(btn){btn.disabled=false;btn.innerHTML=origText;}
