@@ -193,7 +193,7 @@ app.get('/api/branches', async (req, res) => {
 
     const r = await axios.get(`${REPAIR_URL}/api/branches`, {
       headers: { 'X-API-Key': REPAIR_KEY },
-      timeout: 10000
+      timeout: 25000
     });
 
     if (!r.data?.ok) throw new Error('branches API error');
@@ -807,3 +807,7 @@ app.get('/api/resolve-gmaps', requireAuth(['superadmin','admin','manager','it_se
 });
 
 module.exports = app;
+// ── Health check (wake-up ping) ──
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, ts: Date.now(), uptime: process.uptime() });
+});
