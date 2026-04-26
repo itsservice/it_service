@@ -920,7 +920,7 @@ function showKpiPopup(filter, label, count){
       <span class="pill">${statusLabel(t.status)}</span>
     </div>`).join('');
   openMod(`<div class="mod-t">${label} <span style="font-size:14px;color:var(--fg4)">(${count})</span></div>
-    <div style="max-height:60vh;overflow-y:auto;margin:0 -16px;padding:0 16px">
+    <div style="max-height:75vh;overflow-y:auto;margin:0 -16px;padding:0 16px">
       ${rows||'<div style="text-align:center;padding:24px;color:var(--fg4)">ไม่มีข้อมูล</div>'}
     </div>
     <div class="mod-f" style="margin-top:8px">
@@ -3324,9 +3324,9 @@ function ntUpdateBranchMapPreview(){
 
   // Wait for DOM + Leaflet
   const tryInit=(attempt)=>{
-    if(attempt>20)return;
+    if(attempt>30)return;
     const el=document.getElementById('br-mini-map');
-    if(!el||typeof L==='undefined'){setTimeout(()=>tryInit(attempt+1),100);return;}
+    if(!el||typeof L==='undefined'){setTimeout(()=>tryInit(attempt+1),80);return;}
     if(el._leaflet_id){return;}  // already inited
     try{
       _brMap=L.map('br-mini-map',{zoomControl:true}).setView([lat,lng],16);
@@ -3417,7 +3417,7 @@ function openBranchModal(id){
     </div>
 
     <!-- Map preview: initialized by ntUpdateBranchMapPreview() -->
-    <div id="br-map-preview" style="margin-bottom:12px;min-height:60px">
+    <div id="br-map-preview" style="margin-bottom:12px;min-height:220px">
       <div style="text-align:center;color:var(--fg4);font-size:12px;padding:14px;background:var(--bg2);border-radius:8px;border:1px dashed var(--border)">⏳ กำลังโหลดแผนที่...</div>
     </div>
 
@@ -3445,10 +3445,18 @@ async function saveBranchLocation(id){
   
   // Show spinner on button
   const btn=document.querySelector('[onclick*="saveBranchLocation"]');
-  const origText=btn?.innerHTML||'บันทึก';
+  const origText=btn?.innerHTML||'💾 บันทึก';
   if(btn){btn.disabled=true;btn.innerHTML='⏳ กำลังบันทึก...';}
+  // Warn if taking long (Render cold start)
+  const slowWarn=setTimeout(()=>{
+    if(btn&&btn.disabled)btn.innerHTML='⏳ รอเซิร์ฟเวอร์... (อาจใช้เวลา 30-60 วินาที)';
+  },8000);
   
   try{
+    // Wake up Render if sleeping (health ping)
+    if(btn)btn.innerHTML='⏳ กำลังเชื่อมต่อ...';
+    await api('/api/health',{},15000).catch(()=>{});  // ignore error, just wake
+    if(btn)btn.innerHTML='💾 กำลังบันทึก...';
     const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})},30000);
     if(!d.ok)throw new Error(d.error||'บันทึกไม่สำเร็จ');
     branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name}:b);
@@ -3456,7 +3464,7 @@ async function saveBranchLocation(id){
     closeMod();renderBranches();
     addNotif(`อัพเดท location สาขา ${id} สำเร็จ`,'success');
     toast('✅ บันทึก location สำเร็จ');
-  }catch(e){toast('❌ '+e.message);}finally{if(btn){btn.disabled=false;btn.innerHTML=origText;}}
+  }catch(e){toast('❌ '+e.message);}finally{clearTimeout(slowWarn);if(btn){btn.disabled=false;btn.innerHTML=origText;}}
 }
 
 async function submitBranchApproval(id){
