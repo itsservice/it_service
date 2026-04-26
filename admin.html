@@ -784,7 +784,15 @@ const NAV_ALL=[
 ];
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-function api(p,o={}){const h={'Content-Type':'application/json',...(o.headers||{})};if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;return fetch(p,{...o,headers:h}).then(r=>r.json()).catch(e=>({ok:false,error:e.message}));}
+function api(p,o={},timeout=25000){
+  const h={'Content-Type':'application/json',...(o.headers||{})};
+  if(AUTH?.token)h['Authorization']='Bearer '+AUTH.token;
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),timeout);
+  return fetch(p,{...o,headers:h,signal:ctrl.signal})
+    .then(r=>{clearTimeout(tid);return r.json();})
+    .catch(e=>{clearTimeout(tid);return{ok:false,error:e.name==='AbortError'?'Request timeout ('+Math.round(timeout/1000)+'s)':e.message};});
+}
 function statusLabel(s){return(s||'--').replace(/[⏱️⚙️✅❌]/g,'').trim();}
 function cleanBranch(code){return(code||'—').replace(/\s*มี\s*\d+\s*เครื่อง.*/i,'').trim()||'—';}
 
@@ -3430,18 +3438,25 @@ function openBranchModal(id){
 }
 
 async function saveBranchLocation(id){
-  const lat=parseFloat(document.getElementById('br-lat').value);
-  const lng=parseFloat(document.getElementById('br-lng').value);
-  const name=document.getElementById('br-locname').value.trim();
+  const lat=parseFloat(document.getElementById('br-lat')?.value);
+  const lng=parseFloat(document.getElementById('br-lng')?.value);
+  const name=document.getElementById('br-locname')?.value?.trim()||'';
   if(isNaN(lat)||isNaN(lng))return toast('กรุณากรอก lat/lng ให้ถูกต้อง');
+  
+  // Show spinner on button
+  const btn=document.querySelector('[onclick*="saveBranchLocation"]');
+  const origText=btn?.innerHTML||'บันทึก';
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ กำลังบันทึก...';}
+  
   try{
-    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})});
-    if(!d.ok)throw new Error(d.error||'Error');
+    const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify({location_lat:lat,location_lng:lng,location_name:name})},30000);
+    if(!d.ok)throw new Error(d.error||'บันทึกไม่สำเร็จ');
     branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name}:b);
+    if(btn){btn.disabled=false;btn.innerHTML=origText;}
     closeMod();renderBranches();
     addNotif(`อัพเดท location สาขา ${id} สำเร็จ`,'success');
     toast('✅ บันทึก location สำเร็จ');
-  }catch(e){toast('❌ '+e.message);}
+  }catch(e){toast('❌ '+e.message);}finally{if(btn){btn.disabled=false;btn.innerHTML=origText;}}
 }
 
 async function submitBranchApproval(id){
