@@ -489,6 +489,37 @@ button:active,.smb:active,.navb:active,.lbtn:active,.bp:active,.bo:active,.bo2:a
 .exp-btn.txt{color:var(--fg3)}.exp-btn.md{color:#24292e;border-color:#24292e}.exp-btn.md:hover{background:#24292e;color:#fff}
 .exp-btn.gpx{color:#d97706;border-color:#d97706}.exp-btn.gpx:hover{background:#d97706;color:#fff}
 #del-confirm-bg{z-index:10000!important}
+
+/* ── BRANCH MODAL IMPROVED ── */
+.mod-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.mod-code{font-size:10px;color:var(--fg4);font-family:var(--mono);font-weight:600;margin-bottom:3px}
+.mod-name{font-size:17px;font-weight:800;color:var(--fg);letter-spacing:-.03em;line-height:1.2}
+.mod-sub{font-size:11px;color:var(--fg4);margin-top:2px}
+.mod-body-scroll{overflow-y:auto;padding:16px 18px;flex:1}
+.mod-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg3)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--fg4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.field input,.field select{width:100%;padding:9px 11px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--fg3)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gmaps-box{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.gmaps-box-head{font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.gmaps-row{display:flex;gap:6px}
+.gmaps-input{flex:1;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none;transition:border-color .2s}
+.gmaps-input:focus{border-color:var(--blue)}
+.gmaps-convert-btn{padding:8px 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.gmaps-convert-btn:hover{opacity:.85}
+.gmaps-msg{font-size:11px;margin-top:5px;min-height:14px;font-weight:500}
+.gmaps-msg.ok{color:var(--green)}.gmaps-msg.err{color:var(--red)}.gmaps-msg.loading{color:var(--fg4)}
+.map-preview-wrap{border-radius:10px;overflow:hidden;border:1.5px solid var(--border);min-height:200px;background:var(--bg3);margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+.map-hint-inner{text-align:center;color:var(--fg4);font-size:12px;padding:24px;line-height:1.8}
+.close-btn-sm{padding:5px 10px;border:1.5px solid var(--border);background:transparent;border-radius:7px;color:var(--fg3);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.close-btn-sm:hover{background:var(--red);border-color:var(--red);color:#fff}
+.btn-save{flex:1;padding:10px 16px;background:var(--fg);color:var(--bg);border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-save:hover{opacity:.8}.btn-save:disabled{opacity:.35;cursor:default}
+.btn-cancel{flex:1;padding:10px 16px;background:transparent;color:var(--fg3);border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .25s}
+.btn-cancel:hover{background:var(--bg2);color:var(--fg)}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3267,7 +3298,8 @@ async function ntPasteGMaps(){
   if(parsed){
     latEl.value=parsed.lat.toFixed(6);
     lngEl.value=parsed.lng.toFixed(6);
-    msgEl.innerHTML=`<span style="color:var(--green)">✅ แปลงสำเร็จ: ${parsed.lat.toFixed(6)}, ${parsed.lng.toFixed(6)}</span>`;
+    msgEl.className='gmaps-msg ok';
+    msgEl.textContent=`✅ แปลงสำเร็จ: ${parsed.lat.toFixed(6)}, ${parsed.lng.toFixed(6)}`;
     inp.value='';
     ntUpdateBranchMapPreview();
     return;
@@ -3275,17 +3307,20 @@ async function ntPasteGMaps(){
 
   // Short URL → call backend to resolve
   if(isShortGMapsUrl(val)){
-    msgEl.innerHTML='<span style="color:var(--fg4)">⏳ กำลังแปลงลิงก์สั้น...</span>';
+    msgEl.className='gmaps-msg loading';
+    msgEl.textContent='⏳ กำลังแปลงลิงก์สั้น...';
     try{
       const d=await api('/api/resolve-gmaps?url='+encodeURIComponent(val));
       if(d.ok&&d.lat&&d.lng){
         latEl.value=d.lat.toFixed(6);
         lngEl.value=d.lng.toFixed(6);
-        msgEl.innerHTML=`<span style="color:var(--green)">✅ แปลงสำเร็จ: ${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span>`;
+        msgEl.className='gmaps-msg ok';
+        msgEl.textContent=`✅ แปลงสำเร็จ: ${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}`;
         inp.value='';
         ntUpdateBranchMapPreview();
       }else{
-        msgEl.innerHTML=`<span style="color:var(--red)">❌ ${d.error||'แปลงไม่ได้'}</span>`;
+        msgEl.className='gmaps-msg err';
+        msgEl.textContent=`❌ ${d.error||'แปลงไม่ได้'}`;
       }
     }catch(e){
       msgEl.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`;
@@ -3293,7 +3328,8 @@ async function ntPasteGMaps(){
     return;
   }
 
-  msgEl.innerHTML=`<span style="color:var(--red)">❌ ไม่พบพิกัดในลิงก์ — ลองใช้ลิงก์แบบเต็มจาก Google Maps</span>`;
+  msgEl.className='gmaps-msg err';
+  msgEl.textContent='❌ ไม่พบพิกัดในลิงก์ — ลองใช้ลิงก์แบบเต็มจาก Google Maps';
 }
 
 let _brMap=null, _brMarker=null;
@@ -3369,65 +3405,60 @@ function openBranchModal(id){
   const isSup=AUTH?.user?.role==='superadmin';
   const mod=document.getElementById('mod');
   const mbg=document.getElementById('mod-bg');
+    mod.style.cssText='max-width:460px;padding:0;display:flex;flex-direction:column;max-height:90vh';
   mod.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+    <div class="mod-head">
       <div>
-        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);margin-bottom:2px">${esc(b.code||'')} · ${esc(b.brand||'')}</div>
-        <div style="font-size:16px;font-weight:700;color:var(--fg)">${esc(b.nameTh||b.name_en||'')}</div>
-        ${b.name_en?`<div style="font-size:11px;color:var(--fg4)">${esc(b.name_en)}</div>`:''}
+        <div class="mod-code">${esc(b.code||'')} · ${esc(b.brand||'')}</div>
+        <div class="mod-name">${esc(b.nameTh||b.name_en||'')}</div>
+        ${b.name_en&&b.nameTh?`<div class="mod-sub">${esc(b.name_en)}</div>`:''}
       </div>
-      <button class="smb" onclick="closeMod()">✕ ปิด</button>
+      <button class="close-btn-sm" onclick="closeMod()">✕ ปิด</button>
     </div>
-
-    ${isSup?`
-    <!-- Google Maps paste -->
-    <div style="margin-bottom:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:11px;font-weight:700;color:var(--fg3);margin-bottom:6px">📎 วาง Google Maps Link</div>
-      <div style="display:flex;gap:6px">
-        <input id="br-gmaps-inp" placeholder="วาง https://maps.app.goo.gl/... หรือลิงก์ Google Maps"
-          style="flex:1;padding:7px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:12px;outline:none"
-          onpaste="setTimeout(()=>ntPasteGMaps(),50)" oninput="if(this.value.length>10)ntPasteGMaps()"/>
-        <button class="smb" onclick="ntPasteGMaps()" style="padding:7px 12px;font-size:12px">แปลง</button>
+    <div class="mod-body-scroll">
+      ${isSup?`
+      <div class="gmaps-box">
+        <div class="gmaps-box-head">📎 วาง Google Maps Link</div>
+        <div class="gmaps-row">
+          <input class="gmaps-input" id="br-gmaps-inp"
+            placeholder="https://maps.app.goo.gl/... หรือลิงก์แบบเต็ม"
+            onpaste="setTimeout(()=>ntPasteGMaps(),30)"
+            oninput="if(this.value.length>10)ntPasteGMaps()"/>
+          <button class="gmaps-convert-btn" onclick="ntPasteGMaps()">แปลง</button>
+        </div>
+        <div class="gmaps-msg" id="br-parse-msg"></div>
+      </div>`:''}
+      <div class="field-row" style="margin-bottom:10px">
+        <div class="field">
+          <label>Latitude</label>
+          <input id="br-lat" type="number" step="any" value="${b.location_lat||''}"
+            onchange="ntUpdateBranchMapPreview()" placeholder="13.756331"
+            ${isSup?'':'disabled'}/>
+        </div>
+        <div class="field">
+          <label>Longitude</label>
+          <input id="br-lng" type="number" step="any" value="${b.location_lng||''}"
+            onchange="ntUpdateBranchMapPreview()" placeholder="100.501765"
+            ${isSup?'':'disabled'}/>
+        </div>
       </div>
-      <div id="br-parse-msg" style="font-size:11px;margin-top:4px;min-height:14px"></div>
-    </div>`:''
-    }
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Latitude</div>
-        <input id="br-lat" type="number" step="any" value="${b.location_lat||''}"
-          onchange="ntUpdateBranchMapPreview()"
-          style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-          ${isSup?'':'disabled'} placeholder="เช่น 13.756331">
+      <div class="field" style="margin-bottom:12px">
+        <label>Location Name</label>
+        <input id="br-locname" value="${esc(b.location_name||'')}"
+          placeholder="ชื่อสถานที่ / ที่อยู่ เช่น สยาม กรุงเทพ"
+          ${isSup?'':'disabled'}/>
       </div>
-      <div>
-        <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Longitude</div>
-        <input id="br-lng" type="number" step="any" value="${b.location_lng||''}"
-          onchange="ntUpdateBranchMapPreview()"
-          style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-          ${isSup?'':'disabled'} placeholder="เช่น 100.501765">
+      <div class="map-preview-wrap" id="br-map-preview">
+        <div class="map-hint-inner">⏳ กำลังโหลดแผนที่...</div>
       </div>
     </div>
-    <div style="margin-bottom:10px">
-      <div style="font-size:10px;color:var(--fg4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px">Location Name</div>
-      <input id="br-locname" value="${esc(b.location_name||'')}"
-        style="width:100%;padding:8px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--fg);font-family:var(--sans);font-size:13px;outline:none"
-        ${isSup?'':'disabled'} placeholder="ชื่อสถานที่ / ที่อยู่ เช่น สยาม กรุงเทพ">
-    </div>
-
-    <!-- Map preview: initialized by ntUpdateBranchMapPreview() -->
-    <div id="br-map-preview" style="margin-bottom:12px;min-height:220px">
-      <div style="text-align:center;color:var(--fg4);font-size:12px;padding:14px;background:var(--bg2);border-radius:8px;border:1px dashed var(--border)">⏳ กำลังโหลดแผนที่...</div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:4px">
+    <div class="mod-footer">
       ${isSup
-        ?`<button class="bp" onclick="saveBranchLocation('${b.id}')">💾 บันทึก</button>`
-        :`<button class="bp" onclick="submitBranchApproval('${b.id}')">📤 ส่งขออนุมัติ</button>`}
-      <button class="bo" onclick="closeMod()">ยกเลิก</button>
+        ?`<button class="btn-save" id="br-save-btn" onclick="saveBranchLocation('${b.id}')">💾 บันทึก Location</button>`
+        :`<button class="btn-save" onclick="submitBranchApproval('${b.id}')">📤 ส่งขออนุมัติ</button>`}
+      <button class="btn-cancel" onclick="closeMod()">ยกเลิก</button>
     </div>`;
-  mbg.classList.add('on');
+    mbg.classList.add('on');
   // Reset map state when modal opens
   if(_brMap){try{_brMap.remove();}catch(e){}; _brMap=null; _brMarker=null;}
   setTimeout(()=>{
@@ -3443,10 +3474,10 @@ async function saveBranchLocation(id){
   const name=document.getElementById('br-locname')?.value?.trim()||'';
   if(isNaN(lat)||isNaN(lng))return toast('กรุณากรอก lat/lng ให้ถูกต้อง');
   
-  // Show spinner on button
-  const btn=document.querySelector('[onclick*="saveBranchLocation"]');
-  const origText=btn?.innerHTML||'💾 บันทึก';
-  if(btn){btn.disabled=true;btn.innerHTML='⏳ กำลังบันทึก...';}
+  // Show spinner on button (use id for reliability)
+  const btn=document.getElementById('br-save-btn')||document.querySelector('[onclick*="saveBranchLocation"]');
+  const origText=btn?.innerHTML||'💾 บันทึก Location';
+  if(btn){btn.disabled=true;btn.textContent='⏳ กำลังบันทึก...';}
   // Warn if taking long (Render cold start)
   const slowWarn=setTimeout(()=>{
     if(btn&&btn.disabled)btn.innerHTML='⏳ รอเซิร์ฟเวอร์... (อาจใช้เวลา 30-60 วินาที)';
