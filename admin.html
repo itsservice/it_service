@@ -2422,27 +2422,114 @@ function rUsersTable(){
 
 // ── Reporter detail modal ─────────────────────────────────
 function openReporterDetail(id){
- const r=reporters.find(x=>String(x.id)===String(id));
+ const r=reporters.find(x=>String(x.id)===String(id))||users.find(x=>String(x.id)===String(id));
  if(!r)return;
  const isPending=r.reset_requested==1||r.reset_requested===true;
- showMod(`
- <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px"><svg class=ic-md><use href=#i-user /></svg> ${esc(r.name)}</div>
+ const canEdit=['superadmin','admin','it_services'].includes(AUTH?.user?.role);
+ const canDelete=AUTH?.user?.role==='superadmin';
+ openMod(`
+ <div style="font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:14px;display:flex;align-items:center;gap:8px"><svg class=ic-md><use href=#i-user /></svg> <span>${esc(r.name)}</span></div>
  ${isPending?`<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:4px;padding:3px 8px;margin-bottom:12px"><svg class=ic-md><use href=#i-key /></svg> ขอ Reset รหัสผ่าน</div>`:''}
+ <div style="font-size:12px;color:var(--fg4);margin-bottom:8px;font-weight:600">รหัสพนักงาน: <span style="font-family:var(--mono);font-weight:700;color:var(--fg)">${esc(r.username)}</span></div>
+ ${canEdit?`
+ <div class="fg"><label>ชื่อ-สกุล</label><input class="inp" id="rep-name" value="${esc(r.name||'')}" style="width:100%" maxlength="100"/></div>
+ <div class="fg"><label>แบรนด์</label>
+   <select class="sel" id="rep-brand" style="width:100%">
+     ${BR_BRANDS.map(b=>`<option value="${esc(b)}"${r.brand===b?' selected':''}>${esc(b)}</option>`).join('')}
+     <option value="ALL"${r.brand==='ALL'?' selected':''}>ทุกแบรนด์ (ALL)</option>
+   </select>
+ </div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+   <div class="fg" style="margin-bottom:0"><label style="font-size:10px">เบอร์โทร</label><input class="inp" id="rep-phone" value="${esc(r.phone||'')}" maxlength="50" style="width:100%"/></div>
+   <div class="fg" style="margin-bottom:0"><label style="font-size:10px">LINE User ID</label><input class="inp" id="rep-line" value="${esc(r.line_user_id||'')}" maxlength="100" style="width:100%"/></div>
+ </div>
+ ${canSeePassword()?`<div class="fg"><label>รหัสผ่าน (default)</label><div style="display:flex;gap:6px;align-items:center"><span style="font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:6px;font-size:12px;flex:1">${esc(r.password_plain||'-')}</span></div></div>`:''}
+ `:`
  <div style="font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
- ${[['รหัสพนักงาน',`<span style="font-family:var(--mono);font-weight:600">${esc(r.username)}</span>`],
- ['ชื่อ-สกุล',esc(r.name)],['แบรนด์',esc(r.brand||'-')],
- ...(canSeePassword()?[['รหัสผ่าน (default)',`<span style="font-family:var(--mono)">${esc(r.password_plain||'-')}</span>`]]:[['รหัสผ่าน','<span style="color:var(--fg4)">— (เฉพาะ Super Admin)</span>']]),
+ ${[['ชื่อ-สกุล',esc(r.name)],['แบรนด์',esc(r.brand==='ALL'?'ทุกแบรนด์':r.brand||'-')],['เบอร์โทร',esc(r.phone||'-')],
  ['สถานะ',isPending?'<span style="color:#d97706;font-weight:600">รอ Reset รหัสผ่าน</span>':'ปกติ'],
  ].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i>0?'border-top:1px solid var(--border)':''}"><span style="color:var(--fg4);min-width:120px">${k}</span><span style="text-align:right">${v}</span></div>`).join('')}
- </div>
+ </div>`}
  <div style="display:flex;gap:6px;margin-top:16px;flex-wrap:wrap">
- ${isPending?`<button class="bp" style="background:#d97706;border-color:#d97706" onclick="closeMod();confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}')"><svg class=ic-md><use href=#i-key /></svg> Reset รหัสผ่าน</button>`:''}
- <button class="bo" onclick="closeMod()">ปิด</button>
+ ${canEdit?`<button class="bp" onclick="doSaveReporter('${esc(r.id)}')"><svg class=ic-md><use href=#i-save /></svg> บันทึก</button>`:''}
+ ${isPending?`<button class="bp" style="background:#d97706;border-color:#d97706" onclick="closeMod();setTimeout(()=>confirmResetPwd('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}'),100)"><svg class=ic-md><use href=#i-key /></svg> Reset รหัสผ่าน</button>`:''}
+ ${canDelete?`<button class="bo" style="color:#dc2626;border-color:#fca5a5" onclick="closeMod();setTimeout(()=>confirmDelReporter('${esc(r.id)}','${esc(r.name)}','${esc(r.username)}'),100)"><svg class=ic-md><use href=#i-trash /></svg> ลบ</button>`:''}
+ <button class="bo" onclick="closeMod()" style="margin-left:auto">ปิด</button>
  </div>`);
 }
 
+async function doSaveReporter(id){
+ const data={
+   name:document.getElementById('rep-name')?.value?.trim(),
+   brand:document.getElementById('rep-brand')?.value,
+   phone:document.getElementById('rep-phone')?.value?.trim(),
+   line_user_id:document.getElementById('rep-line')?.value?.trim(),
+ };
+ if(!data.name)return toast('<svg class=ic-md><use href=#i-alert /></svg> กรุณากรอกชื่อ-สกุล');
+ const btn=document.querySelector('.mod .bp');
+ const orig=btn?.innerHTML||'Save';
+ if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังบันทึก...';}
+ try{
+   const d=await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify(data)},30000);
+   if(!d.ok)throw new Error(d.error||'Save failed');
+   // Update local caches
+   reporters=reporters.map(r=>String(r.id)===String(id)?{...r,...data}:r);
+   users=users.map(u=>String(u.id)===String(id)?{...u,...data}:u);
+   closeMod();
+   render();
+   toast('<svg class=ic-md><use href=#i-check /></svg> บันทึกข้อมูลสำเร็จ');
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
+}
+
+function confirmDelReporter(id,name,username){
+ if(AUTH?.user?.role!=='superadmin')return toast('<svg class=ic-md><use href=#i-alert /></svg> เฉพาะ superadmin เท่านั้น');
+ openMod(`<div class="mod-t" style="color:#dc2626"><svg class=ic-md><use href=#i-alert /></svg> ยืนยันการลบ Reporter</div>
+   <div style="padding:14px;background:rgba(220,38,38,.05);border:1px solid #fca5a5;border-radius:8px;margin-bottom:14px">
+     <div style="font-size:13px;color:var(--fg);font-weight:700;margin-bottom:4px">${esc(name)}</div>
+     <div style="font-size:12px;color:var(--fg3);font-family:var(--mono);margin-bottom:10px">${esc(username)}</div>
+     <div style="font-size:11px;color:#991b1b;line-height:1.6">
+       <strong>คำเตือน:</strong> ลบบัญชี Reporter นี้แล้วจะ:<br>
+       • ผู้ใช้จะ login ไม่ได้อีก<br>
+       • ประวัติ Ticket เก่ายังอยู่ แต่จะไม่มีการแจ้งเตือน
+     </div>
+   </div>
+   <div class="fg">
+     <label>พิมพ์ <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">DELETE</code> เพื่อยืนยัน</label>
+     <input class="inp" id="del-rep-confirm" placeholder="DELETE" autocomplete="off" style="width:100%;text-align:center;font-family:var(--mono);letter-spacing:.1em" oninput="document.getElementById('del-rep-go').disabled=this.value!=='DELETE'"/>
+   </div>
+   <div class="mod-f">
+     <button class="bo" onclick="closeMod()">ยกเลิก</button>
+     <button id="del-rep-go" disabled onclick="doDelReporter('${esc(id)}')" style="background:#dc2626;color:#fff;border-color:#dc2626;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600"><svg class=ic-md><use href=#i-trash /></svg> ลบ Reporter</button>
+   </div>`);
+ setTimeout(()=>document.getElementById('del-rep-confirm')?.focus(),100);
+}
+
+async function doDelReporter(id){
+ const btn=document.getElementById('del-rep-go');
+ const cancelBtn=document.querySelector('.mod-f .bo');
+ const orig=btn?.innerHTML||'Delete';
+ if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังลบ...';}
+ if(cancelBtn)cancelBtn.disabled=true;
+ try{
+   const d=await api('/api/users/'+id,{method:'DELETE'},30000);
+   if(!d.ok)throw new Error(d.error||'Delete failed');
+   reporters=reporters.filter(r=>String(r.id)!==String(id));
+   users=users.filter(u=>String(u.id)!==String(id));
+   closeMod();
+   render();
+   toast('<svg class=ic-md><use href=#i-check /></svg> ลบ Reporter สำเร็จ');
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   if(cancelBtn)cancelBtn.disabled=false;
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
+}
+
 function confirmResetPwd(id,name,username){
- showMod(`
+ openMod(`
  <div style="font-family:var(--display);font-size:16px;font-weight:800;margin-bottom:8px"><svg class=ic-md><use href=#i-key /></svg> Reset รหัสผ่าน</div>
  <div style="font-size:13px;color:var(--fg3);margin-bottom:16px;line-height:1.7">
  ยืนยัน Reset รหัสผ่านของ<br>
@@ -2989,9 +3076,10 @@ function openDrw(rid){
  <div class="drw-body">
  <div class="dsec">Actions</div>
  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
- <button class="smb" onclick="openAssign('${esc(realRid)}')">Assign</button>
- ${!/(เสร็จสิ้น|ยกเลิก)/.test(t.status||'')?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openClose('${esc(realRid)}')">Close Ticket</button>`:''}
- <button class="smb" onclick="openNote('${esc(realRid)}')">Note</button>
+ <button class="smb" onclick="openAssign('${esc(realRid)}')"><svg class=ic-md><use href=#i-user /></svg> Assign</button>
+ ${!/(เสร็จสิ้น|ยกเลิก)/.test(t.status||'')?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openClose('${esc(realRid)}')"><svg class=ic-md><use href=#i-check /></svg> Close Ticket</button>`:''}
+ <button class="smb" onclick="openNote('${esc(realRid)}')"><svg class=ic-md><use href=#i-edit /></svg> Note</button>
+ ${['superadmin','admin'].includes(AUTH?.user?.role)?`<button class="smb" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelTicket('${esc(realRid)}','${esc(t.id||t._recordId||'')}','${esc(t.type||'')}')"><svg class=ic-md><use href=#i-trash /></svg> Delete</button>`:''}
  </div>
  <div class="dsec">Status</div>
  <select class="sel" style="width:100%;margin-bottom:10px" onchange="qStatus('${esc(realRid)}',this.value)">${ST.map(s=>`<option${(t.status||'').includes(s)?' selected':''}>${s}</option>`).join('')}</select>
@@ -3068,6 +3156,57 @@ function normBrand(s){
     .replace(/\s+/g,' ').trim();
   if(!b||b==='-'||b==='all'||b==='ทุกแบรนด์'||b==='ทุกแบรน์ด')return 'all';
   return b;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TICKET DELETE — admin/superadmin only
+// ═══════════════════════════════════════════════════════════
+function confirmDelTicket(rid,ticketId,type){
+ if(!['superadmin','admin'].includes(AUTH?.user?.role)){
+   return toast('<svg class=ic-md><use href=#i-alert /></svg> เฉพาะ admin/superadmin เท่านั้น');
+ }
+ openMod(`<div class="mod-t" style="color:#dc2626"><svg class=ic-md><use href=#i-alert /></svg> ยืนยันการลบ Ticket</div>
+   <div style="padding:14px;background:rgba(220,38,38,.05);border:1px solid #fca5a5;border-radius:8px;margin-bottom:14px">
+     <div style="font-size:13px;color:var(--fg);font-weight:700;margin-bottom:4px">${esc(ticketId)}</div>
+     <div style="font-size:12px;color:var(--fg3);margin-bottom:10px">${esc(type||'(ไม่ระบุประเภท)')}</div>
+     <div style="font-size:11px;color:#991b1b;line-height:1.6">
+       <strong>คำเตือน:</strong> ลบ Ticket นี้แล้วจะ:<br>
+       • ลบจากระบบถาวร (ไม่สามารถกู้คืนได้)<br>
+       • รายงาน Activity Log ที่อ้างถึงอาจขาดข้อมูล<br>
+       • รูปภาพแนบจะถูกลบด้วย
+     </div>
+   </div>
+   <div class="fg">
+     <label>พิมพ์ <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">DELETE</code> เพื่อยืนยัน</label>
+     <input class="inp" id="del-ticket-confirm" placeholder="DELETE" autocomplete="off" style="width:100%;text-align:center;font-family:var(--mono);letter-spacing:.1em" oninput="document.getElementById('del-ticket-go').disabled=this.value!=='DELETE'"/>
+   </div>
+   <div class="mod-f">
+     <button class="bo" onclick="closeMod()">ยกเลิก</button>
+     <button id="del-ticket-go" disabled onclick="doDelTicket('${esc(rid)}')" style="background:#dc2626;color:#fff;border-color:#dc2626;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600"><svg class=ic-md><use href=#i-trash /></svg> ลบ Ticket</button>
+   </div>`);
+ setTimeout(()=>document.getElementById('del-ticket-confirm')?.focus(),100);
+}
+
+async function doDelTicket(rid){
+ const btn=document.getElementById('del-ticket-go');
+ const cancelBtn=document.querySelector('.mod-f .bo');
+ const orig=btn?.innerHTML||'Delete';
+ if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังลบ...';}
+ if(cancelBtn)cancelBtn.disabled=true;
+ try{
+   const d=await api('/api/tickets/'+rid,{method:'DELETE'},45000);
+   if(!d.ok)throw new Error(d.error||'Delete failed');
+   tickets=tickets.filter(t=>(t._recordId||t.id||t.ticket_id)!==rid);
+   closeMod();
+   closeDrw();
+   render();
+   toast('<svg class=ic-md><use href=#i-check /></svg> ลบ Ticket สำเร็จ');
+   addNotif(`ลบ Ticket ${rid} สำเร็จ`,'info');
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   if(cancelBtn)cancelBtn.disabled=false;
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
 }
 
 function openAssign(rid){
@@ -3634,8 +3773,9 @@ function _renderBranchTable(){
  <td style="font-size:11px">${b.location_lat?`<span style="color:var(--green)"><svg class=ic-md><use href=#i-pin /></svg> ${parseFloat(b.location_lat).toFixed(4)}, ${parseFloat(b.location_lng||0).toFixed(4)}</span><div style="font-size:10px;color:var(--fg4)">${esc(b.location_name||'')}</div>`:'<span style="color:var(--fg4)">ไม่มีพิกัด</span>'}</td>
  <td><span class="br-badge ${b.status==='active'?'active':b.status==='pending'?'pending':'inactive'}">${b.status||'active'}</span></td>
  <td onclick="event.stopPropagation()">
- <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchModal('${b.id}')">แก้ไข</button>
- ${isSup&&b.status==='pending'?`<button class="smb" style="font-size:10px;padding:3px 8px;color:var(--green)" onclick="doApproveBranch(${b.id})">อนุมัติ</button>`:''}
+ <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchModal('${b.id}')"><svg class=ic-md><use href=#i-edit /></svg> แก้ไข</button>
+ ${isSup&&b.status==='pending'?`<button class="smb" style="font-size:10px;padding:3px 8px;color:var(--green);border-color:var(--green)" onclick="doApproveBranch(${b.id})"><svg class=ic-md><use href=#i-check /></svg> อนุมัติ</button>`:''}
+ ${isSup?`<button class="smb" style="font-size:10px;padding:3px 8px;color:#dc2626;border-color:#fca5a5" onclick="confirmDelBranch(${b.id},'${esc(b.code||'')}','${esc(b.brand||'')}','${esc(b.nameTh||b.nameEn||b.name_en||'')}')"><svg class=ic-md><use href=#i-trash /></svg> ลบ</button>`:''}
  </td>
  </tr>`).join('')}
  ${!paged.length?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--fg4)">ไม่พบสาขา</td></tr>':''}
@@ -3687,6 +3827,7 @@ async function renderBranches(){
  </select>
  <span style="font-size:12px;color:var(--fg4);white-space:nowrap" id="br-count-lbl">— สาขา</span>
  <button class="smb" onclick="brLoaded=false;document.getElementById('br-table-wrap').innerHTML='';renderBranches()"><svg class=ic-md><use href=#i-refresh /></svg></button>
+ ${['superadmin','admin','it_services','manager'].includes(AUTH?.user?.role)?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:700" onclick="openAddBranch()"><svg class=ic-md><use href=#i-plus /></svg> เพิ่มสาขา</button>`:''}
  </div>
  <div id="br-table-wrap"></div>
  <div id="br-pager-wrap" style="margin-top:10px"></div>
@@ -3853,6 +3994,141 @@ function ntUpdateBranchMapPreview(){
 }
 
 
+// ═══════════════════════════════════════════════════════════
+// BRANCH CRUD — Add / Delete (Edit uses openBranchModal)
+// ═══════════════════════════════════════════════════════════
+function openAddBranch(){
+ const role=AUTH?.user?.role;
+ if(!['superadmin','admin','it_services','manager'].includes(role)){
+   return toast('<svg class=ic-md><use href=#i-alert /></svg> สิทธิ์ไม่เพียงพอ');
+ }
+ openMod(`<div class="mod-t">เพิ่มสาขาใหม่</div>
+   <div style="font-size:11px;color:var(--fg4);margin-bottom:14px;padding:8px 12px;background:var(--bg2);border-left:3px solid var(--blue);border-radius:6px;line-height:1.55">
+     <svg class=ic-md><use href=#i-info /></svg> กรอกข้อมูลให้ครบ → ระบบจะสร้างสาขาใหม่ใน DB ทันที
+   </div>
+   <div class="fg">
+     <label>แบรนด์ <span style="color:#dc2626">*</span></label>
+     <select class="sel" id="ab-brand" style="width:100%">
+       <option value="">-- เลือกแบรนด์ --</option>
+       ${BR_BRANDS.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+     </select>
+   </div>
+   <div class="fg">
+     <label>รหัสสาขา (Code) <span style="color:#dc2626">*</span></label>
+     <input class="inp" id="ab-code" placeholder="เช่น 0001, 0123" style="width:100%" maxlength="20"/>
+     <div style="font-size:10px;color:var(--fg4);margin-top:3px">ห้ามซ้ำกับ Code ที่มีอยู่ในแบรนด์เดียวกัน</div>
+   </div>
+   <div class="fg">
+     <label>ชื่อสาขา (ไทย)</label>
+     <input class="inp" id="ab-name-th" placeholder="เช่น สาขาสยามพารากอน" style="width:100%" maxlength="200"/>
+   </div>
+   <div class="fg">
+     <label>ชื่อสาขา (อังกฤษ)</label>
+     <input class="inp" id="ab-name-en" placeholder="e.g. Siam Paragon Branch" style="width:100%" maxlength="200"/>
+   </div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+     <div class="fg" style="margin-bottom:0">
+       <label>IP สาขา</label>
+       <input class="inp" id="ab-ip" placeholder="192.168.1.1" maxlength="50"/>
+     </div>
+     <div class="fg" style="margin-bottom:0">
+       <label>เบอร์โทร</label>
+       <input class="inp" id="ab-phone" placeholder="02-xxx-xxxx" maxlength="50"/>
+     </div>
+   </div>
+   <div class="mod-f">
+     <button class="bo" onclick="closeMod()">ยกเลิก</button>
+     <button class="bp" onclick="doAddBranch()"><svg class=ic-md><use href=#i-plus /></svg> เพิ่มสาขา</button>
+   </div>`);
+ setTimeout(()=>document.getElementById('ab-brand')?.focus(),100);
+}
+
+async function doAddBranch(){
+ const brand=document.getElementById('ab-brand').value;
+ const code=document.getElementById('ab-code').value.trim();
+ const name_th=document.getElementById('ab-name-th').value.trim();
+ const name_en=document.getElementById('ab-name-en').value.trim();
+ const ip=document.getElementById('ab-ip').value.trim();
+ const phone=document.getElementById('ab-phone').value.trim();
+ if(!brand)return toast('<svg class=ic-md><use href=#i-alert /></svg> กรุณาเลือกแบรนด์');
+ if(!code)return toast('<svg class=ic-md><use href=#i-alert /></svg> กรุณากรอกรหัสสาขา');
+
+ // Check duplicate (frontend pre-check — backend จะตรวจอีกรอบ)
+ const dup=branches.find(b=>b.brand===brand&&String(b.code).trim()===code);
+ if(dup)return toast('<svg class=ic-md><use href=#i-alert /></svg> รหัสสาขา '+code+' ของ '+brand+' มีอยู่แล้ว');
+
+ const btn=document.querySelector('.mod-f .bp');
+ const cancelBtn=document.querySelector('.mod-f .bo');
+ const orig=btn?.innerHTML||'เพิ่ม';
+ if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังเพิ่ม...';}
+ if(cancelBtn)cancelBtn.disabled=true;
+ try{
+   const d=await api('/api/branches',{method:'POST',body:JSON.stringify({brand,code,name_th,name_en,ip,phone})},45000);
+   if(!d.ok)throw new Error(d.error||'Add branch failed');
+   // Push to local state — refresh server cache on next reload
+   branches.push({
+     id:d.id,brand,code,nameTh:name_th,name_en:name_en,
+     ip,phone,location_lat:null,location_lng:null,location_name:'',
+     status:d.status||'active'
+   });
+   closeMod();
+   _renderBranchTable();
+   toast('<svg class=ic-md><use href=#i-check /></svg> เพิ่มสาขา '+code+' ('+brand+') สำเร็จ');
+   addNotif(`เพิ่มสาขา ${code} - ${name_th||name_en||''} (${brand})`,'success');
+   // Force full reload from server to sync any server-side defaults
+   setTimeout(()=>{brLoaded=false;loadBranches().then(()=>_renderBranchTable());},1500);
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   if(cancelBtn)cancelBtn.disabled=false;
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
+}
+
+function confirmDelBranch(id,code,brand,name){
+ if(AUTH?.user?.role!=='superadmin')return toast('<svg class=ic-md><use href=#i-alert /></svg> เฉพาะ superadmin เท่านั้นที่ลบสาขาได้');
+ openMod(`<div class="mod-t" style="color:#dc2626"><svg class=ic-md><use href=#i-alert /></svg> ยืนยันการลบสาขา</div>
+   <div style="padding:14px;background:rgba(220,38,38,.05);border:1px solid #fca5a5;border-radius:8px;margin-bottom:14px">
+     <div style="font-size:13px;color:var(--fg);font-weight:700;margin-bottom:4px">${esc(code)} · ${esc(brand)}</div>
+     <div style="font-size:12px;color:var(--fg3);margin-bottom:10px">${esc(name||'(ไม่มีชื่อ)')}</div>
+     <div style="font-size:11px;color:#991b1b;line-height:1.6">
+       <strong>คำเตือน:</strong> การลบสาขานี้จะ:<br>
+       • ลบสาขาออกจากระบบถาวร (ไม่สามารถกู้คืนได้)<br>
+       • Ticket ที่อ้างถึงสาขานี้อาจหายอ้างอิง<br>
+       • รายงานย้อนหลังอาจไม่แสดงข้อมูลสาขานี้
+     </div>
+   </div>
+   <div class="fg">
+     <label>พิมพ์ <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">DELETE</code> เพื่อยืนยัน</label>
+     <input class="inp" id="del-confirm" placeholder="DELETE" autocomplete="off" style="width:100%;text-align:center;font-family:var(--mono);letter-spacing:.1em" oninput="document.getElementById('del-go').disabled=this.value!=='DELETE'"/>
+   </div>
+   <div class="mod-f">
+     <button class="bo" onclick="closeMod()">ยกเลิก</button>
+     <button class="b-danger" id="del-go" disabled onclick="doDelBranch(${id})" style="background:#dc2626;color:#fff;border-color:#dc2626"><svg class=ic-md><use href=#i-trash /></svg> ลบสาขาถาวร</button>
+   </div>`);
+ setTimeout(()=>document.getElementById('del-confirm')?.focus(),100);
+}
+
+async function doDelBranch(id){
+ const btn=document.getElementById('del-go');
+ const cancelBtn=document.querySelector('.mod-f .bo');
+ const orig=btn?.innerHTML||'Delete';
+ if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังลบ...';}
+ if(cancelBtn)cancelBtn.disabled=true;
+ try{
+   const d=await api('/api/branches/'+id,{method:'DELETE'},45000);
+   if(!d.ok)throw new Error(d.error||'Delete failed');
+   branches=branches.filter(b=>String(b.id)!==String(id));
+   closeMod();
+   _renderBranchTable();
+   toast('<svg class=ic-md><use href=#i-check /></svg> ลบสาขาสำเร็จ');
+   addNotif(`ลบสาขา id=${id} สำเร็จ`,'info');
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   if(cancelBtn)cancelBtn.disabled=false;
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
+}
+
 function openBranchModal(id){
  const b=branches.find(x=>String(x.id)===String(id));
  if(!b)return;
@@ -3871,6 +4147,17 @@ function openBranchModal(id){
  </div>
  <div class="mod-body-scroll">
  ${isSup?`
+ <details class="br-details" style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;background:var(--bg2)">
+ <summary style="padding:10px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--fg);user-select:none;list-style:none;display:flex;align-items:center;justify-content:space-between"><span><svg class=ic-md><use href=#i-edit /></svg> แก้ไขข้อมูลพื้นฐาน (ชื่อ / IP / เบอร์)</span><svg class=ic-md style="opacity:.5"><use href=#i-chevron-down /></svg></summary>
+ <div style="padding:12px 14px;border-top:1px solid var(--border)">
+ <div class="fg" style="margin-bottom:10px"><label style="font-size:10px">ชื่อสาขา (ไทย)</label><input class="inp" id="br-name-th-edit" value="${esc(b.nameTh||b.name_th||'')}" maxlength="200" style="width:100%"/></div>
+ <div class="fg" style="margin-bottom:10px"><label style="font-size:10px">ชื่อสาขา (อังกฤษ)</label><input class="inp" id="br-name-en-edit" value="${esc(b.nameEn||b.name_en||'')}" maxlength="200" style="width:100%"/></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+ <div class="fg" style="margin-bottom:0"><label style="font-size:10px">IP สาขา</label><input class="inp" id="br-ip-edit" value="${esc(b.ip||'')}" maxlength="50" style="width:100%"/></div>
+ <div class="fg" style="margin-bottom:0"><label style="font-size:10px">เบอร์โทร</label><input class="inp" id="br-phone-edit" value="${esc(b.phone||'')}" maxlength="50" style="width:100%"/></div>
+ </div>
+ </div>
+ </details>
  <div class="gmaps-box">
  <div class="gmaps-box-head"><svg class=ic-md><use href=#i-link /></svg> วาง Google Maps Link</div>
  <div class="gmaps-row">
@@ -4000,6 +4287,18 @@ async function saveBranchLocation(id){
  },2000);
 
  const payload={location_lat:lat,location_lng:lng,location_name:name};
+ // Include basic-info edits if user expanded the section and changed values
+ const ne_th=document.getElementById('br-name-th-edit')?.value?.trim();
+ const ne_en=document.getElementById('br-name-en-edit')?.value?.trim();
+ const ne_ip=document.getElementById('br-ip-edit')?.value?.trim();
+ const ne_ph=document.getElementById('br-phone-edit')?.value?.trim();
+ const cur=branches.find(x=>String(x.id)===String(id));
+ if(cur){
+   if(ne_th!==undefined && ne_th!==(cur.nameTh||cur.name_th||''))payload.name_th=ne_th;
+   if(ne_en!==undefined && ne_en!==(cur.nameEn||cur.name_en||''))payload.name_en=ne_en;
+   if(ne_ip!==undefined && ne_ip!==(cur.ip||''))payload.ip=ne_ip;
+   if(ne_ph!==undefined && ne_ph!==(cur.phone||''))payload.phone=ne_ph;
+ }
  const doSave=(timeoutMs)=>api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify(payload)},timeoutMs);
 
  setBtn('<svg class=ic-md><use href=#i-loader /></svg> กำลังบันทึก...');
@@ -4020,7 +4319,15 @@ async function saveBranchLocation(id){
  }
 
  // Optimistic local update so UI reflects immediately even before refetch
- branches=branches.map(b=>String(b.id)===String(id)?{...b,location_lat:lat,location_lng:lng,location_name:name}:b);
+ branches=branches.map(b=>{
+   if(String(b.id)!==String(id))return b;
+   const upd={...b,location_lat:lat,location_lng:lng,location_name:name};
+   if('name_th' in payload){upd.nameTh=payload.name_th;upd.name_th=payload.name_th;}
+   if('name_en' in payload){upd.nameEn=payload.name_en;upd.name_en=payload.name_en;}
+   if('ip' in payload)upd.ip=payload.ip;
+   if('phone' in payload)upd.phone=payload.phone;
+   return upd;
+ });
  clearInterval(progressTimer);
  setBtn('<svg class=ic-md><use href=#i-check /></svg> บันทึกสำเร็จ',true);
  toast('<svg class=ic-md><use href=#i-check /></svg> บันทึก location สำเร็จ');
