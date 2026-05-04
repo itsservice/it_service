@@ -1,7 +1,6 @@
 // app.js — IT Ticket System v2
 const express = require('express');
 const path    = require('path');
-
 const { hashPwd, createSession, getSession, deleteSession, requireAuth, addLog, getLogs, getLogsAsync } = require('./auth');
 const { getAllUsers, getUserByUsername, getUserByUsernameAndBrand, getAllReporters, createUser, updateUser, deleteUser } = require('./users');
 const { listTickets, getTicket, updateTicket, createTicket, debugSchema, ensureFieldMap, invalidateCache } = require('./larkService');
@@ -17,12 +16,13 @@ app.use(express.urlencoded({ extended:true }));
 // ── Request timeout ─────────────────────────────────────────
 app.use((req, res, next) => {
   if (req.path === '/api/events') return next();
+  // เพิ่มเป็น 60s — เผื่อ FastAPI/MySQL ตอบช้า เช่น cold start
   const timer = setTimeout(() => {
     if (!res.headersSent) {
-      console.warn(`[Timeout] ${req.method} ${req.path} — 25s`);
+      console.warn(`[Timeout] ${req.method} ${req.path} — 60s`);
       res.status(503).json({ ok:false, error:'Request timeout' });
     }
-  }, 25_000);
+  }, 60_000);
   res.on('finish', () => clearTimeout(timer));
   res.on('close',  () => clearTimeout(timer));
   next();
@@ -52,12 +52,10 @@ app.get('/health', (_, res) => {
 
 // ── Static ──────────────────────────────────────────────────
 app.get('/', (_, res) => res.redirect('/Itsupportlanding'));
-
 const noCacheHtml = (file) => (_, res) => {
   res.set({ 'Cache-Control':'no-store,no-cache,must-revalidate','Pragma':'no-cache','Expires':'0' });
   res.sendFile(path.join(__dirname, file));
 };
-
 app.get('/Itsupportlanding', noCacheHtml('itsupport-landing.html'));
 app.get('/landing',          noCacheHtml('itsupport-landing.html'));
 app.get('/report',           noCacheHtml('report.html'));
@@ -70,12 +68,10 @@ app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password, brand } = req.body || {};
     if (!username || !password) return res.json({ ok:false, error:'กรุณากรอก username และ password' });
-
     // Brand-aware lookup: resolve duplicate usernames across brands
     const user = brand
       ? (getUserByUsernameAndBrand(username, brand) || getUserByUsername(username))
       : getUserByUsername(username);
-
     if (!user) return res.json({ ok:false, error:`ไม่พบ username "${username}"` });
     if (!user.active) return res.json({ ok:false, error:'บัญชีนี้ถูกระงับ' });
     if (user.password !== hashPwd(password)) return res.json({ ok:false, error:'รหัสผ่านไม่ถูกต้อง' });
@@ -86,6 +82,7 @@ app.post('/api/auth/login', (req, res) => {
 
     const token = createSession(user);
     addLog({ user, action:'login', detail:`เข้าสู่ระบบ (${user.role})` });
+
     res.json({
       ok: true, token,
       user: {
@@ -107,7 +104,6 @@ app.post('/api/auth/logout', requireAuth(), (req, res) => {
 });
 
 app.get('/api/auth/me', requireAuth(), (req, res) => {
-  // req.user ถูก sync จาก USERS cache แล้วใน getSession
   res.json({ ok:true, user: req.user });
 });
 
@@ -190,14 +186,11 @@ app.get('/api/branches', async (req, res) => {
     const axios = require('axios');
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
     const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-
     const r = await axios.get(`${REPAIR_URL}/api/branches`, {
       headers: { 'X-API-Key': REPAIR_KEY },
       timeout: 25000
     });
-
     if (!r.data?.ok) throw new Error('branches API error');
-
     // แปลง flat array → nested by brand
     const result = {};
     for (const b of (r.data.branches || [])) {
@@ -215,7 +208,6 @@ app.get('/api/branches', async (req, res) => {
         location_name: b.location_name || '',
       });
     }
-
     _branchCache = result;
     _branchCacheExp = Date.now() + 5 * 60 * 1000; // cache 5 นาที
     res.json({ ok:true, branches:result });
@@ -227,7 +219,187 @@ app.get('/api/branches', async (req, res) => {
   }
 });
 
+// POST /api/branches — create new branch (admin+)
+app.post('/api/branches', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const body = { ...(req.body || {}) };
+    // Inject role + created_by เพื่อให้ FastAPI รู้ว่าใครส่งมา
+    if (req.user) {
+      body.role = body.role || req.user.role || 'superadmin';
+      body.created_by = body.created_by || req.user.username || req.user.name || 'admin';
+    }
+    const r = await axios.post(`${REPAIR_URL}/api/branches`, body, {
+      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+      timeout: 60000
+    });
+    _branchCache = null;
+    _branchCacheExp = 0;
+    addLog({ user: req.user, action: 'create_branch', detail: `สร้างสาขา ${body.code} (${body.brand})` });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch create]', e.message, e.response?.data);
+    if (!res.headersSent) {
+      res.status(e.response?.status || 500).json({
+        ok: false,
+        error: e.response?.data?.detail || e.message
+      });
+    }
+  }
+});
 
+// PATCH /api/branches/:id — update branch (admin+)
+// ⚠️ FIX: requireAuth ต้องมีวงเล็บ — ถ้าไม่มี middleware จะปนกัน → request ค้าง → timeout
+app.patch('/api/branches/:id', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { id } = req.params;
+    const body = { ...(req.body || {}) };
+    // Inject role + updated_by เพื่อให้ FastAPI รู้ว่าใครส่งมา
+    // (FastAPI จะ default = superadmin ถ้าไม่ระบุ)
+    if (req.user) {
+      body.role = body.role || req.user.role || 'superadmin';
+      body.updated_by = body.updated_by || req.user.username || req.user.name || 'admin';
+    }
+    const r = await axios.patch(`${REPAIR_URL}/api/branches/${id}`, body, {
+      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+      timeout: 60000   // 60s — เผื่อ MySQL/cold start
+    });
+    // Clear branch cache (ให้ผู้ใช้รายอื่นเห็นข้อมูลใหม่ทันที)
+    _branchCache = null;
+    _branchCacheExp = 0;
+    addLog({ user: req.user, action: 'update_branch', detail: `อัปเดตสาขา id=${id} fields=${Object.keys(body).join(',')}` });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch patch]', e.message, e.response?.data);
+    if (!res.headersSent) {
+      res.status(e.response?.status || 500).json({
+        ok: false,
+        error: e.response?.data?.detail || e.message
+      });
+    }
+  }
+});
+
+// DELETE /api/branches/:id — delete branch (superadmin only)
+app.delete('/api/branches/:id', requireAuth(['superadmin']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { id } = req.params;
+    const r = await axios.delete(`${REPAIR_URL}/api/branches/${id}`, {
+      headers: { 'X-API-Key': REPAIR_KEY },
+      timeout: 30000
+    });
+    _branchCache = null;
+    _branchCacheExp = 0;
+    addLog({ user: req.user, action: 'delete_branch', detail: `ลบสาขา id=${id}` });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch delete]', e.message, e.response?.data);
+    if (!res.headersSent) {
+      res.status(e.response?.status || 500).json({
+        ok: false,
+        error: e.response?.data?.detail || e.message
+      });
+    }
+  }
+});
+
+// POST /api/branches/:id/approve — approve pending branch
+app.post('/api/branches/:id/approve', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { id } = req.params;
+    const body = { approved_by: req.user?.username || req.user?.name || 'admin', ...(req.body || {}) };
+    const r = await axios.post(`${REPAIR_URL}/api/branches/${id}/approve`, body, {
+      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+      timeout: 30000
+    });
+    _branchCache = null;
+    _branchCacheExp = 0;
+    addLog({ user: req.user, action: 'approve_branch', detail: `อนุมัติสาขา id=${id}` });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch approve]', e.message);
+    if (!res.headersSent) res.json({ ok: false, error: e.message });
+  }
+});
+
+// POST /api/branches/:id/reject — reject pending branch
+app.post('/api/branches/:id/reject', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { id } = req.params;
+    const body = { ...(req.body || {}) };
+    const r = await axios.post(`${REPAIR_URL}/api/branches/${id}/reject`, body, {
+      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+      timeout: 30000
+    });
+    _branchCache = null;
+    _branchCacheExp = 0;
+    addLog({ user: req.user, action: 'reject_branch', detail: `ปฏิเสธสาขา id=${id} reason=${body.reason||'-'}` });
+    res.json(r.data);
+  } catch(e) {
+    console.error('[branch reject]', e.message);
+    if (!res.headersSent) res.json({ ok: false, error: e.message });
+  }
+});
+
+// ── Resolve short Google Maps URL → extract lat/lng ──────────
+app.get('/api/resolve-gmaps', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.json({ ok: false, error: 'No URL provided' });
+
+    const axios = require('axios');
+    // Follow redirects to get the final URL
+    const response = await axios.get(url, {
+      maxRedirects: 10,
+      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; IT-Support-Bot/1.0)' },
+      validateStatus: () => true,
+    });
+
+    const finalUrl = response.request?.res?.responseUrl || response.config?.url || url;
+
+    // Try patterns to extract lat/lng from final URL
+    const patterns = [
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
+      /\/(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+    ];
+
+    for (const re of patterns) {
+      const m = finalUrl.match(re);
+      if (m) {
+        const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          return res.json({ ok: true, lat, lng, finalUrl });
+        }
+      }
+    }
+
+    res.json({ ok: false, error: 'ไม่พบพิกัดในลิงก์', finalUrl });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// UPLOAD — proxy to FastAPI
+// ═══════════════════════════════════════════════════════════
 
 // POST /api/upload — proxy to FastAPI upload (parse multipart to preserve role field)
 app.post('/api/upload', async (req, res) => {
@@ -237,9 +409,11 @@ app.post('/api/upload', async (req, res) => {
     const Busboy = require('busboy');
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
     const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+
     const bb = Busboy({ headers: req.headers });
     const fields = {};
     let fileBuffer = null, fileName = 'upload.jpg', fileMime = 'image/jpeg';
+
     bb.on('field', (name, val) => { fields[name] = val; });
     bb.on('file', (name, stream, info) => {
       fileName = info.filename || 'upload.jpg';
@@ -291,29 +465,6 @@ app.patch('/api/users/:id/preference', requireAuth(), async (req, res) => {
       { ui_preference }, { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' }, timeout: 8000 });
     res.json(r.data);
   } catch(e) { if(!res.headersSent) res.json({ ok: false, error: e.message }); }
-});
-
-// PATCH /api/branches/:id — update location (admin+)
-app.patch('/api/branches/:id', requireAuth, async (req, res) => {
-  try {
-    const axios = require('axios');
-    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
-    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
-    const { id } = req.params;
-    const body = req.body || {};
-    const r = await axios.patch(`${REPAIR_URL}/api/branches/${id}`, body, {
-      headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
-      timeout: 10000
-    });
-    // clear branch cache
-    _branchCache = null;
-    _branchCacheExp = 0;
-    logActivity(req.user?.username || 'unknown', `Updated branch ${id} location`);
-    res.json(r.data);
-  } catch(e) {
-    console.error('[branch patch]', e.message);
-    res.json({ ok: false, error: e.message });
-  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -471,6 +622,31 @@ app.patch('/api/tickets/:rid', requireAuth(['superadmin','admin','manager','it_s
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
+// DELETE /api/tickets/:rid — delete ticket (admin+ only)
+app.delete('/api/tickets/:rid', requireAuth(['superadmin','admin']), async (req, res) => {
+  try {
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    const { rid } = req.params;
+    // Forward to FastAPI (graceful — if FastAPI returns 404, treat as already-deleted)
+    try {
+      await axios.delete(`${REPAIR_URL}/api/tickets/${rid}`, {
+        headers: { 'X-API-Key': REPAIR_KEY }, timeout: 30000
+      });
+    } catch(e) {
+      if (e.response?.status !== 404) throw e;
+    }
+    try { invalidateCache(); } catch(_) {}
+    addLog({ user: req.user, action: 'delete_ticket', ticketId: rid, detail: 'ลบ ticket' });
+    broadcast('ticket_deleted', { recordId: rid, ts: new Date().toISOString() });
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('[ticket delete]', e.message);
+    if (!res.headersSent) res.json({ ok: false, error: e.message });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════
 // LOGS / USERS
 // ═══════════════════════════════════════════════════════════
@@ -489,14 +665,17 @@ app.get('/api/logs', requireAuth(['superadmin','admin','manager','it_services'])
 });
 
 app.get('/api/users', requireAuth(['superadmin','admin','manager','it_services']), (_, res) => res.json({ ok:true, users:getAllUsers() }));
+
 app.post('/api/users', requireAuth(['superadmin','admin','it_services']), (req, res) => {
   try { const u=createUser(req.body); addLog({user:req.user,action:'create_user',detail:`สร้าง ${u.username}`}); res.json({ok:true,user:u}); }
   catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
+
 app.patch('/api/users/:id', requireAuth(['superadmin','admin','it_services']), (req, res) => {
   try { const u=updateUser(req.params.id,req.body); addLog({user:req.user,action:'update_user',detail:`แก้ไข ${u.username}`}); res.json({ok:true,user:u}); }
   catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
 });
+
 app.delete('/api/users/:id', requireAuth(['superadmin']), (req, res) => {
   try { deleteUser(req.params.id); addLog({user:req.user,action:'delete_user',detail:`ลบ ${req.params.id}`}); res.json({ok:true}); }
   catch(e) { if(!res.headersSent) res.json({ok:false,error:e.message}); }
@@ -545,9 +724,6 @@ app.get('/api/gps', requireAuth(['superadmin','admin','manager','it_services']),
   }
 });
 
-// ═══════════════════════════════════════════════════════════
-// DEBUG
-// ═══════════════════════════════════════════════════════════
 // ─── GPS History (บันทึกเส้นทาง ดูย้อนหลัง) ───────────────────
 app.get('/api/gps/history', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
   try {
@@ -584,6 +760,9 @@ app.get('/api/gps/sessions', requireAuth(['superadmin','admin','manager','it_ser
   }
 });
 
+// ═══════════════════════════════════════════════════════════
+// DEBUG
+// ═══════════════════════════════════════════════════════════
 app.get('/debug/gps', async (_, res) => {
   try {
     const axios = require('axios');
@@ -667,13 +846,11 @@ app.post('/api/reporter/change-password', requireAuth(['reporter']), async (req,
     const user = req.user;
     if (!new_password || new_password.length < 6)
       return res.json({ ok:false, error:'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
-
     // If old_password provided → verify it
     if (old_password !== null && old_password !== undefined) {
       if (user.password !== hashPwd(old_password))
         return res.json({ ok:false, error:'รหัสผ่านเดิมไม่ถูกต้อง' });
     }
-
     // Update in DB
     const db = require('./db');
     await db.query(
@@ -685,7 +862,7 @@ app.post('/api/reporter/change-password', requireAuth(['reporter']), async (req,
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-// POST /api/reporter/forgot-password  — ขอ reset (ไม่ต้อง auth)
+// POST /api/reporter/forgot-password — ขอ reset (ไม่ต้อง auth)
 app.post('/api/reporter/forgot-password', async (req, res) => {
   try {
     const { username } = req.body || {};
@@ -694,11 +871,9 @@ app.post('/api/reporter/forgot-password', async (req, res) => {
     const user = getUserByUsername(username);
     if (!user || user.role !== 'reporter')
       return res.json({ ok:false, error:'ไม่พบบัญชีนี้ในระบบ' });
-
     // Mark reset_requested in DB
     const db = require('./db');
     await db.query('UPDATE users SET reset_requested=1 WHERE id=?', [user.id]);
-
     // Notify admin via LINE
     try {
       const adminGroupId = await lineConfig.getAdminGroupId();
@@ -709,13 +884,12 @@ app.post('/api/reporter/forgot-password', async (req, res) => {
         }]);
       }
     } catch(lineErr) { console.warn('[ForgotPwd] LINE notify failed:', lineErr.message); }
-
     addLog({ user, action:'forgot_password', detail:`ขอ reset รหัสผ่าน` });
     res.json({ ok:true });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-// POST /api/admin/reporter/reset-password  — Admin reset กลับ default
+// POST /api/admin/reporter/reset-password — Admin reset กลับ default
 app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin','it_services']), async (req, res) => {
   try {
     const { userId } = req.body || {};
@@ -737,7 +911,7 @@ app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin'
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
-// GET /api/admin/reporters  — list reporters for admin panel
+// GET /api/admin/reporters — list reporters for admin panel
 app.get('/api/admin/reporters', requireAuth(['superadmin','admin','manager','it_services']), (req, res) => {
   try {
     const all = getAllReporters();
@@ -764,50 +938,9 @@ setTimeout(async () => {
   try { await ensureFieldMap(); console.log('[App] fieldMap ready'); } catch(e) { console.warn('[App]',e.message); }
 }, 3000);
 
-// ── Resolve short Google Maps URL → extract lat/lng ──────────
-app.get('/api/resolve-gmaps', requireAuth(['superadmin','admin','manager','it_services']), async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.json({ ok: false, error: 'No URL provided' });
-    
-    const axios = require('axios');
-    // Follow redirects to get the final URL
-    const response = await axios.get(url, {
-      maxRedirects: 10,
-      timeout: 8000,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; IT-Support-Bot/1.0)' },
-      validateStatus: () => true,
-    });
-    
-    const finalUrl = response.request?.res?.responseUrl || response.config?.url || url;
-    
-    // Try patterns to extract lat/lng from final URL
-    const patterns = [
-      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
-      /\/(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
-    ];
-    
-    for (const re of patterns) {
-      const m = finalUrl.match(re);
-      if (m) {
-        const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-          return res.json({ ok: true, lat, lng, finalUrl });
-        }
-      }
-    }
-    
-    res.json({ ok: false, error: 'ไม่พบพิกัดในลิงก์', finalUrl });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
-  }
-});
-
-module.exports = app;
 // ── Health check (wake-up ping) ──
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, ts: Date.now(), uptime: process.uptime() });
 });
+
+module.exports = app;
