@@ -4194,6 +4194,9 @@ function openBranchModal(id){
  <button class="map-tool-btn" onclick="ntCopyCoords()" title="คัดลอกพิกัด">
  <span style="font-size:14px"><svg class=ic-md><use href=#i-clipboard /></svg></span> คัดลอก
  </button>
+ <button class="map-tool-btn" onclick="ntClearLocation()" title="ล้างพิกัด — ลบ lat/lng/ชื่อสถานที่ออกจากระบบ" style="margin-left:auto;color:#dc2626;border-color:#fca5a5">
+ <span style="font-size:14px"><svg class=ic-md><use href=#i-trash /></svg></span> ล้างพิกัด
+ </button>
  </div>`:''}
  <div class="field" style="margin-bottom:12px">
  <label>Location Name</label>
@@ -4261,9 +4264,88 @@ function ntCopyCoords(){
  }
 }
 
+// ล้างพิกัด — เคลียร์ทุก field ที่เกี่ยวกับ location และให้ผู้ใช้กด "บันทึก Location" ตามปกติ
+// (ไม่บันทึกอัตโนมัติ — ป้องกันลบโดยไม่ตั้งใจ)
+function ntClearLocation(){
+ const latInp=document.getElementById('br-lat');
+ const lngInp=document.getElementById('br-lng');
+ const nameInp=document.getElementById('br-locname');
+ const gmapsInp=document.getElementById('br-gmaps-inp');
+ if(!latInp||!lngInp)return;
+ const hasData=latInp.value||lngInp.value||(nameInp&&nameInp.value);
+ if(!hasData)return toast('<svg class=ic-md><use href=#i-info /></svg> ยังไม่มีพิกัดให้ล้าง');
+ // Clear input values
+ latInp.value='';
+ lngInp.value='';
+ if(nameInp)nameInp.value='';
+ if(gmapsInp)gmapsInp.value='';
+ // Clear parse message
+ const parseMsg=document.getElementById('br-parse-msg');
+ if(parseMsg)parseMsg.innerHTML='';
+ // Clear error box
+ const errBox=document.getElementById('br-err-box');
+ if(errBox){errBox.style.display='none';errBox.innerHTML='';}
+ // Mark as "cleared" so saveBranchLocation knows to send NULL
+ latInp.dataset.cleared='1';
+ lngInp.dataset.cleared='1';
+ // Refresh map preview (will show empty state)
+ if(typeof ntUpdateBranchMapPreview==='function')ntUpdateBranchMapPreview();
+ toast('<svg class=ic-md><use href=#i-check /></svg> ล้างพิกัดแล้ว — กด "บันทึก Location" เพื่อยืนยัน');
+}
+
+// Helper: บันทึกล้างพิกัด — ส่ง null ไป backend
+async function _saveCleared(id){
+ const btn=document.getElementById('br-save-btn');
+ const cancelBtn=document.querySelector('.btn-cancel');
+ const orig=btn?.innerHTML||'<svg class=ic-md><use href=#i-save /></svg> บันทึก Location';
+ if(btn){btn.disabled=true;btn.innerHTML='<svg class=ic-md><use href=#i-loader /></svg> กำลังล้างพิกัด...';}
+ if(cancelBtn)cancelBtn.disabled=true;
+ try{
+   const payload={location_lat:null,location_lng:null,location_name:''};
+   // Include basic-info edits if user changed them
+   const ne_th=document.getElementById('br-name-th-edit')?.value?.trim();
+   const ne_en=document.getElementById('br-name-en-edit')?.value?.trim();
+   const ne_ip=document.getElementById('br-ip-edit')?.value?.trim();
+   const ne_ph=document.getElementById('br-phone-edit')?.value?.trim();
+   const cur=branches.find(x=>String(x.id)===String(id));
+   if(cur){
+     if(ne_th!==undefined && ne_th!==(cur.nameTh||cur.name_th||''))payload.name_th=ne_th;
+     if(ne_en!==undefined && ne_en!==(cur.nameEn||cur.name_en||''))payload.name_en=ne_en;
+     if(ne_ip!==undefined && ne_ip!==(cur.ip||''))payload.ip=ne_ip;
+     if(ne_ph!==undefined && ne_ph!==(cur.phone||''))payload.phone=ne_ph;
+   }
+   const d=await api('/api/branches/'+id,{method:'PATCH',body:JSON.stringify(payload)},45000);
+   if(!d.ok)throw new Error(d.error||'ล้างพิกัดไม่สำเร็จ');
+   // Update local cache
+   branches=branches.map(b=>{
+     if(String(b.id)!==String(id))return b;
+     const upd={...b,location_lat:null,location_lng:null,location_name:''};
+     if('name_th' in payload){upd.nameTh=payload.name_th;upd.name_th=payload.name_th;}
+     if('name_en' in payload){upd.nameEn=payload.name_en;upd.name_en=payload.name_en;}
+     if('ip' in payload)upd.ip=payload.ip;
+     if('phone' in payload)upd.phone=payload.phone;
+     return upd;
+   });
+   toast('<svg class=ic-md><use href=#i-check /></svg> ล้างพิกัดสำเร็จ');
+   if(typeof addNotif==='function')addNotif(`ล้างพิกัดสาขา ${id} แล้ว`,'info');
+   setTimeout(()=>{closeMod();renderBranches();},500);
+ }catch(e){
+   if(btn){btn.disabled=false;btn.innerHTML=orig;}
+   if(cancelBtn)cancelBtn.disabled=false;
+   toast('<svg class=ic-md><use href=#i-x /></svg> '+(e.message||'Error'));
+ }
+}
+
 async function saveBranchLocation(id){
- const lat=parseFloat(document.getElementById('br-lat')?.value);
- const lng=parseFloat(document.getElementById('br-lng')?.value);
+ const latInp=document.getElementById('br-lat');
+ const lngInp=document.getElementById('br-lng');
+ // Detect "cleared" mode: user clicked ล้างพิกัด → send explicit null
+ const isCleared=latInp?.dataset?.cleared==='1' && !latInp.value && !lngInp.value;
+ if(isCleared){
+   return _saveCleared(id);
+ }
+ const lat=parseFloat(latInp?.value);
+ const lng=parseFloat(lngInp?.value);
  const name=document.getElementById('br-locname')?.value?.trim()||'';
  if(isNaN(lat)||isNaN(lng))return toast('<svg class=ic-md><use href=#i-alert /></svg> กรุณากรอก lat/lng ให้ถูกต้อง');
  if(lat<-90||lat>90)return toast('<svg class=ic-md><use href=#i-alert /></svg> Latitude ต้องอยู่ระหว่าง -90 ถึง 90');
