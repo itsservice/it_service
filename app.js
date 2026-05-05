@@ -629,21 +629,32 @@ app.delete('/api/tickets/:rid', requireAuth(['superadmin','admin']), async (req,
     const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
     const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
     const { rid } = req.params;
+    // ส่ง deleted_by ไปด้วยเพื่อ audit trail (FastAPI รับผ่าน body)
+    const auditBody = {
+      deleted_by: req.user?.username || req.user?.name || 'admin',
+    };
     // Forward to FastAPI (graceful — if FastAPI returns 404, treat as already-deleted)
     try {
       await axios.delete(`${REPAIR_URL}/api/tickets/${rid}`, {
-        headers: { 'X-API-Key': REPAIR_KEY }, timeout: 30000
+        headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type': 'application/json' },
+        data: auditBody,   // axios.delete: data must be in config object
+        timeout: 30000
       });
     } catch(e) {
       if (e.response?.status !== 404) throw e;
     }
     try { invalidateCache(); } catch(_) {}
-    addLog({ user: req.user, action: 'delete_ticket', ticketId: rid, detail: 'ลบ ticket' });
+    addLog({ user: req.user, action: 'delete_ticket', ticketId: rid, detail: 'ลบ ticket (soft delete)' });
     broadcast('ticket_deleted', { recordId: rid, ts: new Date().toISOString() });
     res.json({ ok: true });
   } catch(e) {
-    console.error('[ticket delete]', e.message);
-    if (!res.headersSent) res.json({ ok: false, error: e.message });
+    console.error('[ticket delete]', e.message, e.response?.data);
+    if (!res.headersSent) {
+      res.status(e.response?.status || 500).json({
+        ok: false,
+        error: e.response?.data?.detail || e.message
+      });
+    }
   }
 });
 
