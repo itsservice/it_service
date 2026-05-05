@@ -1115,7 +1115,14 @@ const NAV_ALL=[
  {id:'server', ic:'server', lb:'Server Logs', min:100, roles:['superadmin']},
  {id:'branches', ic:'store', lb:'Branches', min:60, roles:null}
 ];
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// HTML escape — รวม ' และ " เพื่อป้องกัน attribute injection
+// (สำคัญเมื่อ value ถูกใช้ใน onclick="..." หรือ title="..." ที่มี apostrophe เช่น "Dunkin'")
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// JS-in-HTML escape — สำหรับ string ที่อยู่ใน inline event handler (onclick="fn('...')")
+// เพราะ HTML &#39; จะถูก browser decode กลับเป็น ' แล้ว break JS parser
+// ใช้ JSON.stringify เพื่อให้ได้ proper JS string literal (รวม double-quote เปิด-ปิดด้วย)
+// แต่ก่อน wrap ต้องมั่นใจว่า output ปลอดภัยใน HTML attribute → escape < / > & "
+const escJs=s=>JSON.stringify(String(s||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function api(p,o={},timeout=25000){
  const h={'Content-Type':'application/json',...(o.headers||{})};
@@ -3788,7 +3795,7 @@ function _renderBranchTable(){
  <td onclick="event.stopPropagation()">
  <button class="smb" style="font-size:10px;padding:3px 8px" onclick="openBranchModal('${b.id}')"><svg class=ic-md><use href=#i-edit /></svg> แก้ไข</button>
  ${isSup&&b.status==='pending'?`<button class="smb" style="font-size:10px;padding:3px 8px;color:var(--green);border-color:var(--green)" onclick="doApproveBranch(${b.id})"><svg class=ic-md><use href=#i-check /></svg> อนุมัติ</button>`:''}
- ${isSup?`<button class="smb" style="font-size:10px;padding:3px 8px;color:#dc2626;border-color:#fca5a5" onclick="confirmDelBranch(${b.id},'${esc(b.code||'')}','${esc(b.brand||'')}','${esc(b.nameTh||b.nameEn||b.name_en||'')}')"><svg class=ic-md><use href=#i-trash /></svg> ลบ</button>`:''}
+ ${isSup?`<button class="smb" style="font-size:10px;padding:3px 8px;color:#dc2626;border-color:#fca5a5" onclick="confirmDelBranch(${b.id},${escJs(b.code||'')},${escJs(b.brand||'')},${escJs(b.nameTh||b.nameEn||b.name_en||'')})"><svg class=ic-md><use href=#i-trash /></svg> ลบ</button>`:''}
  </td>
  </tr>`).join('')}
  ${!paged.length?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--fg4)">ไม่พบสาขา</td></tr>':''}
