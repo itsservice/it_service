@@ -1029,7 +1029,7 @@ svg.ic-spin{animation:icspin 1.1s linear infinite;transform-origin:center}
  <a href="/">Home</a>
  <div style="display:flex;gap:3px">
  <button onclick="togTheme()" style="flex:1" id="theme-btn">Dark</button>
- <button onclick="logout()" style="flex:1">Logout</button>
+ <button onclick="logout()" style="flex:1" id="logout-btn">Logout</button>
  </div>
  </div>
 </aside>
@@ -1040,9 +1040,9 @@ svg.ic-spin{animation:icspin 1.1s linear infinite;transform-origin:center}
  <div class="top-clock" id="clock">--:--:--</div>
  <div class="status-dot offline" id="dot"></div>
  <button class="smb" id="btn-rf" onclick="doRefresh()">Refresh</button>
- <button class="smb" onclick="openCmd()" title="K"><svg class=ic-md><use href=#i-cmd /></svg>K</button>
- <button class="smb" id="lang-btn" onclick="togLang()" title="สลับภาษา">TH</button>
- <button class="notif-btn" id="notif-btn" onclick="togNotif()" title="การแจ้งเตือน">
+ <button class="smb" onclick="openCmd()" aria-label="Quick command"><svg class=ic-md><use href=#i-cmd /></svg>K</button>
+ <button class="smb" id="lang-btn" onclick="togLang()" aria-label="Switch language">TH</button>
+ <button class="notif-btn" id="notif-btn" onclick="togNotif()" aria-label="Notifications">
  <svg class=ic-md><use href=#i-bell /></svg><span class="notif-badge" id="notif-badge">0</span>
  </button>
  </div>
@@ -1090,6 +1090,715 @@ svg.ic-spin{animation:icspin 1.1s linear infinite;transform-origin:center}
 <script>
 let AUTH=null,tickets=[],logs=[],users=[],reporters=[],reporterFilter={brand:'',search:''},pg='dash',sse=null;
 let logF={userName:'',action:'',dateFrom:'',dateTo:'',sortCol:'ts',sortDir:'desc',pp:5,page:1};
+
+// ═══════════════════════════════════════════════════════════════════
+// i18n — Internationalization (TH/EN)
+// ─ ครอบคลุม: เมนู, ปุ่ม, header, label, modal, toast, hint, placeholder
+// ─ ไม่ครอบคลุม: ข้อมูลใน DB (ticket details, reporter names, brand names, branch names)
+// ─ Persisted via localStorage('lang')
+// ═══════════════════════════════════════════════════════════════════
+let LANG = localStorage.getItem('lang') || 'th';
+const LANG_DICT = {
+  th: {
+    // Menu
+    'menu.overview':'ภาพรวม','menu.tickets':'ตั๋วงาน','menu.users':'ผู้ใช้','menu.log':'บันทึกกิจกรรม',
+    'menu.gps':'แผนที่ GPS','menu.gpsHistory':'ประวัติ GPS','menu.line':'กลุ่ม LINE',
+    'menu.system':'ตั้งค่าระบบ','menu.server':'บันทึกเซิร์ฟเวอร์','menu.branches':'สาขา',
+    // Sidebar bottom
+    'sidebar.dark':'โหมดมืด','sidebar.light':'โหมดสว่าง','sidebar.logout':'ออกจากระบบ','sidebar.home':'หน้าแรก',
+    'sidebar.preview':'แสดงในมุมมอง',
+    // Roles
+    'role.superadmin':'ผู้ดูแลระบบสูงสุด','role.admin':'ผู้ดูแลระบบ','role.manager':'ผู้จัดการ',
+    'role.engineer':'ช่างเทคนิค','role.lead_engineer':'หัวหน้าช่าง','role.it_services':'IT Services',
+    'role.reporter':'ผู้แจ้ง',
+    // Top bar
+    'top.refresh':'รีเฟรช','top.notif':'การแจ้งเตือน','top.lang':'สลับภาษา','top.menu':'เมนู',
+    // Buttons (common)
+    'btn.save':'บันทึก','btn.cancel':'ยกเลิก','btn.delete':'ลบ','btn.edit':'แก้ไข','btn.add':'เพิ่ม',
+    'btn.close':'ปิด','btn.confirm':'ยืนยัน','btn.ok':'ตกลง','btn.back':'กลับ','btn.next':'ถัดไป',
+    'btn.submit':'ส่ง','btn.search':'ค้นหา','btn.filter':'กรอง','btn.clear':'ล้าง','btn.reset':'รีเซ็ต',
+    'btn.export':'ส่งออก','btn.import':'นำเข้า','btn.download':'ดาวน์โหลด','btn.upload':'อัปโหลด',
+    'btn.copy':'คัดลอก','btn.refresh':'รีเฟรช','btn.viewAll':'ดูทั้งหมด','btn.viewMore':'ดูเพิ่มเติม',
+    'btn.approve':'อนุมัติ','btn.reject':'ปฏิเสธ','btn.assign':'มอบหมาย','btn.accept':'รับงาน',
+    'btn.note':'บันทึกย่อ','btn.closeTicket':'ปิดงาน','btn.restore':'กู้คืน','btn.viewDetail':'ดูรายละเอียด',
+    // Common labels
+    'label.brand':'แบรนด์','label.code':'รหัส','label.branchCode':'รหัสสาขา','label.branch':'สาขา',
+    'label.name':'ชื่อ','label.fullName':'ชื่อ-สกุล','label.nameTh':'ชื่อ (ไทย)','label.nameEn':'ชื่อ (อังกฤษ)',
+    'label.username':'ชื่อผู้ใช้','label.password':'รหัสผ่าน','label.email':'อีเมล','label.phone':'เบอร์โทร',
+    'label.role':'บทบาท','label.status':'สถานะ','label.location':'ตำแหน่ง','label.locationName':'ชื่อสถานที่',
+    'label.ip':'IP','label.lineUserId':'LINE User ID','label.address':'ที่อยู่',
+    'label.date':'วันที่','label.time':'เวลา','label.dateFrom':'จากวันที่','label.dateTo':'ถึงวันที่',
+    'label.action':'การกระทำ','label.detail':'รายละเอียด','label.note':'หมายเหตุ','label.reason':'เหตุผล',
+    'label.allBrands':'ทุกแบรนด์','label.all':'ทั้งหมด','label.none':'ไม่มี','label.optional':'(ไม่บังคับ)',
+    'label.required':'จำเป็น','label.search':'ค้นหา','label.filter':'กรองข้อมูล','label.total':'ทั้งหมด',
+    'label.reporter':'ผู้แจ้ง','label.engineer':'ช่าง','label.assignedTo':'มอบหมายให้','label.workDetail':'รายละเอียดงาน',
+    'label.partsUsed':'อะไหล่ที่ใช้','label.workHours':'ชั่วโมงทำงาน','label.adminNote':'บันทึกผู้ดูแล',
+    'label.type':'ประเภท','label.workType':'ประเภทงาน','label.completedAt':'วันเวลาที่เสร็จ',
+    'label.startedAt':'วันเวลาเริ่ม','label.closedAt':'วันเวลาปิด','label.closedBy':'ปิดโดย',
+    'label.createdAt':'สร้างเมื่อ','label.updatedAt':'แก้ไขล่าสุด','label.createdBy':'สร้างโดย',
+    'label.image':'รูปภาพ','label.images':'รูปภาพ','label.attachment':'ไฟล์แนบ',
+    'label.latitude':'Latitude','label.longitude':'Longitude','label.coordinates':'พิกัด',
+    'label.nickname':'ชื่อเล่น','label.default':'ค่าเริ่มต้น',
+    // Placeholders
+    'ph.search':'ค้นหา...','ph.searchBranch':'ค้นหาชื่อ / รหัสสาขา...','ph.searchUser':'ค้นหาผู้ใช้...',
+    'ph.selectBrand':'-- เลือกแบรนด์ --','ph.selectBranch':'-- เลือกสาขา --','ph.selectEngineer':'-- เลือกช่าง --',
+    'ph.locationName':'ชื่อสถานที่ / ที่อยู่ เช่น สยาม กรุงเทพ',
+    'ph.ip':'192.168.1.1','ph.phone':'02-xxx-xxxx','ph.code':'เช่น 0001, 0123',
+    'ph.nameTh':'เช่น สาขาสยามพารากอน','ph.nameEn':'e.g. Siam Paragon Branch',
+    'ph.gmapsLink':'https://maps.app.goo.gl/... หรือลิงก์แบบเต็ม',
+    // Stat cards
+    'stat.total':'ทั้งหมด','stat.pending':'รอดำเนินการ','stat.inProgress':'กำลังทำ',
+    'stat.review':'ตรวจงาน','stat.done':'เสร็จสิ้น','stat.cancelled':'ยกเลิก',
+    // Workflow status (Thai content stored in DB — we still translate for display)
+    'status.pending':'รอดำเนินการ','status.inProgress':'อยู่ระหว่างดำเนินการ',
+    'status.review':'ตรวจงาน','status.done':'เสร็จสิ้น','status.cancelled':'ยกเลิก',
+    'status.active':'ใช้งาน','status.inactive':'ปิดใช้งาน','status.deleted':'ถูกลบ',
+    // Header titles
+    'header.overview':'ภาพรวมระบบ','header.tickets':'รายการตั๋วทั้งหมด','header.users':'ผู้ใช้และผู้แจ้ง',
+    'header.log':'บันทึกกิจกรรม','header.gps':'แผนที่ GPS','header.gpsHistory':'ประวัติ GPS',
+    'header.line':'กลุ่ม LINE','header.system':'ตั้งค่าระบบ','header.server':'บันทึกเซิร์ฟเวอร์',
+    'header.branches':'สาขา',
+    'header.dashSubtitle':'สวัสดี','header.ticketChart':'ตั๋วต่อวัน','header.statusChart':'สถานะ',
+    'header.brandChart':'ตั๋วตามแบรนด์','header.topEngineer':'ช่างยอดเยี่ยม (ปิดงาน)',
+    'header.recentActivity':'กิจกรรมล่าสุด',
+    // Modal — Branch CRUD
+    'modal.addBranch':'เพิ่มสาขาใหม่','modal.editBranch':'แก้ไขสาขา',
+    'modal.editBasicInfo':'แก้ไขข้อมูลพื้นฐาน (ชื่อ / IP / เบอร์)',
+    'modal.delBranchTitle':'ยืนยันการลบสาขา','modal.delTicketTitle':'ยืนยันการลบ Ticket',
+    'modal.delReporterTitle':'ยืนยันการลบ Reporter','modal.delUserTitle':'ยืนยันการลบผู้ใช้',
+    'modal.assignTitle':'มอบหมายช่าง','modal.closeTicket':'ปิดงาน','modal.note':'บันทึกย่อ',
+    'modal.gmapsBox':'วาง Google Maps Link','modal.convert':'แปลง',
+    'modal.confirmInstruction':'พิมพ์ DELETE เพื่อยืนยัน',
+    'modal.dontShowAgain':'อย่าแสดงข้อความนี้อีก',
+    // Modal warnings
+    'warn.deleteBranch':'การลบสาขานี้จะ:','warn.deleteTicket':'ลบ Ticket นี้แล้วจะ:',
+    'warn.deleteReporter':'ลบบัญชี Reporter นี้แล้วจะ:',
+    'warn.softDelete':'ซ่อนสาขาออกจากรายการทันที (สถานะ → inactive)',
+    'warn.refIntact':'Ticket ที่อ้างถึงสาขานี้ยังคงอยู่ ไม่หายอ้างอิง',
+    'warn.recoverable':'กู้คืนได้ โดยติดต่อ superadmin',
+    'warn.permanent':'ลบจากระบบถาวร (ไม่สามารถกู้คืนได้)',
+    'warn.activityRef':'รายงาน Activity Log ที่อ้างถึงอาจขาดข้อมูล',
+    'warn.imagesGone':'รูปภาพแนบจะถูกลบด้วย',
+    'warn.userCannotLogin':'ผู้ใช้จะ login ไม่ได้อีก',
+    'warn.historyRemains':'ประวัติเก่ายังอยู่ แต่จะไม่มีการแจ้งเตือน',
+    // Hints
+    'hint.codeUnique':'ห้ามซ้ำกับ Code ที่มีอยู่ในแบรนด์เดียวกัน',
+    'hint.fillNew':'กรอกข้อมูลให้ครบ → ระบบจะสร้างสาขาใหม่ใน DB ทันที',
+    'hint.gmapsExplain':'วาง Google Maps Link หรือกรอก lat/lng เพื่อบันทึกตำแหน่ง',
+    'hint.noLocation':'ยังไม่มีพิกัด','hint.fillLatLng':'กรอก lat/lng หรือวาง Google Maps link เพื่อดูแผนที่',
+    'hint.dragPin':'ลากหมุดเพื่อย้ายตำแหน่ง','hint.useMyLocation':'ใช้ตำแหน่งปัจจุบันของฉัน',
+    'hint.openInMaps':'เปิดใน Google Maps','hint.copyCoords':'คัดลอกพิกัด','hint.clearLocation':'ล้างพิกัด',
+    'hint.noBranchEngineer':'ไม่มีช่างที่ดูแลแบรนด์นี้โดยตรง',
+    'hint.engineerWillBeNotified':'ช่างที่เลือกจะได้รับแจ้งเตือนผ่าน LINE',
+    // Toasts (common)
+    'toast.refreshed':'รีเฟรชแล้ว','toast.saved':'บันทึกสำเร็จ','toast.deleted':'ลบสำเร็จ',
+    'toast.added':'เพิ่มสำเร็จ','toast.updated':'อัปเดตสำเร็จ','toast.copied':'คัดลอกแล้ว',
+    'toast.error':'เกิดข้อผิดพลาด','toast.networkError':'เครือข่ายขัดข้อง','toast.permError':'สิทธิ์ไม่เพียงพอ',
+    'toast.loginRequired':'กรุณาเข้าสู่ระบบ','toast.invalidInput':'ข้อมูลไม่ถูกต้อง',
+    'toast.locClearedConfirm':'ล้างพิกัดแล้ว — กด "บันทึก Location" เพื่อยืนยัน',
+    'toast.locSaveSuccess':'บันทึกพิกัดสำเร็จ','toast.locClearSuccess':'ล้างพิกัดสำเร็จ',
+    'toast.assignSuccess':'มอบหมายช่างสำเร็จ','toast.acceptSuccess':'รับงานสำเร็จ',
+    'toast.closeSuccess':'ปิดงานสำเร็จ','toast.submitSuccess':'ส่งงานสำเร็จ',
+    'toast.statusChanged':'เปลี่ยนสถานะแล้ว','toast.notFound':'ไม่พบข้อมูล',
+    'toast.alreadyExists':'มีอยู่แล้ว','toast.invalidLatLng':'กรุณากรอก lat/lng ให้ถูกต้อง',
+    'toast.fillRequired':'กรุณากรอกข้อมูลให้ครบ',
+    // Filter / sort
+    'filter.allStatus':'สถานะทั้งหมด','filter.allBrands':'ทุกแบรนด์','filter.allEngineers':'ช่างทั้งหมด',
+    'filter.7days':'7 วัน','filter.30days':'30 วัน','filter.90days':'90 วัน','filter.allTime':'ทั้งหมด',
+    'filter.today':'วันนี้','filter.yesterday':'เมื่อวาน','filter.thisWeek':'สัปดาห์นี้','filter.thisMonth':'เดือนนี้',
+    // Table
+    'table.code':'CODE','table.brand':'BRAND','table.branchName':'ชื่อสาขา','table.location':'LOCATION',
+    'table.status':'STATUS','table.action':'ACTION','table.date':'DATE','table.user':'USER',
+    'table.empty':'ไม่พบข้อมูล','table.loading':'กำลังโหลด...','table.show':'แสดง',
+    'table.records':'รายการ','table.of':'จาก','table.page':'หน้า','table.branches':'สาขา',
+    'table.tickets':'ตั๋ว','table.users':'ผู้ใช้',
+    // Loading / empty states
+    'state.loading':'กำลังโหลด...','state.empty':'ไม่มีข้อมูล','state.noResults':'ไม่พบผลลัพธ์',
+    'state.connecting':'กำลังเชื่อมต่อ...','state.connected':'เชื่อมต่อแล้ว','state.offline':'ออฟไลน์',
+    'state.online':'ออนไลน์','state.saving':'กำลังบันทึก...','state.deleting':'กำลังลบ...',
+    'state.adding':'กำลังเพิ่ม...','state.uploading':'กำลังอัปโหลด...','state.processing':'กำลังประมวลผล...',
+    // Login
+    'login.title':'Admin Portal','login.subtitle':'IT Support Management System',
+    'login.username':'Username','login.password':'Password','login.submit':'เข้าสู่ระบบ',
+    'login.showPwd':'แสดงรหัสผ่าน','login.hidePwd':'ซ่อนรหัสผ่าน',
+    // Ticket detail / drawer
+    'ticket.detail':'รายละเอียดตั๋ว','ticket.problem':'ปัญหา','ticket.actions':'การกระทำ',
+    'ticket.report':'รายงาน','ticket.workDetail':'รายละเอียดงาน','ticket.engineer':'ช่างผู้รับผิดชอบ',
+    'ticket.history':'ประวัติ','ticket.imagesReporter':'รูปจากผู้แจ้ง','ticket.imagesEngineer':'รูปจากช่าง',
+    // Notif drop
+    'notif.title':'การแจ้งเตือน','notif.empty':'ไม่มีการแจ้งเตือน','notif.markAllRead':'อ่านทั้งหมด',
+    'notif.viewAll':'ดูทั้งหมด',
+    // Dashboard import/export
+    'imp.title':'IMPORT / EXPORT','imp.template':'ดาวน์โหลด Template','imp.excel':'นำเข้า Excel',
+    'imp.hint':'แก้ข้อมูลใน Excel แล้วนำเข้ากลับ ระบบอัปเดตอัตโนมัติ',
+    'exp.title':'EXPORT','exp.btn':'ส่งออก',
+  },
+  en: {
+    // Menu
+    'menu.overview':'Overview','menu.tickets':'Tickets','menu.users':'Users','menu.log':'Activity Log',
+    'menu.gps':'GPS Map','menu.gpsHistory':'GPS History','menu.line':'LINE Groups',
+    'menu.system':'System','menu.server':'Server Logs','menu.branches':'Branches',
+    'sidebar.dark':'Dark','sidebar.light':'Light','sidebar.logout':'Logout','sidebar.home':'Home',
+    'sidebar.preview':'Preview Role',
+    // Roles
+    'role.superadmin':'Super Admin','role.admin':'Admin','role.manager':'Manager',
+    'role.engineer':'Engineer','role.lead_engineer':'Lead Engineer','role.it_services':'IT Services',
+    'role.reporter':'Reporter',
+    // Top bar
+    'top.refresh':'Refresh','top.notif':'Notifications','top.lang':'Switch language','top.menu':'Menu',
+    // Buttons
+    'btn.save':'Save','btn.cancel':'Cancel','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add',
+    'btn.close':'Close','btn.confirm':'Confirm','btn.ok':'OK','btn.back':'Back','btn.next':'Next',
+    'btn.submit':'Submit','btn.search':'Search','btn.filter':'Filter','btn.clear':'Clear','btn.reset':'Reset',
+    'btn.export':'Export','btn.import':'Import','btn.download':'Download','btn.upload':'Upload',
+    'btn.copy':'Copy','btn.refresh':'Refresh','btn.viewAll':'View All','btn.viewMore':'View More',
+    'btn.approve':'Approve','btn.reject':'Reject','btn.assign':'Assign','btn.accept':'Accept',
+    'btn.note':'Note','btn.closeTicket':'Close Ticket','btn.restore':'Restore','btn.viewDetail':'View Detail',
+    // Common labels
+    'label.brand':'Brand','label.code':'Code','label.branchCode':'Branch Code','label.branch':'Branch',
+    'label.name':'Name','label.fullName':'Full Name','label.nameTh':'Name (Thai)','label.nameEn':'Name (English)',
+    'label.username':'Username','label.password':'Password','label.email':'Email','label.phone':'Phone',
+    'label.role':'Role','label.status':'Status','label.location':'Location','label.locationName':'Location Name',
+    'label.ip':'IP','label.lineUserId':'LINE User ID','label.address':'Address',
+    'label.date':'Date','label.time':'Time','label.dateFrom':'From','label.dateTo':'To',
+    'label.action':'Action','label.detail':'Details','label.note':'Note','label.reason':'Reason',
+    'label.allBrands':'All Brands','label.all':'All','label.none':'None','label.optional':'(Optional)',
+    'label.required':'Required','label.search':'Search','label.filter':'Filter','label.total':'Total',
+    'label.reporter':'Reporter','label.engineer':'Engineer','label.assignedTo':'Assigned To','label.workDetail':'Work Details',
+    'label.partsUsed':'Parts Used','label.workHours':'Work Hours','label.adminNote':'Admin Note',
+    'label.type':'Type','label.workType':'Work Type','label.completedAt':'Completed At',
+    'label.startedAt':'Started At','label.closedAt':'Closed At','label.closedBy':'Closed By',
+    'label.createdAt':'Created','label.updatedAt':'Updated','label.createdBy':'Created By',
+    'label.image':'Image','label.images':'Images','label.attachment':'Attachment',
+    'label.latitude':'Latitude','label.longitude':'Longitude','label.coordinates':'Coordinates',
+    'label.nickname':'Nickname','label.default':'Default',
+    'ph.search':'Search...','ph.searchBranch':'Search name / branch code...','ph.searchUser':'Search user...',
+    'ph.selectBrand':'-- Select Brand --','ph.selectBranch':'-- Select Branch --','ph.selectEngineer':'-- Select Engineer --',
+    'ph.locationName':'Place name / address e.g. Siam, Bangkok',
+    'ph.ip':'192.168.1.1','ph.phone':'02-xxx-xxxx','ph.code':'e.g. 0001, 0123',
+    'ph.nameTh':'e.g. Siam Paragon Branch','ph.nameEn':'e.g. Siam Paragon Branch',
+    'ph.gmapsLink':'https://maps.app.goo.gl/... or full link',
+    'stat.total':'Total','stat.pending':'Pending','stat.inProgress':'In Progress',
+    'stat.review':'Review','stat.done':'Done','stat.cancelled':'Cancelled',
+    'status.pending':'Pending','status.inProgress':'In Progress',
+    'status.review':'Review','status.done':'Done','status.cancelled':'Cancelled',
+    'status.active':'Active','status.inactive':'Inactive','status.deleted':'Deleted',
+    'header.overview':'System Overview','header.tickets':'All Tickets','header.users':'Users & Reporters',
+    'header.log':'Activity Log','header.gps':'GPS Map','header.gpsHistory':'GPS History',
+    'header.line':'LINE Groups','header.system':'System Settings','header.server':'Server Logs',
+    'header.branches':'Branches',
+    'header.dashSubtitle':'Hello','header.ticketChart':'Tickets per Day','header.statusChart':'Status',
+    'header.brandChart':'Tickets by Brand','header.topEngineer':'Top Engineers (Closed)',
+    'header.recentActivity':'Recent Activity',
+    'modal.addBranch':'Add New Branch','modal.editBranch':'Edit Branch',
+    'modal.editBasicInfo':'Edit Basic Info (Name / IP / Phone)',
+    'modal.delBranchTitle':'Confirm Delete Branch','modal.delTicketTitle':'Confirm Delete Ticket',
+    'modal.delReporterTitle':'Confirm Delete Reporter','modal.delUserTitle':'Confirm Delete User',
+    'modal.assignTitle':'Assign Engineer','modal.closeTicket':'Close Ticket','modal.note':'Note',
+    'modal.gmapsBox':'Paste Google Maps Link','modal.convert':'Convert',
+    'modal.confirmInstruction':'Type DELETE to confirm',
+    'modal.dontShowAgain':"Don't show this again",
+    'warn.deleteBranch':'Deleting this branch will:','warn.deleteTicket':'Deleting this Ticket will:',
+    'warn.deleteReporter':'Deleting this Reporter will:',
+    'warn.softDelete':'Hide branch from list immediately (status → inactive)',
+    'warn.refIntact':'Tickets referencing this branch remain — no broken references',
+    'warn.recoverable':'Recoverable by contacting superadmin',
+    'warn.permanent':'Permanent removal from system (cannot be recovered)',
+    'warn.activityRef':'Activity Log entries may have missing references',
+    'warn.imagesGone':'Attached images will be deleted too',
+    'warn.userCannotLogin':'User will no longer be able to login',
+    'warn.historyRemains':'Existing history is preserved but no notifications will be sent',
+    'hint.codeUnique':'Must be unique within the same brand',
+    'hint.fillNew':'Fill in the form → system creates branch in DB immediately',
+    'hint.gmapsExplain':'Paste Google Maps Link or enter lat/lng to save location',
+    'hint.noLocation':'No location set','hint.fillLatLng':'Enter lat/lng or paste Google Maps link to view map',
+    'hint.dragPin':'Drag pin to move location','hint.useMyLocation':'Use my current location',
+    'hint.openInMaps':'Open in Google Maps','hint.copyCoords':'Copy coordinates','hint.clearLocation':'Clear location',
+    'hint.noBranchEngineer':'No engineers directly assigned to this brand',
+    'hint.engineerWillBeNotified':'Selected engineer will be notified via LINE',
+    'toast.refreshed':'Refreshed','toast.saved':'Saved successfully','toast.deleted':'Deleted successfully',
+    'toast.added':'Added successfully','toast.updated':'Updated successfully','toast.copied':'Copied',
+    'toast.error':'An error occurred','toast.networkError':'Network error','toast.permError':'Permission denied',
+    'toast.loginRequired':'Please login first','toast.invalidInput':'Invalid input',
+    'toast.locClearedConfirm':'Location cleared — click "Save Location" to confirm',
+    'toast.locSaveSuccess':'Location saved successfully','toast.locClearSuccess':'Location cleared successfully',
+    'toast.assignSuccess':'Engineer assigned successfully','toast.acceptSuccess':'Job accepted',
+    'toast.closeSuccess':'Ticket closed successfully','toast.submitSuccess':'Submitted successfully',
+    'toast.statusChanged':'Status updated','toast.notFound':'Not found',
+    'toast.alreadyExists':'Already exists','toast.invalidLatLng':'Please enter valid lat/lng',
+    'toast.fillRequired':'Please fill in all required fields',
+    'filter.allStatus':'All Status','filter.allBrands':'All Brands','filter.allEngineers':'All Engineers',
+    'filter.7days':'7 Days','filter.30days':'30 Days','filter.90days':'90 Days','filter.allTime':'All Time',
+    'filter.today':'Today','filter.yesterday':'Yesterday','filter.thisWeek':'This Week','filter.thisMonth':'This Month',
+    'table.code':'CODE','table.brand':'BRAND','table.branchName':'BRANCH NAME','table.location':'LOCATION',
+    'table.status':'STATUS','table.action':'ACTION','table.date':'DATE','table.user':'USER',
+    'table.empty':'No data found','table.loading':'Loading...','table.show':'Show',
+    'table.records':'records','table.of':'of','table.page':'Page','table.branches':'branches',
+    'table.tickets':'tickets','table.users':'users',
+    'state.loading':'Loading...','state.empty':'No data','state.noResults':'No results',
+    'state.connecting':'Connecting...','state.connected':'Connected','state.offline':'Offline',
+    'state.online':'Online','state.saving':'Saving...','state.deleting':'Deleting...',
+    'state.adding':'Adding...','state.uploading':'Uploading...','state.processing':'Processing...',
+    'login.title':'Admin Portal','login.subtitle':'IT Support Management System',
+    'login.username':'Username','login.password':'Password','login.submit':'Login',
+    'login.showPwd':'Show password','login.hidePwd':'Hide password',
+    'ticket.detail':'Ticket Details','ticket.problem':'Problem','ticket.actions':'Actions',
+    'ticket.report':'Report','ticket.workDetail':'Work Details','ticket.engineer':'Assigned Engineer',
+    'ticket.history':'History','ticket.imagesReporter':'Reporter Images','ticket.imagesEngineer':'Engineer Images',
+    'notif.title':'Notifications','notif.empty':'No notifications','notif.markAllRead':'Mark All Read',
+    'notif.viewAll':'View All',
+    'imp.title':'IMPORT / EXPORT','imp.template':'Download Template','imp.excel':'Import Excel',
+    'imp.hint':'Edit data in Excel and import back — system updates automatically',
+    'exp.title':'EXPORT','exp.btn':'Export',
+  }
+};
+// Translator — falls back to key (or fallback param) if missing
+function t(key, fallback){ return (LANG_DICT[LANG] && LANG_DICT[LANG][key]) || (LANG_DICT.th && LANG_DICT.th[key]) || fallback || key; }
+
+// Switch language — persist + re-render
+function setLang(newLang){
+  if (newLang !== 'th' && newLang !== 'en') return;
+  LANG = newLang;
+  try { localStorage.setItem('lang', newLang); } catch(_){}
+  document.documentElement.lang = newLang;
+  // Update lang button label
+  const lb = document.getElementById('lang-btn');
+  if (lb) lb.textContent = newLang === 'th' ? 'TH' : 'EN';
+  // Translate static buttons
+  const tBtn = document.getElementById('theme-btn');
+  if (tBtn) {
+    const isDark = (document.documentElement.getAttribute('data-t') === 'dark');
+    tBtn.textContent = isDark ? t('sidebar.light','Light') : t('sidebar.dark','Dark');
+  }
+  const lBtn = document.getElementById('logout-btn');
+  if (lBtn) lBtn.textContent = t('sidebar.logout','Logout');
+  const rBtn = document.getElementById('btn-rf');
+  if (rBtn) rBtn.textContent = t('btn.refresh','Refresh');
+  // Top page title
+  const tt = document.getElementById('top-t');
+  if (tt && pg) tt.textContent = t('menu.'+pg, PG[pg]||pg);
+  // Login screen
+  const lt = document.querySelector('.lcard-t');
+  if (lt) lt.textContent = t('login.title','Admin Portal');
+  const ls = document.querySelector('.lcard-s');
+  if (ls) ls.textContent = t('login.subtitle','IT Support Management System');
+  const blogin = document.getElementById('btn-login');
+  if (blogin) blogin.textContent = t('login.submit','Login');
+  // Re-render the entire UI: nav, current page, sidebar
+  try {
+    if (AUTH && AUTH.user) {
+      const rEl = document.getElementById('s-role');
+      if (rEl) rEl.textContent = t('role.'+AUTH.user.role, AUTH.user.role);
+    }
+    if (typeof buildNav === 'function') buildNav();
+    if (typeof render === 'function') render();
+  } catch(e){ console.warn('[setLang] re-render error', e); }
+}
+function togLang(){ setLang(LANG === 'th' ? 'en' : 'th'); }
+
+// ────────── Runtime UI Translator ──────────
+// Strategy: source markup stays in Thai (existing strings preserved).
+// When LANG=en, walk the DOM and replace known Thai phrases with English.
+// We skip:
+//   - DB-content elements (marked with [data-i18n-skip] or inside .ticket-data, .branch-data)
+//   - Code/mono fonts (codes, IPs, IDs are language-agnostic)
+//   - Input values & textarea contents (user-typed data)
+//   - SVG / script / style nodes
+const TR_TH_EN = {
+  // Common verbs
+  'บันทึก':'Save','ยกเลิก':'Cancel','ลบ':'Delete','แก้ไข':'Edit','เพิ่ม':'Add',
+  'ปิด':'Close','ยืนยัน':'Confirm','ตกลง':'OK','ส่ง':'Submit','ค้นหา':'Search',
+  'กรอง':'Filter','ล้าง':'Clear','รีเซ็ต':'Reset','ส่งออก':'Export','นำเข้า':'Import',
+  'ดาวน์โหลด':'Download','อัปโหลด':'Upload','คัดลอก':'Copy','รีเฟรช':'Refresh',
+  'ดูทั้งหมด':'View All','ดูเพิ่มเติม':'View More','ดูรายละเอียด':'View Details',
+  'อนุมัติ':'Approve','ปฏิเสธ':'Reject','มอบหมาย':'Assign','รับงาน':'Accept Job',
+  'ปิดงาน':'Close Job','กู้คืน':'Restore','เลือก':'Select','สร้าง':'Create',
+  'ตรวจ':'Check','ตรวจสอบ':'Verify',
+  // Common nouns
+  'ทั้งหมด':'All','รายการ':'records','สถานะ':'Status','แบรนด์':'Brand',
+  'ทุกแบรนด์':'All Brands','สาขา':'Branch','รหัส':'Code','รหัสสาขา':'Branch Code',
+  'ชื่อ':'Name','ชื่อสาขา':'Branch Name','ชื่อ-สกุล':'Full Name',
+  'ชื่อผู้ใช้':'Username','รหัสผ่าน':'Password','อีเมล':'Email','เบอร์โทร':'Phone',
+  'เบอร์':'Phone','บทบาท':'Role','ตำแหน่ง':'Location','ชื่อสถานที่':'Location Name',
+  'ที่อยู่':'Address','วันที่':'Date','เวลา':'Time','การกระทำ':'Action',
+  'รายละเอียด':'Details','หมายเหตุ':'Note','เหตุผล':'Reason','ผู้แจ้ง':'Reporter',
+  'ช่าง':'Engineer','ประเภท':'Type','ประเภทงาน':'Work Type','รายละเอียดงาน':'Work Details',
+  'อะไหล่ที่ใช้':'Parts Used','ชั่วโมงทำงาน':'Work Hours','รูปภาพ':'Images','พิกัด':'Coordinates',
+  'จาก':'From','ถึง':'to','วัน':'days',
+  // Status / workflow
+  'รอดำเนินการ':'Pending','อยู่ระหว่างดำเนินการ':'In Progress','ตรวจงาน':'Review',
+  'เสร็จสิ้น':'Done','เสร็จ':'Done',
+  'ใช้งาน':'Active','ปิดใช้งาน':'Inactive','ถูกลบ':'Deleted',
+  // Dashboard / sections
+  'ภาพรวม':'Overview','ภาพรวมระบบ':'System Overview','ภาพรวมระบบ Dashboard':'Overview Dashboard',
+  'ตั๋วงาน':'Tickets','ตั๋วทั้งหมด':'All Tickets','ตั๋ว':'tickets',
+  'ผู้ใช้':'Users','บันทึกกิจกรรม':'Activity Log','แผนที่ GPS':'GPS Map',
+  'ประวัติ GPS':'GPS History','กลุ่ม LINE':'LINE Groups','ตั้งค่าระบบ':'System Settings',
+  'บันทึกเซิร์ฟเวอร์':'Server Logs','TICKET รายวัน':'Tickets per Day',
+  'TICKET ตามแบรนด์':'Tickets by Brand','TOP ENGINEER (ปิดงาน)':'TOP ENGINEER (Closed)',
+  'กิจกรรมล่าสุด':'Recent Activity',
+  'ผู้ใช้และผู้แจ้ง':'Users & Reporters',
+  // Roles
+  'ผู้ดูแลระบบสูงสุด':'Super Admin','ผู้ดูแลระบบ':'Admin','ผู้จัดการ':'Manager',
+  'ช่างเทคนิค':'Engineer','หัวหน้าช่าง':'Lead Engineer','Super Admin':'Super Admin',
+  // Actions / messages
+  'รีเฟรชแล้ว':'Refreshed','บันทึกสำเร็จ':'Saved successfully',
+  'ลบสำเร็จ':'Deleted successfully','เพิ่มสำเร็จ':'Added successfully',
+  'อัปเดตสำเร็จ':'Updated successfully','คัดลอกแล้ว':'Copied',
+  'เกิดข้อผิดพลาด':'An error occurred','สำเร็จ':'Success',
+  'กำลังโหลด...':'Loading...','กำลังบันทึก...':'Saving...',
+  'กำลังลบ...':'Deleting...','กำลังเพิ่ม...':'Adding...',
+  'ไม่มีข้อมูล':'No data','ไม่พบข้อมูล':'No data found','ไม่พบ':'Not found',
+  'ไม่มี':'None','ไม่มีการแจ้งเตือน':'No notifications',
+  'การแจ้งเตือน':'Notifications','อ่านทั้งหมด':'Mark All Read',
+  // Login / sidebar
+  'เข้าสู่ระบบ':'Login','ออกจากระบบ':'Logout','โหมดมืด':'Dark','โหมดสว่าง':'Light',
+  'หน้าแรก':'Home','สลับภาษา':'Switch Language',
+  // Sidebar / preview
+  'ดูเท่านั้น':'View Only','ทำได้เต็มที่':'Full Access','ทำไม่ได้':'No Access',
+  'แสดงในมุมมอง':'Preview as',
+  // Filters
+  'ทุกสถานะ':'All Status','ทุกช่าง':'All Engineers',
+  '7 วัน':'7 Days','30 วัน':'30 Days','90 วัน':'90 Days',
+  'วันนี้':'Today','เมื่อวาน':'Yesterday','สัปดาห์นี้':'This Week','เดือนนี้':'This Month',
+  'แสดง':'Show','หน้า':'Page',
+  // Messages / hints
+  'พิมพ์':'Type','เพื่อยืนยัน':'to confirm','กรุณากรอก':'Please enter',
+  'กรุณากรอกข้อมูลให้ครบ':'Please fill in all required fields',
+  'กรุณาเข้าสู่ระบบ':'Please login first','สิทธิ์ไม่เพียงพอ':'Permission denied',
+  // Branches
+  'เพิ่มสาขา':'Add Branch','เพิ่มสาขาใหม่':'Add New Branch',
+  'แก้ไขสาขา':'Edit Branch','ยืนยันการลบสาขา':'Confirm Delete Branch',
+  'ค้นหาชื่อ / รหัสสาขา...':'Search name / branch code...',
+  'รหัสพนักงาน':'Employee ID','รหัสพนักงาน:':'Employee ID:',
+  'ห้ามแก้ เว้นว่างถ้าเพิ่มสาขาใหม่':'Do not edit. Leave empty to add new branch',
+  'ห้ามซ้ำกับ Code ที่มีอยู่ในแบรนด์เดียวกัน':'Must be unique within the same brand',
+  'ที่มีอยู่ในแบรนด์เดียวกัน':'within the same brand',
+  // Map / location
+  'ใช้ตำแหน่งปัจจุบัน':'Use My Location','ใช้ตำแหน่งปัจจุบันของฉัน':'Use my current location',
+  'เปิดใน Google Maps':'Open in Google Maps','เปิดใน':'Open in',
+  'ล้างพิกัด':'Clear Location','ยังไม่มีพิกัด':'No coordinates set',
+  'ลากหมุดเพื่อย้ายตำแหน่ง':'Drag pin to move location',
+  'วาง Google Maps Link':'Paste Google Maps Link','แปลง':'Convert',
+  'ชื่อสถานที่ / ที่อยู่ เช่น สยาม กรุงเทพ':'Place name / address e.g. Siam, Bangkok',
+  'แก้ไขข้อมูลพื้นฐาน (ชื่อ / IP / เบอร์)':'Edit Basic Info (Name / IP / Phone)',
+  'แก้ไขข้อมูลพื้นฐาน':'Edit Basic Info',
+  // Tickets
+  'ยืนยันการลบ Ticket':'Confirm Delete Ticket','คำเตือน:':'Warning:',
+  'ลบ Ticket นี้แล้วจะ:':'Deleting this Ticket will:',
+  'ลบจากระบบถาวร (ไม่สามารถกู้คืนได้)':'Permanent removal (cannot be recovered)',
+  'รายงาน Activity Log ที่อ้างถึงอาจขาดข้อมูล':'Activity Log entries may have missing references',
+  'รูปภาพแนบจะถูกลบด้วย':'Attached images will be deleted',
+  'ซ่อนสาขาออกจากรายการทันที (สถานะ → inactive)':'Hide branch from list (status → inactive)',
+  'ซ่อนสาขาออกจากรายการทันที':'Hide branch from list immediately',
+  'Ticket ที่อ้างถึงสาขานี้ยังคงอยู่ ไม่หายอ้างอิง':'Tickets referencing this branch are preserved',
+  'ที่อ้างถึงสาขานี้ยังคงอยู่ ไม่หายอ้างอิง':'remain — no broken references',
+  'กู้คืนได้':'Recoverable','โดยติดต่อ':'by contacting',
+  // Reporter
+  'ยืนยันการลบ Reporter':'Confirm Delete Reporter','ลบ Reporter':'Delete Reporter',
+  'ลบบัญชี Reporter นี้แล้วจะ:':'Deleting this Reporter account will:',
+  'ผู้ใช้จะ login ไม่ได้อีก':'User will no longer be able to login',
+  'ประวัติ Ticket เก่ายังอยู่ แต่จะไม่มีการแจ้งเตือน':'Existing tickets remain but no notifications will be sent',
+  // Misc widely-used
+  'กรุณาระบุ':'Please specify','กรุณาเลือก':'Please select',
+  'ขอ Reset รหัสผ่าน':'Password Reset Requested','รหัสผ่าน (default)':'Password (default)',
+  'Reset รหัสผ่าน':'Reset Password',
+  'ของฉัน':'of mine','ปัจจุบัน':'current','ใหม่':'new','เก่า':'old',
+  'IMPORT / EXPORT':'IMPORT / EXPORT','EXPORT':'EXPORT',
+  'ดาวน์โหลด Template':'Download Template','Import Excel':'Import Excel',
+  'แก้ข้อมูลใน Excel แล้ว Import กลับ ระบบอัปเดตอัตโนมัติ':'Edit data in Excel and import back — system updates automatically',
+  'แก้ไขข้อมูลใน Excel แล้ว Import กลับ ระบบอัปเดตอัตโนมัติ':'Edit data in Excel and import back — system updates automatically',
+  // Dashboard stats
+  'TICKET รายวัน':'Daily Tickets','TICKET รายเดือน':'Monthly Tickets','TICKET รายปี':'Yearly Tickets',
+  'งานทั้งหมด':'Total Tickets','งานเสร็จ':'Completed','งานรอ':'Pending','งานกำลังทำ':'In Progress',
+  'งานยกเลิก':'Cancelled','งานตรวจ':'Under Review','สวัสดี':'Hello',
+  'วันที่ทำการ':'Working Date','ระยะเวลา':'Duration','รายการล่าสุด':'Latest Records',
+  // Action verbs
+  'ส่ง':'Send','ส่งงาน':'Submit Work','รายงาน':'Report','โหลด':'Load',
+  'ใส่':'Enter','พิมพ์ข้อมูลใหม่':'Type new data','ใส่ถ้าอัปเดต':'Enter to update',
+  'เว้นว่างถ้าสร้างใหม่':'Leave empty for new','เว้นว่างถ้าเพิ่มสาขาใหม่':'Leave empty when adding new branch',
+  'เว้นว่างถ้าไม่ต้องการเปลี่ยน':'Leave empty to keep unchanged',
+  // Field labels (form)
+  'ชื่อสาขา (ไทย)':'Branch Name (Thai)','ชื่อสาขา (อังกฤษ)':'Branch Name (English)',
+  'รหัสสาขา (Code)':'Branch Code','IP สาขา':'Branch IP','รหัสพนักงาน':'Employee ID',
+  'จำเป็น':'Required','ไม่บังคับ':'Optional','(ไม่บังคับ)':'(Optional)','(จำเป็น)':'(Required)',
+  'ค่าเริ่มต้น':'Default','ชื่อเล่น':'Nickname',
+  // Ticket workflow detail
+  'ซิม':'SIM','สิม':'SIM','เครื่องชั่ง':'Scale','พัดลม':'Fan',
+  'ระบบไฟฟ้า':'Electrical','ระบบประปา':'Plumbing','ระบบ POS':'POS System',
+  'ระบบ POS/IT':'POS/IT System','คอมพิวเตอร์':'Computer','โน้ตบุ๊ก':'Laptop',
+  // Ticket details
+  'ผู้แจ้งงาน':'Reporter','ผู้รับงาน':'Assignee','ผู้ปิดงาน':'Closed By',
+  'แจ้งเรื่อง':'Issue','สรุปงาน':'Summary','รายละเอียดเพิ่มเติม':'Additional Details',
+  'รายละเอียดปัญหาเพิ่มเติม':'Additional Problem Details',
+  'อธิบายปัญหาโดยละเอียด':'Describe the problem in detail',
+  'อธิบายปัญหาโดยละเอียด เช่น เกิดขึ้นเมื่อไหร่ อาการเป็นยังไง':'Describe the problem in detail (e.g. when, how)',
+  // Common phrases
+  'รายการทั้งหมด':'All Records','รายการล่าสุด':'Latest Records',
+  'ดูได้':'Visible','ซ่อน':'Hidden','ออน':'Online','ออฟ':'Offline',
+  'เซิร์ฟเวอร์':'Server','คำสั่ง':'Command','คำเตือน':'Warning','ข้อมูล':'Information',
+  'ข้อความ':'Message','คำตอบ':'Response','ผลลัพธ์':'Result',
+  'หน้า':'Page','ลิสต์':'List','ตาราง':'Table','แผนภูมิ':'Chart',
+  'แดชบอร์ด':'Dashboard','คอนโซล':'Console',
+  // GPS / map related
+  'แผนที่':'Map','แผนที่อัตโนมัติเมื่อช่างส่ง':'Auto-map when engineer submits',
+  'เส้นทาง':'Route','ตำแหน่งล่าสุด':'Latest Location','ระยะทาง':'Distance',
+  'เริ่มเดินทาง':'Trip Start','สิ้นสุดเดินทาง':'Trip End','เริ่มงาน':'Job Start',
+  'จุด':'Point','จุดเริ่มต้น':'Start Point','จุดสิ้นสุด':'End Point',
+  'เลือกช่างและวันที่แล้วกด โหลด':'Select engineer and date, then click Load',
+  'เลือกช่างและวันที่':'Select engineer and date',
+  'เครื่องทำกาแฟ/เครื่องบดกาแฟ':'Coffee Machine / Grinder',
+  'งานระบบไฟฟ้า/แสงสว่าง':'Electrical / Lighting',
+  'งานซ่อมแซมอุปกรณ์ครัว':'Kitchen Equipment Repair',
+  'เครื่องทำความเย็น/ตู้แช่/ตู้เย็น':'Refrigeration / Freezer / Cooler',
+  'เครื่องกรองน้ำ/ไส้กรองน้ำ':'Water Filter / Filter Cartridge',
+  'งานโครงสร้าง/งานก่อสร้าง':'Structural / Construction',
+  'ระบบประปา/ท่อน้ำ':'Plumbing / Water Pipe',
+  'เครื่องชั่ง':'Scale','เครื่องล้างจาน':'Dishwasher','เครื่องทำน้ำร้อน':'Water Heater',
+  'เครื่องซีลแก้ว':'Cup Sealer','เครื่องอื่นๆ':'Other Equipment',
+  'กล้องวงจรปิด/ระบบรักษาความปลอดภัย':'CCTV / Security System',
+  // Login screen
+  'IT Support Management System':'IT Support Management System',
+  'Admin Portal':'Admin Portal',
+  // Date / time
+  'นาที':'minutes','ชั่วโมง':'hours','วินาที':'seconds',
+  'นาทีที่แล้ว':'minutes ago','ชั่วโมงที่แล้ว':'hours ago','วันที่แล้ว':'days ago',
+  'เพิ่งผ่าน':'just now','เพิ่ง':'just',
+  // Activity log actions
+  'เข้าสู่ระบบ (superadmin)':'Login (superadmin)','เข้าสู่ระบบ (admin)':'Login (admin)',
+  'เข้าสู่ระบบ (manager)':'Login (manager)','เข้าสู่ระบบ (engineer)':'Login (engineer)',
+  'เข้าสู่ระบบ (reporter)':'Login (reporter)',
+  'สร้าง Ticket':'Create Ticket','สร้างผู้ใช้':'Create User','สร้างสาขา':'Create Branch',
+  'อัปเดตสถานะ':'Update Status','มอบหมาย':'Assign','ปิดงาน':'Close',
+  'รับงาน':'Accept','ส่งงาน':'Submit','อัปเดต':'Update',
+  'ลบ Ticket (soft delete)':'Delete Ticket (soft delete)',
+  'อัปเดตสาขา':'Update Branch','ลบสาขา':'Delete Branch','สร้างสาขา':'Create Branch',
+  'อัปเดตค่า LINE Settings':'Update LINE Settings','ทดสอบ LINE':'Test LINE',
+  'ออกจากระบบ':'Logout',
+  // Common short
+  'แสดง':'Show','ปิด':'Close','เปิด':'Open',
+  'จาก':'from','ถึง':'to','และ':'and','หรือ':'or',
+  'เพิ่มเติม':'more','โดย':'by','ไปที่':'go to',
+  // Misc UI
+  'แสดงผล':'Display','ซ่อนแสดง':'Hide/Show','ขยายเต็มจอ':'Fullscreen',
+  'พิมพ์ DELETE เพื่อยืนยัน':'Type DELETE to confirm',
+  'ลบ Ticket':'Delete Ticket','ลบสาขาถาวร':'Delete Permanently',
+  'อย่าแสดงข้อความนี้อีก':"Don't show this again",
+  // Hints
+  'ระบบจะอัปเดตข้อมูลอัตโนมัติและแจ้งผล':'System will auto-update and notify you',
+  'ระบบจะอัปเดตข้อมูลอัตโนมัติ':'System will auto-update',
+  'พิมพ์ข้อมูลใหม่ใต้แถวนี้ลงไปเรื่อยๆ':'Type new entries below this row',
+  'พื้นที่พิมพ์ข้อมูลใหม่ได้เลย':'Type your new data here',
+  'เริ่มกรอกข้อมูลใหม่ที่นี่':'Start entering new data here',
+  'ใช้ค้นหา ถ้าแก้จะหาไม่เจอ':'Used for search — editing breaks lookup',
+  'ลงในช่องด้านล่าง แล้วกด บันทึก':'Enter below and press Save',
+  'ไม่มีช่างที่ดูแลแบรนด์นี้โดยตรง':'No engineers directly handling this brand',
+  'ช่างที่เลือกจะได้รับแจ้งเตือนผ่าน':'Selected engineer will be notified via',
+  // Stats per status
+  'รอ':'Wait','ทำ':'Doing','ตรวจ':'Review','เสร็จ':'Done','ยกเลิก':'Cancel',
+};
+// Append additional partial-match tokens — these handle mixed-language strings
+Object.assign(TR_TH_EN, {
+  // Sub-tokens often used inside larger strings
+  'รายวัน':'Daily','รายเดือน':'Monthly','รายปี':'Yearly','รายสัปดาห์':'Weekly',
+  'ตามแบรนด์':'by Brand','ตามสาขา':'by Branch','ตามช่าง':'by Engineer','ตามประเภท':'by Type',
+  'ปิดงาน':'Closed','รับงาน':'Accept','ยกเลิกงาน':'Cancelled',
+  'รายเดือน':'Monthly','รายปี':'Yearly','รายสัปดาห์':'Weekly',
+  'กำลังทำ':'In Progress','กำลังโหลด':'Loading','กำลังบันทึก':'Saving',
+  'วันอังคาร':'Tuesday','วันจันทร์':'Monday','วันพุธ':'Wednesday','วันพฤหัสบดี':'Thursday',
+  'วันศุกร์':'Friday','วันเสาร์':'Saturday','วันอาทิตย์':'Sunday',
+  'มกราคม':'January','กุมภาพันธ์':'February','มีนาคม':'March','เมษายน':'April',
+  'พฤษภาคม':'May','มิถุนายน':'June','กรกฎาคม':'July','สิงหาคม':'August',
+  'กันยายน':'September','ตุลาคม':'October','พฤศจิกายน':'November','ธันวาคม':'December',
+  'ที่':'','สวัสดี':'Hello',
+  // Misc partial
+  'ดูเท่านั้น':'View Only','ดูได้':'Visible','ทำได้':'Allowed',
+  'ไม่ได้':'Not allowed','ไม่ต้อง':'Not required',
+  'ค้นหาผู้ใช้':'Search user','ค้นหา...':'Search...','ค้นหา':'Search',
+  'ลำดับ':'No.','ทำการ':'perform','สำหรับ':'for','โดย':'by',
+});
+
+// Walk DOM and replace text nodes when LANG=en
+// We translate ONLY exact-match phrases (no partial substring) to avoid corrupting DB content
+// To support TH↔EN switching: snapshot originals on first translation; restore when LANG=th
+const I18N_ORIG = new WeakMap();   // node → { text } or { attrs: {name: original} }
+function _restoreNode(node){
+  if (node.nodeType === 3) {
+    const o = I18N_ORIG.get(node);
+    if (o && typeof o.text === 'string') node.nodeValue = o.text;
+  } else if (node.nodeType === 1) {
+    const tag = node.tagName;
+    if (!tag) return;
+    if (['SCRIPT','STYLE','SVG','PATH','USE','SYMBOL','CODE','PRE'].includes(tag)) return;
+    if (node.hasAttribute('data-i18n-skip')) return;
+    const o = I18N_ORIG.get(node);
+    if (o && o.attrs) {
+      Object.keys(o.attrs).forEach(attr => {
+        if (node.hasAttribute(attr)) node.setAttribute(attr, o.attrs[attr]);
+      });
+    }
+    const isInput = (tag === 'INPUT' || tag === 'TEXTAREA');
+    if (!isInput) {
+      for (let i = 0; i < node.childNodes.length; i++) _restoreNode(node.childNodes[i]);
+    }
+  }
+}
+function _translateNode(node){
+  if (LANG !== 'en') return;
+  if (node.nodeType === 3) {
+    const txt = node.nodeValue;
+    if (!txt) return;
+    const trimmed = txt.trim();
+    if (!trimmed) return;
+    if (!/[\u0e00-\u0e7f]/.test(trimmed)) return;
+    // Snapshot original BEFORE mutation
+    if (!I18N_ORIG.has(node)) I18N_ORIG.set(node, { text: txt });
+    // 1) Exact match
+    const tr = TR_TH_EN[trimmed];
+    if (tr) { node.nodeValue = txt.replace(trimmed, tr); return; }
+    // 2) Token-by-token (separators)
+    const parts = trimmed.split(/(\s*[\/,]\s*|\s+)/);
+    if (parts.length > 1) {
+      let changed = false;
+      const newParts = parts.map(p => {
+        const tp = p.trim();
+        if (!tp || !/[\u0e00-\u0e7f]/.test(tp)) return p;
+        if (TR_TH_EN[tp]) { changed = true; return p.replace(tp, TR_TH_EN[tp]); }
+        return p;
+      });
+      if (changed) { node.nodeValue = txt.replace(trimmed, newParts.join('')); return; }
+    }
+    // 3) Substring replacement (longest-first)
+    let result = trimmed;
+    let modified = false;
+    const keys = Object.keys(TR_TH_EN).sort((a,b)=>b.length-a.length);
+    for (const k of keys) {
+      if (!/[\u0e00-\u0e7f]/.test(k)) continue;
+      if (result.includes(k)) {
+        result = result.split(k).join(TR_TH_EN[k]);
+        modified = true;
+      }
+    }
+    if (modified) node.nodeValue = txt.replace(trimmed, result);
+  } else if (node.nodeType === 1) {
+    const tag = node.tagName;
+    if (!tag) return;
+    if (['SCRIPT','STYLE','SVG','PATH','USE','SYMBOL','CODE','PRE'].includes(tag)) return;
+    if (node.hasAttribute('data-i18n-skip')) return;
+    const isInput = (tag === 'INPUT' || tag === 'TEXTAREA');
+    if (!isInput) {
+      for (let i = 0; i < node.childNodes.length; i++) _translateNode(node.childNodes[i]);
+    }
+    // Translate attributes — snapshot originals first
+    ['placeholder','title','aria-label'].forEach(attr => {
+      if (!node.hasAttribute || !node.hasAttribute(attr)) return;
+      const v = node.getAttribute(attr);
+      if (!v || !/[\u0e00-\u0e7f]/.test(v)) return;
+      // Snapshot
+      let entry = I18N_ORIG.get(node);
+      if (!entry) { entry = { attrs: {} }; I18N_ORIG.set(node, entry); }
+      if (!entry.attrs) entry.attrs = {};
+      if (!(attr in entry.attrs)) entry.attrs[attr] = v;
+      // Translate
+      const trimmed = v.trim();
+      if (TR_TH_EN[trimmed]) { node.setAttribute(attr, TR_TH_EN[trimmed]); return; }
+      let result = trimmed;
+      let modified = false;
+      const keys = Object.keys(TR_TH_EN).sort((a,b)=>b.length-a.length);
+      for (const k of keys) {
+        if (!/[\u0e00-\u0e7f]/.test(k)) continue;
+        if (result.includes(k)) {
+          result = result.split(k).join(TR_TH_EN[k]);
+          modified = true;
+        }
+      }
+      if (modified) node.setAttribute(attr, result);
+    });
+  }
+}
+function _translateUI(){
+  if (LANG === 'en') {
+    try { _translateNode(document.body); } catch(e){ console.warn('[translate]', e); }
+  } else {
+    // Restore originals
+    try { _restoreNode(document.body); } catch(e){ console.warn('[restore]', e); }
+  }
+}
+// Hook setLang to run translation after re-render
+const _origSetLang = setLang;
+setLang = function(newLang){
+  _origSetLang(newLang);
+  // After re-render, schedule translation pass
+  setTimeout(()=>_translateUI(), 50);
+  setTimeout(()=>_translateUI(), 200);
+  setTimeout(()=>_translateUI(), 500);
+};
+
+// MutationObserver — auto-translate any DOM nodes added later (modals, toasts, dynamic tables)
+let _i18nObserver = null;
+function _startI18nObserver(){
+  if (_i18nObserver || typeof MutationObserver === 'undefined') return;
+  // Debounce: queue mutations and translate in one batch every 80ms
+  let pending = new Set();
+  let timer = null;
+  const flush = () => {
+    if (LANG === 'en' && pending.size > 0) {
+      pending.forEach(node => {
+        try { _translateNode(node); } catch(_){}
+      });
+    }
+    pending.clear();
+    timer = null;
+  };
+  _i18nObserver = new MutationObserver(mutations => {
+    if (LANG !== 'en') return;
+    for (const m of mutations) {
+      m.addedNodes.forEach(n => pending.add(n));
+      // Also re-translate the target if its character data changed
+      if (m.type === 'characterData' && m.target) pending.add(m.target);
+    }
+    if (!timer) timer = setTimeout(flush, 80);
+  });
+  // Observe document body — covers all dynamic UI
+  if (document.body) {
+    _i18nObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
+}
+// Start observer when DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _startI18nObserver);
+} else {
+  _startI18nObserver();
+}
+
+// ────────── Workflow Status display helpers ──────────
+// DB stores Thai labels — we map them to current language for UI
+const STATUS_LABELS = {
+  'รอดำเนินการ':         { th:'รอดำเนินการ',          en:'Pending' },
+  'อยู่ระหว่างดำเนินการ': { th:'อยู่ระหว่างดำเนินการ', en:'In Progress' },
+  'ตรวจงาน':              { th:'ตรวจงาน',             en:'Under Review' },
+  'เสร็จสิ้น':             { th:'เสร็จสิ้น',            en:'Done' },
+  'ยกเลิก':                { th:'ยกเลิก',               en:'Cancelled' },
+  'pending':              { th:'รอดำเนินการ',          en:'Pending' },
+  'in_progress':          { th:'อยู่ระหว่างดำเนินการ', en:'In Progress' },
+  'review':               { th:'ตรวจงาน',             en:'Under Review' },
+  'done':                  { th:'เสร็จสิ้น',            en:'Done' },
+  'cancelled':            { th:'ยกเลิก',               en:'Cancelled' },
+};
+// Strip emoji + map to current LANG; fallback to original
+function trStatus(s){
+  if (!s) return '';
+  // Strip trailing emoji/symbols (⏱️ ⚙️ ✅ ❌ etc) for matching
+  const stripped = String(s).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]\uFE0F?/gu, '').trim();
+  const m = STATUS_LABELS[stripped];
+  if (m) return (m[LANG] || m.th || stripped);
+  return s;
+}
+
 // ── Brand color palette ──
 const BRAND_COLORS = {
  "Dunkin'" : '#FF6B00',
@@ -1184,7 +1893,7 @@ document.getElementById('btn-login').onclick=async()=>{
 };
 ['l-user','l-pass'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
 function logout(){api('/api/auth/logout',{method:'POST'}).catch(()=>{});AUTH=null;localStorage.removeItem('adm_auth');location.reload();}
-function togTheme(){const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';localStorage.setItem('adm_theme',d.dataset.t);document.getElementById('theme-btn').textContent=d.dataset.t==='dark'?'Light':'Dark';}
+function togTheme(){const d=document.documentElement;d.dataset.t=d.dataset.t==='dark'?'':'dark';localStorage.setItem('adm_theme',d.dataset.t);document.getElementById('theme-btn').textContent=d.dataset.t==='dark'?t('sidebar.light','Light'):t('sidebar.dark','Dark');}
 if(localStorage.getItem('adm_theme')==='dark'){document.documentElement.dataset.t='dark';}
 
 // ═══ BOOT ═══
@@ -1209,9 +1918,15 @@ async function boot(){
  },200);
 
  document.getElementById('app').classList.add('on');
- document.getElementById('s-name').textContent=AUTH.user.name;
- const rl={superadmin:'Super Admin',admin:'Admin',manager:'Manager'};
- document.getElementById('s-role').textContent=rl[AUTH.user.role]||AUTH.user.role;
+ // Sidebar: prefer nickname, fallback to name, fallback to username
+ const dispName = AUTH.user.nickname || AUTH.user.name || AUTH.user.username || '—';
+ document.getElementById('s-name').textContent = dispName;
+ document.getElementById('s-role').textContent = t('role.'+AUTH.user.role, AUTH.user.role);
+ // Initialize lang button label
+ const _lb = document.getElementById('lang-btn'); if (_lb) _lb.textContent = LANG === 'th' ? 'TH' : 'EN';
+ document.documentElement.lang = LANG;
+ // Apply saved language to all static UI elements
+ try { setLang(LANG); } catch(e){ console.warn('[init lang]', e); }
  buildNav();startClock();connectSSE();
  initPreviewRole();
 
@@ -1241,17 +1956,19 @@ async function boot(){
  setTimeout(()=>loadEl.remove(),500);
 
  navTo('dash');
- document.getElementById('theme-btn').textContent=document.documentElement.dataset.t==='dark'?'Light':'Dark';
+ document.getElementById('theme-btn').textContent=document.documentElement.dataset.t==='dark'?t('sidebar.light','Light'):t('sidebar.dark','Dark');
 }
 
 function buildNav(){
  const level=ROLE_LEVEL[AUTH?.user?.role||'']||0;
  const items=NAV_ALL.filter(n=>(level>=n.min)&&(!n.roles||n.roles.includes(AUTH?.user?.role)));
- document.getElementById('s-nav').innerHTML=items.map(n=>`<button class="navb${pg===n.id?' on':''}" data-p="${n.id}"><span class="ni"><svg class=ic-md><use href=#i-${n.ic} /></svg></span><span>${n.lb}</span>${n.id==='tickets'?'<span class="bdg" id="nav-bdg" style="display:none">0</span>':''}</button>`).join('');
+ document.getElementById('s-nav').innerHTML=items.map(n=>`<button class="navb${pg===n.id?' on':''}" data-p="${n.id}"><span class="ni"><svg class=ic-md><use href=#i-${n.ic} /></svg></span><span>${t('menu.'+n.id, n.lb)}</span>${n.id==='tickets'?'<span class="bdg" id="nav-bdg" style="display:none">0</span>':''}</button>`).join('');
  document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>navTo(b.dataset.p));
+ // Update top-bar title to translated current page
+ const tt=document.getElementById('top-t'); if(tt) tt.textContent=t('menu.'+pg, PG[pg]||pg);
 }
 
-function navTo(p){pg=p;document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));document.getElementById('pg-'+p)?.classList.add('on');document.getElementById('top-t').textContent=PG[p]||p;document.querySelectorAll('.navb').forEach(b=>b.classList.toggle('on',b.dataset.p===p));closeSide();render();}
+function navTo(p){pg=p;document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));document.getElementById('pg-'+p)?.classList.add('on');document.getElementById('top-t').textContent=t('menu.'+p, PG[p]||p);document.querySelectorAll('.navb').forEach(b=>b.classList.toggle('on',b.dataset.p===p));closeSide();render();}
 function togSide(){document.getElementById('side').classList.toggle('open');document.getElementById('ov').classList.toggle('on');}
 function closeSide(){document.getElementById('side').classList.remove('open');document.getElementById('ov').classList.remove('on');}
 
@@ -4528,42 +5245,8 @@ async function loadUserPref(){
 }
 
 // ══════════════════════════════════════════
-// TH/EN LANGUAGE TOGGLE
+// (Old i18n skeleton replaced by comprehensive LANG_DICT at top of script)
 // ══════════════════════════════════════════
-let _lang='th';
-const LANG={
- th:{
- 'Overview':'Overview','All Tickets':'All Tickets','Users':'Users',
- 'Activity Log':'Activity Log','GPS Map':'GPS Map','LINE Groups':'LINE Groups',
- 'System Settings':'System Settings','Server Logs':'Server Logs','Branches':'Branches',
- 'Refresh':'Refresh','Add User':'+ Add User','btn-rf':'Refresh',
- 'pg-title-dash':'ภาพรวม','pg-title-tickets':'ตั๋วทั้งหมด',
- 'notif-title-txt':'การแจ้งเตือน'
- },
- en:{
- 'Overview':'Overview','All Tickets':'All Tickets','Users':'Users',
- 'Activity Log':'Activity Log','GPS Map':'GPS Map','LINE Groups':'LINE Groups',
- 'System Settings':'System Settings','Server Logs':'Server Logs','Branches':'Branches',
- 'Refresh':'Refresh','Add User':'+ Add User','btn-rf':'Refresh',
- 'pg-title-dash':'Overview','pg-title-tickets':'All Tickets',
- 'notif-title-txt':'Notifications'
- }
-};
-function togLang(){
- _lang=_lang==='th'?'en':'th';
- const btn=document.getElementById('lang-btn');
- if(btn)btn.textContent=_lang==='th'?'TH':'EN';
- // Update page names
- const PG_TH={dash:'ภาพรวม',tickets:'ตั๋วทั้งหมด',users:'Users & Reporters',log:'บันทึกกิจกรรม',gps:'GPS Map',line:'LINE Groups',system:'ตั้งค่าระบบ',server:'Server Logs',branches:'สาขา'};
- const PG_EN={dash:'Overview',tickets:'All Tickets',users:'Users & Reporters',log:'Activity Log',gps:'GPS Map',line:'LINE Groups',system:'System Settings',server:'Server Logs',branches:'Branches'};
- const map=_lang==='th'?PG_TH:PG_EN;
- window._PG_OVERRIDE=map;
- // Re-render current page title
- const curTitle=map[pg];
- if(curTitle){const t=document.getElementById('top-t');if(t)t.textContent=curTitle;}
- // Re-render to pick up label changes
- render();
-}
 
 // ══════════════════════════════════════════
 // GPS HISTORY PAGE — Waypoint Selector
