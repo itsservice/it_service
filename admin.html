@@ -3092,16 +3092,7 @@ function openDrw(rid){
  <button class="smb" onclick="openAssign('${esc(realRid)}')"><svg class=ic-md><use href=#i-user /></svg> Assign</button>
  ${!/(เสร็จสิ้น|ยกเลิก)/.test(t.status||'')?`<button class="smb" style="background:var(--fg);color:var(--bg);border-color:var(--fg)" onclick="openClose('${esc(realRid)}')"><svg class=ic-md><use href=#i-check /></svg> Close Ticket</button>`:''}
  <button class="smb" onclick="openNote('${esc(realRid)}')"><svg class=ic-md><use href=#i-edit /></svg> Note</button>
- 
- 
- ${/*
- 
- อันนี้ คือปิดไว้ก่อนครับ เดี๋ยวมาแก้ไขครับ เนื่องจาก ติดลิมิต
- ['superadmin','admin'].includes(AUTH?.user?.role)?`<button class="smb" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelTicket('${esc(realRid)}','${esc(t.id||t._recordId||'')}','${esc(t.type||'')}')"><svg class=ic-md><use href=#i-trash /></svg> Delete</button>`:''
- 
- */}
-
- 
+ ${['superadmin','admin'].includes(AUTH?.user?.role)?`<button class="smb" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelTicket('${esc(realRid)}','${esc(t.id||t._recordId||'')}','${esc(t.type||'')}')"><svg class=ic-md><use href=#i-trash /></svg> Delete</button>`:''}
  </div>
  <div class="dsec">Status</div>
  <select class="sel" style="width:100%;margin-bottom:10px" onchange="qStatus('${esc(realRid)}',this.value)">${ST.map(s=>`<option${(t.status||'').includes(s)?' selected':''}>${s}</option>`).join('')}</select>
@@ -4121,8 +4112,9 @@ function confirmDelBranch(id,code,brand,name){
      <div style="font-size:12px;color:var(--fg3);margin-bottom:10px">${esc(name||'(ไม่มีชื่อ)')}</div>
      <div style="font-size:11px;color:#991b1b;line-height:1.6">
        <strong>คำเตือน:</strong> การลบสาขานี้จะ:<br>
-       • สาขาที่ท่านเลือกจะออกจากรายการทันทีหลังจากดำเนินการ<br>
-       • <span style="color:#16a34a;font-weight:700">หากต้องการกู้คืน</span> สามารถสร้างให่ได้หรือติดต่อ <span style="color:#16a34a;font-weight:700">ผู้พัฒนาเว็บ</span>
+       • ซ่อนสาขาออกจากรายการทันที (สถานะ → inactive)<br>
+       • Ticket ที่อ้างถึงสาขานี้ยังคงอยู่ ไม่หายอ้างอิง<br>
+       • <span style="color:#16a34a;font-weight:700">กู้คืนได้</span> โดยติดต่อ superadmin
      </div>
    </div>
    <div class="fg">
@@ -4131,7 +4123,7 @@ function confirmDelBranch(id,code,brand,name){
    </div>
    <div class="mod-f">
      <button class="bo" onclick="closeMod()">ยกเลิก</button>
-     <button class="smb" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelTicket('${esc(realRid)}','${esc(t.id||t._recordId||'')}','${esc(t.type||'')}')"><svg class=ic-md><use href=#i-trash /></svg> ลบสาขา</button>
+     <button class="b-danger" id="del-go" disabled onclick="doDelBranch(${id})" style="background:#dc2626;color:#fff;border-color:#dc2626"><svg class=ic-md><use href=#i-trash /></svg> ลบสาขา</button>
    </div>`);
  setTimeout(()=>document.getElementById('del-confirm')?.focus(),100);
 }
