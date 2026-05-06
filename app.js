@@ -857,17 +857,20 @@ app.post('/api/reporter/change-password', requireAuth(['reporter']), async (req,
     const user = req.user;
     if (!new_password || new_password.length < 6)
       return res.json({ ok:false, error:'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
-    // If old_password provided → verify it
-    if (old_password !== null && old_password !== undefined) {
-      if (user.password !== hashPwd(old_password))
-        return res.json({ ok:false, error:'รหัสผ่านเดิมไม่ถูกต้อง' });
+    // Forward to FastAPI (replaces broken local require('./db'))
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    try {
+      const r = await axios.post(`${REPAIR_URL}/api/reporter/change-password`,
+        { user_id: user.id, new_password, old_password: (old_password ?? null) },
+        { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type':'application/json' }, timeout: 30000 }
+      );
+      if (!r.data?.ok) return res.json({ ok:false, error: r.data?.error || 'change failed' });
+    } catch(apiErr) {
+      const msg = apiErr.response?.data?.detail || apiErr.message || 'change failed';
+      return res.json({ ok:false, error: msg });
     }
-    // Update in DB
-    const db = require('./db');
-    await db.query(
-      'UPDATE users SET password=?, password_plain=?, reset_requested=0 WHERE id=?',
-      [hashPwd(new_password), new_password, user.id]
-    );
     addLog({ user, action:'change_password', detail:'Reporter เปลี่ยนรหัสผ่านด้วยตัวเอง' });
     res.json({ ok:true });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
@@ -879,23 +882,35 @@ app.post('/api/reporter/forgot-password', async (req, res) => {
     const { username } = req.body || {};
     if (!username) return res.json({ ok:false, error:'กรุณาระบุ username' });
 
-    const user = getUserByUsername(username);
-    if (!user || user.role !== 'reporter')
-      return res.json({ ok:false, error:'ไม่พบบัญชีนี้ในระบบ' });
-    // Mark reset_requested in DB
-    const db = require('./db');
-    await db.query('UPDATE users SET reset_requested=1 WHERE id=?', [user.id]);
-    // Notify admin via LINE
+    // Forward to FastAPI (replaces broken local require('./db'))
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    let user = null;
+    try {
+      const r = await axios.post(`${REPAIR_URL}/api/reporter/forgot-password`,
+        { username },
+        { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type':'application/json' }, timeout: 30000 }
+      );
+      if (!r.data?.ok) return res.json({ ok:false, error: r.data?.error || 'ไม่พบบัญชีนี้ในระบบ' });
+      user = r.data.user || null;
+    } catch(apiErr) {
+      const status = apiErr.response?.status;
+      const msg = apiErr.response?.data?.detail || apiErr.message;
+      if (status === 404) return res.json({ ok:false, error:'ไม่พบบัญชีนี้ในระบบ' });
+      return res.json({ ok:false, error: msg || 'forgot-password failed' });
+    }
+    // Notify admin via LINE (best-effort — failure shouldn't block reset)
     try {
       const adminGroupId = await lineConfig.getAdminGroupId();
-      if (adminGroupId) {
+      if (adminGroupId && user) {
         await lineNotify.push(adminGroupId, [{
           type: 'text',
-          text: `🔑 [ลืมรหัสผ่าน]\nชื่อ: ${user.name}\nUsername: ${username}\nแบรนด์: ${user.brand || '-'}\n\nกรุณา Reset รหัสผ่านใน Admin Panel`
+          text: `🔑 [ลืมรหัสผ่าน]\nชื่อ: ${user.name||'-'}\nUsername: ${username}\nแบรนด์: ${user.brand || '-'}\n\nกรุณา Reset รหัสผ่านใน Admin Panel`
         }]);
       }
     } catch(lineErr) { console.warn('[ForgotPwd] LINE notify failed:', lineErr.message); }
-    addLog({ user, action:'forgot_password', detail:`ขอ reset รหัสผ่าน` });
+    addLog({ user: user || { username }, action:'forgot_password', detail:`ขอ reset รหัสผ่าน` });
     res.json({ ok:true });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
@@ -906,19 +921,29 @@ app.post('/api/admin/reporter/reset-password', requireAuth(['superadmin','admin'
     const { userId } = req.body || {};
     if (!userId) return res.json({ ok:false, error:'ต้องระบุ userId' });
 
-    const db = require('./db');
-    const [rows] = await db.query('SELECT * FROM users WHERE id=? AND role="reporter"', [userId]);
-    if (!rows.length) return res.json({ ok:false, error:'ไม่พบ reporter' });
-
-    const reporter = rows[0];
-    const defaultPwd = reporter.password_plain || reporter.username.replace(/^[GABPDF]/,'').replace(/^0+/,'') || reporter.username;
-
-    await db.query(
-      'UPDATE users SET password=?, password_plain=?, reset_requested=0 WHERE id=?',
-      [hashPwd(defaultPwd), defaultPwd, userId]
-    );
-    addLog({ user:req.user, action:'reset_reporter_password', detail:`Reset รหัสผ่าน ${reporter.username} (${reporter.name})` });
-    res.json({ ok:true, default_password: defaultPwd });
+    // Forward to FastAPI (replaces broken local require('./db'))
+    const axios = require('axios');
+    const REPAIR_URL = process.env.REPAIR_API_URL || 'http://repair.mobile1234.site';
+    const REPAIR_KEY = process.env.REPAIR_API_KEY || 'repair123';
+    let result;
+    try {
+      const r = await axios.post(`${REPAIR_URL}/api/admin/reporter/reset-password`,
+        { user_id: userId, reset_by: req.user?.username || 'admin' },
+        { headers: { 'X-API-Key': REPAIR_KEY, 'Content-Type':'application/json' }, timeout: 30000 }
+      );
+      if (!r.data?.ok) return res.json({ ok:false, error: r.data?.error || 'reset failed' });
+      result = r.data;
+    } catch(apiErr) {
+      const status = apiErr.response?.status;
+      const msg = apiErr.response?.data?.detail || apiErr.message;
+      if (status === 404) return res.json({ ok:false, error:'ไม่พบ reporter' });
+      return res.json({ ok:false, error: msg || 'reset failed' });
+    }
+    addLog({
+      user: req.user, action:'reset_reporter_password',
+      detail: `Reset รหัสผ่าน ${result.user?.username||userId} (${result.user?.name||'-'})`
+    });
+    res.json({ ok:true, default_password: result.default_password });
   } catch(e) { if(!res.headersSent) res.json({ ok:false, error:e.message }); }
 });
 
