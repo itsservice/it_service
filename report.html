@@ -551,7 +551,20 @@ async function doChangePassword() {
   const btn     = document.getElementById('chpwd-btn');
   const needOld = oldWrap.style.display !== 'none';
 
-  function chErr(msg) { errEl.textContent=msg; errEl.style.display='block'; }
+  function chErr(msg) {
+    errEl.textContent=msg;
+    errEl.style.color='#dc2626';
+    errEl.style.background='#fef2f2';
+    errEl.style.border='1px solid #fecaca';
+    errEl.style.display='block';
+  }
+  function chOk(msg) {
+    errEl.textContent=msg;
+    errEl.style.color='#15803d';
+    errEl.style.background='#f0fdf4';
+    errEl.style.border='1px solid #bbf7d0';
+    errEl.style.display='block';
+  }
   errEl.style.display = 'none';
 
   if (needOld && !oldPwd) { chErr('กรุณากรอกรหัสผ่านเดิม'); return; }
@@ -564,14 +577,56 @@ async function doChangePassword() {
       method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+_reporterToken },
       body: JSON.stringify({ old_password: needOld ? oldPwd : null, new_password: newPwd })
     });
-    const d = await r.json();
-    if (!d.ok) { chErr(d.error || 'เปลี่ยนรหัสผ่านไม่สำเร็จ'); return; }
-    // Success
-    closeChangePasswordModal();
-    onLoginSuccess();
+    let d;
+    try { d = await r.json(); } catch(_) { d = { ok:false, error:'รูปแบบ response ไม่ถูกต้อง' }; }
+
+    if (!d.ok) {
+      // Map common backend errors to user-friendly Thai messages
+      let errMsg = d.error || 'เปลี่ยนรหัสผ่านไม่สำเร็จ';
+      const lower = String(errMsg).toLowerCase();
+      if (lower === 'not found' || errMsg === 'ไม่พบบัญชีผู้ใช้') {
+        errMsg = 'ระบบไม่พบบัญชีของคุณ กรุณาเข้าสู่ระบบใหม่อีกครั้ง';
+      } else if (lower.includes('failed with status code 404')) {
+        errMsg = 'ระบบกำลังอัปเดต กรุณาลองอีกครั้งในอีก 1-2 นาที';
+      } else if (errMsg === 'รหัสผ่านเดิมไม่ถูกต้อง') {
+        // keep as-is
+      }
+      chErr(errMsg);
+      return;
+    }
+
+    // ── Success ──
+    // 1) Show success message
+    chOk('✅ เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+    // 2) Disable the button permanently (we're about to redirect)
+    btn.disabled = true; btn.textContent = 'สำเร็จ ✓';
+    // 3) Clear session (force re-login with new password)
+    try {
+      sessionStorage.removeItem('rep_token');
+      sessionStorage.removeItem('rep_user');
+    } catch(_) {}
+    _reporterToken = null; _reporterUser = null;
+    // 4) After 2 seconds → close modal + show login screen
+    setTimeout(() => {
+      closeChangePasswordModal();
+      // Reset login form & show overlay
+      const loginUserEl = document.getElementById('login-user');
+      const loginPassEl = document.getElementById('login-pass');
+      const loginErrEl  = document.getElementById('login-err');
+      if (loginPassEl) loginPassEl.value = '';
+      if (loginErrEl)  { loginErrEl.style.display='none'; loginErrEl.textContent=''; }
+      const ov = document.getElementById('login-overlay');
+      if (ov) { ov.style.display='flex'; ov.style.opacity='1'; ov.style.pointerEvents='all'; }
+      // Hide topbar user tag + logout button
+      const tag = document.getElementById('user-tag');
+      if (tag) tag.style.display = 'none';
+      const logoutBtn = document.getElementById('btn-logout');
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      // Focus password input — username pre-filled for convenience
+      if (loginPassEl) setTimeout(() => loginPassEl.focus(), 100);
+    }, 2000);
   } catch(e) {
     chErr('เชื่อมต่อไม่ได้ กรุณาลองใหม่');
-  } finally {
     btn.disabled = false; btn.textContent = 'บันทึกรหัสผ่านใหม่';
   }
 }
