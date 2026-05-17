@@ -868,7 +868,21 @@ app.post('/api/reporter/change-password', requireAuth(['reporter']), async (req,
       );
       if (!r.data?.ok) return res.json({ ok:false, error: r.data?.error || 'change failed' });
     } catch(apiErr) {
-      const msg = apiErr.response?.data?.detail || apiErr.message || 'change failed';
+      // Map common errors to user-friendly Thai messages
+      const status = apiErr.response?.status;
+      const detail = apiErr.response?.data?.detail;
+      let msg;
+      if (status === 401 || detail === 'รหัสผ่านเดิมไม่ถูกต้อง') {
+        msg = 'รหัสผ่านเดิมไม่ถูกต้อง';
+      } else if (status === 404 && (!detail || detail === 'Not Found')) {
+        // FastAPI default 404 — usually means endpoint not deployed
+        console.warn('[change-password] FastAPI returned default 404 — endpoint may not be deployed', apiErr.config?.url);
+        msg = 'ระบบกำลังอัปเดต กรุณาลองอีกครั้งในอีก 1-2 นาที';
+      } else if (status === 404) {
+        msg = detail || 'ไม่พบบัญชีของคุณในระบบ';
+      } else {
+        msg = detail || apiErr.message || 'change failed';
+      }
       return res.json({ ok:false, error: msg });
     }
     addLog({ user, action:'change_password', detail:'Reporter เปลี่ยนรหัสผ่านด้วยตัวเอง' });
